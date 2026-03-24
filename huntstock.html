@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Huntington Bank Staff Demo - HBAN Widget</title>
+  <style>
+    :root {
+      --bg-1: #f7faf5;
+      --bg-2: #edf6e8;
+      --card: #ffffff;
+      --line: #dbe8d5;
+      --text: #1d2b22;
+      --muted: #627165;
+      --sage-dark: #214d2e;
+      --abundant-green: #5ba63c;
+      --green-soft: #dff0d2;
+      --green-pill: #e8f5e3;
+      --green-text: #2f7d32;
+      --shadow: 0 12px 34px rgba(24, 39, 28, 0.10);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+    }
+
+    .widget {
+      width: 100%;
+      max-width: 430px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(91,166,60,0.10) 0%, rgba(91,166,60,0.02) 100%);
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .title {
+      font-size: 22px;
+      line-height: 1.15;
+      font-weight: 800;
+      color: var(--sage-dark);
+      margin: 0;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .brand-mark {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: var(--abundant-green);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      font-weight: 900;
+      box-shadow: 0 8px 18px rgba(91,166,60,0.25);
+      flex: 0 0 auto;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .price-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .price {
+      font-size: 42px;
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .pill {
+      margin-bottom: 4px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--green-pill);
+      color: var(--green-text);
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .chart-wrap {
+      margin-bottom: 8px;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+    }
+
+    .metric {
+      padding: 12px;
+      border: 1px solid #e6eee1;
+      border-radius: var(--radius-md);
+      background: #fbfcfa;
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: #6b766f;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #f8fbf7;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .campaign {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--sage-dark);
+      font-weight: 700;
+    }
+
+    .embed-shell {
+      width: 100%;
+      max-width: 1000px;
+      display: grid;
+      gap: 16px;
+      justify-items: center;
+    }
+
+    .embed-help {
+      max-width: 760px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 12px;
+      }
+
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .price {
+        font-size: 36px;
+      }
+
+      .meta-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="embed-shell">
+    <div class="widget" role="region" aria-label="Huntington Bancshares stock widget">
+      <div class="header">
+        <div class="header-row">
+          <div>
+            <div class="eyebrow">Market snapshot</div>
+            <h1 class="title">Huntington Bancshares</h1>
+            <div class="subtitle">NASDAQ: HBAN</div>
+          </div>
+          <div class="brand-mark" aria-hidden="true">H</div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="price-row">
+          <div class="price" id="price">$15.29</div>
+          <div class="pill" id="changePill">▲ 0.20 (1.33%)</div>
+        </div>
+
+        <div class="chart-wrap">
+          <svg viewBox="0 0 360 84" role="img" aria-label="HBAN price trend">
+            <defs>
+              <linearGradient id="fillGreen" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#dff0d2" stop-opacity="0.95"></stop>
+                <stop offset="100%" stop-color="#dff0d2" stop-opacity="0.20"></stop>
+              </linearGradient>
+            </defs>
+
+            <polygon
+              points="8,76 8,62 45,58 82,56 119,49 156,52 193,43 230,39 267,41 304,32 352,26 352,76"
+              fill="url(#fillGreen)">
+            </polygon>
+
+            <polyline
+              points="8,62 45,58 82,56 119,49 156,52 193,43 230,39 267,41 304,32 352,26"
+              fill="none"
+              stroke="#5ba63c"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round">
+            </polyline>
+          </svg>
+        </div>
+
+        <div class="meta-row">
+          <span>Intraday trend</span>
+          <span id="updatedAt">Updated 2:00 PM ET</span>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-label">Open</div>
+            <div class="metric-value" id="open">$15.10</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Day range</div>
+            <div class="metric-value" id="range">$15.05–$15.31</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Volume</div>
+            <div class="metric-value" id="volume">2.18M</div>
+          </div>
+        </div>
+
+        <div class="campaign">Let’s get more from money.</div>
+
+        <div class="footer-note">
+          Internal staff demo only. Replace the “H” badge with the approved Huntington Bank logo from your internal brand library before production use.
+        </div>
+      </div>
+    </div>
+
+    <div class="embed-help">
+      This file is self-contained and can be opened directly or embedded in an iframe. Public Huntington brand materials describe a refreshed visual identity centered on signature green, a broader palette, expressive type, and the “Let’s get more from money” campaign, which this demo styling loosely reflects. HBAN is the Huntington Bancshares ticker on NASDAQ.
+    </div>
+  </div>
+
+  <script>
+    const demoData = {
+      ticker: "HBAN",
+      price: 15.29,
+      change: 0.20,
+      changePct: 1.33,
+      open: 15.10,
+      low: 15.05,
+      high: 15.31,
+      volume: "2.18M",
+      updatedAt: "2:00 PM ET"
+    };
+
+    function formatMoney(value) {
+      return `$${Number(value).toFixed(2)}`;
+    }
+
+    function renderWidget(data) {
+      const up = data.change >= 0;
+      document.getElementById("price").textContent = formatMoney(data.price);
+      document.getElementById("changePill").textContent =
+        `${up ? "▲" : "▼"} ${Math.abs(data.change).toFixed(2)} (${Math.abs(data.changePct).toFixed(2)}%)`;
+      document.getElementById("changePill").style.background = up ? "#e8f5e3" : "#fdecec";
+      document.getElementById("changePill").style.color = up ? "#2f7d32" : "#b42318";
+      document.getElementById("open").textContent = formatMoney(data.open);
+      document.getElementById("range").textContent = `${formatMoney(data.low)}–${formatMoney(data.high)}`;
+      document.getElementById("volume").textContent = data.volume;
+      document.getElementById("updatedAt").textContent = `Updated ${data.updatedAt}`;
+    }
+
+    renderWidget(demoData);
+  </script>
+</body>
+</html>
