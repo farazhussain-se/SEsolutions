@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your IT Tickets — ServiceNow</title>
+  <style>
+    :root {
+      --bg-1: #f4f6fb;
+      --bg-2: #eaecf5;
+      --card: #ffffff;
+      --line: #dde1ef;
+      --text: #1a1f36;
+      --muted: #6b7280;
+      --brand: #1a56db;
+      --brand-light: #ebf0ff;
+      --shadow: 0 12px 34px rgba(26, 31, 54, 0.10);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+    }
+
+    /* ── Widget shell ── */
+    .widget {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── Header ── */
+    .header {
+      padding: 20px 20px 14px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(26,86,219,0.07) 0%, rgba(26,86,219,0.01) 100%);
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .title {
+      font-size: 20px;
+      line-height: 1.15;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    /* ── Selector dropdown ── */
+    .dropdown-wrap { position: relative; }
+
+    .selector-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .selector-btn:hover { background: #f7f8fc; }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+      list-style: none;
+      padding: 6px 0;
+      min-width: 150px;
+      z-index: 100;
+    }
+
+    .dropdown-menu.open { display: block; }
+
+    .dropdown-menu li {
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .dropdown-menu li:hover { background: #f9fafb; }
+    .dropdown-menu li.active { font-weight: 700; color: var(--brand); background: var(--brand-light); }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      padding: 12px 16px;
+      border-bottom: 1px solid #edf0f7;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: #fafbfd;
+    }
+
+    .search-wrap { flex: 1; position: relative; }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: #9ca3af;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 10px 8px 32px;
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      font-size: 13px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .search-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(26,86,219,0.10); }
+
+    .filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 12px;
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active { background: var(--brand-light); color: var(--brand); border-color: #c7d7f9; }
+
+    .filter-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+      padding: 12px 16px;
+      z-index: 100;
+      min-width: 200px;
+    }
+
+    .filter-panel.open { display: block; }
+
+    .filter-panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 10px;
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: #374151;
+    }
+
+    .filter-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Ticket list ── */
+    .ticket-list {
+      max-height: 420px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--line) transparent;
+    }
+
+    .ticket-list::-webkit-scrollbar { width: 5px; }
+    .ticket-list::-webkit-scrollbar-track { background: transparent; }
+    .ticket-list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+    /* ── Ticket card ── */
+    .ticket-card {
+      padding: 14px 16px;
+      border-bottom: 1px solid #edf0f7;
+      cursor: default;
+      transition: background 0.12s;
+    }
+
+    .ticket-card:last-child { border-bottom: none; }
+    .ticket-card:hover { background: #f9fafb; }
+
+    .ticket-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 7px;
+    }
+
+    .ticket-id {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      font-family: "Courier New", Courier, monospace;
+    }
+
+    .ticket-time {
+      margin-left: auto;
+      font-size: 11px;
+      color: #9ca3af;
+      white-space: nowrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+    }
+
+    .ticket-desc {
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.45;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      margin-bottom: 7px;
+    }
+
+    .ticket-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .priority-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .priority-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      padding: 40px 20px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 14px;
+    }
+
+    .empty-icon {
+      display: block;
+      margin: 0 auto 12px;
+      opacity: 0.4;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      padding: 11px 16px;
+      border-top: 1px solid #edf0f7;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fafbfd;
+    }
+
+    .footer-count {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .footer-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--brand);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .footer-link:hover { text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 520px) {
+      body { padding: 10px; }
+      .title { font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="widget" role="region" aria-label="ServiceNow IT Tickets">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">ServiceNow</div>
+          <div class="title">Your IT Tickets</div>
+        </div>
+        <div class="dropdown-wrap">
+          <button class="selector-btn" id="selectorBtn" aria-haspopup="listbox" aria-expanded="false">
+            <span id="selectorLabel">My Items</span>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M3 5l4 4 4-4" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <ul class="dropdown-menu" id="selectorMenu" role="listbox">
+            <li role="option" class="active" data-value="My Items">My Items</li>
+            <li role="option" data-value="All Tickets">All Tickets</li>
+            <li role="option" data-value="Open">Open</li>
+            <li role="option" data-value="In Progress">In Progress</li>
+            <li role="option" data-value="Resolved">Resolved</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg class="search-icon" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+          <circle cx="6.5" cy="6.5" r="5" stroke="#9ca3af" stroke-width="1.5"/>
+          <path d="M10.5 10.5L13.5 13.5" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input
+          type="search"
+          class="search-input"
+          id="searchInput"
+          placeholder="Search tickets…"
+          aria-label="Search tickets"
+        />
+      </div>
+      <div class="dropdown-wrap">
+        <button class="filter-btn" id="filterBtn" aria-haspopup="true" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M1 3h12M3 7h8M5 11h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          Filters
+        </button>
+        <div class="filter-panel" id="filterPanel" aria-label="Filter by type">
+          <div class="filter-panel-title">Filter by Type</div>
+          <div class="filter-row"><span class="filter-dot" style="background:#b42318"></span>Incident</div>
+          <div class="filter-row"><span class="filter-dot" style="background:#92400e"></span>Planning</div>
+          <div class="filter-row"><span class="filter-dot" style="background:#1e40af"></span>Request</div>
+          <div class="filter-row"><span class="filter-dot" style="background:#065f46"></span>Change</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ticket list -->
+    <div class="ticket-list" id="ticketList" aria-live="polite" aria-label="Ticket list">
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span class="footer-count" id="footerCount">7 tickets</span>
+      <a href="#" class="footer-link" aria-label="Open ServiceNow">
+        Open ServiceNow
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <path d="M2 10L10 2M10 2H5M10 2v5" stroke="#1a56db" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    /* ── Mock ServiceNow ticket data ── */
+    const TICKETS = [
+      {
+        id: "INC0000027",
+        type: "Incident",
+        priority: "2 - High",
+        status: "In Progress",
+        description: "Network connectivity issues affecting Building 3 — users unable to access internal resources.",
+        updatedAt: "2 min ago",
+      },
+      {
+        id: "INC0000031",
+        type: "Incident",
+        priority: "3 - Moderate",
+        status: "On Hold",
+        description: "Printer on floor 4 not responding to print jobs sent from workstations.",
+        updatedAt: "15 min ago",
+      },
+      {
+        id: "TASK0000084",
+        type: "Planning",
+        priority: "5 - Planning",
+        status: "Pending",
+        description: "Scheduled OS patching for the finance department servers during off-peak hours.",
+        updatedAt: "1 hr ago",
+      },
+      {
+        id: "REQ0000110",
+        type: "Request",
+        priority: "4 - Low",
+        status: "Open",
+        description: "New laptop provisioning request for onboarding employee — requires software installation.",
+        updatedAt: "3 hrs ago",
+      },
+      {
+        id: "INC0000019",
+        type: "Incident",
+        priority: "1 - Critical",
+        status: "In Progress",
+        description: "Email server down — all outbound mail queued; escalated to infrastructure team.",
+        updatedAt: "5 hrs ago",
+      },
+      {
+        id: "TASK0000072",
+        type: "Change",
+        priority: "3 - Moderate",
+        status: "Resolved",
+        description: "Firewall rule update completed for new SaaS vendor traffic whitelisting.",
+        updatedAt: "1 day ago",
+      },
+      {
+        id: "REQ0000097",
+        type: "Request",
+        priority: "4 - Low",
+        status: "Closed",
+        description: "Software license renewal for Adobe Creative Suite — auto-approved via catalog.",
+        updatedAt: "2 days ago",
+      },
+    ];
+
+    /* ── Colour maps ── */
+    const TYPE_COLORS = {
+      Incident: { bg: "#fde8e8", color: "#b42318", border: "#fca5a5" },
+      Planning: { bg: "#fef3c7", color: "#92400e", border: "#fcd34d" },
+      Request:  { bg: "#dbeafe", color: "#1e40af", border: "#93c5fd" },
+      Change:   { bg: "#d1fae5", color: "#065f46", border: "#6ee7b7" },
+    };
+
+    const STATUS_COLORS = {
+      "In Progress": { bg: "#dbeafe", color: "#1e40af" },
+      "On Hold":     { bg: "#fef3c7", color: "#92400e" },
+      "Pending":     { bg: "#f3e8ff", color: "#6b21a8" },
+      "Open":        { bg: "#f0fdf4", color: "#166534" },
+      "Resolved":    { bg: "#d1fae5", color: "#065f46" },
+      "Closed":      { bg: "#f3f4f6", color: "#374151" },
+    };
+
+    const PRIORITY_COLORS = {
+      "1 - Critical": "#b42318",
+      "2 - High":     "#d97706",
+      "3 - Moderate": "#1a56db",
+      "4 - Low":      "#6b7280",
+      "5 - Planning": "#7c3aed",
+    };
+
+    /* ── State ── */
+    let activeFilter = "My Items";
+    let searchQuery  = "";
+
+    /* ── Render helpers ── */
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderBadge(label, cfg) {
+      return `<span class="badge" style="background:${cfg.bg};color:${cfg.color};border:1px solid ${cfg.border || cfg.bg};">${escapeHtml(label)}</span>`;
+    }
+
+    function renderTicket(t) {
+      const typeCfg   = TYPE_COLORS[t.type]     || TYPE_COLORS["Request"];
+      const statusCfg = STATUS_COLORS[t.status] || { bg: "#f3f4f6", color: "#374151" };
+      const priColor  = PRIORITY_COLORS[t.priority] || "#6b7280";
+
+      return `
+        <div class="ticket-card">
+          <div class="ticket-top">
+            <span class="ticket-id">${escapeHtml(t.id)}</span>
+            ${renderBadge(t.type, typeCfg)}
+            <span class="ticket-time">${escapeHtml(t.updatedAt)}</span>
+          </div>
+          <p class="ticket-desc">${escapeHtml(t.description)}</p>
+          <div class="ticket-meta">
+            <span class="priority-label" style="color:${priColor};">
+              <span class="priority-dot" style="background:${priColor};"></span>
+              ${escapeHtml(t.priority)}
+            </span>
+            ${renderBadge(t.status, { ...statusCfg, border: statusCfg.bg })}
+          </div>
+        </div>`;
+    }
+
+    function filterTickets() {
+      const q = searchQuery.trim().toLowerCase();
+      return TICKETS.filter(t => {
+        const matchFilter =
+          activeFilter === "My Items"    ? true :
+          activeFilter === "All Tickets" ? true :
+          activeFilter === "Open"        ? t.status === "Open" :
+          activeFilter === "In Progress" ? t.status === "In Progress" :
+          activeFilter === "Resolved"    ? t.status === "Resolved" : true;
+
+        const matchSearch = !q || (
+          t.id.toLowerCase().includes(q)          ||
+          t.description.toLowerCase().includes(q) ||
+          t.type.toLowerCase().includes(q)        ||
+          t.status.toLowerCase().includes(q)
+        );
+        return matchFilter && matchSearch;
+      });
+    }
+
+    /* ── Render tickets into DOM ── */
+    function renderList() {
+      const list    = document.getElementById("ticketList");
+      const counter = document.getElementById("footerCount");
+      const visible = filterTickets();
+
+      if (visible.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <svg class="empty-icon" width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+              <circle cx="22" cy="22" r="20" stroke="#dde1ef" stroke-width="2"/>
+              <path d="M14 22h16M22 14v16" stroke="#dde1ef" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            No tickets found
+          </div>`;
+      } else {
+        list.innerHTML = visible.map(renderTicket).join("");
+      }
+
+      counter.textContent = `${visible.length} ticket${visible.length !== 1 ? "s" : ""}`;
+    }
+
+    /* ── Dropdown toggle utility ── */
+    function toggleDropdown(menuEl, btnEl) {
+      const isOpen = menuEl.classList.toggle("open");
+      btnEl.setAttribute("aria-expanded", isOpen);
+      if (btnEl.classList.contains("filter-btn")) {
+        btnEl.classList.toggle("active", isOpen);
+      }
+    }
+
+    function closeAllDropdowns() {
+      document.getElementById("selectorMenu").classList.remove("open");
+      document.getElementById("selectorBtn").setAttribute("aria-expanded", "false");
+      document.getElementById("filterPanel").classList.remove("open");
+      document.getElementById("filterBtn").setAttribute("aria-expanded", "false");
+      document.getElementById("filterBtn").classList.remove("active");
+    }
+
+    /* ── Event: selector dropdown ── */
+    document.getElementById("selectorBtn").addEventListener("click", function (e) {
+      e.stopPropagation();
+      const filterPanel = document.getElementById("filterPanel");
+      filterPanel.classList.remove("open");
+      document.getElementById("filterBtn").classList.remove("active");
+      document.getElementById("filterBtn").setAttribute("aria-expanded", "false");
+      toggleDropdown(document.getElementById("selectorMenu"), this);
+    });
+
+    document.getElementById("selectorMenu").addEventListener("click", function (e) {
+      const li = e.target.closest("li[data-value]");
+      if (!li) return;
+      activeFilter = li.dataset.value;
+      document.getElementById("selectorLabel").textContent = activeFilter;
+
+      // Update active styles
+      this.querySelectorAll("li").forEach(el => {
+        el.classList.toggle("active", el.dataset.value === activeFilter);
+      });
+
+      this.classList.remove("open");
+      document.getElementById("selectorBtn").setAttribute("aria-expanded", "false");
+      renderList();
+    });
+
+    /* ── Event: filter button ── */
+    document.getElementById("filterBtn").addEventListener("click", function (e) {
+      e.stopPropagation();
+      const selectorMenu = document.getElementById("selectorMenu");
+      selectorMenu.classList.remove("open");
+      document.getElementById("selectorBtn").setAttribute("aria-expanded", "false");
+      toggleDropdown(document.getElementById("filterPanel"), this);
+    });
+
+    /* ── Event: search ── */
+    document.getElementById("searchInput").addEventListener("input", function () {
+      searchQuery = this.value;
+      renderList();
+    });
+
+    /* ── Close dropdowns on outside click ── */
+    document.addEventListener("click", function () {
+      closeAllDropdowns();
+    });
+
+    /* ── Close dropdowns on Escape ── */
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeAllDropdowns();
+    });
+
+    /* ── Public API for dynamic updates ── */
+    window.ServiceNowWidget = {
+      /**
+       * Replace the full ticket list and re-render.
+       * @param {Array} tickets  Array of ticket objects matching TICKETS structure.
+       */
+      setTickets: function (tickets) {
+        TICKETS.length = 0;
+        tickets.forEach(t => TICKETS.push(t));
+        renderList();
+      },
+      /**
+       * Prepend a new ticket and re-render.
+       * @param {Object} ticket  A single ticket object.
+       */
+      addTicket: function (ticket) {
+        TICKETS.unshift(ticket);
+        renderList();
+      },
+    };
+
+    /* ── Initial render ── */
+    renderList();
+  </script>
+</body>
+</html>
