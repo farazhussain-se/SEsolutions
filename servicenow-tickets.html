@@ -534,14 +534,22 @@
         .replace(/'/g, "&#39;");
     }
 
+    /* Validate that a value is a safe CSS color (hex only) before inline use. */
+    function safeCssColor(value, fallback) {
+      return /^#[0-9a-fA-F]{3,8}$/.test(value) ? value : fallback;
+    }
+
     function renderBadge(label, cfg) {
-      return `<span class="badge" style="background:${cfg.bg};color:${cfg.color};border:1px solid ${cfg.border || cfg.bg};">${escapeHtml(label)}</span>`;
+      const bg     = safeCssColor(cfg.bg,    "#f3f4f6");
+      const color  = safeCssColor(cfg.color, "#374151");
+      const border = safeCssColor(cfg.border || cfg.bg, bg);
+      return `<span class="badge" style="background:${bg};color:${color};border:1px solid ${border};">${escapeHtml(label)}</span>`;
     }
 
     function renderTicket(t) {
       const typeCfg   = TYPE_COLORS[t.type]     || TYPE_COLORS["Request"];
       const statusCfg = STATUS_COLORS[t.status] || { bg: "#f3f4f6", color: "#374151" };
-      const priColor  = PRIORITY_COLORS[t.priority] || "#6b7280";
+      const priColor  = safeCssColor(PRIORITY_COLORS[t.priority] || "#6b7280", "#6b7280");
 
       return `
         <div class="ticket-card">
@@ -675,18 +683,19 @@
     window.ServiceNowWidget = {
       /**
        * Replace the full ticket list and re-render.
-       * @param {Array} tickets  Array of ticket objects matching TICKETS structure.
+       * @param {Array} tickets  Array of objects with {id, type, priority, status, description, updatedAt}.
        */
       setTickets: function (tickets) {
-        TICKETS.length = 0;
-        tickets.forEach(t => TICKETS.push(t));
+        if (!Array.isArray(tickets)) { return; }
+        TICKETS.splice(0, TICKETS.length, ...tickets);
         renderList();
       },
       /**
        * Prepend a new ticket and re-render.
-       * @param {Object} ticket  A single ticket object.
+       * @param {Object} ticket  Object with {id, type, priority, status, description, updatedAt}.
        */
       addTicket: function (ticket) {
+        if (!ticket || typeof ticket !== "object") { return; }
         TICKETS.unshift(ticket);
         renderList();
       },
