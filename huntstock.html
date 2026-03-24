@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Huntington Bank Staff Demo - HBAN Widget</title>
+  <title>Huntington Bancshares — HBAN</title>
   <style>
     :root {
       --bg-1: #f7faf5;
@@ -23,12 +23,9 @@
       --radius-md: 14px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      margin: 0;
       min-height: 100vh;
       display: grid;
       place-items: center;
@@ -40,7 +37,7 @@
 
     .widget {
       width: 100%;
-      max-width: 430px;
+      max-width: 440px;
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: var(--radius-xl);
@@ -48,10 +45,11 @@
       box-shadow: var(--shadow);
     }
 
+    /* ── Header ── */
     .header {
-      padding: 18px 20px 14px;
+      padding: 20px 22px 16px;
       border-bottom: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(91,166,60,0.10) 0%, rgba(91,166,60,0.02) 100%);
+      background: linear-gradient(180deg, rgba(91,166,60,0.09) 0%, rgba(91,166,60,0.02) 100%);
     }
 
     .header-row {
@@ -61,46 +59,42 @@
       gap: 16px;
     }
 
+    .logo-wrap {
+      height: 40px;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo-wrap img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+    }
+
     .eyebrow {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.09em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     .title {
-      font-size: 22px;
+      font-size: 21px;
       line-height: 1.15;
       font-weight: 800;
       color: var(--sage-dark);
-      margin: 0;
     }
 
     .subtitle {
-      margin-top: 6px;
-      font-size: 14px;
+      margin-top: 5px;
+      font-size: 13px;
       color: var(--muted);
     }
 
-    .brand-mark {
-      width: 52px;
-      height: 52px;
-      border-radius: 16px;
-      background: var(--abundant-green);
-      color: white;
-      display: grid;
-      place-items: center;
-      font-size: 18px;
-      font-weight: 900;
-      box-shadow: 0 8px 18px rgba(91,166,60,0.25);
-      flex: 0 0 auto;
-    }
-
-    .content {
-      padding: 20px;
-    }
+    /* ── Content ── */
+    .content { padding: 20px 22px; }
 
     .price-row {
       display: flex;
@@ -111,7 +105,7 @@
     }
 
     .price {
-      font-size: 42px;
+      font-size: 44px;
       line-height: 1;
       font-weight: 800;
       letter-spacing: -0.03em;
@@ -119,42 +113,38 @@
 
     .pill {
       margin-bottom: 4px;
-      padding: 6px 10px;
+      padding: 6px 11px;
       border-radius: 999px;
-      background: var(--green-pill);
-      color: var(--green-text);
       font-size: 14px;
       font-weight: 700;
       white-space: nowrap;
     }
 
+    /* ── Chart ── */
     .chart-wrap {
       margin-bottom: 8px;
-      border-radius: 16px;
+      border-radius: 14px;
       overflow: hidden;
     }
 
-    svg {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
+    svg { display: block; width: 100%; height: auto; }
 
     .meta-row {
       display: flex;
       justify-content: space-between;
-      gap: 12px;
       font-size: 12px;
       color: var(--muted);
       margin-bottom: 18px;
     }
 
+    /* ── Metrics ── */
     .metrics {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      gap: 10px;
       border-top: 1px solid var(--line);
       padding-top: 16px;
+      margin-bottom: 18px;
     }
 
     .metric {
@@ -165,9 +155,9 @@
     }
 
     .metric-label {
-      font-size: 12px;
+      font-size: 11px;
       color: #6b766f;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     .metric-value {
@@ -176,168 +166,186 @@
       color: var(--text);
     }
 
-    .footer-note {
-      margin-top: 18px;
-      padding: 14px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: #f8fbf7;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.5;
-    }
-
+    /* ── Campaign tagline ── */
     .campaign {
-      margin-top: 10px;
-      font-size: 13px;
-      color: var(--sage-dark);
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--sage-dark) 0%, #2e6b40 100%);
+      color: #fff;
+      font-size: 15px;
       font-weight: 700;
-    }
-
-    .embed-shell {
-      width: 100%;
-      max-width: 1000px;
-      display: grid;
-      gap: 16px;
-      justify-items: center;
-    }
-
-    .embed-help {
-      max-width: 760px;
+      letter-spacing: 0.01em;
       text-align: center;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
     }
 
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 16px 0;
+    }
+
+    /* ── Live badge ── */
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--green-pill);
+      color: var(--green-text);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--abundant-green);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.75); }
+    }
+
+    /* ── Responsive ── */
     @media (max-width: 520px) {
-      body {
-        padding: 12px;
-      }
-
-      .metrics {
-        grid-template-columns: 1fr;
-      }
-
-      .price {
-        font-size: 36px;
-      }
-
-      .meta-row {
-        flex-direction: column;
-      }
+      body { padding: 12px; }
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .price { font-size: 36px; }
     }
   </style>
 </head>
 <body>
-  <div class="embed-shell">
-    <div class="widget" role="region" aria-label="Huntington Bancshares stock widget">
-      <div class="header">
-        <div class="header-row">
-          <div>
-            <div class="eyebrow">Market snapshot</div>
-            <h1 class="title">Huntington Bancshares</h1>
-            <div class="subtitle">NASDAQ: HBAN</div>
-          </div>
-          <div class="brand-mark" aria-hidden="true">H</div>
+  <div class="widget" role="region" aria-label="Huntington Bancshares stock information">
+
+    <div class="header">
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">Market snapshot</div>
+          <div class="title">Huntington Bancshares</div>
+          <div class="subtitle">NASDAQ: HBAN</div>
         </div>
-      </div>
-
-      <div class="content">
-        <div class="price-row">
-          <div class="price" id="price">$15.29</div>
-          <div class="pill" id="changePill">▲ 0.20 (1.33%)</div>
-        </div>
-
-        <div class="chart-wrap">
-          <svg viewBox="0 0 360 84" role="img" aria-label="HBAN price trend">
-            <defs>
-              <linearGradient id="fillGreen" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#dff0d2" stop-opacity="0.95"></stop>
-                <stop offset="100%" stop-color="#dff0d2" stop-opacity="0.20"></stop>
-              </linearGradient>
-            </defs>
-
-            <polygon
-              points="8,76 8,62 45,58 82,56 119,49 156,52 193,43 230,39 267,41 304,32 352,26 352,76"
-              fill="url(#fillGreen)">
-            </polygon>
-
-            <polyline
-              points="8,62 45,58 82,56 119,49 156,52 193,43 230,39 267,41 304,32 352,26"
-              fill="none"
-              stroke="#5ba63c"
-              stroke-width="3"
-              stroke-linecap="round"
-              stroke-linejoin="round">
-            </polyline>
-          </svg>
-        </div>
-
-        <div class="meta-row">
-          <span>Intraday trend</span>
-          <span id="updatedAt">Updated 2:00 PM ET</span>
-        </div>
-
-        <div class="metrics">
-          <div class="metric">
-            <div class="metric-label">Open</div>
-            <div class="metric-value" id="open">$15.10</div>
-          </div>
-          <div class="metric">
-            <div class="metric-label">Day range</div>
-            <div class="metric-value" id="range">$15.05–$15.31</div>
-          </div>
-          <div class="metric">
-            <div class="metric-label">Volume</div>
-            <div class="metric-value" id="volume">2.18M</div>
-          </div>
-        </div>
-
-        <div class="campaign">Let’s get more from money.</div>
-
-        <div class="footer-note">
-          Internal staff demo only. Replace the “H” badge with the approved Huntington Bank logo from your internal brand library before production use.
+        <div class="logo-wrap">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGZBdM0v1WQPASXmnSB0TbMUNnX8BLjpimug&s"
+            alt="Huntington Bank"
+          />
         </div>
       </div>
     </div>
 
-    <div class="embed-help">
-      This file is self-contained and can be opened directly or embedded in an iframe. Public Huntington brand materials describe a refreshed visual identity centered on signature green, a broader palette, expressive type, and the “Let’s get more from money” campaign, which this demo styling loosely reflects. HBAN is the Huntington Bancshares ticker on NASDAQ.
+    <div class="content">
+
+      <div class="live-badge">
+        <span class="live-dot"></span>
+        Live · NASDAQ
+      </div>
+
+      <div class="price-row">
+        <div class="price" id="price">$15.29</div>
+        <div class="pill" id="changePill">▲ 0.20 (1.33%)</div>
+      </div>
+
+      <div class="chart-wrap">
+        <svg viewBox="0 0 360 84" role="img" aria-label="HBAN intraday price chart">
+          <defs>
+            <linearGradient id="fillGreen" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#dff0d2" stop-opacity="0.95"></stop>
+              <stop offset="100%" stop-color="#dff0d2" stop-opacity="0.15"></stop>
+            </linearGradient>
+          </defs>
+          <polygon
+            points="8,76 8,62 45,58 82,56 119,49 156,52 193,43 230,39 267,41 304,32 352,26 352,76"
+            fill="url(#fillGreen)">
+          </polygon>
+          <polyline
+            points="8,62 45,58 82,56 119,49 156,52 193,43 230,39 267,41 304,32 352,26"
+            fill="none"
+            stroke="#5ba63c"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round">
+          </polyline>
+        </svg>
+      </div>
+
+      <div class="meta-row">
+        <span>Intraday trend</span>
+        <span id="updatedAt">Updated 2:00 PM ET</span>
+      </div>
+
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Open</div>
+          <div class="metric-value" id="open">$15.10</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Day High</div>
+          <div class="metric-value" id="high">$15.31</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Day Low</div>
+          <div class="metric-value" id="low">$15.05</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Prev. Close</div>
+          <div class="metric-value" id="prevClose">$15.09</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Volume</div>
+          <div class="metric-value" id="volume">2.18M</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Mkt Cap</div>
+          <div class="metric-value" id="mktCap">$20.4B</div>
+        </div>
+      </div>
+
+      <div class="campaign">Let's get more from money.</div>
+
     </div>
   </div>
 
   <script>
-    const demoData = {
-      ticker: "HBAN",
+    const data = {
       price: 15.29,
       change: 0.20,
       changePct: 1.33,
       open: 15.10,
-      low: 15.05,
       high: 15.31,
+      low: 15.05,
+      prevClose: 15.09,
       volume: "2.18M",
+      mktCap: "$20.4B",
       updatedAt: "2:00 PM ET"
     };
 
-    function formatMoney(value) {
-      return `$${Number(value).toFixed(2)}`;
+    function fmt(v) { return `$${Number(v).toFixed(2)}`; }
+
+    function render(d) {
+      const up = d.change >= 0;
+      document.getElementById("price").textContent = fmt(d.price);
+      const pill = document.getElementById("changePill");
+      pill.textContent = `${up ? "▲" : "▼"} ${Math.abs(d.change).toFixed(2)} (${Math.abs(d.changePct).toFixed(2)}%)`;
+      pill.style.background = up ? "#e8f5e3" : "#fdecec";
+      pill.style.color = up ? "#2f7d32" : "#b42318";
+      document.getElementById("open").textContent = fmt(d.open);
+      document.getElementById("high").textContent = fmt(d.high);
+      document.getElementById("low").textContent = fmt(d.low);
+      document.getElementById("prevClose").textContent = fmt(d.prevClose);
+      document.getElementById("volume").textContent = d.volume;
+      document.getElementById("mktCap").textContent = d.mktCap;
+      document.getElementById("updatedAt").textContent = `Updated ${d.updatedAt}`;
     }
 
-    function renderWidget(data) {
-      const up = data.change >= 0;
-      document.getElementById("price").textContent = formatMoney(data.price);
-      document.getElementById("changePill").textContent =
-        `${up ? "▲" : "▼"} ${Math.abs(data.change).toFixed(2)} (${Math.abs(data.changePct).toFixed(2)}%)`;
-      document.getElementById("changePill").style.background = up ? "#e8f5e3" : "#fdecec";
-      document.getElementById("changePill").style.color = up ? "#2f7d32" : "#b42318";
-      document.getElementById("open").textContent = formatMoney(data.open);
-      document.getElementById("range").textContent = `${formatMoney(data.low)}–${formatMoney(data.high)}`;
-      document.getElementById("volume").textContent = data.volume;
-      document.getElementById("updatedAt").textContent = `Updated ${data.updatedAt}`;
-    }
-
-    renderWidget(demoData);
+    render(data);
   </script>
 </body>
 </html>
