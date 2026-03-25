@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Tasks</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #f0f0f0;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 24px;
+    }
+
+    .widget {
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      border: 1px solid #e4e4e4;
+      border-radius: 16px;
+      padding: 22px 20px 18px;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #111;
+      margin-bottom: 16px;
+    }
+
+    /* ── Task Row ── */
+    .task-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 4px;
+      border-bottom: 1px solid #f2f2f2;
+      cursor: pointer;
+      transition: background 0.12s;
+      border-radius: 8px;
+    }
+
+    .task-row:last-child { border-bottom: none; }
+    .task-row:hover { background: #fafafa; }
+
+    .task-row.completed .task-label {
+      text-decoration: line-through;
+      color: #aaa;
+    }
+
+    .task-row.completed .check-circle {
+      border-color: #c8e6c9;
+      background: #e8f5e9;
+    }
+
+    .task-row.completed .check-circle svg {
+      opacity: 1;
+      color: #4caf50;
+    }
+
+    .task-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* ── Checkbox ── */
+    .check-circle {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+      background: #fafafa;
+    }
+
+    .check-circle svg {
+      width: 13px;
+      height: 13px;
+      opacity: 0;
+      color: #bbb;
+      transition: opacity 0.2s;
+    }
+
+    .task-row:hover .check-circle svg { opacity: 0.4; }
+
+    .task-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #222;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Date Pills ── */
+    .pill {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .pill-today    { background: #ffe0b2; color: #e65100; }
+    .pill-tomorrow { background: #e3f2fd; color: #1565c0; }
+    .pill-soon     { background: #c8e6c9; color: #1b5e20; }
+    .pill-later    { background: #e8f5e9; color: #2e7d32; }
+    .pill-overdue  { background: #ffebee; color: #b71c1c; }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #f2f2f2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-count {
+      font-size: 12px;
+      color: #999;
+      font-weight: 500;
+    }
+
+    .view-all {
+      font-size: 12px;
+      font-weight: 700;
+      color: #2e7d32;
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0;
+    }
+
+    .view-all:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="widget">
+  <h2>My Tasks</h2>
+
+  <div id="task-list"></div>
+
+  <div class="footer">
+    <span class="footer-count" id="footer-count"></span>
+    <button class="view-all">View all in Workday →</button>
+  </div>
+</div>
+
+<script>
+  const tasks = [
+    { id: 1, label: "Complete Q1 Branch Scorecards — Carolinas",  pill: "Today",     pillClass: "pill-today"    },
+    { id: 2, label: "Review Cadence Charlotte Conversion Report", pill: "Today",     pillClass: "pill-today"    },
+    { id: 3, label: "Submit Raleigh Branch Staffing Gaps",        pill: "Tomorrow",  pillClass: "pill-tomorrow" },
+    { id: 4, label: "Approve 3 Pending PTO Requests — Workday",  pill: "Apr 1",     pillClass: "pill-soon"     },
+    { id: 5, label: "Attend Carolinas Regional All-Hands",        pill: "Apr 3",     pillClass: "pill-soon"     },
+    { id: 6, label: "Merger Onboarding — 12 New Colleagues",      pill: "Apr 7",     pillClass: "pill-later"    },
+  ];
+
+  const completed = new Set();
+
+  function renderTasks() {
+    const list = document.getElementById('task-list');
+    list.innerHTML = '';
+
+    tasks.forEach(task => {
+      const done = completed.has(task.id);
+      const row = document.createElement('div');
+      row.className = `task-row${done ? ' completed' : ''}`;
+      row.onclick = () => toggleTask(task.id);
+
+      row.innerHTML = `
+        <div class="task-left">
+          <div class="check-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <span class="task-label">${task.label}</span>
+        </div>
+        <span class="pill ${done ? 'pill-later' : task.pillClass}">${task.pill}</span>
+      `;
+
+      list.appendChild(row);
+    });
+
+    const remaining = tasks.length - completed.size;
+    document.getElementById('footer-count').textContent =
+      `${remaining} of ${tasks.length} tasks remaining`;
+  }
+
+  function toggleTask(id) {
+    if (completed.has(id)) {
+      completed.delete(id);
+    } else {
+      completed.add(id);
+    }
+    renderTasks();
+  }
+
+  renderTasks();
+</script>
+
+</body>
+</html>
