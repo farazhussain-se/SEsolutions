@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="widget-name" content="Cornerstone Learning">
+    <meta name="widget-description" content="Cornerstone LMS integration with course catalog, notifications, gamification profile, and team leaderboard.">
+    <title>Cornerstone Learning Integration</title>
+    <style>
+        :root {
+            --primary-purple: #5D2E8E;
+            --primary-purple-light: #F3EFFF;
+            --text-dark: #1F1F1F;
+            --text-grey: #666666;
+            --bg-light: #F8F9FA;
+            --white: #FFFFFF;
+            --border-radius: 12px;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+        body {
+            background-color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Mobile Container Simulation */
+        .app-container {
+            width: 375px;
+            height: 812px; /* iPhone X height */
+            background-color: var(--white);
+            border-radius: 0;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            padding: 44px 20px 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--white);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .brand-icon {
+            width: 24px;
+            height: 24px;
+            background-color: var(--primary-purple);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cw-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: #ddd;
+            background-image: url('https://i.pravatar.cc/100?img=5');
+            background-size: cover;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            padding: 0 20px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 16px;
+        }
+
+        .cw-tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 0;
+            margin-right: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-grey);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .cw-tab-btn.active {
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .cw-tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--text-dark);
+        }
+
+        /* Scrollable Content */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            /* Bottom padding reduced since nav is gone */
+            padding: 0 20px 20px 20px; 
+            scrollbar-width: none; /* Hide scrollbar Firefox */
+        }
+        .content-area::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome */
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .cw-filter-btn {
+            font-size: 12px;
+            color: var(--text-grey);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        /* Course Grid */
+        .course-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .course-card {
+            background: var(--white);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .course-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-img-wrap {
+            height: 100px;
+            width: 100%;
+            background-color: #eee;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cw-status-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .status-required { background: rgba(30, 30, 30, 0.8); }
+        .status-inprogress { background: rgba(255, 140, 0, 0.9); }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-meta {
+            font-size: 11px;
+            color: var(--text-grey);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 2px;
+        }
+
+        .card-due {
+            font-size: 11px;
+            color: var(--text-grey);
+        }
+
+        /* Modal / Detail View */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 92%;
+            background: var(--white);
+            border-radius: 20px 20px 0 0;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 101;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-active .modal-overlay { opacity: 1; pointer-events: auto; }
+        .modal-active .modal-content { transform: translateY(0); }
+
+        .modal-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cw-close-btn {
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--text-grey);
+        }
+
+        .modal-scroll {
+            overflow-y: auto;
+            padding: 0 20px 100px 20px;
+            flex: 1;
+        }
+
+        .hero-img {
+            width: 100%;
+            height: 180px;
+            background: #eee;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            object-fit: cover;
+        }
+
+        .detail-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .detail-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-grey);
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-desc-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .detail-desc {
+            font-size: 14px;
+            color: var(--text-grey);
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .detail-desc ul {
+            padding-left: 20px;
+            margin-top: 8px;
+        }
+
+        .cta-container {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 20px;
+            background: var(--white);
+            border-top: 1px solid #eee;
+        }
+
+        .cw-btn {
+            width: 100%;
+            background-color: var(--primary-purple);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Notification Panel */
+        .notif-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--white);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .notif-panel.open {
+            transform: translateX(0);
+        }
+
+        .notif-header {
+            padding: 44px 20px 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .notif-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .notif-back-btn {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--text-grey);
+            padding: 4px;
+        }
+
+        .cw-notif-count-badge {
+            background: var(--primary-purple);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+
+        .notif-list {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        .notif-list::-webkit-scrollbar { display: none; }
+
+        .notif-section-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-grey);
+            padding: 16px 20px 8px;
+        }
+
+        .notif-item {
+            display: flex;
+            gap: 12px;
+            padding: 14px 20px;
+            border-bottom: 1px solid #f3f3f3;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .notif-item:hover {
+            background: #fafafa;
+        }
+
+        .notif-item.unread {
+            background: var(--primary-purple-light);
+        }
+
+        .notif-item.unread:hover {
+            background: #ebe4f7;
+        }
+
+        .notif-icon-wrap {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .notif-icon-urgent { background: #FEE2E2; }
+        .notif-icon-due { background: #FEF3C7; }
+        .notif-icon-assign { background: #E0E7FF; }
+        .notif-icon-complete { background: #D1FAE5; }
+        .notif-icon-event { background: #F3E8FF; }
+
+        .notif-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notif-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+
+        .notif-desc {
+            font-size: 12px;
+            color: var(--text-grey);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .notif-time {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 4px;
+        }
+
+        .notif-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary-purple);
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
+
+        .notif-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-grey);
+        }
+
+        .notif-empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .bell-btn {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .cw-bell-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background: red;
+            border-radius: 50%;
+        }
+
+        .cw-avatar {
+            cursor: pointer;
+        }
+
+        /* Profile Panel */
+        .profile-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-light);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .profile-panel.open {
+            transform: translateX(0);
+        }
+
+        .profile-header {
+            padding: 44px 20px 20px 20px;
+            background: var(--white);
+            border-bottom: 1px solid #eee;
+        }
+
+        .profile-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-header-top h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .profile-back-btn {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--text-grey);
+            padding: 4px;
+        }
+
+        .profile-card {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .profile-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-image: url('https://i.pravatar.cc/100?img=5');
+            background-size: cover;
+            border: 3px solid var(--primary-purple);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .cw-profile-level-badge {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            background: var(--primary-purple);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--white);
+        }
+
+        .profile-info h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+        }
+
+        .profile-info .profile-role {
+            font-size: 12px;
+            color: var(--text-grey);
+            margin-bottom: 6px;
+        }
+
+        .xp-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .xp-bar {
+            flex: 1;
+            height: 6px;
+            background: #eee;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .xp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-purple), #9B59B6);
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+
+        .xp-label {
+            font-size: 11px;
+            color: var(--primary-purple);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .profile-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px 20px;
+            scrollbar-width: none;
+        }
+        .profile-scroll::-webkit-scrollbar { display: none; }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .cw-stat-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 14px 10px;
+            text-align: center;
+        }
+
+        .cw-stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .cw-stat-label {
+            font-size: 11px;
+            color: var(--text-grey);
+            margin-top: 2px;
+        }
+
+        /* Streak */
+        .streak-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .streak-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .streak-header h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .streak-count {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary-purple);
+        }
+
+        .streak-days {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .streak-day {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .streak-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .streak-dot.done {
+            background: var(--primary-purple);
+            color: white;
+        }
+
+        .streak-dot.today {
+            background: var(--primary-purple-light);
+            color: var(--primary-purple);
+            border: 2px solid var(--primary-purple);
+        }
+
+        .streak-dot.future {
+            background: #f0f0f0;
+            color: #ccc;
+        }
+
+        .streak-day-label {
+            font-size: 10px;
+            color: var(--text-grey);
+        }
+
+        /* Badges */
+        .badges-section {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .badges-section h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .cw-badge-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 4px;
+        }
+
+        .cw-badge-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .cw-badge-icon.earned {
+            background: var(--primary-purple-light);
+        }
+
+        .cw-badge-icon.locked {
+            background: #f0f0f0;
+            filter: grayscale(1);
+            opacity: 0.5;
+        }
+
+        .cw-badge-name {
+            font-size: 10px;
+            color: var(--text-grey);
+            line-height: 1.2;
+        }
+
+        /* Leaderboard */
+        .leaderboard-section {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .leaderboard-section h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .lb-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .lb-row:last-child {
+            border-bottom: none;
+        }
+
+        .lb-row.is-you {
+            background: var(--primary-purple-light);
+            margin: 0 -16px;
+            padding: 10px 16px;
+            border-radius: 8px;
+        }
+
+        .lb-rank {
+            width: 24px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-grey);
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .lb-rank.gold { color: #F59E0B; }
+        .lb-rank.silver { color: #9CA3AF; }
+        .lb-rank.bronze { color: #D97706; }
+
+        .lb-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-size: cover;
+            flex-shrink: 0;
+        }
+
+        .lb-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .lb-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .lb-dept {
+            font-size: 11px;
+            color: var(--text-grey);
+        }
+
+        .lb-xp {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-purple);
+            flex-shrink: 0;
+        }
+
+        /* SVG Helper */
+        svg { width: 24px; height: 24px; fill: #999; }
+        .purple-fill { fill: var(--primary-purple); }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <header>
+            <div class="brand">
+                <div class="brand-icon">★</div>
+                <span>Cornerstone</span>
+            </div>
+            <div class="user-actions">
+                <div class="bell-btn" onclick="toggleNotifications()">
+                    🔔
+                    <div class="cw-bell-badge" id="bell-badge"></div>
+                </div>
+                <div class="cw-avatar" onclick="toggleProfile()"></div>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="cw-tab-btn active" onclick="switchTab('learnings')" data-i18n="tabLearnings">Learnings</button>
+            <button class="cw-tab-btn" onclick="switchTab('recommended')" data-i18n="tabRecommended">Recommended</button>
+        </div>
+
+        <div class="content-area" id="main-content">
+            </div>
+
+        <div class="profile-panel" id="profile-panel">
+            <div class="profile-header">
+                <div class="profile-header-top">
+                    <div style="display:flex;align-items:center;gap:4px;">
+                        <button class="profile-back-btn" onclick="toggleProfile()">←</button>
+                        <h2 data-i18n="myProfile">My Profile</h2>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <div class="profile-avatar">
+                        <div class="cw-profile-level-badge" id="profile-level">12</div>
+                    </div>
+                    <div class="profile-info">
+                        <h3>Nicole Adams</h3>
+                        <div class="profile-role" data-i18n="profileRole">Product Design · Munich</div>
+                        <div class="xp-bar-wrap">
+                            <div class="xp-bar"><div class="xp-bar-fill" id="xp-bar-fill" style="width:72%"></div></div>
+                            <div class="xp-label" id="xp-label">2,160 / 3,000 XP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-scroll" id="profile-scroll"></div>
+        </div>
+
+        <div class="notif-panel" id="notif-panel">
+            <div class="notif-header">
+                <div style="display:flex; align-items:center;">
+                    <button class="notif-back-btn" onclick="toggleNotifications()">←</button>
+                    <h2><span data-i18n="notifications">Notifications</span> <span class="cw-notif-count-badge" id="notif-count"></span></h2>
+                </div>
+                <button class="notif-back-btn" onclick="markAllRead()" title="Mark all as read" style="font-size:14px;" data-i18n="markAllAsRead">✓ All</button>
+            </div>
+            <div class="notif-list" id="notif-list"></div>
+        </div>
+
+        <div class="modal-overlay" id="modal-overlay" onclick="closeModal()"></div>
+        <div class="modal-content" id="modal-content">
+            <div class="modal-header">
+                <h3 data-i18n="trainingDetails">Training Details</h3>
+                <button class="cw-close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-scroll" id="modal-body">
+                </div>
+            <div class="cta-container">
+                <button class="cw-btn" data-i18n="startTraining">Start Training</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // — Language detection —
+        const LANG = (() => {
+            const l = navigator.language || '';
+            if (l.startsWith('de')) return 'de';
+            if (l.startsWith('fr')) return 'fr';
+            if (l.startsWith('es')) return 'es';
+            if (l.startsWith('ja')) return 'ja';
+            if (l === 'en-GB') return 'en-GB';
+            return 'en-US';
+        })();
+        document.documentElement.lang = LANG;
+
+        const LOCALE = { 'de': 'de-DE', 'fr': 'fr-FR', 'es': 'es-ES', 'ja': 'ja-JP', 'en-GB': 'en-GB', 'en-US': 'en-US' }[LANG];
+        const LANG_SUFFIX = { 'de': 'De', 'fr': 'Fr', 'es': 'Es', 'ja': 'Ja', 'en-GB': '', 'en-US': '' };
+
+        function loc(obj, key) {
+            const suffix = LANG_SUFFIX[LANG] || '';
+            return (suffix ? obj[key + suffix] : undefined) || obj[key];
+        }
+
+        const numFmt = new Intl.NumberFormat(LOCALE);
+
+        // — Translations —
+        const T = {
+            de: {
+                tabLearnings: "Schulungen", tabRecommended: "Empfohlen",
+                myLearnings: "Meine Schulungen", recommendedForYou: "Für dich empfohlen",
+                filter: "Filter", myProfile: "Mein Profil",
+                profileRole: "Produktdesign · München",
+                notifications: "Benachrichtigungen", markAllAsRead: "✓ Alle",
+                trainingDetails: "Schulungsdetails", startTraining: "Training starten",
+                completed: "Abgeschlossen", learned: "Gelernt", certificates: "Zertifikate",
+                learningStreak: "Lernserie", days: "Tage",
+                achievements: "Erfolge", teamLeaderboard: "Team-Rangliste", you: "Du",
+                notifNew: "Neu", notifEarlier: "Früher", noNotifications: "Keine Benachrichtigungen",
+                aboutCourse: "Über den Kurs", sessionOverview: "Sitzungsübersicht",
+                viewAll: "Alle anzeigen", introduction: "Einführung",
+                required: "Pflicht", inProgress: "In Bearbeitung", newLabel: "Neu",
+                online: "Online", eventType: "Veranstaltung"
+            },
+            fr: {
+                tabLearnings: "Formations", tabRecommended: "Recommandé",
+                myLearnings: "Mes formations", recommendedForYou: "Recommandé pour vous",
+                filter: "Filtrer", myProfile: "Mon profil",
+                profileRole: "Design produit · Munich",
+                notifications: "Notifications", markAllAsRead: "✓ Tout",
+                trainingDetails: "Détails de la formation", startTraining: "Commencer la formation",
+                completed: "Terminé", learned: "Appris", certificates: "Certificats",
+                learningStreak: "Série d'apprentissage", days: "jours",
+                achievements: "Réalisations", teamLeaderboard: "Classement d'équipe", you: "Vous",
+                notifNew: "Nouveau", notifEarlier: "Plus tôt", noNotifications: "Aucune notification",
+                aboutCourse: "À propos du cours", sessionOverview: "Aperçu de la session",
+                viewAll: "Voir tout", introduction: "Introduction",
+                required: "Obligatoire", inProgress: "En cours", newLabel: "Nouveau",
+                online: "En ligne", eventType: "Événement"
+            },
+            es: {
+                tabLearnings: "Formaciones", tabRecommended: "Recomendado",
+                myLearnings: "Mis formaciones", recommendedForYou: "Recomendado para ti",
+                filter: "Filtrar", myProfile: "Mi perfil",
+                profileRole: "Diseño de producto · Múnich",
+                notifications: "Notificaciones", markAllAsRead: "✓ Todo",
+                trainingDetails: "Detalles de la formación", startTraining: "Iniciar formación",
+                completed: "Completado", learned: "Aprendido", certificates: "Certificados",
+                learningStreak: "Racha de aprendizaje", days: "días",
+                achievements: "Logros", teamLeaderboard: "Clasificación del equipo", you: "Tú",
+                notifNew: "Nuevo", notifEarlier: "Anterior", noNotifications: "Sin notificaciones",
+                aboutCourse: "Sobre el curso", sessionOverview: "Resumen de la sesión",
+                viewAll: "Ver todo", introduction: "Introducción",
+                required: "Obligatorio", inProgress: "En progreso", newLabel: "Nuevo",
+                online: "En línea", eventType: "Evento"
+            },
+            ja: {
+                tabLearnings: "学習", tabRecommended: "おすすめ",
+                myLearnings: "マイ学習", recommendedForYou: "おすすめの学習",
+                filter: "フィルター", myProfile: "マイプロフィール",
+                profileRole: "プロダクトデザイン · ミュンヘン",
+                notifications: "通知", markAllAsRead: "✓ すべて",
+                trainingDetails: "研修の詳細", startTraining: "研修を開始",
+                completed: "完了", learned: "学習済み", certificates: "証明書",
+                learningStreak: "学習連続記録", days: "日間",
+                achievements: "実績", teamLeaderboard: "チームランキング", you: "あなた",
+                notifNew: "新着", notifEarlier: "以前", noNotifications: "通知はありません",
+                aboutCourse: "コースについて", sessionOverview: "セッション概要",
+                viewAll: "すべて表示", introduction: "はじめに",
+                required: "必須", inProgress: "進行中", newLabel: "新規",
+                online: "オンライン", eventType: "イベント"
+            },
+            'en-GB': {
+                tabLearnings: "Learnings", tabRecommended: "Recommended",
+                myLearnings: "My Learnings", recommendedForYou: "Recommended for you",
+                filter: "Filter", myProfile: "My Profile",
+                profileRole: "Product Design · Munich",
+                notifications: "Notifications", markAllAsRead: "✓ All",
+                trainingDetails: "Training Details", startTraining: "Start Training",
+                completed: "Completed", learned: "Learned", certificates: "Certificates",
+                learningStreak: "Learning Streak", days: "days",
+                achievements: "Achievements", teamLeaderboard: "Team Leaderboard", you: "You",
+                notifNew: "New", notifEarlier: "Earlier", noNotifications: "No notifications",
+                aboutCourse: "About the Course", sessionOverview: "Session Overview",
+                viewAll: "View all", introduction: "Introduction",
+                required: "Required", inProgress: "In progress", newLabel: "New",
+                online: "Online", eventType: "Event"
+            },
+            'en-US': {
+                tabLearnings: "Learnings", tabRecommended: "Recommended",
+                myLearnings: "My Learnings", recommendedForYou: "Recommended for you",
+                filter: "Filter", myProfile: "My Profile",
+                profileRole: "Product Design · Munich",
+                notifications: "Notifications", markAllAsRead: "✓ All",
+                trainingDetails: "Training Details", startTraining: "Start Training",
+                completed: "Completed", learned: "Learned", certificates: "Certificates",
+                learningStreak: "Learning Streak", days: "days",
+                achievements: "Achievements", teamLeaderboard: "Team Leaderboard", you: "You",
+                notifNew: "New", notifEarlier: "Earlier", noNotifications: "No notifications",
+                aboutCourse: "About the Course", sessionOverview: "Session Overview",
+                viewAll: "View all", introduction: "Introduction",
+                required: "Required", inProgress: "In progress", newLabel: "New",
+                online: "Online", eventType: "Event"
+            }
+        };
+        const t = T[LANG];
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (t[key]) el.textContent = t[key];
+            });
+        }
+
+        // --- PROFILE & GAMIFICATION DATA ---
+        const profileData = {
+            level: 12,
+            xp: 2160,
+            xpNext: 3000,
+            completed: 18,
+            hoursLearned: 34,
+            certificates: 6,
+            streak: 5,
+            streakDays: [
+                { label: 'Mon', labelDe: 'Mo', labelFr: 'Lun', labelEs: 'Lun', labelJa: '月', done: true },
+                { label: 'Tue', labelDe: 'Di', labelFr: 'Mar', labelEs: 'Mar', labelJa: '火', done: true },
+                { label: 'Wed', labelDe: 'Mi', labelFr: 'Mer', labelEs: 'Mié', labelJa: '水', done: true },
+                { label: 'Thu', labelDe: 'Do', labelFr: 'Jeu', labelEs: 'Jue', labelJa: '木', done: true },
+                { label: 'Fri', labelDe: 'Fr', labelFr: 'Ven', labelEs: 'Vie', labelJa: '金', done: true },
+                { label: 'Sat', labelDe: 'Sa', labelFr: 'Sam', labelEs: 'Sáb', labelJa: '土', done: false, today: true },
+                { label: 'Sun', labelDe: 'So', labelFr: 'Dim', labelEs: 'Dom', labelJa: '日', done: false }
+            ],
+            badges: [
+                { emoji: '🚀', name: 'Quick Starter', nameDe: 'Schnellstarter', nameFr: "Démarrage rapide", nameEs: "Inicio rápido", nameJa: "クイックスターター", earned: true },
+                { emoji: '🔥', name: '5-Day Streak', nameDe: '5-Tage-Serie', nameFr: "Série de 5 jours", nameEs: "Racha de 5 días", nameJa: "5日連続", earned: true },
+                { emoji: '📚', name: 'Bookworm', nameDe: 'Bücherwurm', nameFr: "Rat de bibliothèque", nameEs: "Ratón de biblioteca", nameJa: "読書家", earned: true },
+                { emoji: '🏆', name: 'Top 10%', nameDe: 'Top 10%', nameFr: "Top 10%", nameEs: "Top 10%", nameJa: "トップ10%", earned: true },
+                { emoji: '🎯', name: 'Completionist', nameDe: 'Perfektionist', nameFr: "Perfectionniste", nameEs: "Perfeccionista", nameJa: "コンプリート", earned: true },
+                { emoji: '🤝', name: 'Team Player', nameDe: 'Teamplayer', nameFr: "Esprit d'équipe", nameEs: "Trabajo en equipo", nameJa: "チームプレーヤー", earned: true },
+                { emoji: '💡', name: 'Innovator', nameDe: 'Innovator', nameFr: "Innovateur", nameEs: "Innovador", nameJa: "イノベーター", earned: false },
+                { emoji: '⭐', name: 'All-Star', nameDe: 'All-Star', nameFr: "All-Star", nameEs: "Estrella", nameJa: "オールスター", earned: false }
+            ],
+            leaderboard: [
+                { name: 'Marcus Barlow', dept: 'Engineering', deptDe: "Technik", deptFr: "Ingénierie", deptEs: "Ingeniería", deptJa: "エンジニアリング", xp: 3820, avatar: 'https://i.pravatar.cc/100?img=12' },
+                { name: 'Fiona Travis', dept: 'Marketing', deptDe: "Marketing", deptFr: "Marketing", deptEs: "Marketing", deptJa: "マーケティング", xp: 3450, avatar: 'https://i.pravatar.cc/100?img=32' },
+                { name: 'Nicole Adams', dept: 'Product Design', deptDe: "Produktdesign", deptFr: "Design produit", deptEs: "Diseño de producto", deptJa: "プロダクトデザイン", xp: 2160, avatar: 'https://i.pravatar.cc/100?img=5', isYou: true },
+                { name: 'Joel Riggs', dept: 'Sales', deptDe: "Vertrieb", deptFr: "Ventes", deptEs: "Ventas", deptJa: "営業", xp: 2080, avatar: 'https://i.pravatar.cc/100?img=15' },
+                { name: 'Maya Kumar', dept: 'HR', deptDe: "Personal", deptFr: "RH", deptEs: "RRHH", deptJa: "人事", xp: 1940, avatar: 'https://i.pravatar.cc/100?img=25' },
+                { name: 'Martin Wolf', dept: 'Engineering', deptDe: "Technik", deptFr: "Ingénierie", deptEs: "Ingeniería", deptJa: "エンジニアリング", xp: 1720, avatar: 'https://i.pravatar.cc/100?img=53' },
+                { name: 'Elizabeth Rorke', dept: 'Finance', deptDe: "Finanzen", deptFr: "Finance", deptEs: "Finanzas", deptJa: "財務", xp: 1580, avatar: 'https://i.pravatar.cc/100?img=44' }
+            ]
+        };
+
+        function renderProfile() {
+            const d = profileData;
+            const scroll = document.getElementById('profile-scroll');
+
+            // Stats row
+            let html = `
+                <div class="stats-row">
+                    <div class="cw-stat-card">
+                        <div class="cw-stat-value">${d.completed}</div>
+                        <div class="cw-stat-label">${t.completed}</div>
+                    </div>
+                    <div class="cw-stat-card">
+                        <div class="cw-stat-value">${d.hoursLearned}h</div>
+                        <div class="cw-stat-label">${t.learned}</div>
+                    </div>
+                    <div class="cw-stat-card">
+                        <div class="cw-stat-value">${d.certificates}</div>
+                        <div class="cw-stat-label">${t.certificates}</div>
+                    </div>
+                </div>
+            `;
+
+            // Streak
+            let streakDaysHtml = d.streakDays.map(day => {
+                let cls = day.done ? 'done' : (day.today ? 'today' : 'future');
+                let icon = day.done ? '✓' : (day.today ? '·' : '');
+                return `
+                    <div class="streak-day">
+                        <div class="streak-dot ${cls}">${icon}</div>
+                        <div class="streak-day-label">${loc(day, 'label')}</div>
+                    </div>
+                `;
+            }).join('');
+
+            html += `
+                <div class="streak-card">
+                    <div class="streak-header">
+                        <h4>🔥 ${t.learningStreak}</h4>
+                        <div class="streak-count">${d.streak} ${t.days}</div>
+                    </div>
+                    <div class="streak-days">${streakDaysHtml}</div>
+                </div>
+            `;
+
+            // Badges
+            let badgesHtml = d.badges.map(b => `
+                <div class="cw-badge-item">
+                    <div class="cw-badge-icon ${b.earned ? 'earned' : 'locked'}">${b.emoji}</div>
+                    <div class="cw-badge-name">${loc(b, 'name')}</div>
+                </div>
+            `).join('');
+
+            html += `
+                <div class="badges-section">
+                    <h4>${t.achievements} · ${d.badges.filter(b => b.earned).length}/${d.badges.length}</h4>
+                    <div class="badges-grid">${badgesHtml}</div>
+                </div>
+            `;
+
+            // Leaderboard
+            const rankCls = ['gold', 'silver', 'bronze'];
+            const rankIcon = ['🥇', '🥈', '🥉'];
+            let lbHtml = d.leaderboard.map((p, i) => {
+                const rank = i < 3 ? `<span class="lb-rank ${rankCls[i]}">${rankIcon[i]}</span>` : `<span class="lb-rank">${i + 1}</span>`;
+                return `
+                    <div class="lb-row ${p.isYou ? 'is-you' : ''}">
+                        ${rank}
+                        <div class="lb-avatar" style="background-image:url('${p.avatar}')"></div>
+                        <div class="lb-info">
+                            <div class="lb-name">${p.name}${p.isYou ? ` (${t.you})` : ''}</div>
+                            <div class="lb-dept">${loc(p, 'dept')}</div>
+                        </div>
+                        <div class="lb-xp">${numFmt.format(p.xp)} XP</div>
+                    </div>
+                `;
+            }).join('');
+
+            html += `
+                <div class="leaderboard-section">
+                    <h4>🏅 ${t.teamLeaderboard}</h4>
+                    ${lbHtml}
+                </div>
+            `;
+
+            scroll.innerHTML = html;
+            document.getElementById('xp-label').textContent = `${numFmt.format(d.xp)} / ${numFmt.format(d.xpNext)} XP`;
+        }
+
+        function toggleProfile() {
+            const panel = document.getElementById('profile-panel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) {
+                renderProfile();
+            }
+        }
+
+        // --- NOTIFICATION DATA ---
+        const notifications = [
+            {
+                id: 'n1', type: 'urgent', unread: true, courseId: 1,
+                title: 'Overdue: Leadership Foundations',
+                titleDe: "Überfällig: Grundlagen der Führung",
+                titleFr: "En retard : Fondamentaux du leadership",
+                titleEs: "Vencido: Fundamentos del liderazgo",
+                titleJa: "期限超過：リーダーシップの基礎",
+                desc: 'This required training was due 3 days ago. Complete it as soon as possible to stay compliant.',
+                descDe: "Diese Pflichtschulung war vor 3 Tagen fällig. Schließen Sie sie so schnell wie möglich ab.",
+                descFr: "Cette formation obligatoire était due il y a 3 jours. Terminez-la dès que possible.",
+                descEs: "Esta formación obligatoria venció hace 3 días. Complétala lo antes posible.",
+                descJa: "この必須研修は3日前が期限でした。できるだけ早く完了してください。",
+                time: '2 hours ago', timeDe: "Vor 2 Stunden", timeFr: "Il y a 2 heures", timeEs: "Hace 2 horas", timeJa: "2時間前"
+            },
+            {
+                id: 'n2', type: 'due', unread: true, courseId: 2,
+                title: 'Due Soon: Product Management 101',
+                titleDe: "Bald fällig: Produktmanagement 101",
+                titleFr: "Bientôt : Gestion de produit 101",
+                titleEs: "Vence pronto: Gestión de productos 101",
+                titleJa: "まもなく期限：プロダクトマネジメント入門",
+                desc: 'Your in-progress course is due on Jan 20. You\'re 60% through \u2014 keep going!',
+                descDe: "Ihr laufender Kurs ist am 20. Jan. fällig. Sie haben 60% geschafft \u2014 weiter so!",
+                descFr: "Votre cours en cours est dû le 20 janv. Vous êtes à 60% \u2014 continuez !",
+                descEs: "Tu curso en progreso vence el 20 ene. Llevas un 60% \u2014 ¡sigue así!",
+                descJa: "進行中のコースの期限は1月20日です。60%完了 \u2014 この調子で！",
+                time: '5 hours ago', timeDe: "Vor 5 Stunden", timeFr: "Il y a 5 heures", timeEs: "Hace 5 horas", timeJa: "5時間前"
+            },
+            {
+                id: 'n3', type: 'event', unread: true, courseId: 3,
+                title: 'Reminder: Live Training: Safety',
+                titleDe: "Erinnerung: Live-Training: Sicherheit",
+                titleFr: "Rappel : Formation en direct : Sécurité",
+                titleEs: "Recordatorio: Formación presencial: Seguridad",
+                titleJa: "リマインダー：対面研修：安全",
+                desc: 'Your full-day on-site safety training is coming up on Jan 28. Don\'t forget to register your attendance.',
+                descDe: "Ihre ganztägige Sicherheitsschulung vor Ort findet am 28. Jan. statt. Vergessen Sie nicht, Ihre Teilnahme zu bestätigen.",
+                descFr: "Votre formation sécurité sur site d'une journée approche le 28 janv. N'oubliez pas de confirmer votre présence.",
+                descEs: "Tu formación de seguridad presencial es el 28 ene. No olvides confirmar tu asistencia.",
+                descJa: "1月28日の終日安全研修が近づいています。出席登録をお忘れなく。",
+                time: 'Yesterday', timeDe: "Gestern", timeFr: "Hier", timeEs: "Ayer", timeJa: "昨日"
+            },
+            {
+                id: 'n4', type: 'assign', unread: true, courseId: 5,
+                title: 'New Assignment: Data Privacy 2026',
+                titleDe: "Neue Zuweisung: Datenschutz 2026",
+                titleFr: "Nouvelle affectation : Protection des données 2026",
+                titleEs: "Nueva asignación: Privacidad de datos 2026",
+                titleJa: "新しい割り当て：データプライバシー 2026",
+                desc: 'Your manager assigned you a new required course on data privacy and GDPR compliance.',
+                descDe: "Ihr Vorgesetzter hat Ihnen einen neuen Pflichtkurs zum Thema Datenschutz und DSGVO zugewiesen.",
+                descFr: "Votre responsable vous a attribué un nouveau cours obligatoire sur la protection des données et le RGPD.",
+                descEs: "Tu responsable te ha asignado un nuevo curso obligatorio sobre privacidad de datos y RGPD.",
+                descJa: "マネージャーがデータプライバシーとGDPRに関する新しい必須コースを割り当てました。",
+                time: 'Yesterday', timeDe: "Gestern", timeFr: "Hier", timeEs: "Ayer", timeJa: "昨日"
+            },
+            {
+                id: 'n5', type: 'due', unread: false, courseId: 4,
+                title: 'Upcoming: Communicate Across Cultures',
+                titleDe: "Bevorstehend: Interkulturelle Kommunikation",
+                titleFr: "À venir : Communiquer entre les cultures",
+                titleEs: "Próximo: Comunicación intercultural",
+                titleJa: "予定：異文化コミュニケーション",
+                desc: 'This event is scheduled for Feb 14. Review the pre-reading materials before attending.',
+                descDe: "Diese Veranstaltung ist für den 14. Feb. geplant. Lesen Sie die Vorbereitungsmaterialien vor der Teilnahme.",
+                descFr: "Cet événement est prévu le 14 févr. Consultez les documents préparatoires avant d'y assister.",
+                descEs: "Este evento está programado para el 14 feb. Revisa los materiales de lectura previa.",
+                descJa: "このイベントは2月14日に予定されています。参加前に事前資料を確認してください。",
+                time: '2 days ago', timeDe: "Vor 2 Tagen", timeFr: "Il y a 2 jours", timeEs: "Hace 2 días", timeJa: "2日前"
+            },
+            {
+                id: 'n6', type: 'complete', unread: false, courseId: null,
+                title: 'Congratulations! Onboarding Basics completed',
+                titleDe: "Glückwunsch! Onboarding-Grundlagen abgeschlossen",
+                titleFr: "Félicitations ! Bases d'intégration terminées",
+                titleEs: "¡Felicidades! Conceptos básicos completados",
+                titleJa: "おめでとうございます！オンボーディング基礎を完了",
+                desc: 'You\'ve successfully completed the Onboarding Basics course. Your certificate is ready.',
+                descDe: "Sie haben den Kurs Onboarding-Grundlagen erfolgreich abgeschlossen. Ihr Zertifikat ist bereit.",
+                descFr: "Vous avez terminé le cours Bases d'intégration. Votre certificat est prêt.",
+                descEs: "Has completado el curso de conceptos básicos. Tu certificado está listo.",
+                descJa: "オンボーディング基礎コースを完了しました。証明書の準備ができています。",
+                time: '3 days ago', timeDe: "Vor 3 Tagen", timeFr: "Il y a 3 jours", timeEs: "Hace 3 días", timeJa: "3日前"
+            },
+            {
+                id: 'n7', type: 'assign', unread: false, courseId: 7,
+                title: 'New Recommendation: Advanced Excel',
+                titleDe: "Neue Empfehlung: Fortgeschrittenes Excel",
+                titleFr: "Nouvelle recommandation : Excel avancé",
+                titleEs: "Nueva recomendación: Excel avanzado",
+                titleJa: "新しいおすすめ：Excel上級",
+                desc: 'Based on your role, we recommend this course to strengthen your data skills.',
+                descDe: "Basierend auf Ihrer Rolle empfehlen wir diesen Kurs zur Stärkung Ihrer Datenkompetenz.",
+                descFr: "En fonction de votre rôle, nous vous recommandons ce cours pour renforcer vos compétences en données.",
+                descEs: "Según tu rol, te recomendamos este curso para fortalecer tus habilidades con datos.",
+                descJa: "あなたの役割に基づき、データスキルを強化するためにこのコースをおすすめします。",
+                time: '4 days ago', timeDe: "Vor 4 Tagen", timeFr: "Il y a 4 jours", timeEs: "Hace 4 días", timeJa: "4日前"
+            }
+        ];
+
+        const notifIconMap = {
+            urgent: { cls: 'notif-icon-urgent', emoji: '🚨' },
+            due:    { cls: 'notif-icon-due',    emoji: '⏰' },
+            assign: { cls: 'notif-icon-assign',  emoji: '📋' },
+            complete:{ cls: 'notif-icon-complete',emoji: '✅' },
+            event:  { cls: 'notif-icon-event',   emoji: '📅' }
+        };
+
+        function renderNotifications() {
+            const list = document.getElementById('notif-list');
+            const unread = notifications.filter(n => n.unread);
+            const read = notifications.filter(n => !n.unread);
+
+            document.getElementById('notif-count').textContent = unread.length || '';
+
+            const badge = document.getElementById('bell-badge');
+            badge.style.display = unread.length > 0 ? 'block' : 'none';
+
+            let html = '';
+
+            if (unread.length > 0) {
+                html += `<div class="notif-section-label">${t.notifNew}</div>`;
+                unread.forEach(n => { html += renderNotifItem(n); });
+            }
+
+            if (read.length > 0) {
+                html += `<div class="notif-section-label">${t.notifEarlier}</div>`;
+                read.forEach(n => { html += renderNotifItem(n); });
+            }
+
+            if (notifications.length === 0) {
+                html = `<div class="notif-empty"><div class="notif-empty-icon">🔔</div><div>${t.noNotifications}</div></div>`;
+            }
+
+            list.innerHTML = html;
+        }
+
+        function renderNotifItem(n) {
+            const icon = notifIconMap[n.type] || notifIconMap.assign;
+            return `
+                <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="openNotification('${n.id}')">
+                    <div class="notif-icon-wrap ${icon.cls}">${icon.emoji}</div>
+                    <div class="notif-body">
+                        <div class="notif-title">${loc(n, 'title')}</div>
+                        <div class="notif-desc">${loc(n, 'desc')}</div>
+                        <div class="notif-time">${loc(n, 'time')}</div>
+                    </div>
+                    ${n.unread ? '<div class="notif-dot"></div>' : ''}
+                </div>
+            `;
+        }
+
+        function toggleNotifications() {
+            const panel = document.getElementById('notif-panel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) {
+                renderNotifications();
+            }
+        }
+
+        function openNotification(nId) {
+            const notif = notifications.find(n => n.id === nId);
+            if (!notif) return;
+            notif.unread = false;
+            renderNotifications();
+            if (notif.courseId) {
+                toggleNotifications();
+                openDetails(notif.courseId);
+            }
+        }
+
+        function markAllRead() {
+            notifications.forEach(n => { n.unread = false; });
+            renderNotifications();
+        }
+
+        // --- DATA ---
+        const myLearningsData = [
+            {
+                id: 1,
+                title: "Leadership Foundations",
+                titleDe: "Grundlagen der Führung", titleFr: "Fondamentaux du leadership", titleEs: "Fundamentos del liderazgo", titleJa: "リーダーシップの基礎",
+                image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=300",
+                status: "Required", type: "Online",
+                duration: "1 hr", durationDe: "1 Std.", durationFr: "1 h", durationEs: "1 h", durationJa: "1時間",
+                dueDate: "Due in 3 days", dueDateDe: "Fällig in 3 Tagen", dueDateFr: "Échéance dans 3 jours", dueDateEs: "Vence en 3 días", dueDateJa: "期限まであと3日",
+                description: "Master the essential skills required to lead teams effectively. Covers communication, empathy, and strategic thinking.",
+                descriptionDe: "Erlernen Sie die wesentlichen Fähigkeiten, um Teams effektiv zu führen. Kommunikation, Empathie und strategisches Denken.",
+                descriptionFr: "Maîtrisez les compétences essentielles pour diriger des équipes. Communication, empathie et réflexion stratégique.",
+                descriptionEs: "Domina las habilidades esenciales para liderar equipos. Comunicación, empatía y pensamiento estratégico.",
+                descriptionJa: "チームを効果的にリードするための基本スキルを習得。コミュニケーション、共感力、戦略的思考。",
+                modules: ["Intro to Leadership", "Communication Styles", "Conflict Resolution"],
+                modulesDe: ["Einführung in Führung", "Kommunikationsstile", "Konfliktlösung"],
+                modulesFr: ["Introduction au leadership", "Styles de communication", "Résolution de conflits"],
+                modulesEs: ["Introducción al liderazgo", "Estilos de comunicación", "Resolución de conflictos"],
+                modulesJa: ["リーダーシップ入門", "コミュニケーションスタイル", "紛争解決"]
+            },
+            {
+                id: 2,
+                title: "Product Management 101",
+                titleDe: "Produktmanagement 101", titleFr: "Gestion de produit 101", titleEs: "Gestión de productos 101", titleJa: "プロダクトマネジメント入門",
+                image: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=300",
+                status: "In progress", type: "Online",
+                duration: "45 min", durationDe: "45 Min.", durationFr: "45 min", durationEs: "45 min", durationJa: "45分",
+                dueDate: "Jan 20", dueDateDe: "20. Jan.", dueDateFr: "20 janv.", dueDateEs: "20 ene.", dueDateJa: "1月20日",
+                description: "An introduction to the product lifecycle, from ideation to launch. Learn how to define requirements and work with engineering.",
+                descriptionDe: "Eine Einführung in den Produktlebenszyklus, von der Idee bis zur Markteinführung. Anforderungen definieren und mit der Entwicklung zusammenarbeiten.",
+                descriptionFr: "Introduction au cycle de vie du produit, de l'idéation au lancement. Définir les exigences et travailler avec l'ingénierie.",
+                descriptionEs: "Introducción al ciclo de vida del producto, desde la ideación hasta el lanzamiento. Definir requisitos y trabajar con ingeniería.",
+                descriptionJa: "アイデアからリリースまでのプロダクトライフサイクル入門。要件定義とエンジニアリングとの協業。",
+                modules: ["Product Lifecycle", "User Stories", "Roadmapping"],
+                modulesDe: ["Produktlebenszyklus", "User Stories", "Roadmapping"],
+                modulesFr: ["Cycle de vie du produit", "User Stories", "Feuille de route"],
+                modulesEs: ["Ciclo de vida del producto", "Historias de usuario", "Hoja de ruta"],
+                modulesJa: ["プロダクトライフサイクル", "ユーザーストーリー", "ロードマッピング"]
+            },
+            {
+                id: 3,
+                title: "Live Training: Safety",
+                titleDe: "Live-Training: Sicherheit", titleFr: "Formation en direct : Sécurité", titleEs: "Formación presencial: Seguridad", titleJa: "対面研修：安全",
+                image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=300",
+                status: null, type: "Event",
+                duration: "Full day", durationDe: "Ganztägig", durationFr: "Journée complète", durationEs: "Día completo", durationJa: "終日",
+                dueDate: "Jan 28", dueDateDe: "28. Jan.", dueDateFr: "28 janv.", dueDateEs: "28 ene.", dueDateJa: "1月28日",
+                description: "On-site safety training for all warehouse and operational staff. Mandatory attendance.",
+                descriptionDe: "Sicherheitsschulung vor Ort für alle Lager- und Betriebsmitarbeiter. Teilnahme ist Pflicht.",
+                descriptionFr: "Formation sécurité sur site pour tout le personnel opérationnel. Présence obligatoire.",
+                descriptionEs: "Formación de seguridad presencial para todo el personal operativo. Asistencia obligatoria.",
+                descriptionJa: "倉庫および業務スタッフ全員を対象とした現場安全研修。参加必須。",
+                modules: ["Morning Session", "Equipment Handling", "Emergency Protocols"],
+                modulesDe: ["Vormittagssitzung", "Gerätebedienung", "Notfallprotokolle"],
+                modulesFr: ["Session du matin", "Manipulation des équipements", "Protocoles d'urgence"],
+                modulesEs: ["Sesión matutina", "Manejo de equipos", "Protocolos de emergencia"],
+                modulesJa: ["午前セッション", "機器の取り扱い", "緊急プロトコル"]
+            },
+            {
+                id: 4,
+                title: "Communicate Across Cultures",
+                titleDe: "Interkulturelle Kommunikation", titleFr: "Communiquer entre les cultures", titleEs: "Comunicación intercultural", titleJa: "異文化コミュニケーション",
+                image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=300",
+                status: null, type: "Event",
+                duration: "3 hr", durationDe: "3 Std.", durationFr: "3 h", durationEs: "3 h", durationJa: "3時間",
+                dueDate: "Feb 14", dueDateDe: "14. Feb.", dueDateFr: "14 févr.", dueDateEs: "14 feb.", dueDateJa: "2月14日",
+                description: "Learn how to navigate cultural differences in a global workplace environment.",
+                descriptionDe: "Lernen Sie, kulturelle Unterschiede in einer globalen Arbeitsumgebung zu navigieren.",
+                descriptionFr: "Apprenez à naviguer les différences culturelles dans un environnement international.",
+                descriptionEs: "Aprende a navegar las diferencias culturales en un entorno de trabajo global.",
+                descriptionJa: "グローバルな職場環境における文化の違いをナビゲートする方法を学びます。",
+                modules: ["Cultural Dimensions", "Non-verbal cues", "Case Studies"],
+                modulesDe: ["Kulturelle Dimensionen", "Nonverbale Signale", "Fallstudien"],
+                modulesFr: ["Dimensions culturelles", "Indices non verbaux", "Études de cas"],
+                modulesEs: ["Dimensiones culturales", "Señales no verbales", "Casos de estudio"],
+                modulesJa: ["文化的側面", "非言語コミュニケーション", "ケーススタディ"]
+            }
+        ];
+
+        const recommendedData = [
+            {
+                id: 5,
+                title: "Data Privacy 2026",
+                titleDe: "Datenschutz 2026", titleFr: "Protection des données 2026", titleEs: "Privacidad de datos 2026", titleJa: "データプライバシー 2026",
+                image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=300",
+                status: "In progress", type: "Online",
+                duration: "1 hr", durationDe: "1 Std.", durationFr: "1 h", durationEs: "1 h", durationJa: "1時間",
+                dueDate: "Due in 3 days", dueDateDe: "Fällig in 3 Tagen", dueDateFr: "Échéance dans 3 jours", dueDateEs: "Vence en 3 días", dueDateJa: "期限まであと3日",
+                description: "Learn how to handle personal data responsibly and understand the key principles of GDPR and CCPA to protect privacy and stay compliant.",
+                descriptionDe: "Lernen Sie den verantwortungsvollen Umgang mit personenbezogenen Daten und die Grundprinzipien der DSGVO und des CCPA.",
+                descriptionFr: "Apprenez à traiter les données personnelles de manière responsable et comprenez les principes du RGPD et du CCPA.",
+                descriptionEs: "Aprende a manejar datos personales de forma responsable y comprende los principios del RGPD y CCPA.",
+                descriptionJa: "個人データを責任を持って取り扱い、GDPRとCCPAの主要原則を理解します。",
+                modules: ["Personal data", "GDPR and CCPA Responsibilities", "Privacy best practices"],
+                modulesDe: ["Personenbezogene Daten", "DSGVO- und CCPA-Pflichten", "Datenschutz-Best-Practices"],
+                modulesFr: ["Données personnelles", "Responsabilités RGPD et CCPA", "Bonnes pratiques de confidentialité"],
+                modulesEs: ["Datos personales", "Responsabilidades RGPD y CCPA", "Mejores prácticas de privacidad"],
+                modulesJa: ["個人データ", "GDPRとCCPAの責任", "プライバシーのベストプラクティス"]
+            },
+            {
+                id: 6,
+                title: "Information Security",
+                titleDe: "Informationssicherheit", titleFr: "Sécurité de l'information", titleEs: "Seguridad de la información", titleJa: "情報セキュリティ",
+                image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=300",
+                status: null, type: "Online",
+                duration: "45 min", durationDe: "45 Min.", durationFr: "45 min", durationEs: "45 min", durationJa: "45分",
+                dueDate: "Jan 20", dueDateDe: "20. Jan.", dueDateFr: "20 janv.", dueDateEs: "20 ene.", dueDateJa: "1月20日",
+                description: "Protecting company assets from cyber threats. Phishing, password security, and social engineering.",
+                descriptionDe: "Schutz von Unternehmenswerten vor Cyberbedrohungen. Phishing, Passwortsicherheit und Social Engineering.",
+                descriptionFr: "Protection des actifs de l'entreprise contre les cybermenaces. Hameçonnage, mots de passe et ingénierie sociale.",
+                descriptionEs: "Protección de activos empresariales contra amenazas cibernéticas. Phishing, contraseñas e ingeniería social.",
+                descriptionJa: "サイバー脅威から企業資産を保護。フィッシング、パスワードセキュリティ、ソーシャルエンジニアリング。",
+                modules: ["Phishing Awareness", "Password Hygiene", "Reporting Incidents"],
+                modulesDe: ["Phishing-Bewusstsein", "Passworthygiene", "Vorfälle melden"],
+                modulesFr: ["Sensibilisation au hameçonnage", "Hygiène des mots de passe", "Signalement d'incidents"],
+                modulesEs: ["Concienciación sobre phishing", "Higiene de contraseñas", "Reportar incidentes"],
+                modulesJa: ["フィッシング対策", "パスワード管理", "インシデント報告"]
+            },
+            {
+                id: 7,
+                title: "Advanced Excel",
+                titleDe: "Fortgeschrittenes Excel", titleFr: "Excel avancé", titleEs: "Excel avanzado", titleJa: "Excel上級",
+                image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=300",
+                status: "New", type: "Online",
+                duration: "2 hr", durationDe: "2 Std.", durationFr: "2 h", durationEs: "2 h", durationJa: "2時間",
+                dueDate: "Optional", dueDateDe: "Optional", dueDateFr: "Optionnel", dueDateEs: "Opcional", dueDateJa: "任意",
+                description: "Take your spreadsheets to the next level with Pivot Tables, VLOOKUP, and Macros.",
+                descriptionDe: "Bringen Sie Ihre Tabellenkalkulationen mit Pivot-Tabellen, SVERWEIS und Makros auf das nächste Level.",
+                descriptionFr: "Passez au niveau supérieur avec les tableaux croisés dynamiques, RECHERCHEV et les macros.",
+                descriptionEs: "Lleva tus hojas de cálculo al siguiente nivel con tablas dinámicas, BUSCARV y macros.",
+                descriptionJa: "ピボットテーブル、VLOOKUP、マクロでスプレッドシートスキルを向上。",
+                modules: ["Formulas", "Pivot Tables", "Macros"],
+                modulesDe: ["Formeln", "Pivot-Tabellen", "Makros"],
+                modulesFr: ["Formules", "Tableaux croisés dynamiques", "Macros"],
+                modulesEs: ["Fórmulas", "Tablas dinámicas", "Macros"],
+                modulesJa: ["数式", "ピボットテーブル", "マクロ"]
+            }
+        ];
+
+        // --- RENDER LOGIC ---
+
+        function renderGrid(data, title) {
+            const statusMap = { 'Required': t.required, 'In progress': t.inProgress, 'New': t.newLabel };
+            const typeMap = { 'Online': t.online, 'Event': t.eventType };
+            let html = `
+                <div class="section-header">
+                    <div class="section-title">${title}</div>
+                    <div class="cw-filter-btn">${t.filter} ▾</div>
+                </div>
+                <div class="course-grid">
+            `;
+
+            data.forEach(course => {
+                let badgeHtml = '';
+                if (course.status) {
+                    const badgeClass = course.status === 'Required' ? 'status-required' : 'status-inprogress';
+                    badgeHtml = `<span class="cw-status-badge ${badgeClass}">${statusMap[course.status] || course.status}</span>`;
+                }
+
+                html += `
+                    <div class="course-card" onclick="openDetails(${course.id})">
+                        <div class="card-img-wrap">
+                            <img src="${course.image}" class="card-img" alt="${loc(course, 'title')}">
+                            ${badgeHtml}
+                        </div>
+                        <div class="card-title">${loc(course, 'title')}</div>
+                        <div class="card-meta">
+                            <span>🎧 ${typeMap[course.type] || course.type}</span> • <span>${loc(course, 'duration')}</span>
+                        </div>
+                        <div class="card-due">${loc(course, 'dueDate')}</div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            return html;
+        }
+
+        function switchTab(tabName) {
+            const buttons = document.querySelectorAll('.cw-tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            const container = document.getElementById('main-content');
+            
+            if (tabName === 'learnings') {
+                buttons[0].classList.add('active');
+                container.innerHTML = renderGrid(myLearningsData, t.myLearnings);
+            } else {
+                buttons[1].classList.add('active');
+                container.innerHTML = renderGrid(recommendedData, t.recommendedForYou);
+            }
+        }
+
+        function openDetails(id) {
+            const course = [...myLearningsData, ...recommendedData].find(c => c.id === id);
+            if (!course) return;
+
+            const modalBody = document.getElementById('modal-body');
+            const typeMap = { 'Online': t.online, 'Event': t.eventType };
+            const localModules = loc(course, 'modules') || [];
+            const modulesHtml = localModules.map((mod, index) => `
+                <li style="margin-bottom: 8px; color: #555;">${mod}</li>
+            `).join('');
+
+            modalBody.innerHTML = `
+                <img src="${course.image.replace('w=300', 'w=600')}" class="hero-img">
+                <h2 class="detail-title">${loc(course, 'title')}</h2>
+                <div class="detail-meta">
+                    <span>🎧 ${typeMap[course.type] || course.type}</span>
+                    <span>⏱ ${loc(course, 'duration')}</span>
+                    <span>📅 ${loc(course, 'dueDate')}</span>
+                </div>
+
+                <div class="detail-desc-title">${t.aboutCourse}</div>
+                <div class="detail-desc">
+                    ${loc(course, 'description')}
+                    <ul>${modulesHtml}</ul>
+                    <div style="text-align:right; margin-top:8px; color:var(--primary-purple); font-weight:600;">${t.viewAll}</div>
+                </div>
+
+                <div class="detail-desc-title">${t.sessionOverview}</div>
+                 <div style="display:flex; gap:12px; margin-top:12px;">
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <div style="width:24px; height:24px; background:#ccc; border-radius:50%; color:white; display:flex; justify-content:center; align-items:center; font-size:12px;">1</div>
+                        <div style="width:1px; height:30px; background:#eee;"></div>
+                    </div>
+                    <div>
+                        <div style="font-weight:600; font-size:14px;">${t.introduction}</div>
+                        <div style="font-size:12px; color:#999;">5 min</div>
+                    </div>
+                 </div>
+            `;
+
+            document.body.classList.add('modal-active');
+        }
+
+        function closeModal() {
+            document.body.classList.remove('modal-active');
+        }
+
+        // Initialize
+        switchTab('learnings');
+        renderNotifications();
+        applyTranslations();
+
+    </script>
+</body>
+</html>
