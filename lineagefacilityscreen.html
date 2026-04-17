@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lineage Ops – Atlanta (Lithia Springs)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #0d1117; color: #e6edf3; }
+
+.widget {
+  width: 100%;
+  height: 600px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── HEADER ── */
+.widget-header {
+  background: linear-gradient(135deg, #1a3a5c, #0e2a45);
+  padding: 9px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #1f6feb;
+  flex-shrink: 0;
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.lineage-logo {
+  background: #1f6feb; color: white; font-weight: 800;
+  font-size: 12px; padding: 3px 8px; border-radius: 4px; letter-spacing: 1px;
+}
+.facility-name { font-size: 13px; font-weight: 600; color: #79c0ff; }
+.facility-sub { font-size: 10px; color: #8b949e; }
+.live-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: #0d2e0d; border: 1px solid #238636;
+  border-radius: 12px; padding: 3px 9px; font-size: 10px; color: #56d364;
+}
+.live-dot {
+  width: 6px; height: 6px; background: #56d364;
+  border-radius: 50%; animation: pulse 1.4s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* ── BODY GRID ── */
+.widget-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  flex: 1;
+  overflow: hidden;
+}
+.panel {
+  padding: 10px 13px;
+  border-right: 1px solid #21262d;
+  border-bottom: 1px solid #21262d;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.panel:nth-child(2),.panel:nth-child(4) { border-right: none; }
+.panel:nth-child(3),.panel:nth-child(4) { border-bottom: none; }
+
+.panel-title {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.2px; color: #8b949e; margin-bottom: 7px;
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+}
+
+/* ── SHIFT PANEL ── */
+.shift-block {
+  background: #1c2128; border-radius: 5px;
+  padding: 6px 9px; margin-bottom: 5px;
+  border-left: 3px solid #30363d; flex-shrink: 0;
+}
+.shift-block.active { border-left-color: #56d364; background: #0d2e0d33; }
+.shift-name { font-size: 12px; font-weight: 700; }
+.shift-time { font-size: 11px; color: #79c0ff; margin-top: 1px; }
+.shift-super { font-size: 10px; color: #8b949e; margin-top: 2px; }
+.shift-badge {
+  display: inline-block; background: #56d36422; color: #56d364;
+  border: 1px solid #56d36455; border-radius: 10px;
+  font-size: 9px; padding: 1px 7px; margin-left: 6px; font-weight: 600;
+}
+
+/* ── CREW PANEL ── */
+.crew-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 5px; flex: 1;
+}
+.crew-card {
+  background: #1c2128; border-radius: 5px;
+  padding: 5px 7px; display: flex; align-items: center; gap: 7px;
+}
+.avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: white; flex-shrink: 0;
+}
+.crew-name { font-size: 10px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crew-role { font-size: 9px; color: #8b949e; }
+
+/* ── SAFETY PANEL ── */
+.safety-tip-box {
+  background: linear-gradient(135deg, #1a2e1a, #0d2412);
+  border: 1px solid #238636; border-radius: 6px;
+  padding: 9px 11px; flex: 1;
+}
+.safety-tip-label { font-size: 9px; color: #56d364; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+.safety-tip-text { font-size: 11px; color: #d2ffd2; line-height: 1.55; }
+.tip-nav { display: flex; align-items: center; gap: 5px; margin-top: 8px; }
+.tip-dot { width: 7px; height: 7px; border-radius: 50%; background: #30363d; cursor: pointer; transition: background .2s; }
+.tip-dot.active { background: #56d364; }
+.tip-counter { font-size: 9px; color: #6e7681; margin-left: 4px; }
+
+/* ── ALERTS PANEL ── */
+.alert-item {
+  display: flex; align-items: flex-start; gap: 7px;
+  background: #1c2128; border-radius: 5px;
+  padding: 7px 8px; margin-bottom: 5px;
+  border-left: 3px solid #da3633; flex-shrink: 0;
+}
+.alert-item.warn  { border-left-color: #d29922; }
+.alert-item.info  { border-left-color: #1f6feb; }
+.alert-icon { font-size: 14px; flex-shrink: 0; line-height: 1.3; }
+.alert-title { font-size: 10px; font-weight: 700; }
+.alert-desc { font-size: 9px; color: #8b949e; margin-top: 2px; line-height: 1.4; }
+.alert-time { font-size: 9px; color: #6e7681; margin-top: 2px; }
+
+/* ── FOOTER ── */
+.widget-footer {
+  background: #0d1117; border-top: 1px solid #21262d;
+  padding: 5px 14px; display: flex;
+  justify-content: space-between; align-items: center; flex-shrink: 0;
+}
+.footer-src { font-size: 9px; color: #484f58; }
+.footer-clock { font-size: 9px; color: #6e7681; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="widget">
+
+  <!-- HEADER -->
+  <div class="widget-header">
+    <div class="header-left">
+      <div class="lineage-logo">LINEAGE</div>
+      <div>
+        <div class="facility-name">Atlanta – Lithia Springs</div>
+        <div class="facility-sub">737 Douglas Hill Rd · Lithia Springs, GA 30122 · (470) 632-4600</div>
+      </div>
+    </div>
+    <div class="live-badge"><div class="live-dot"></div>LIVE OPS</div>
+  </div>
+
+  <!-- BODY -->
+  <div class="widget-body">
+
+    <!-- PANEL 1: SHIFT -->
+    <div class="panel" id="panel-shift">
+      <div class="panel-title">🕐 Shift Schedule · Today</div>
+      <div class="shift-block" id="shift-1st">
+        <div class="shift-name">1st Shift</div>
+        <div class="shift-time">06:00 AM – 02:00 PM</div>
+        <div class="shift-super">Supervisor: James Okafor</div>
+      </div>
+      <div class="shift-block" id="shift-2nd">
+        <div class="shift-name">2nd Shift</div>
+        <div class="shift-time">02:00 PM – 10:00 PM</div>
+        <div class="shift-super">Supervisor: Linda Cho</div>
+      </div>
+      <div class="shift-block" id="shift-3rd">
+        <div class="shift-name">3rd Shift</div>
+        <div class="shift-time">10:00 PM – 06:00 AM</div>
+        <div class="shift-super">Supervisor: Ray Santos</div>
+      </div>
+    </div>
+
+    <!-- PANEL 2: CREW -->
+    <div class="panel">
+      <div class="panel-title">👷 Today\'s Crew Assignment</div>
+      <div class="crew-grid">
+        <div class="crew-card"><div class="avatar" style="background:#1f6feb">MT</div><div><div class="crew-name">Marcus T.</div><div class="crew-role">Lead Forklift Op</div></div></div>
+        <div class="crew-card"><div class="avatar" style="background:#238636">DR</div><div><div class="crew-name">Diana R.</div><div class="crew-role">Dock Supervisor</div></div></div>
+        <div class="crew-card"><div class="avatar" style="background:#8957e5">JH</div><div><div class="crew-name">Joel H.</div><div class="crew-role">Reach Truck Op</div></div></div>
+        <div class="crew-card"><div class="avatar" style="background:#db6d28">PM</div><div><div class="crew-name">Priya M.</div><div class="crew-role">QA / Temp Monitor</div></div></div>
+        <div class="crew-card"><div class="avatar" style="background:#1f6feb">CW</div><div><div class="crew-name">Cody W.</div><div class="crew-role">Pallet Selector</div></div></div>
+        <div class="crew-card"><div class="avatar" style="background:#238636">TB</div><div><div class="crew-name">Tonya B.</div><div class="crew-role">Inbound Receiver</div></div></div>
+      </div>
+    </div>
+
+    <!-- PANEL 3: SAFETY -->
+    <div class="panel">
+      <div class="panel-title">🦺 Safety Moment</div>
+      <div class="safety-tip-box">
+        <div class="safety-tip-label" id="tip-label">⚡ Rotating Tip #1 of 5</div>
+        <div class="safety-tip-text" id="tip-text"></div>
+        <div class="tip-nav" id="tip-nav"></div>
+      </div>
+    </div>
+
+    <!-- PANEL 4: ALERTS -->
+    <div class="panel">
+      <div class="panel-title">🚨 Urgent Alerts</div>
+      <div class="alert-item">
+        <div class="alert-icon">🥶</div>
+        <div>
+          <div class="alert-title">FREEZER TEMP DEVIATION — Cell F-4</div>
+          <div class="alert-desc">Cell F-4 reading -2°F (target: -10°F). Maintenance dispatched. Product hold initiated.</div>
+          <div class="alert-time">Triggered 07:42 AM · Source: Sensitech TempTrak</div>
+        </div>
+      </div>
+      <div class="alert-item warn">
+        <div class="alert-icon">🚛</div>
+        <div>
+          <div class="alert-title">DOCK CONGESTION — Doors 12–14</div>
+          <div class="alert-desc">3 inbound reefer trailers queued. ETA clearance ~45 min. Coordinate with Diana R.</div>
+          <div class="alert-time">Updated 08:15 AM · Source: YMS Gate Log</div>
+        </div>
+      </div>
+      <div class="alert-item info">
+        <div class="alert-icon">🔧</div>
+        <div>
+          <div class="alert-title">EQUIPMENT OOS — Crown RC 5500 #3</div>
+          <div class="alert-desc">Hydraulic fault E-44. Est. repair 10:30 AM. Use units #1 and #5 as alternates.</div>
+          <div class="alert-time">Logged 06:55 AM · Source: WMS Equipment Tracker</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="widget-footer">
+    <div class="footer-src">Simulated · Lineage WMS · Sensitech TempTrak · YMS Gate Log · Equipment Tracker</div>
+    <div class="footer-clock" id="footer-clock"></div>
+  </div>
+
+</div>
+
+<script>
+// ── SAFETY TIPS ──
+var TIPS = [
+  "Always verify freezer door seals are fully engaged before walking away. A partial seal on a -10°F chamber causes frost buildup and slip hazards within minutes.",
+  "When operating the Crown reach truck in Aisles 7–9, reduce speed to 2 mph at blind intersections. Sound horn twice at each corner.",
+  "PPE reminder: Insulated gloves and thermal jacket are mandatory in blast freeze cells. Exposure beyond 10 min requires a buddy check-in.",
+  "Dock plates must be fully seated and pinned before any pallet jack crosses. Never override the dock lock indicator light.",
+  "Report any ammonia odor immediately to your shift supervisor. Do NOT locate the source — evacuate and call the emergency line: ext. 5555."
+];
+
+var tipIndex = 0;
+
+function renderTip() {
+  document.getElementById('tip-label').textContent = '⚡ Rotating Tip #' + (tipIndex + 1) + ' of ' + TIPS.length;
+  document.getElementById('tip-text').textContent = TIPS[tipIndex];
+  var nav = document.getElementById('tip-nav');
+  nav.innerHTML = '';
+  TIPS.forEach(function(_, i) {
+    var dot = document.createElement('div');
+    dot.className = 'tip-dot' + (i === tipIndex ? ' active' : '');
+    dot.onclick = (function(idx){ return function(){ tipIndex = idx; renderTip(); }; })(i);
+    nav.appendChild(dot);
+  });
+  var counter = document.createElement('span');
+  counter.className = 'tip-counter';
+  counter.textContent = 'auto-rotates every 8s';
+  nav.appendChild(counter);
+}
+
+renderTip();
+setInterval(function() {
+  tipIndex = (tipIndex + 1) % TIPS.length;
+  renderTip();
+}, 8000);
+
+// ── SHIFT HIGHLIGHT ──
+function highlightShift() {
+  var h = new Date().getHours();
+  ['1st','2nd','3rd'].forEach(function(s) {
+    var el = document.getElementById('shift-' + s);
+    el.classList.remove('active');
+    var name = el.querySelector('.shift-name');
+    var badge = el.querySelector('.shift-badge');
+    if (badge) badge.remove();
+  });
+  var active = null;
+  if (h >= 6 && h < 14)         active = '1st';
+  else if (h >= 14 && h < 22)   active = '2nd';
+  else                           active = '3rd';
+  var el = document.getElementById('shift-' + active);
+  el.classList.add('active');
+  var badge = document.createElement('span');
+  badge.className = 'shift-badge';
+  badge.textContent = '● ACTIVE';
+  el.querySelector('.shift-name').appendChild(badge);
+}
+highlightShift();
+
+// ── CLOCK ──
+function updateClock() {
+  var now = new Date();
+  var dateStr = now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+  var timeStr = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('footer-clock').textContent = dateStr + '  |  ' + timeStr;
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
