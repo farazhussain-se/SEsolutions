@@ -3,123 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Black+Decker Site Badge - Ruby Gray</title>
+    <title>Site Badge – Ruby Gray</title>
 
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        bdOrange:  '#FF6600',
-                        bdBlack:   '#1A1A1A',
-                        bdGray:    '#F5F5F5',
-                        bdYellow:  '#FFD100'
-                    }
-                }
-            }
-        }
-    </script>
 
     <style>
-        * { box-sizing: border-box; }
-        html { overflow: hidden; height: auto; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { overflow: hidden; height: auto; background: transparent; }
         body {
-            margin: 0;
             padding: 10px;
-            overflow: hidden;
-            height: auto;
-            background: transparent;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-        #root { overflow: hidden; height: auto; }
 
         @keyframes pulse-ring {
-            0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74,222,128,0.7); }
-            70%  { transform: scale(1);    box-shadow: 0 0 0 8px rgba(74,222,128,0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+            0%   { box-shadow: 0 0 0 0 rgba(74,222,128,0.7); }
+            70%  { box-shadow: 0 0 0 7px rgba(74,222,128,0); }
+            100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
         }
         .pulse { border-radius: 50%; animation: pulse-ring 2s infinite; }
 
-        /* Diagonal stripe pattern — Black+Decker orange/black */
         .access-stripe {
             background: repeating-linear-gradient(
                 45deg,
-                #FF6600,
-                #FF6600 6px,
-                #CC5200 6px,
-                #CC5200 12px
+                #374151,
+                #374151 6px,
+                #1f2937 6px,
+                #1f2937 12px
             );
         }
+
+        button { cursor: pointer; background: none; border: none; font: inherit; }
     </style>
 </head>
 <body>
-    <div id="root">Loading badge...</div>
+    <div id="root">Loading badge…</div>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // ── Black+Decker Employee Data ──
         const EMPLOYEE = {
-            id:          "BD-47231",
+            id:          "EMP-47231",
             firstName:   "Ruby",
             lastName:    "Gray",
             title:       "Senior Assembly Technician",
-            department:  "Power Tools Manufacturing – Line 7",
-            site:        "Black+Decker Manufacturing",
+            department:  "Power Tools Mfg – Line 7",
+            site:        "Towson Manufacturing Facility",
             location:    "Towson, MD",
             accessLevel: "LEVEL 3",
-            shift:       "Day Shift | 06:00 – 14:30",
+            shift:       "Day  06:00 – 14:30",
             expires:     "2026-12-31",
             ppeStatus:   "Compliant",
             safetyHours: 1840,
             certifications: [
-                { label: "OSHA 10",           status: "active"   },
-                { label: "Forklift Op.",       status: "active"   },
-                { label: "ESD Handling",       status: "active"   },
-                { label: "Robotics Safety",    status: "expiring" }
+                { label: "OSHA 10",        status: "active"   },
+                { label: "Forklift Op.",   status: "active"   },
+                { label: "ESD Handling",   status: "active"   },
+                { label: "Robotics Safety",status: "expiring" }
             ],
             zones: [
-                { name: "Assembly Floor",      granted: true  },
-                { name: "Tool Testing Bay",    granted: true  },
-                { name: "Restricted R&D",      granted: false },
-                { name: "Logistics Dock",      granted: true  }
+                { name: "Assembly Floor",  granted: true  },
+                { name: "Tool Test Bay",   granted: true  },
+                { name: "Restricted R&D",  granted: false },
+                { name: "Logistics Dock",  granted: true  }
             ]
         };
 
+        /* ── tokens ── */
+        const C = {
+            bg:       '#ffffff',
+            surface:  '#f9fafb',
+            border:   '#e5e7eb',
+            divider:  '#f3f4f6',
+            text:     '#111827',
+            muted:    '#374151',
+            faint:    '#6b7280',
+            accent:   '#1d4ed8',   /* neutral corporate blue – no brand color */
+            dark:     '#111827',
+            success:  { bg:'#f0fdf4', border:'#bbf7d0', text:'#166534' },
+            warning:  { bg:'#fffbeb', border:'#fde68a', text:'#92400e' },
+            error:    { bg:'#fef2f2', border:'#fecaca', text:'#991b1b' },
+        };
+
+        /* ── Badge ── */
         const SiteBadge = () => {
             const qrRef  = useRef(null);
-            const [timeString, setTimeString] = useState('');
-            const [qrDone, setQrDone]         = useState(false);
-            const [tab, setTab]               = useState('zones');
+            const [time, setTime]     = useState('');
+            const [qrDone, setQrDone] = useState(false);
+            const [tab, setTab]       = useState('zones');
 
-            // Live clock
             useEffect(() => {
-                const tick = () => {
-                    setTimeString(new Date().toLocaleTimeString([], {
-                        hour: '2-digit', minute: '2-digit', second: '2-digit'
-                    }));
-                };
+                const tick = () => setTime(new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }));
                 tick();
                 const t = setInterval(tick, 1000);
                 return () => clearInterval(t);
             }, []);
 
-            // QR Code (BD-ID payload)
             useEffect(() => {
                 if (qrRef.current && !qrDone) {
                     qrRef.current.innerHTML = '';
                     new QRCode(qrRef.current, {
-                        text: `BD-SITE|ID:${EMPLOYEE.id}|EMP:${EMPLOYEE.firstName}+${EMPLOYEE.lastName}|SITE:TOWSON|LVL:3`,
-                        width: 140,
-                        height: 140,
-                        colorDark:  '#1A1A1A',
-                        colorLight: '#FFFFFF',
+                        text: `SITE-BADGE|ID:${EMPLOYEE.id}|EMP:${EMPLOYEE.firstName}+${EMPLOYEE.lastName}|SITE:TOWSON|LVL:3`,
+                        width: 120, height: 120,
+                        colorDark: '#111827', colorLight: '#ffffff',
                         correctLevel: QRCode.CorrectLevel.H
                     });
                     setQrDone(true);
@@ -127,175 +115,130 @@
             }, []);
 
             return (
-                <div style={{ maxWidth: '360px', margin: '0 auto' }}>
+                <div style={{ maxWidth: 340, margin: '0 auto' }}>
                     <div style={{
-                        background: 'white',
-                        borderRadius: '16px',
-                        overflow: 'hidden',
-                        border: '1px solid #e5e7eb',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
+                        background: C.bg, borderRadius: 14,
+                        overflow: 'hidden', border: `1px solid ${C.border}`,
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.10)'
                     }}>
-
-                        {/* ── TOP: Security Header ── */}
-                        <div style={{
-                            background: '#1A1A1A',
-                            padding: '8px 14px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                        }}>
-                            <span style={{ color: 'white', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span className="pulse" style={{ width: '9px', height: '9px', background: '#4ade80', display: 'inline-block' }}></span>
+                        {/* ── Header bar ── */}
+                        <div style={{ background: C.dark, padding: '7px 13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span className="pulse" style={{ width: 8, height: 8, background: '#4ade80', display: 'inline-block', flexShrink: 0 }} />
                                 SITE ACCESS ACTIVE
                             </span>
-                            <span style={{ color: '#9ca3af', fontSize: '10px', fontFamily: 'monospace' }}>{timeString}</span>
+                            <span style={{ color: '#9ca3af', fontSize: 10, fontFamily: 'monospace' }}>{time}</span>
                         </div>
 
-                        {/* ── ACCESS LEVEL STRIPE ── */}
-                        <div className="access-stripe" style={{
-                            padding: '5px 14px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                        }}>
-                            <span style={{ color: 'white', fontSize: '11px', fontWeight: '800', letterSpacing: '0.1em' }}>
+                        {/* ── Access level stripe ── */}
+                        <div className="access-stripe" style={{ padding: '5px 13px' }}>
+                            <span style={{ color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: '0.08em' }}>
                                 ⚠ {EMPLOYEE.accessLevel} — MANUFACTURING ACCESS
                             </span>
                         </div>
 
-                        {/* ── PROFILE ROW ── */}
-                        <div style={{ padding: '16px 14px 12px', borderBottom: '1px solid #f3f4f6', display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                        {/* ── Profile row ── */}
+                        <div style={{ padding: '14px 13px 11px', borderBottom: `1px solid ${C.divider}`, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
 
-                            {/* Left: QR Code */}
+                            {/* QR */}
                             <div style={{ flexShrink: 0 }}>
-                                <div style={{
-                                    padding: '6px',
-                                    border: '2px solid #e5e7eb',
-                                    borderRadius: '10px',
-                                    background: 'white'
-                                }}>
-                                    <div ref={qrRef}></div>
+                                <div style={{ padding: 5, border: `2px solid ${C.border}`, borderRadius: 9, background: '#fff' }}>
+                                    <div ref={qrRef} />
                                 </div>
-                                <p style={{ textAlign: 'center', fontSize: '9px', color: '#6b7280', fontFamily: 'monospace', margin: '4px 0 0 0' }}>
-                                    {EMPLOYEE.id}
-                                </p>
+                                <p style={{ textAlign: 'center', fontSize: 9, color: C.faint, fontFamily: 'monospace', marginTop: 3 }}>{EMPLOYEE.id}</p>
                             </div>
 
-                            {/* Right: Name & Details */}
+                            {/* Info */}
                             <div style={{ flex: 1, minWidth: 0 }}>
-
-                                {/* Black+Decker Brand Mark */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                                {/* Org label – generic */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 7 }}>
                                     <div style={{
-                                        background: '#FF6600',
-                                        color: 'white',
-                                        fontWeight: '900',
-                                        fontSize: '11px',
-                                        padding: '2px 7px',
-                                        borderRadius: '3px',
-                                        letterSpacing: '0.05em'
-                                    }}>BLACK+DECKER</div>
-                                    <span style={{ fontSize: '9px', color: '#6b7280', fontWeight: '600', letterSpacing: '0.05em' }}>EMPLOYEE BADGE</span>
+                                        background: C.dark, color: '#fff',
+                                        fontWeight: 800, fontSize: 10,
+                                        padding: '2px 7px', borderRadius: 3,
+                                        letterSpacing: '0.06em'
+                                    }}>EMPLOYEE BADGE</div>
                                 </div>
 
-                                <p style={{ margin: '0 0 2px 0', fontSize: '17px', fontWeight: '800', color: '#111827', lineHeight: 1.1 }}>
-                                    {EMPLOYEE.firstName}<br/>{EMPLOYEE.lastName}
+                                <p style={{ fontSize: 17, fontWeight: 800, color: C.text, lineHeight: 1.1, marginBottom: 3 }}>
+                                    {EMPLOYEE.firstName}<br />{EMPLOYEE.lastName}
                                 </p>
-                                <p style={{ margin: '4px 0 2px 0', fontSize: '10px', fontWeight: '700', color: '#FF6600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                <p style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
                                     {EMPLOYEE.title}
                                 </p>
-                                <p style={{ margin: '0 0 2px 0', fontSize: '9px', color: '#374151' }}>{EMPLOYEE.department}</p>
-                                <p style={{ margin: '0 0 4px 0', fontSize: '9px', color: '#6b7280' }}>{EMPLOYEE.site}</p>
-                                <div style={{
-                                    display: 'inline-flex', alignItems: 'center', gap: '4px',
-                                    background: '#dcfce7', borderRadius: '99px',
-                                    padding: '2px 8px'
+                                <p style={{ fontSize: 9, color: C.muted, marginBottom: 1 }}>{EMPLOYEE.department}</p>
+                                <p style={{ fontSize: 9, color: C.faint, marginBottom: 5 }}>{EMPLOYEE.site}</p>
+
+                                <span style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                                    background: C.success.bg, borderRadius: 99, padding: '2px 8px',
+                                    border: `1px solid ${C.success.border}`
                                 }}>
-                                    <span style={{ fontSize: '8px', fontWeight: '700', color: '#166534' }}>
-                                        ✓ PPE {EMPLOYEE.ppeStatus}
-                                    </span>
-                                </div>
+                                    <span style={{ fontSize: 8, fontWeight: 700, color: C.success.text }}>✓ PPE {EMPLOYEE.ppeStatus}</span>
+                                </span>
                             </div>
                         </div>
 
-                        {/* ── Shift & Safety Hours ── */}
+                        {/* ── Shift & safety ── */}
                         <div style={{
-                            background: '#f9fafb',
-                            padding: '8px 14px',
-                            display: 'grid',
-                            gridTemplateColumns: '1fr 1fr',
-                            gap: '6px',
-                            borderBottom: '1px solid #f3f4f6'
+                            background: C.surface, padding: '8px 13px',
+                            display: 'grid', gridTemplateColumns: '1fr 1fr',
+                            gap: 6, borderBottom: `1px solid ${C.divider}`
                         }}>
-                            <MetaBlock icon="⏰" label="Current Shift" value={EMPLOYEE.shift} />
-                            <MetaBlock icon="🛡️" label="Safety Hours" value={`${EMPLOYEE.safetyHours.toLocaleString()} hrs`} />
+                            <MetaBlock icon="⏰" label="Shift" value={EMPLOYEE.shift} />
+                            <MetaBlock icon="🛡" label="Safety Hours" value={`${EMPLOYEE.safetyHours.toLocaleString()} hrs`} />
                         </div>
 
-                        {/* ── TABS: Zones / Certs ── */}
-                        <div style={{ display: 'flex', borderBottom: '1px solid #f3f4f6' }}>
-                            <TabBtn label="Zone Access"    active={tab === 'zones'} onClick={() => setTab('zones')} />
-                            <TabBtn label="Certifications" active={tab === 'certs'} onClick={() => setTab('certs')} />
+                        {/* ── Tabs ── */}
+                        <div style={{ display: 'flex', borderBottom: `1px solid ${C.divider}` }}>
+                            <TabBtn label="Zone Access"    active={tab==='zones'} accent={C.accent} onClick={() => setTab('zones')} />
+                            <TabBtn label="Certifications" active={tab==='certs'} accent={C.accent} onClick={() => setTab('certs')} />
                         </div>
 
-                        {/* ── TAB CONTENT ── */}
-                        <div style={{ padding: '10px 14px 14px' }}>
+                        {/* ── Tab content ── */}
+                        <div style={{ padding: '10px 13px 13px' }}>
                             {tab === 'zones' && (
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                                    {EMPLOYEE.zones.map((z, i) => (
-                                        <ZoneChip key={i} name={z.name} granted={z.granted} />
-                                    ))}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                                    {EMPLOYEE.zones.map((z, i) => <ZoneChip key={i} name={z.name} granted={z.granted} />)}
                                 </div>
                             )}
                             {tab === 'certs' && (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    {EMPLOYEE.certifications.map((c, i) => (
-                                        <CertRow key={i} label={c.label} status={c.status} />
-                                    ))}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    {EMPLOYEE.certifications.map((c, i) => <CertRow key={i} label={c.label} status={c.status} />)}
                                 </div>
                             )}
                         </div>
 
-                        {/* ── FOOTER ── */}
+                        {/* ── Footer ── */}
                         <div style={{
-                            background: '#1A1A1A',
-                            padding: '7px 14px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
+                            background: C.dark, padding: '6px 13px',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                         }}>
-                            <span style={{ color: '#6b7280', fontSize: '9px' }}>
-                                Expires: {EMPLOYEE.expires}
-                            </span>
-                            <span style={{ color: '#6b7280', fontSize: '9px' }}>
-                                📍 {EMPLOYEE.location}
-                            </span>
+                            <span style={{ color: '#6b7280', fontSize: 9 }}>Expires: {EMPLOYEE.expires}</span>
+                            <span style={{ color: '#6b7280', fontSize: 9 }}>📍 {EMPLOYEE.location}</span>
                         </div>
                     </div>
 
-                    <p style={{ textAlign: 'center', fontSize: '10px', color: '#9ca3af', marginTop: '8px' }}>
-                        BLACK+DECKER BD-ID • Do not share or screenshot this badge
-    </p>
+                    <p style={{ textAlign: 'center', fontSize: 10, color: '#9ca3af', marginTop: 7 }}>
+                        Secure ID • Do not share or screenshot this badge
+                    </p>
                 </div>
             );
         };
 
-        // ── Sub-components ──
-
+        /* ── Sub-components ── */
         const MetaBlock = ({ icon, label, value }) => (
             <div>
-                <p style={{ margin: '0 0 1px 0', fontSize: '9px', color: '#9ca3af', fontWeight: '600', textTransform: 'uppercase' }}>
-                    {icon} {label}
-                </p>
-                <p style={{ margin: 0, fontSize: '10px', fontWeight: '700', color: '#111827' }}>{value}</p>
+                <p style={{ fontSize: 9, color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', marginBottom: 1 }}>{icon} {label}</p>
+                <p style={{ fontSize: 10, fontWeight: 700, color: '#111827' }}>{value}</p>
             </div>
         );
 
-        const TabBtn = ({ label, active, onClick }) => (
+        const TabBtn = ({ label, active, accent, onClick }) => (
             <button onClick={onClick} style={{
-                flex: 1, padding: '8px 4px', border: 'none', background: 'transparent',
-                cursor: 'pointer', fontSize: '11px', fontWeight: '700',
-                color: active ? '#FF6600' : '#6b7280',
-                borderBottom: active ? '2px solid #FF6600' : '2px solid transparent',
+                flex: 1, padding: '7px 4px', fontSize: 11, fontWeight: 700,
+                color: active ? accent : '#6b7280',
+                borderBottom: active ? `2px solid ${accent}` : '2px solid transparent',
                 transition: 'all 0.15s'
             }}>
                 {label}
@@ -304,35 +247,30 @@
 
         const ZoneChip = ({ name, granted }) => (
             <div style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '7px 10px', borderRadius: '8px',
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '7px 9px', borderRadius: 8,
                 background: granted ? '#f0fdf4' : '#fef2f2',
                 border: `1px solid ${granted ? '#bbf7d0' : '#fecaca'}`
             }}>
-                <span style={{ fontSize: '13px' }}>{granted ? '✅' : '🚫'}</span>
-                <span style={{ fontSize: '10px', fontWeight: '700', color: granted ? '#166534' : '#991b1b', lineHeight: 1.2 }}>
-                    {name}
-                </span>
+                <span style={{ fontSize: 12 }}>{granted ? '✅' : '🚫'}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: granted ? '#166534' : '#991b1b', lineHeight: 1.2 }}>{name}</span>
             </div>
         );
 
         const CertRow = ({ label, status }) => {
-            const colors = {
-                active:   { bg: '#f0fdf4', border: '#bbf7d0', text: '#166534', badge: 'Active'   },
-                expiring: { bg: '#fffbeb', border: '#fde68a', text: '#92400e', badge: 'Expiring' },
-                expired:  { bg: '#fef2f2', border: '#fecaca', text: '#991b1b', badge: 'Expired'  }
-            };
-            const c = colors[status] || colors.active;
+            const s = {
+                active:   { bg:'#f0fdf4', border:'#bbf7d0', text:'#166534', badge:'Active'   },
+                expiring: { bg:'#fffbeb', border:'#fde68a', text:'#92400e', badge:'Expiring' },
+                expired:  { bg:'#fef2f2', border:'#fecaca', text:'#991b1b', badge:'Expired'  }
+            }[status] || { bg:'#f0fdf4', border:'#bbf7d0', text:'#166534', badge:'Active' };
             return (
                 <div style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '7px 10px', borderRadius: '8px',
-                    background: c.bg, border: `1px solid ${c.border}`
+                    padding: '7px 10px', borderRadius: 8,
+                    background: s.bg, border: `1px solid ${s.border}`
                 }}>
-                    <span style={{ fontSize: '11px', fontWeight: '600', color: '#111827' }}>🏅 {label}</span>
-                    <span style={{ fontSize: '9px', fontWeight: '800', color: c.text, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {c.badge}
-                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>🏅 {label}</span>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: s.text, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.badge}</span>
                 </div>
             );
         };
