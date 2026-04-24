@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rewards</title>
+<style>
+  :root{--bg:#f5f7fb;--panel:#fff;--ink:#182235;--muted:#66738a;--line:#dde5f0;--brand:#0b75ff;--brand2:#f58220;--shadow:0 18px 50px rgba(24,34,53,.10)}
+  *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .frame{max-width:420px;margin:0 auto;min-height:100vh;background:#fff;box-shadow:var(--shadow)}
+  .top{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:5}
+  .top h1{margin:0;font-size:16px;font-weight:700}.badge{font-size:12px;color:var(--brand);background:#eaf2ff;border-radius:999px;padding:6px 10px}
+  .hero{margin:16px;border-radius:22px;padding:18px;background:linear-gradient(135deg,#1d8bff,#163fbb);color:#fff;overflow:hidden;position:relative}
+  .hero h2{margin:0;font-size:30px;line-height:1.05;max-width:10ch}.hero p{margin:10px 0 0;font-size:13px;opacity:.95}
+  .stats{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin:0 16px 14px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+  .label{font-size:12px;color:var(--muted)} .points{font-size:26px;font-weight:800;letter-spacing:-.02em}
+  .cta{border:0;border-radius:14px;padding:12px 16px;font-weight:800;background:var(--brand2);color:#fff;cursor:pointer}.cta.secondary{background:var(--brand)}
+  .tabs{display:flex;gap:8px;padding:0 16px 14px;overflow:auto}.tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 12px;font-size:12px;white-space:nowrap;cursor:pointer}.tab.active{background:#101827;color:#fff;border-color:#101827}
+  .section{padding:0 16px 18px}.card{border:1px solid var(--line);border-radius:18px;background:#fff;padding:14px;margin-bottom:12px;box-shadow:0 6px 22px rgba(24,34,53,.04)}
+  .card h3{margin:0 0 6px;font-size:15px}.card p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}.meta{margin-top:10px;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.tile{background:#f7faff;border:1px solid var(--line);border-radius:16px;padding:12px;min-height:92px}.tile strong{display:block;font-size:14px;margin-bottom:4px}.tile span{font-size:12px;color:var(--muted)}
+  .footer{height:24px}
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="top"><h1>Rewards</h1><div class="badge">250 pts</div></div>
+    <div class="hero"><h2>Redeem for rewards you want</h2><p>Browse popular items, experiences, and branded perks.</p></div>
+    <div class="stats"><div><div class="label">Available balance</div><div class="points">850 points</div></div><button class="cta secondary" id="redeem">Redeem</button></div>
+    <div class="tabs" id="tabs"><button class="tab active" data-tab="featured">Featured</button><button class="tab" data-tab="categories">Categories</button><button class="tab" data-tab="saved">Saved</button><button class="tab" data-tab="history">History</button></div>
+    <div class="section" id="content"></div>
+    <div class="footer"></div>
+  </div>
+<script>
+  const content = document.getElementById('content');
+  const tabs = document.getElementById('tabs');
+  const views = {
+    featured: `
+      <div class="card"><h3>Gift cards</h3><p>Popular options from leading retailers and dining brands.</p><div class="meta"><span>From 500 pts</span><span>View all</span></div></div>
+      <div class="grid">
+        <div class="tile"><strong>Electronics</strong><span>Headphones, accessories, and gadgets.</span></div>
+        <div class="tile"><strong>Wellness</strong><span>Fitness, self-care, and relaxation.</span></div>
+        <div class="tile"><strong>Experiences</strong><span>Events, travel, and getaways.</span></div>
+        <div class="tile"><strong>Company swag</strong><span>Branded gear and limited drops.</span></div>
+      </div>`,
+    categories: `
+      <div class="card"><h3>Shop by category</h3><p>Find rewards by what matters most to your team.</p></div>
+      <div class="grid">
+        <div class="tile"><strong>Apparel</strong><span>Clothing and accessories.</span></div>
+        <div class="tile"><strong>Home</strong><span>Kitchen, décor, and essentials.</span></div>
+        <div class="tile"><strong>Charity</strong><span>Donate points to causes.</span></div>
+        <div class="tile"><strong>Food</strong><span>Snacks, meals, and subscriptions.</span></div>
+      </div>`,
+    saved: `
+      <div class="card"><h3>Saved rewards</h3><p>Your shortlisted items will appear here for quick redemption.</p></div>
+      <div class="card"><h3>Featured eGift card</h3><p>750 points • Available now</p><div class="meta"><span>Saved 2d ago</span><span>Redeem</span></div></div>`,
+    history: `
+      <div class="card"><h3>Redemption history</h3><p>View past orders and fulfillment status.</p></div>
+      <div class="card"><h3>Lunch voucher</h3><p>Redeemed 300 points • Delivered</p><div class="meta"><span>Apr 21</span><span>Receipt</span></div></div>`
+  };
+  function render(tab){ content.innerHTML = views[tab]; }
+  render('featured');
+  tabs.addEventListener('click', e => { if(!e.target.matches('.tab')) return; document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); render(e.target.dataset.tab); });
+  document.getElementById('redeem').addEventListener('click', ()=>{ content.innerHTML = `<div class="card"><h3>Redeem request received</h3><p>Your selected reward is being prepared for checkout.</p></div>`; });
+</script>
+</body>
+</html>
