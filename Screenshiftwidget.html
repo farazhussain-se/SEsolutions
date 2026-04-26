@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lineage Ops – Atlanta (Lithia Springs)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f0f0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+
+.widget {
+  width: 720px;
+  height: 540px;
+  background: #ffffff;
+  border: 2px solid #d0d7de;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+}
+
+/* ── HEADER ── */
+.widget-header {
+  background: linear-gradient(135deg, #1a3a5c, #0e2a45);
+  padding: 14px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 3px solid #1f6feb;
+  flex-shrink: 0;
+}
+.header-left { display: flex; align-items: center; gap: 14px; }
+.lineage-logo {
+  background: #1f6feb; color: white; font-weight: 900;
+  font-size: 20px; padding: 5px 14px; border-radius: 6px; letter-spacing: 2px;
+}
+.facility-name { font-size: 22px; font-weight: 700; color: #79c0ff; }
+.facility-sub { font-size: 13px; color: #adbac7; margin-top: 2px; }
+.live-badge {
+  display: flex; align-items: center; gap: 7px;
+  background: #0d2e0d; border: 2px solid #238636;
+  border-radius: 20px; padding: 6px 16px; font-size: 15px; color: #56d364;
+  font-weight: 700; white-space: nowrap;
+}
+.live-dot {
+  width: 10px; height: 10px; background: #56d364;
+  border-radius: 50%; animation: pulse 1.4s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* ── BODY ── */
+.widget-body {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── PANEL (left / right) ── */
+.panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px;
+  overflow: hidden;
+}
+.panel-left {
+  border-right: 2px solid #d0d7de;
+}
+
+.section-title {
+  font-size: 13px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 1.5px; color: #57606a; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 6px;
+  border-bottom: 2px solid #e8ebef; padding-bottom: 8px;
+}
+
+/* ── SHIFT ── */
+.shift-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #f6f8fa;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  border-left: 5px solid #d0d7de;
+  transition: background 0.2s;
+}
+.shift-row.active {
+  border-left-color: #1a9e3f;
+  background: #dafbe1;
+}
+.shift-row:last-child { margin-bottom: 0; }
+.shift-name {
+  font-size: 22px; font-weight: 800; color: #1b1f24;
+  line-height: 1.1;
+}
+.shift-time {
+  font-size: 16px; color: #1f6feb; font-weight: 600; margin-top: 3px;
+}
+.shift-super {
+  font-size: 15px; color: #57606a; font-weight: 500; text-align: right;
+}
+.shift-badge {
+  display: inline-block;
+  background: #1a9e3f; color: #ffffff;
+  border-radius: 12px;
+  font-size: 13px; padding: 3px 12px; font-weight: 700;
+  margin-top: 5px; letter-spacing: 0.5px;
+}
+
+/* ── PRODUCTION ── */
+.prod-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  flex: 1;
+}
+.prod-card {
+  background: #f6f8fa;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid #d0d7de;
+  border-top: 4px solid #d0d7de;
+}
+.prod-card.green  { border-top-color: #1a9e3f; }
+.prod-card.blue   { border-top-color: #1f6feb; }
+.prod-card.orange { border-top-color: #bc4c00; }
+.prod-card.purple { border-top-color: #8250df; }
+
+.prod-label {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: #57606a; margin-bottom: 6px;
+}
+.prod-value {
+  font-size: 34px; font-weight: 900; color: #1b1f24; line-height: 1;
+}
+.prod-unit {
+  font-size: 13px; font-weight: 600; color: #57606a; margin-top: 4px;
+}
+.prod-delta {
+  font-size: 13px; font-weight: 700; margin-top: 5px;
+}
+.prod-delta.up   { color: #1a9e3f; }
+.prod-delta.down { color: #cf222e; }
+.prod-delta.flat { color: #9a6700; }
+
+/* ── FOOTER ── */
+.widget-footer {
+  background: #f6f8fa;
+  border-top: 2px solid #d0d7de;
+  padding: 8px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.footer-src { font-size: 12px; color: #8c959f; }
+.footer-clock { font-size: 15px; color: #1b1f24; font-weight: 700; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="widget">
+
+  <!-- HEADER -->
+  <div class="widget-header">
+    <div class="header-left">
+      <div class="lineage-logo">LINEAGE</div>
+      <div>
+        <div class="facility-name">Atlanta – Lithia Springs</div>
+        <div class="facility-sub">737 Douglas Hill Rd · Lithia Springs, GA 30122</div>
+      </div>
+    </div>
+    <div class="live-badge"><div class="live-dot"></div>LIVE OPS</div>
+  </div>
+
+  <!-- BODY: two side-by-side panels -->
+  <div class="widget-body">
+
+    <!-- LEFT: SHIFT -->
+    <div class="panel panel-left">
+      <div class="section-title">🕐 Shift Schedule · Today</div>
+
+      <div class="shift-row" id="shift-1st">
+        <div>
+          <div class="shift-name">1st Shift</div>
+          <div class="shift-time">06:00 AM – 02:00 PM</div>
+        </div>
+        <div style="text-align:right">
+          <div class="shift-super">Sup: James Okafor</div>
+        </div>
+      </div>
+
+      <div class="shift-row" id="shift-2nd">
+        <div>
+          <div class="shift-name">2nd Shift</div>
+          <div class="shift-time">02:00 PM – 10:00 PM</div>
+        </div>
+        <div style="text-align:right">
+          <div class="shift-super">Sup: Linda Cho</div>
+        </div>
+      </div>
+
+      <div class="shift-row" id="shift-3rd">
+        <div>
+          <div class="shift-name">3rd Shift</div>
+          <div class="shift-time">10:00 PM – 06:00 AM</div>
+        </div>
+        <div style="text-align:right">
+          <div class="shift-super">Sup: Ray Santos</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: PRODUCTION -->
+    <div class="panel panel-right">
+      <div class="section-title">📦 Production · Current Shift</div>
+      <div class="prod-grid">
+
+        <div class="prod-card green">
+          <div class="prod-label">Cases Picked</div>
+          <div class="prod-value">3,847</div>
+          <div class="prod-unit">of 5,200 goal</div>
+          <div class="prod-delta up">▲ 74% to goal</div>
+        </div>
+
+        <div class="prod-card blue">
+          <div class="prod-label">Pallets Built</div>
+          <div class="prod-value">112</div>
+          <div class="prod-unit">of 140 goal</div>
+          <div class="prod-delta up">▲ 80% to goal</div>
+        </div>
+
+        <div class="prod-card orange">
+          <div class="prod-label">Inbound Loads</div>
+          <div class="prod-value">8</div>
+          <div class="prod-unit">of 11 scheduled</div>
+          <div class="prod-delta flat">● 3 pending</div>
+        </div>
+
+        <div class="prod-card purple">
+          <div class="prod-label">Outbound Loads</div>
+          <div class="prod-value">6</div>
+          <div class="prod-unit">of 9 scheduled</div>
+          <div class="prod-delta down">▼ 2 delayed</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="widget-footer">
+    <div class="footer-src">Simulated · WMS · TempTrak · YMS</div>
+    <div class="footer-clock" id="footer-clock"></div>
+  </div>
+
+</div>
+
+<script>
+// ── Active shift highlight ──
+function highlightShift() {
+  var h = new Date().getHours();
+  ['1st','2nd','3rd'].forEach(function(s) {
+    var el = document.getElementById('shift-' + s);
+    el.classList.remove('active');
+    var b = el.querySelector('.shift-badge');
+    if (b) b.remove();
+  });
+  var active = (h >= 6 && h < 14) ? '1st' : (h >= 14 && h < 22) ? '2nd' : '3rd';
+  var el = document.getElementById('shift-' + active);
+  el.classList.add('active');
+  var badge = document.createElement('div');
+  badge.className = 'shift-badge';
+  badge.textContent = '● ACTIVE NOW';
+  el.querySelector('div').appendChild(badge);
+}
+highlightShift();
+
+// ── Live clock ──
+function updateClock() {
+  var now = new Date();
+  var d = now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+  var t = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('footer-clock').textContent = d + '  |  ' + t;
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
