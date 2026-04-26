@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your IT Tickets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --font-body: 'Inter', sans-serif;
+    --radius-sm: 0.25rem; --radius-md: 0.375rem; --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem; --radius-full: 9999px;
+    --transition: 150ms ease;
+  }
+  :root, [data-theme="light"] {
+    --bg: #f5f5f5;
+    --surface: #ffffff;
+    --surface-2: #f9f9f9;
+    --surface-offset: #f0f0f0;
+    --border: #e2e2e2;
+    --divider: #ebebeb;
+    --text: #1a1a1a;
+    --text-muted: #555;
+    --text-faint: #999;
+    --primary: #0066cc;
+    --primary-bg: #e8f0fb;
+    --warning: #c05c00;
+    --warning-bg: #fff3e0;
+    --success: #2e7d32;
+    --error: #c62828;
+    --orange: #c05c00;
+    --purple: #5e35b1;
+    --info: #0277bd;
+    --shadow: 0 2px 8px rgba(0,0,0,0.10);
+  }
+  [data-theme="dark"] {
+    --bg: #111;
+    --surface: #1c1c1c;
+    --surface-2: #242424;
+    --surface-offset: #2a2a2a;
+    --border: #333;
+    --divider: #2a2a2a;
+    --text: #e8e8e8;
+    --text-muted: #a0a0a0;
+    --text-faint: #555;
+    --primary: #4da3f5;
+    --primary-bg: #1a2d3f;
+    --warning: #f5a623;
+    --warning-bg: #2d2010;
+    --success: #66bb6a;
+    --error: #ef5350;
+    --orange: #ffa040;
+    --purple: #ab7ae0;
+    --info: #29b6f6;
+    --shadow: 0 2px 12px rgba(0,0,0,0.4);
+  }
+
+  html { -webkit-font-smoothing: antialiased; font-size: 16px; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+
+  /* WIDGET SHELL */
+  .widget {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow);
+    width: 390px;
+    max-width: 100%;
+    overflow: visible;
+    position: relative;
+  }
+
+  /* HEADER */
+  .widget-header {
+    padding: 16px 16px 0;
+  }
+  .widget-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .widget-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .header-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    position: relative;
+  }
+  .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-md);
+    background: var(--surface-offset);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: background var(--transition);
+    position: relative;
+  }
+  .icon-btn:hover { background: var(--divider); }
+
+  /* NOTIFICATION POPOVER */
+  .notif-popover {
+    display: none;
+    position: absolute;
+    top: 42px; right: 0;
+    width: 280px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    z-index: 50;
+    overflow: hidden;
+    animation: fadeIn 0.15s ease;
+  }
+  .notif-popover.open { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform: translateY(0); } }
+  .notif-empty {
+    padding: 32px 20px;
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .notif-bell-icon {
+    width: 52px; height: 52px;
+    color: var(--text-faint);
+    opacity: 0.5;
+  }
+  .notif-empty-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .notif-empty-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* FILTER ROW */
+  .filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+  }
+
+  /* VIEW DROPDOWN */
+  .view-dropdown-wrap { position: relative; }
+  .view-btn {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 0.875rem; font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: none;
+    transition: background var(--transition);
+  }
+  .view-btn:hover { background: var(--surface-offset); }
+  .view-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px); left: 0;
+    min-width: 130px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    z-index: 40;
+    overflow: hidden;
+    animation: fadeIn 0.12s ease;
+  }
+  .view-dropdown.open { display: block; }
+  .view-option {
+    padding: 9px 14px;
+    font-size: 0.875rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+  .view-option:hover { background: var(--surface-offset); }
+  .view-option.selected { font-weight: 600; color: var(--primary); }
+
+  /* FILTERS BUTTON */
+  .filters-btn {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 0.875rem; font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--surface-offset);
+    transition: background var(--transition);
+  }
+  .filters-btn:hover { background: var(--divider); }
+  .filters-btn.active {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  /* FILTER PANEL */
+  .filter-panel {
+    display: none;
+    padding: 10px 16px 12px;
+    border-top: 1px solid var(--divider);
+    gap: 8px;
+    flex-direction: column;
+  }
+  .filter-panel.open { display: flex; }
+
+  .show-closed-btn {
+    align-self: flex-start;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+  .show-closed-btn:hover { background: var(--surface-offset); }
+
+  .sort-row {
+    display: flex; gap: 8px;
+  }
+  .sort-btn {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 0.8rem; font-weight: 500;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 4px 11px;
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+  .sort-btn:hover { background: var(--surface-offset); }
+
+  /* SEARCH */
+  .search-wrap {
+    padding: 0 16px 10px;
+    position: relative;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding: 7px 12px 7px 32px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  .search-wrap input::placeholder { color: var(--text-faint); }
+  .search-wrap input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-bg);
+  }
+  .search-icon {
+    position: absolute; left: 28px; top: 50%; transform: translateY(-50%);
+    color: var(--text-faint); pointer-events: none;
+    display: flex; align-items: center;
+  }
+
+  /* TICKET LIST */
+  .ticket-list {
+    border-top: 1px solid var(--divider);
+    max-height: 480px;
+    overflow-y: auto;
+    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  }
+  .ticket-list::-webkit-scrollbar { width: 3px; }
+  .ticket-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius-full); }
+
+  .ticket-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--divider);
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+  .ticket-item:last-child { border-bottom: none; }
+  .ticket-item:hover { background: var(--surface-2); }
+  .ticket-item.active { background: var(--primary-bg); }
+
+  .ticket-meta {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 4px;
+  }
+  .ticket-id {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .ticket-badge {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    background: var(--surface-offset);
+    border-radius: var(--radius-sm);
+    padding: 1px 7px;
+  }
+
+  .ticket-status-row {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 4px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  /* Priority colors matching screenshots — High is orange/amber */
+  .p-critical { color: var(--error); }
+  .p-high     { color: var(--orange); }
+  .p-moderate { color: var(--orange); }
+  .p-low      { color: var(--info); }
+  .p-planning { color: var(--text-muted); }
+
+  .dot-sep { color: var(--text-faint); margin: 0 5px; }
+
+  .status-text { font-weight: 600; }
+  .s-in-progress { color: var(--primary); }
+  .s-on-hold     { color: var(--warning); }
+  .s-open        { color: var(--orange); }
+  .s-resolved    { color: var(--success); }
+  .s-new         { color: var(--purple); }
+  .s-cancelled   { color: var(--text-faint); }
+
+  .ticket-desc {
+    font-size: 0.875rem;
+    color: var(--text);
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  .ticket-timestamp {
+    font-size: 0.75rem;
+    color: var(--text-faint);
+  }
+  .ticket-timestamp a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-faint);
+  }
+  .empty-state p { font-size: 0.875rem; color: var(--text-muted); margin-top: 8px; }
+
+  /* DARK MODE TOGGLE */
+  .theme-toggle-wrap { position: fixed; top: 16px; right: 16px; }
+  .theme-toggle {
+    width: 34px; height: 34px; border-radius: var(--radius-full);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-muted);
+    transition: background var(--transition);
+  }
+  .theme-toggle:hover { background: var(--surface-offset); }
+
+  /* Backdrop for dropdowns */
+  .backdrop {
+    display: none;
+    position: fixed; inset: 0; z-index: 30;
+  }
+  .backdrop.on { display: block; }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle-wrap">
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+  </button>
+</div>
+
+<div id="backdrop" class="backdrop" onclick="closeAll()"></div>
+
+<div class="widget">
+
+  <!-- Header -->
+  <div class="widget-header">
+    <div class="widget-header-top">
+      <h1 class="widget-title">Your IT Tickets</h1>
+      <div class="header-actions">
+
+        <!-- Bell button + notification popover -->
+        <button class="icon-btn" id="bellBtn" onclick="toggleNotif(event)" aria-label="Notifications">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+        <div class="notif-popover" id="notifPopover">
+          <div class="notif-empty">
+            <svg class="notif-bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              <line x1="2" y1="2" x2="22" y2="22" stroke-width="1.5"/>
+            </svg>
+            <div class="notif-empty-title">No new notifications</div>
+            <div class="notif-empty-sub">You will see new notifications here.</div>
+          </div>
+        </div>
+
+        <!-- Ellipsis / more options -->
+        <button class="icon-btn" aria-label="More options">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="5" cy="12" r="1.2" fill="currentColor"/>
+            <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
+            <circle cx="19" cy="12" r="1.2" fill="currentColor"/>
+          </svg>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- View toggle + Filters button -->
+    <div class="filter-row">
+      <!-- View dropdown -->
+      <div class="view-dropdown-wrap">
+        <button class="view-btn" id="viewBtn" onclick="toggleViewDropdown(event)">
+          <span id="viewLabel">My Items</span>
+          <svg id="viewChevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="view-dropdown" id="viewDropdown">
+          <div class="view-option selected" onclick="selectView(this, 'My Items')">My Items</div>
+          <div class="view-option" onclick="selectView(this, 'My Tasks')">My Tasks</div>
+        </div>
+      </div>
+
+      <!-- Filters toggle -->
+      <button class="filters-btn" id="filtersBtn" onclick="toggleFilterPanel()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filters
+        <svg id="filterChevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Panel (hidden by default, shown when Filters clicked) -->
+  <div class="filter-panel" id="filterPanel">
+    <button class="show-closed-btn" onclick="toggleShowClosed(this)">Show Closed Items</button>
+    <div class="sort-row">
+      <button class="sort-btn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+        Update Date (Newest)
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <button class="sort-btn">
+        Types
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <span class="search-icon">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    </span>
+    <input type="text" id="searchInput" placeholder="Search ..." oninput="filterTickets()" aria-label="Search tickets">
+  </div>
+
+  <!-- Ticket list -->
+  <div class="ticket-list" id="ticketList"></div>
+
+</div>
+
+<script>
+  // ── DATA ──────────────────────────────────────────────────────────────────
+  const myItemsData = [
+    {
+      id: 'INC0000027', type: 'Incident',
+      priorityLabel: '2 - High', priorityClass: 'p-high',
+      status: 'In Progress', statusClass: 's-in-progress',
+      desc: 'Please remove the latest hotfix from my PC',
+      timeLabel: 'Updated:', time: '10/14/2025, 11:57 PM', openedBy: null
+    },
+    {
+      id: 'INC0001990', type: 'Incident',
+      priorityLabel: '5 - Planning', priorityClass: 'p-planning',
+      status: 'On Hold', statusClass: 's-on-hold',
+      desc: 'Unable to access the personal details section in employee portal',
+      timeLabel: 'Updated:', time: '10/14/2025, 11:57 PM', openedBy: null
+    },
+    {
+      id: 'INC0000059', type: 'Incident',
+      priorityLabel: '3 - Moderate', priorityClass: 'p-moderate',
+      status: 'In Progress', statusClass: 's-in-progress',
+      desc: 'Unable to access team file share',
+      timeLabel: 'Updated:', time: '10/14/2025, 11:57 PM', openedBy: null
+    },
+    {
+      id: 'REQ0002341', type: 'Request',
+      priorityLabel: '4 - Low', priorityClass: 'p-low',
+      status: 'New', statusClass: 's-new',
+      desc: 'Request new laptop for onboarding employee — start date 10/20',
+      timeLabel: 'Updated:', time: '10/13/2025, 02:10 PM', openedBy: null
+    },
+    {
+      id: 'INC0000812', type: 'Incident',
+      priorityLabel: '1 - Critical', priorityClass: 'p-critical',
+      status: 'In Progress', statusClass: 's-in-progress',
+      desc: 'Email client not syncing — missed urgent calendar invites',
+      timeLabel: 'Updated:', time: '10/13/2025, 08:44 AM', openedBy: null
+    },
+    {
+      id: 'REQ0001103', type: 'Request',
+      priorityLabel: '4 - Low', priorityClass: 'p-low',
+      status: 'Resolved', statusClass: 's-resolved',
+      desc: 'VPN access needed for remote work from home setup',
+      timeLabel: 'Updated:', time: '10/10/2025, 11:30 AM', openedBy: null
+    }
+  ];
+
+  const myTasksData = [
+    {
+      id: 'TASK0022395', type: 'Incident Task',
+      priorityLabel: '2 - High', priorityClass: 'p-high',
+      status: 'Open', statusClass: 's-open',
+      desc: 'Connect with caller to run through our performance diagnostic checklist',
+      timeLabel: 'Opened:', time: '10/15/2025, 12:00 AM', openedBy: 'System Administrator'
+    },
+    {
+      id: 'TASK0022401', type: 'Incident Task',
+      priorityLabel: '3 - Moderate', priorityClass: 'p-moderate',
+      status: 'Open', statusClass: 's-open',
+      desc: 'Verify user permissions on shared drive after access restoration',
+      timeLabel: 'Opened:', time: '10/14/2025, 09:15 AM', openedBy: 'System Administrator'
+    },
+    {
+      id: 'TASK0022388', type: 'Change Task',
+      priorityLabel: '4 - Low', priorityClass: 'p-low',
+      status: 'Open', statusClass: 's-open',
+      desc: 'Review and approve patch deployment schedule for Q4 maintenance window',
+      timeLabel: 'Opened:', time: '10/12/2025, 03:30 PM', openedBy: 'Change Manager'
+    }
+  ];
+
+  let currentView = 'My Items';
+  let searchQuery = '';
+  let showClosed = false;
+  let activeId = null;
+
+  function getDataset() {
+    return currentView === 'My Tasks' ? myTasksData : myItemsData;
+  }
+
+  function renderTickets() {
+    const list = document.getElementById('ticketList');
+    const q = searchQuery.toLowerCase();
+    let data = getDataset();
+
+    if (!showClosed) {
+      data = data.filter(t => t.status !== 'Resolved' && t.status !== 'Cancelled');
+    }
+
+    if (q) {
+      data = data.filter(t =>
+        t.id.toLowerCase().includes(q) ||
+        t.desc.toLowerCase().includes(q) ||
+        t.type.toLowerCase().includes(q) ||
+        t.status.toLowerCase().includes(q)
+      );
+    }
+
+    if (data.length === 0) {
+      list.innerHTML = `<div class="empty-state">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto; opacity:0.35; display:block;">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <p>No items found</p>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = data.map(t => {
+      const ts = t.openedBy
+        ? `${t.timeLabel} ${t.time} by <a href="#">${t.openedBy}</a>`
+        : `${t.timeLabel} ${t.time}`;
+      return `
+        <div class="ticket-item${t.id === activeId ? ' active' : ''}"
+             onclick="selectTicket('${t.id}')" role="button" tabindex="0">
+          <div class="ticket-meta">
+            <span class="ticket-id">${t.id}</span>
+            <span class="ticket-badge">${t.type}</span>
+          </div>
+          <div class="ticket-status-row ${t.priorityClass}">
+            <span>${t.priorityLabel}</span>
+            <span class="dot-sep">·</span>
+            <span class="status-text ${t.statusClass}">${t.status}</span>
+          </div>
+          <div class="ticket-desc" title="${t.desc}">${t.desc}</div>
+          <div class="ticket-timestamp">${ts}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function selectTicket(id) {
+    activeId = activeId === id ? null : id;
+    renderTickets();
+  }
+
+  function filterTickets() {
+    searchQuery = document.getElementById('searchInput').value;
+    renderTickets();
+  }
+
+  // ── VIEW DROPDOWN ─────────────────────────────────────────────────────────
+  function toggleViewDropdown(e) {
+    e.stopPropagation();
+    const dd = document.getElementById('viewDropdown');
+    const open = dd.classList.toggle('open');
+    document.getElementById('backdrop').classList.toggle('on', open);
+    if (open) closeNotif();
+  }
+
+  function selectView(el, view) {
+    currentView = view;
+    document.getElementById('viewLabel').textContent = view;
+    document.querySelectorAll('.view-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    closeAll();
+    renderTickets();
+  }
+
+  // ── FILTER PANEL ──────────────────────────────────────────────────────────
+  function toggleFilterPanel() {
+    const panel = document.getElementById('filterPanel');
+    const btn = document.getElementById('filtersBtn');
+    const chevron = document.getElementById('filterChevron');
+    const open = panel.classList.toggle('open');
+    btn.classList.toggle('active', open);
+    chevron.innerHTML = open
+      ? '<polyline points="18 15 12 9 6 15"/>'
+      : '<polyline points="6 9 12 15 18 9"/>';
+  }
+
+  function toggleShowClosed(btn) {
+    showClosed = !showClosed;
+    btn.textContent = showClosed ? 'Hide Closed Items' : 'Show Closed Items';
+    renderTickets();
+  }
+
+  // ── NOTIFICATIONS ─────────────────────────────────────────────────────────
+  function toggleNotif(e) {
+    e.stopPropagation();
+    const pop = document.getElementById('notifPopover');
+    const open = pop.classList.toggle('open');
+    document.getElementById('backdrop').classList.toggle('on', open);
+    if (open) closeViewDropdown();
+  }
+
+  function closeNotif() { document.getElementById('notifPopover').classList.remove('open'); }
+  function closeViewDropdown() { document.getElementById('viewDropdown').classList.remove('open'); }
+
+  function closeAll() {
+    closeNotif();
+    closeViewDropdown();
+    document.getElementById('backdrop').classList.remove('on');
+  }
+
+  // ── DARK MODE ─────────────────────────────────────────────────────────────
+  (function () {
+    const btn = document.getElementById('themeToggle');
+    const root = document.documentElement;
+    let dark = matchMedia('(prefers-color-scheme:dark)').matches;
+    const sun = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
+    const moon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+    const apply = () => { root.setAttribute('data-theme', dark ? 'dark' : 'light'); btn.innerHTML = dark ? sun : moon; };
+    apply();
+    btn.addEventListener('click', () => { dark = !dark; apply(); });
+  })();
+
+  // ── INIT ──────────────────────────────────────────────────────────────────
+  renderTickets();
+</script>
+</body>
+</html>
