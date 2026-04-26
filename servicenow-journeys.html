@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ServiceNow Journeys</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300..700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+:root, [data-theme="light"] {
+  --color-bg: #f2f4f8;
+  --color-surface: #ffffff;
+  --color-surface-2: #f8f9fb;
+  --color-surface-offset: #eef0f5;
+  --color-border: #dde1ea;
+  --color-divider: #e8eaf0;
+  --color-text: #1d1f26;
+  --color-text-muted: #5a5f72;
+  --color-text-faint: #9ba3b8;
+  --color-primary: #293e8f;
+  --color-primary-hover: #1e2f6e;
+  --color-primary-light: #e8eaf8;
+  --color-accent: #6b3db5;
+  --color-success: #2e7d32;
+  --color-success-bg: #e8f5e9;
+  --color-warning: #e65100;
+  --color-warning-bg: #fff3e0;
+  --color-info: #0277bd;
+  --color-info-bg: #e1f5fe;
+  --color-on-track: #2e7d32;
+  --color-on-track-bg: #e6f4ea;
+  --color-sn-purple: #81007f;
+  --color-sn-purple-bg: #f9e5f9;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.1);
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+}
+
+[data-theme="dark"] {
+  --color-bg: #0f1117;
+  --color-surface: #181b22;
+  --color-surface-2: #1e2130;
+  --color-surface-offset: #232639;
+  --color-border: #2d3148;
+  --color-divider: #252840;
+  --color-text: #d8dce8;
+  --color-text-muted: #8890a8;
+  --color-text-faint: #545870;
+  --color-primary: #6c82e0;
+  --color-primary-hover: #8fa0f0;
+  --color-primary-light: #1e2540;
+  --color-success: #66bb6a;
+  --color-success-bg: #1a3320;
+  --color-on-track: #66bb6a;
+  --color-on-track-bg: #1a3320;
+  --color-sn-purple: #c97adc;
+  --color-sn-purple-bg: #2a1535;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+}
+
+/* ─── App Shell ─── */
+.app-shell { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ─── Top Nav ─── */
+.topnav {
+  background: #1c1f36;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topnav-logo {
+  display: flex; align-items: center; gap: 8px;
+  color: #fff; font-weight: 700; font-size: var(--text-lg);
+  letter-spacing: -0.3px; white-space: nowrap;
+}
+.topnav-logo svg { width: 22px; height: 22px; }
+.topnav-links { display: flex; gap: 4px; }
+.topnav-link {
+  color: rgba(255,255,255,0.75); font-size: var(--text-sm);
+  padding: 4px 10px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.15s ease;
+  display: flex; align-items: center; gap: 4px;
+  background: none; border: none;
+  font-family: inherit;
+}
+.topnav-link:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.topnav-link .chevron { font-size: 10px; opacity: 0.7; }
+.topnav-spacer { flex: 1; }
+.topnav-actions { display: flex; align-items: center; gap: 8px; }
+.topnav-search {
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--radius-full); padding: 4px 12px;
+  color: rgba(255,255,255,0.8); font-size: var(--text-sm);
+  width: 200px; outline: none; font-family: inherit;
+}
+.topnav-search::placeholder { color: rgba(255,255,255,0.45); }
+.topnav-search:focus { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.3); }
+.topnav-icon-btn {
+  width: 30px; height: 30px; border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.75); cursor: pointer; border: none; background: none;
+  font-size: 16px; transition: all 0.15s;
+}
+.topnav-icon-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.avatar-btn {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: #6c82e0; color: white; font-size: var(--text-xs);
+  font-weight: 700; border: 2px solid rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; letter-spacing: 0.5px;
+}
+
+/* ─── Subnav ─── */
+.subnav {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 24px;
+  display: flex; align-items: center; gap: 8px;
+  height: 40px;
+}
+.subnav-item {
+  font-size: var(--text-sm); color: var(--color-text-muted);
+  padding: 4px 12px; border-radius: var(--radius-sm);
+  cursor: pointer; border: none; background: none;
+  font-family: inherit; transition: all 0.15s;
+  white-space: nowrap; display: flex; align-items: center; gap: 4px;
+}
+.subnav-item:hover { color: var(--color-text); background: var(--color-surface-offset); }
+.subnav-item.active { color: var(--color-text); }
+.subnav-chevron { font-size: 10px; opacity: 0.5; }
+.subnav-sep { color: var(--color-text-faint); font-size: var(--text-sm); }
+
+/* ─── Main Content ─── */
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 24px 40px;
+  width: 100%;
+}
+
+/* ─── Page Header ─── */
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.page-header-left { display: flex; align-items: center; gap: 14px; }
+.page-icon {
+  width: 48px; height: 48px; border-radius: var(--radius-md);
+  background: var(--color-primary-light);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.page-icon svg { width: 26px; height: 26px; color: var(--color-primary); }
+.page-title-block h1 { font-size: var(--text-xl); font-weight: 700; line-height: 1.2; }
+.page-title-block p { font-size: var(--text-sm); color: var(--color-text-muted); margin-top: 2px; }
+.page-header-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ─── Tabs ─── */
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 20px;
+}
+.tab-btn {
+  font-size: var(--text-sm); font-family: inherit;
+  padding: 8px 16px; background: none; border: none;
+  color: var(--color-text-muted); cursor: pointer;
+  position: relative; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; transition: all 0.15s; font-weight: 500;
+}
+.tab-btn:hover { color: var(--color-text); }
+.tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* ─── Section Titles ─── */
+.section-title {
+  font-size: var(--text-base); font-weight: 600;
+  margin-bottom: 12px; color: var(--color-text);
+}
+
+/* ─── Card ─── */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+}
+.card-body { padding: 16px 20px; }
+
+/* ─── Your Next Tasks ─── */
+.tasks-empty {
+  padding: 28px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+}
+.check-circle {
+  width: 40px; height: 40px; background: var(--color-success-bg);
+  border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 4px;
+}
+.check-circle svg { width: 22px; height: 22px; color: var(--color-success); }
+.tasks-empty-title { font-size: var(--text-base); font-weight: 600; color: var(--color-text); }
+.tasks-empty-sub { font-size: var(--text-sm); color: var(--color-text-muted); max-width: 340px; }
+
+/* ─── Filters Row ─── */
+.filters-row {
+  display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; align-items: center;
+}
+.filter-select {
+  font-family: inherit; font-size: var(--text-sm);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  color: var(--color-text-muted); border-radius: var(--radius-sm);
+  padding: 5px 28px 5px 10px; cursor: pointer; outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239ba3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 8px center;
+  min-width: 140px;
+}
+.filter-select:focus { border-color: var(--color-primary); color: var(--color-text); }
+.search-wrap { flex: 1; min-width: 160px; max-width: 300px; position: relative; }
+.search-wrap svg { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--color-text-faint); pointer-events: none; }
+.search-input {
+  width: 100%; font-family: inherit; font-size: var(--text-sm);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  color: var(--color-text); border-radius: var(--radius-sm);
+  padding: 5px 28px 5px 10px; outline: none;
+}
+.search-input:focus { border-color: var(--color-primary); }
+.search-input::placeholder { color: var(--color-text-faint); }
+
+/* ─── Journeys Table ─── */
+.journeys-table { width: 100%; border-collapse: collapse; }
+.journeys-table th {
+  font-size: var(--text-xs); font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--color-text-muted);
+  padding: 8px 12px; border-bottom: 1px solid var(--color-border);
+  text-align: left; white-space: nowrap;
+}
+.journeys-table td {
+  padding: 12px 12px; border-bottom: 1px solid var(--color-divider);
+  vertical-align: middle; font-size: var(--text-sm);
+}
+.journeys-table tr:last-child td { border-bottom: none; }
+.journeys-table tr:hover td { background: var(--color-surface-2); }
+.journey-link {
+  color: var(--color-primary); font-weight: 500; cursor: pointer;
+  text-decoration: none; transition: color 0.15s;
+}
+.journey-link:hover { color: var(--color-primary-hover); text-decoration: underline; }
+
+/* ─── Status Badge ─── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: var(--radius-full);
+  font-size: var(--text-xs); font-weight: 600; white-space: nowrap;
+}
+.badge-on-track { background: var(--color-on-track-bg); color: var(--color-on-track); }
+.badge-at-risk { background: var(--color-warning-bg); color: var(--color-warning); }
+.badge-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: currentColor; display: inline-block;
+}
+
+/* ─── Progress Bar ─── */
+.progress-wrap { min-width: 120px; }
+.progress-bar {
+  width: 100%; height: 5px; background: var(--color-surface-offset);
+  border-radius: var(--radius-full); overflow: hidden; margin-bottom: 4px;
+}
+.progress-fill { height: 100%; background: var(--color-success); border-radius: var(--radius-full); transition: width 0.4s ease; }
+.progress-label { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* ─── Journey Cards (My Team) ─── */
+.journey-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.journey-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+.journey-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.journey-card-status { margin-bottom: 8px; }
+.journey-card-title {
+  font-size: var(--text-sm); font-weight: 600; margin-bottom: 6px;
+  color: var(--color-text); display: flex; align-items: center; gap: 6px;
+}
+.journey-card-check { color: var(--color-success); font-size: 14px; }
+.journey-card-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 8px; }
+.journey-card-employee {
+  display: flex; align-items: center; gap: 6px; margin-top: 8px;
+}
+.emp-avatar {
+  width: 22px; height: 22px; border-radius: var(--radius-full);
+  background: var(--color-primary-light); color: var(--color-primary);
+  font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+}
+.emp-name { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* ─── Insights Section ─── */
+.insights-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px; margin-bottom: 8px;
+}
+.insight-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+}
+.insight-value { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+.insight-label { font-size: var(--text-xs); color: var(--color-text-muted); }
+.insight-trend { font-size: var(--text-xs); margin-top: 6px; display: flex; align-items: center; gap: 3px; }
+.trend-up { color: var(--color-success); }
+.trend-neutral { color: var(--color-text-muted); }
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: var(--radius-sm);
+  font-size: var(--text-sm); font-weight: 600; font-family: inherit;
+  cursor: pointer; border: none; transition: all 0.15s; white-space: nowrap;
+}
+.btn-primary { background: var(--color-primary); color: white; }
+.btn-primary:hover { background: var(--color-primary-hover); }
+.btn-ghost {
+  background: none; border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+.btn-ghost:hover { background: var(--color-surface-offset); color: var(--color-text); }
+
+/* ─── Breadcrumb ─── */
+.breadcrumb {
+  display: flex; align-items: center; gap: 6px;
+  font-size: var(--text-sm); color: var(--color-text-muted);
+  margin-bottom: 18px;
+}
+.breadcrumb a { color: var(--color-text-muted); text-decoration: none; }
+.breadcrumb a:hover { color: var(--color-primary); }
+.breadcrumb-sep { color: var(--color-text-faint); }
+.breadcrumb-current { color: var(--color-text); }
+
+/* ─── Tab Panels ─── */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ─── Create Journey Banner ─── */
+.create-banner {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.create-banner h3 { font-size: var(--text-base); font-weight: 600; margin-bottom: 4px; }
+.create-banner p { font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: 12px; }
+.create-banner p a { color: var(--color-primary); text-decoration: none; }
+.create-banner p a:hover { text-decoration: underline; }
+
+/* ─── Dark Toggle ─── */
+.theme-toggle-wrap { position: fixed; bottom: 16px; right: 16px; z-index: 200; }
+.theme-toggle {
+  width: 36px; height: 36px; border-radius: var(--radius-full);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--color-text-muted); font-size: 16px; transition: all 0.15s;
+}
+.theme-toggle:hover { color: var(--color-text); box-shadow: var(--shadow-md); }
+
+/* ─── Involved Journey Modal panel ─── */
+.journey-detail-panel {
+  position: fixed; top: 84px; right: 0; bottom: 0;
+  width: 380px; background: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+  z-index: 150; display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+.journey-detail-panel.open { transform: translateX(0); }
+.panel-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--color-border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-header h2 { font-size: var(--text-base); font-weight: 600; }
+.panel-close { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--color-text-muted); padding: 2px 6px; border-radius: var(--radius-sm); }
+.panel-close:hover { background: var(--color-surface-offset); color: var(--color-text); }
+.panel-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+.panel-section { margin-bottom: 20px; }
+.panel-section-title { font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); margin-bottom: 10px; }
+.task-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--color-divider);
+}
+.task-item:last-child { border-bottom: none; }
+.task-check {
+  width: 16px; height: 16px; border-radius: 3px; flex-shrink: 0; margin-top: 1px;
+  border: 2px solid var(--color-border); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.task-check.done { background: var(--color-success); border-color: var(--color-success); }
+.task-check.done::after { content: '✓'; color: white; font-size: 10px; font-weight: 700; }
+.task-text { font-size: var(--text-sm); line-height: 1.4; }
+.task-text.done { text-decoration: line-through; color: var(--color-text-muted); }
+.task-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
+.info-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--color-divider); font-size: var(--text-sm); }
+.info-row:last-child { border-bottom: none; }
+.info-row-label { color: var(--color-text-muted); }
+.info-row-value { font-weight: 500; }
+
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<!-- Top Nav -->
+<nav class="topnav">
+  <div class="topnav-logo">
+    <svg viewBox="0 0 36 36" fill="none">
+      <rect width="36" height="36" rx="6" fill="#81007f"/>
+      <text x="18" y="25" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="800" fill="white">SN</text>
+    </svg>
+    ServiceNow
+  </div>
+  <div class="topnav-links">
+    <button class="topnav-link">All</button>
+    <button class="topnav-link">Favorites</button>
+    <button class="topnav-link">History</button>
+    <button class="topnav-link">Workspaces</button>
+  </div>
+  <div class="topnav-spacer"></div>
+  <div class="topnav-actions">
+    <input class="topnav-search" type="search" placeholder="Search…">
+    <button class="topnav-icon-btn" title="Globe">🌐</button>
+    <button class="topnav-icon-btn" title="Notifications">🔔</button>
+    <button class="topnav-icon-btn" title="Help">?</button>
+    <div class="avatar-btn">FH</div>
+  </div>
+</nav>
+
+<!-- Subnav -->
+<div class="subnav">
+  <button class="subnav-item">HR <span class="subnav-chevron">▾</span></button>
+  <button class="subnav-item">IT <span class="subnav-chevron">▾</span></button>
+  <button class="subnav-item">Workplace <span class="subnav-chevron">▾</span></button>
+  <button class="subnav-item">Org Chart</button>
+  <button class="subnav-item">Manager Hub <span class="subnav-chevron">▾</span></button>
+</div>
+
+<!-- Main -->
+<main class="main-content">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="#">Home</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-current">Journeys</span>
+  </nav>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+        </svg>
+      </div>
+      <div class="page-title-block">
+        <h1>Journeys</h1>
+        <p>Collaborative guidance to help you navigate the career moments that matter</p>
+      </div>
+    </div>
+    <div class="page-header-actions">
+      <button class="btn btn-ghost" onclick="alert('Opening journey templates…')">Browse templates</button>
+      <button class="btn btn-primary" onclick="alert('Create new journey flow…')">+ Create journey</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('team', this)">My team's journeys</button>
+    <button class="tab-btn" onclick="switchTab('my', this)">My journeys</button>
+    <button class="tab-btn" onclick="switchTab('templates', this)">My templates</button>
+  </div>
+
+  <!-- ═══ TAB: My Team's Journeys ═══ -->
+  <div class="tab-panel active" id="tab-team">
+
+    <div class="create-banner">
+      <h3>Create a journey for your team</h3>
+      <p>Step-by-step guidance to help employees achieve their goals. <a href="#">Learn more about getting started with journeys.</a></p>
+      <button class="btn btn-primary" onclick="alert('Opening journey builder…')">Create a new journey</button>
+    </div>
+
+    <div class="section-title">Journeys that need attention</div>
+    <div class="journey-cards-grid" id="attention-cards"></div>
+
+    <div class="section-title" style="margin-top:24px">Journey insights</div>
+    <div class="insights-grid" id="insight-cards"></div>
+
+  </div>
+
+  <!-- ═══ TAB: My Journeys ═══ -->
+  <div class="tab-panel" id="tab-my">
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-body">
+        <div class="section-title" style="margin-bottom:4px">Your next tasks</div>
+      </div>
+      <div class="tasks-empty">
+        <div class="check-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="tasks-empty-title">All your tasks are complete. Nice work!</div>
+        <div class="tasks-empty-sub">Check back later to see if new tasks are added to your journey</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body" style="padding-bottom:0">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px">
+          <div class="section-title" style="margin-bottom:0">All journeys</div>
+        </div>
+        <div class="filters-row">
+          <select class="filter-select"><option>Journey type</option><option>Onboarding</option><option>Career Growth</option><option>Offboarding</option></select>
+          <select class="filter-select"><option>State</option><option>On track</option><option>At risk</option><option>Complete</option></select>
+          <select class="filter-select"><option>Recently updated</option><option>Oldest first</option><option>A–Z</option></select>
+          <div class="search-wrap">
+            <input class="search-input" type="search" placeholder="Search by keyword" id="journey-search" oninput="filterJourneys()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+        </div>
+      </div>
+      <table class="journeys-table" id="journeys-table">
+        <thead>
+          <tr>
+            <th>Journey</th>
+            <th>State</th>
+            <th>Journey progress</th>
+            <th>Last updated</th>
+            <th>Employee</th>
+          </tr>
+        </thead>
+        <tbody id="journey-rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: Templates ═══ -->
+  <div class="tab-panel" id="tab-templates">
+    <div class="card">
+      <div class="card-body">
+        <div class="section-title">Task templates</div>
+        <p style="font-size:var(--text-sm); color:var(--color-text-muted); margin-bottom:16px">Reusable task templates to accelerate journey creation.</p>
+        <div id="template-list"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- Journey Detail Side Panel -->
+<div class="journey-detail-panel" id="detail-panel">
+  <div class="panel-header">
+    <h2 id="panel-title">Journey Details</h2>
+    <button class="panel-close" onclick="closePanel()">✕</button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<!-- Theme Toggle -->
+<div class="theme-toggle-wrap">
+  <button class="theme-toggle" data-theme-toggle title="Toggle theme">🌙</button>
+</div>
+
+<script>
+// ─── Data ───
+const journeys = [
+  { id: 1, name: 'New Hire Onboarding - Sofia Warehouse Worker', type: 'Onboarding', state: 'on-track', progress: 1, total: 3, updated: '6m ago', employee: 'Sofia Warehouse Worker', initials: 'SW' },
+  { id: 2, name: 'New Hire Onboarding - Abel Tuter', type: 'Onboarding', state: 'on-track', progress: 1, total: 5, updated: '12h ago', employee: 'Abel Tuter', initials: 'AT' },
+  { id: 3, name: 'Career Growth - Irene Rose', type: 'Career Growth', state: 'on-track', progress: 3, total: 6, updated: 'About 1 month ago', employee: 'Irene Rose', initials: 'IR' },
+  { id: 4, name: 'Parental Leave of Absence - Steven May', type: 'Leave', state: 'on-track', progress: 2, total: 8, updated: 'About 1 month ago', employee: 'Steven May', initials: 'SM' },
+  { id: 5, name: 'Promotion - Chris Peters', type: 'Career Growth', state: 'on-track', progress: 4, total: 7, updated: 'About 1 month ago', employee: 'Chris Peters', initials: 'CP' },
+  { id: 6, name: 'New Hire Journey - Nick Newman', type: 'Onboarding', state: 'at-risk', progress: 2, total: 10, updated: '23d ago', employee: 'Nick Newman', initials: 'NN' },
+];
+
+const tasksByJourney = {
+  1: [
+    { text: 'Request Standing Desk', done: true, assignee: 'Sofia', due: 'Due Apr 15' },
+    { text: 'Request Change in Start Date', done: false, assignee: 'HR Manager', due: 'Due Apr 22' },
+    { text: 'Complete Work Visa Transfer', done: false, assignee: 'HR Service', due: 'Due Apr 30' },
+  ],
+  2: [
+    { text: 'Complete I-9 Verification', done: true, assignee: 'Abel', due: 'Due Apr 10' },
+    { text: 'Set Up Workstation', done: false, assignee: 'IT', due: 'Due Apr 18' },
+    { text: 'HR Onboarding Call', done: false, assignee: 'HR Manager', due: 'Due Apr 19' },
+    { text: 'Complete Benefits Enrollment', done: false, assignee: 'Abel', due: 'Due Apr 25' },
+    { text: 'Meet with Buddy', done: false, assignee: 'Abel', due: 'Due May 1' },
+  ],
+  3: [
+    { text: 'Update Career Profile', done: true, assignee: 'Irene', due: 'Done' },
+    { text: 'Schedule 1:1 with Manager', done: true, assignee: 'Irene', due: 'Done' },
+    { text: 'Complete Skills Assessment', done: true, assignee: 'Irene', due: 'Done' },
+    { text: 'Identify Stretch Projects', done: false, assignee: 'Manager', due: 'Due May 5' },
+    { text: 'Submit Development Plan', done: false, assignee: 'Irene', due: 'Due May 12' },
+    { text: 'Mid-Year Review', done: false, assignee: 'HR', due: 'Due Jun 1' },
+  ],
+  4: [
+    { text: 'Submit Leave Request', done: true, assignee: 'Steven', due: 'Done' },
+    { text: 'Benefits Review', done: true, assignee: 'HR', due: 'Done' },
+    { text: 'Handover Documentation', done: false, assignee: 'Steven', due: 'Due Apr 28' },
+    { text: 'Coverage Plan Setup', done: false, assignee: 'Manager', due: 'Due Apr 30' },
+  ],
+  5: [
+    { text: 'Performance Summary', done: true, assignee: 'Chris', due: 'Done' },
+    { text: 'Promotion Recommendation Letter', done: true, assignee: 'Manager', due: 'Done' },
+    { text: 'Compensation Review', done: true, assignee: 'HR', due: 'Done' },
+    { text: 'HRBP Approval', done: true, assignee: 'HRBP', due: 'Done' },
+    { text: 'Announce Promotion', done: false, assignee: 'Manager', due: 'Due May 1' },
+    { text: 'Update Job Profile', done: false, assignee: 'HR', due: 'Due May 5' },
+    { text: 'Onboard to New Role', done: false, assignee: 'Nick', due: 'Due May 10' },
+  ],
+  6: [
+    { text: 'Complete New Hire Paperwork', done: true, assignee: 'Nick', due: 'Done' },
+    { text: 'IT Equipment Setup', done: true, assignee: 'IT', due: 'Done' },
+    { text: 'Complete Security Training', done: false, assignee: 'Nick', due: 'OVERDUE' },
+    { text: 'Meet Department Team', done: false, assignee: 'Manager', due: 'Due Apr 26' },
+  ],
+};
+
+const attentionJourneys = [
+  { name: 'Career Growth - Irene Rose', employee: 'Irene Rose', initials: 'IR', updated: 'About 1 month ago', state: 'on-track', id: 3 },
+  { name: 'Parental Leave of Absence - ...', employee: 'Steven May', initials: 'SM', updated: 'About 1 month ago', state: 'on-track', id: 4 },
+  { name: 'Promotion - Chris Peters', employee: 'Chris Peters', initials: 'CP', updated: 'About 1 month ago', state: 'on-track', id: 5 },
+  { name: 'New Hire Journey - Nick N...', employee: 'Nick Newman', initials: 'NN', updated: '23d ago', state: 'at-risk', id: 6 },
+];
+
+const insights = [
+  { value: '6', label: 'Active journeys', trend: '▲ 2 from last month', trendClass: 'trend-up' },
+  { value: '4', label: 'On track', trend: '67% completion rate', trendClass: 'trend-neutral' },
+  { value: '1', label: 'Needs attention', trend: 'Nick Newman overdue', trendClass: 'trend-neutral' },
+  { value: '12', label: 'Tasks due this week', trend: '5 completed', trendClass: 'trend-up' },
+];
+
+const templates = [
+  { name: 'New Hire Onboarding', trigger: 'After Pre-Hire', tasks: 8 },
+  { name: 'Employee Offboarding', trigger: 'After Separation', tasks: 12 },
+  { name: 'Career Growth Plan', trigger: 'Manual', tasks: 6 },
+  { name: 'Parental Leave', trigger: 'After Leave Request', tasks: 9 },
+  { name: 'Promotion Journey', trigger: 'After Promotion Approval', tasks: 7 },
+];
+
+// ─── Render Attention Cards ───
+function renderAttentionCards() {
+  const grid = document.getElementById('attention-cards');
+  grid.innerHTML = attentionJourneys.map(j => `
+    <div class="journey-card" onclick="openPanel(${j.id})">
+      <div class="journey-card-status">
+        <span class="badge badge-${j.state === 'on-track' ? 'on-track' : 'at-risk'}">
+          <span class="badge-dot"></span>${j.state === 'on-track' ? 'On track' : 'At risk'}
+        </span>
+      </div>
+      <div class="journey-card-title">
+        <span style="color:var(--color-success)">✓</span> ${j.name}
+      </div>
+      <div class="journey-card-meta">Last updated ${j.updated}</div>
+      <div class="journey-card-employee">
+        <div class="emp-avatar">${j.initials}</div>
+        <span class="emp-name">${j.employee}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── Render Insights ───
+function renderInsights() {
+  const grid = document.getElementById('insight-cards');
+  grid.innerHTML = insights.map(i => `
+    <div class="insight-card">
+      <div class="insight-value">${i.value}</div>
+      <div class="insight-label">${i.label}</div>
+      <div class="insight-trend ${i.trendClass}">${i.trend}</div>
+    </div>
+  `).join('');
+}
+
+// ─── Render Journey Table ───
+function renderJourneys(list) {
+  const tbody = document.getElementById('journey-rows');
+  tbody.innerHTML = list.map(j => {
+    const pct = Math.round((j.progress / j.total) * 100);
+    return `
+      <tr>
+        <td><a class="journey-link" onclick="openPanel(${j.id})">${j.name}</a></td>
+        <td><span class="badge badge-${j.state === 'on-track' ? 'on-track' : 'at-risk'}"><span class="badge-dot"></span>${j.state === 'on-track' ? 'On track' : 'At risk'}</span></td>
+        <td>
+          <div class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <div class="progress-label">${j.progress}/${j.total} tasks completed</div>
+          </div>
+        </td>
+        <td style="color:var(--color-text-muted)">${j.updated}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="emp-avatar">${j.initials}</div>
+            <span>${j.employee}</span>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ─── Render Templates ───
+function renderTemplates() {
+  const list = document.getElementById('template-list');
+  list.innerHTML = templates.map(t => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--color-divider)">
+      <div>
+        <div style="font-size:var(--text-sm);font-weight:600">${t.name}</div>
+        <div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px">Trigger: ${t.trigger} · ${t.tasks} tasks</div>
+      </div>
+      <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick="alert('Use template: ${t.name}')">Use template</button>
+    </div>
+  `).join('');
+}
+
+// ─── Filter Journeys ───
+function filterJourneys() {
+  const q = document.getElementById('journey-search').value.toLowerCase();
+  renderJourneys(q ? journeys.filter(j => j.name.toLowerCase().includes(q) || j.employee.toLowerCase().includes(q)) : journeys);
+}
+
+// ─── Tab Switch ───
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  const panel = document.getElementById('tab-' + name);
+  if (panel) panel.classList.add('active');
+  closePanel();
+}
+
+// ─── Side Panel ───
+function openPanel(id) {
+  const j = journeys.find(x => x.id === id);
+  if (!j) return;
+  document.getElementById('panel-title').textContent = j.name;
+  const tasks = tasksByJourney[id] || [];
+  const pct = Math.round((j.progress / j.total) * 100);
+  document.getElementById('panel-body').innerHTML = `
+    <div class="panel-section">
+      <div class="panel-section-title">Overview</div>
+      <div class="info-row"><span class="info-row-label">Employee</span><span class="info-row-value">${j.employee}</span></div>
+      <div class="info-row"><span class="info-row-label">State</span>
+        <span class="badge badge-${j.state === 'on-track' ? 'on-track' : 'at-risk'}" style="font-size:11px"><span class="badge-dot"></span>${j.state === 'on-track' ? 'On track' : 'At risk'}</span>
+      </div>
+      <div class="info-row"><span class="info-row-label">Progress</span><span class="info-row-value">${j.progress}/${j.total} tasks (${pct}%)</span></div>
+      <div class="info-row"><span class="info-row-label">Last updated</span><span class="info-row-value">${j.updated}</span></div>
+      <div class="info-row"><span class="info-row-label">Type</span><span class="info-row-value">${j.type}</span></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Tasks</div>
+      ${tasks.map((t, i) => `
+        <div class="task-item">
+          <div class="task-check ${t.done ? 'done' : ''}" onclick="toggleTask(${id}, ${i}, this)"></div>
+          <div>
+            <div class="task-text ${t.done ? 'done' : ''}">${t.text}</div>
+            <div class="task-meta">${t.assignee} · ${t.due}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function toggleTask(journeyId, taskIdx, el) {
+  const tasks = tasksByJourney[journeyId];
+  tasks[taskIdx].done = !tasks[taskIdx].done;
+  openPanel(journeyId);
+  // Update progress
+  const j = journeys.find(x => x.id === journeyId);
+  j.progress = tasks.filter(t => t.done).length;
+  renderJourneys(journeys);
+}
+
+function closePanel() {
+  document.getElementById('detail-panel').classList.remove('open');
+}
+
+// ─── Theme Toggle ───
+(function(){
+  const t = document.querySelector('[data-theme-toggle]'), r = document.documentElement;
+  let d = matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
+  r.setAttribute('data-theme', d);
+  t && t.addEventListener('click', () => {
+    d = d === 'dark' ? 'light' : 'dark';
+    r.setAttribute('data-theme', d);
+    t.innerHTML = d === 'dark' ? '☀️' : '🌙';
+  });
+})();
+
+// ─── Init ───
+renderAttentionCards();
+renderInsights();
+renderJourneys(journeys);
+renderTemplates();
+</script>
+</body>
+</html>
