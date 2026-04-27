@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Shift Overview</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #ffffff;
+  padding: 0;
+  margin: 0;
+}
+
+/* ── Gentiva brand palette ──────────────────────────────
+   Primary:   #E87722  (Gentiva orange)
+   Secondary: #4A4A4A  (charcoal gray)
+   Accent:    #00688B  (teal, used for hover/accents)
+   Light bg:  #FDF6F0  (warm off-white)
+──────────────────────────────────────────────────────── */
+
+.widget {
+  width: 100%;
+  max-width: 480px;
+  margin: auto;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+/* ── Logo header ── */
+.brand-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #F2E8DF;
+}
+.brand-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+.brand-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #4A4A4A;
+  letter-spacing: 0.5px;
+}
+.brand-name span {
+  color: #E87722;
+}
+
+.widget-title {
+  text-align: center;
+  font-size: 17px;
+  font-weight: 600;
+  color: #4A4A4A;
+  margin: 0 0 4px 0;
+}
+
+.date-range {
+  text-align: center;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: #6B6B6B;
+  font-size: 14px;
+}
+
+.nav-arrows {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 20px;
+  padding: 0 4px;
+  color: #E87722;
+  cursor: pointer;
+}
+
+.week-days {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 4px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #777;
+}
+.week-days div {
+  width: 100%;
+  text-align: center;
+  padding: 8px 0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.week-days div:hover {
+  background: #FDF0E6;
+}
+.week-days .active {
+  background: #E87722;
+  color: white;
+  font-weight: 600;
+}
+
+.summary {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #4A4A4A;
+  background: #FDF6F0;
+  border-radius: 8px;
+  padding: 8px 0;
+}
+
+.day-label {
+  margin-top: 20px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #4A4A4A;
+  font-size: 15px;
+  padding-left: 4px;
+}
+
+.shift-card {
+  width: 100%;
+  background: white;
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  border-left: 4px solid #E87722;
+  margin-bottom: 16px;
+}
+
+.shift-time {
+  font-size: 16px;
+  font-weight: 700;
+  color: #4A4A4A;
+  margin-bottom: 6px;
+}
+
+.shift-details {
+  font-size: 14px;
+  color: #6B6B6B;
+  margin-bottom: 3px;
+}
+
+.shift-meta {
+  text-align: right;
+  font-size: 13px;
+  color: #999;
+  margin-top: 6px;
+}
+
+.swap-btn {
+  margin-top: 10px;
+  padding: 12px 14px;
+  font-size: 15px;
+  border-radius: 8px;
+  background: #E87722;
+  color: white;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.swap-btn:hover {
+  background: #00688B;
+}
+
+/* ── Modal ── */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 1000;
+}
+.modal-content {
+  background: white;
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 14px;
+  border-top: 4px solid #E87722;
+}
+.modal-content h3 {
+  margin: 0 0 12px 0;
+  color: #4A4A4A;
+  font-size: 17px;
+}
+.close {
+  float: right;
+  cursor: pointer;
+  font-size: 22px;
+  color: #999;
+  line-height: 1;
+}
+.close:hover {
+  color: #E87722;
+}
+
+select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 15px;
+  border: 1px solid #DDD;
+  color: #4A4A4A;
+  outline: none;
+}
+select:focus {
+  border-color: #E87722;
+  box-shadow: 0 0 0 2px rgba(232,119,34,0.15);
+}
+</style>
+</head>
+<body>
+<div class="widget">
+
+  <!-- Gentiva brand header -->
+  <div class="brand-header">
+    <span class="brand-icon">🧡</span>
+    <div class="brand-name">gentiva <span style="font-weight:400; color:#6B6B6B; font-size:14px; display:block; margin-top:-4px; letter-spacing:2px; text-transform:uppercase;">HOSPICE</span></div>
+  </div>
+
+  <h2 class="widget-title">Shift Overview</h2>
+  <div class="date-range">Jan 12 – Jan 18, 2026</div>
+
+  <div class="nav-arrows">
+    <span>&#8249;</span>
+    <span>&#8250;</span>
+  </div>
+
+  <div class="week-days">
+    <div>Mo<br>12</div>
+    <div>Tu<br>13</div>
+    <div class="active">We<br>14</div>
+    <div>Th<br>15</div>
+    <div>Fr<br>16</div>
+    <div>Sa<br>17</div>
+    <div>Su<br>18</div>
+  </div>
+
+  <div class="summary">30 hrs &nbsp;/&nbsp; $285</div>
+
+  <div class="day-label">We, Jan 14</div>
+  <div class="shift-card">
+    <div class="shift-time">6am – 2pm</div>
+    <div class="shift-details">Morning Shift</div>
+    <div class="shift-details">Assembly Line A</div>
+    <div class="shift-meta">8 hrs</div>
+    <button class="swap-btn" onclick="openSwapModal('6am – 2pm')">Request Swap</button>
+  </div>
+
+  <div class="day-label">Th, Jan 15</div>
+  <div class="shift-card">
+    <div class="shift-time">2pm – 10pm</div>
+    <div class="shift-details">Afternoon Shift</div>
+    <div class="shift-details">Packaging Area</div>
+    <div class="shift-meta">8 hrs</div>
+    <button class="swap-btn" onclick="openSwapModal('2pm – 10pm')">Request Swap</button>
+  </div>
+
+  <div class="day-label">Fr, Jan 16</div>
+  <div class="shift-card">
+    <div class="shift-time">2pm – 10pm</div>
+    <div class="shift-details">Afternoon Shift</div>
+    <div class="shift-details">Quality Control</div>
+    <div class="shift-meta">8 hrs</div>
+    <button class="swap-btn" onclick="openSwapModal('2pm – 10pm')">Request Swap</button>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div id="swapModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeSwapModal()">&times;</span>
+    <h3>Request Shift Swap</h3>
+    <p id="selectedShift" style="color:#6B6B6B; font-size:14px;"></p>
+    abel style="font-weight:600; color:#4A4A4A; font-size:14px;">Swap with colleague:</label>
+    <br><br>
+    <select id="colleague">
+      <option value="Lukas Schneider">Lukas Schneider</option>
+      <option value="Maria Hoffmann">Maria Hoffmann</option>
+      <option value="Daniel Weber">Daniel Weber</option>
+    </select>
+    <br><br>
+    <button class="swap-btn" onclick="sendSwapRequest()">Send Request</button>
+  </div>
+</div>
+
+<script>
+let chosenShift = "";
+function openSwapModal(shift) {
+  chosenShift = shift;
+  document.getElementById("selectedShift").innerHTML = "<strong>Shift:</strong> " + shift;
+  document.getElementById("swapModal").style.display = "flex";
+}
+function closeSwapModal() {
+  document.getElementById("swapModal").style.display = "none";
+}
+async function sendSwapRequest() {
+  const colleague = document.getElementById("colleague").value;
+  const payload = {
+    "accessorIds": ["69442498464086241764544e"],
+    "channels": ["notificationCenter", "push"],
+    "content": {
+      "en_US": { "text": `New Shift Swap Requested: ${chosenShift} → ${colleague}` },
+      "de_DE": { "text": `New Shift Swap Requested: ${chosenShift} → ${colleague}` }
+    },
+    "icon": { "en_US": {"type":"font","char":""}, "de_DE": {"type":"font","char":""} },
+    "image": {
+      "en_US": {
+        "type":"image",
+        "href":"https://i.pinimg.com/474x/66/9b/d7/669bd7e734f2e0615d94fb1af77cc6aa.jpg",
+        "width":600,"height":400
+      },
+      "de_DE": {
+        "type":"image",
+        "href":"https://i.pinimg.com/474x/66/9b/d7/669bd7e734f2e0615d94fb1af77cc6aa.jpg",
+        "width":600,"height":400
+      }
+    },
+    "link":"https://forrester2026.staffbase.com/content/page/6954863938dc171a5131ea69"
+  };
+  try {
+    const res = await fetch("https://forrester2026.staffbase.com/api/branch/notifications", {
+      method: "POST",
+      headers: {
+        "Authorization":"Basic Njk1YWE0MDg2ZTc1MjM1NzVlZWQxYjdjOnddXUhjM2w7bVJWT2U5aGpSU2oqZihFZHY1VTE2bWNvbzRKcTl+IUpIUEwxSnZVNGd6dGY3eGNiWkJOKEs1MiE=",
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+    alert(res.ok ? "Shift swap request sent!" : "Error sending request");
+  } catch {
+    alert("Network error");
+  }
+  closeSwapModal();
+}
+</script>
+</body>
+</html>
