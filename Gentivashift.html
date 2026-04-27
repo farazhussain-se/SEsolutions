@@ -15,13 +15,6 @@ body {
   margin: 0;
 }
 
-/* ── Gentiva brand palette ──────────────────────────────
-   Primary:   #E87722  (Gentiva orange)
-   Secondary: #4A4A4A  (charcoal gray)
-   Accent:    #00688B  (teal, used for hover/accents)
-   Light bg:  #FDF6F0  (warm off-white)
-──────────────────────────────────────────────────────── */
-
 .widget {
   width: 100%;
   max-width: 480px;
@@ -29,30 +22,6 @@ body {
   background: #ffffff;
   border-radius: 14px;
   padding: 16px;
-}
-
-/* ── Logo header ── */
-.brand-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 14px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #F2E8DF;
-}
-.brand-icon {
-  font-size: 26px;
-  line-height: 1;
-}
-.brand-name {
-  font-size: 22px;
-  font-weight: 700;
-  color: #4A4A4A;
-  letter-spacing: 0.5px;
-}
-.brand-name span {
-  color: #E87722;
 }
 
 .widget-title {
@@ -161,7 +130,7 @@ body {
   padding: 12px 14px;
   font-size: 15px;
   border-radius: 8px;
-  background: #E87722;
+  background: #00a0ad;
   color: white;
   border: none;
   cursor: pointer;
@@ -170,7 +139,7 @@ body {
   transition: background 0.2s;
 }
 .swap-btn:hover {
-  background: #00688B;
+  background: #007a84;
 }
 
 /* ── Modal ── */
@@ -205,7 +174,7 @@ body {
   line-height: 1;
 }
 .close:hover {
-  color: #E87722;
+  color: #00a0ad;
 }
 
 select {
@@ -218,19 +187,13 @@ select {
   outline: none;
 }
 select:focus {
-  border-color: #E87722;
-  box-shadow: 0 0 0 2px rgba(232,119,34,0.15);
+  border-color: #00a0ad;
+  box-shadow: 0 0 0 2px rgba(0,160,173,0.15);
 }
 </style>
 </head>
 <body>
 <div class="widget">
-
-  <!-- Gentiva brand header -->
-  <div class="brand-header">
-    <span class="brand-icon">🧡</span>
-    <div class="brand-name">gentiva <span style="font-weight:400; color:#6B6B6B; font-size:14px; display:block; margin-top:-4px; letter-spacing:2px; text-transform:uppercase;">HOSPICE</span></div>
-  </div>
 
   <h2 class="widget-title">Shift Overview</h2>
   <div class="date-range">Jan 12 – Jan 18, 2026</div>
@@ -287,7 +250,7 @@ select:focus {
     <span class="close" onclick="closeSwapModal()">&times;</span>
     <h3>Request Shift Swap</h3>
     <p id="selectedShift" style="color:#6B6B6B; font-size:14px;"></p>
-    abel style="font-weight:600; color:#4A4A4A; font-size:14px;">Swap with colleague:</label>
+    <label style="font-weight:600; color:#4A4A4A; font-size:14px;">Swap with colleague:</label>
     <br><br>
     <select id="colleague">
       <option value="Lukas Schneider">Lukas Schneider</option>
