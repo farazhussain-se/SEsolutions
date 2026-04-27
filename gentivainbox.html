@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Gentiva Staff Portal</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f4f6f8;
+}
+
+/* ── Shell ── */
+.app-shell {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Top bar ── */
+.top-bar {
+  background: #00a0ad;
+  color: white;
+  padding: 14px 16px 10px;
+}
+.top-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.top-bar-greeting {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-bottom: 2px;
+}
+.top-bar-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+.top-bar-badge {
+  position: relative;
+  cursor: pointer;
+}
+.badge-icon {
+  font-size: 24px;
+}
+.badge-dot {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  background: #E87722;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 99px;
+  padding: 1px 5px;
+  min-width: 16px;
+  text-align: center;
+}
+
+/* ── Tab bar ── */
+.tab-bar {
+  display: flex;
+  border-bottom: 2px solid #e8eaed;
+  background: #fff;
+}
+.tab-btn {
+  flex: 1;
+  padding: 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn.active {
+  color: #00a0ad;
+  border-bottom-color: #00a0ad;
+}
+
+/* ── Scroll area ── */
+.tab-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* ══════════════════════════════════
+   INBOX STYLES
+══════════════════════════════════ */
+.inbox-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.inbox-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2d2d2d;
+}
+.inbox-filter {
+  font-size: 12px;
+  color: #00a0ad;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.inbox-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #aaa;
+  margin: 16px 0 8px;
+}
+
+.task-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  border-left: 4px solid #00a0ad;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.task-card:hover {
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+}
+.task-card.overdue {
+  border-left-color: #E87722;
+}
+.task-card.acknowledged {
+  border-left-color: #b0b0b0;
+  opacity: 0.7;
+}
+
+.task-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+.task-patient {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2d2d2d;
+}
+.task-time {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+.task-type {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 4px;
+}
+.task-meta {
+  font-size: 12px;
+  color: #888;
+}
+.task-due {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.task-due.overdue { color: #E87722; }
+.task-due.ok { color: #00a0ad; }
+
+.task-source {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #e6f7f8;
+  color: #00a0ad;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-top: 6px;
+}
+
+/* ── Detail panel ── */
+.detail-panel {
+  animation: slideIn 0.2s ease;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.detail-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #00a0ad;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+.detail-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+.detail-card-header {
+  background: #00a0ad;
+  color: white;
+  padding: 16px;
+}
+.detail-card-header h3 {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.detail-card-header p {
+  font-size: 13px;
+  opacity: 0.85;
+}
+.detail-body {
+  padding: 16px;
+}
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-label {
+  color: #00a0ad;
+  font-weight: 600;
+  min-width: 110px;
+}
+.detail-value {
+  color: #333;
+  text-align: right;
+  flex: 1;
+}
+.detail-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.btn-reject {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: 2px solid #E87722;
+  background: white;
+  color: #E87722;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-reject:hover { background: #fff4ed; }
+.btn-acknowledge {
+  flex: 2;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: #00a0ad;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-acknowledge:hover { background: #007a84; }
+.btn-acknowledge:disabled {
+  background: #b0b0b0;
+  cursor: default;
+}
+
+/* ══════════════════════════════════
+   SHIFT STYLES
+══════════════════════════════════ */
+.date-range {
+  text-align: center;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: #6B6B6B;
+  font-size: 14px;
+}
+.nav-arrows {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 22px;
+  padding: 0 4px;
+  color: #00a0ad;
+  cursor: pointer;
+  user-select: none;
+}
+.week-days {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 4px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #777;
+}
+.week-days div {
+  width: 100%;
+  text-align: center;
+  padding: 8px 0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.week-days div:hover { background: #e6f7f8; }
+.week-days .active-day {
+  background: #00a0ad;
+  color: white;
+  font-weight: 600;
+}
+.summary-bar {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #4A4A4A;
+  background: #e6f7f8;
+  border-radius: 8px;
+  padding: 8px 0;
+}
+.day-label {
+  margin-top: 20px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: #4A4A4A;
+  font-size: 15px;
+  padding-left: 4px;
+}
+.shift-card {
+  width: 100%;
+  background: white;
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  border-left: 4px solid #00a0ad;
+  margin-bottom: 16px;
+}
+.shift-time {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2d2d2d;
+  margin-bottom: 6px;
+}
+.shift-details {
+  font-size: 14px;
+  color: #6B6B6B;
+  margin-bottom: 3px;
+}
+.shift-meta-row {
+  text-align: right;
+  font-size: 13px;
+  color: #999;
+  margin-top: 6px;
+}
+.swap-btn {
+  margin-top: 10px;
+  padding: 12px 14px;
+  font-size: 15px;
+  border-radius: 8px;
+  background: #00a0ad;
+  color: white;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.swap-btn:hover { background: #007a84; }
+
+/* ── Swap Modal ── */
+.modal-overlay {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 1000;
+}
+.modal-box {
+  background: white;
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 14px;
+  border-top: 4px solid #00a0ad;
+}
+.modal-box h3 {
+  margin: 0 0 12px;
+  color: #2d2d2d;
+  font-size: 17px;
+}
+.modal-close {
+  float: right;
+  cursor: pointer;
+  font-size: 22px;
+  color: #999;
+  line-height: 1;
+}
+.modal-close:hover { color: #00a0ad; }
+.modal-select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 15px;
+  border: 1px solid #ddd;
+  color: #333;
+  outline: none;
+  margin-top: 8px;
+}
+.modal-select:focus {
+  border-color: #00a0ad;
+  box-shadow: 0 0 0 2px rgba(0,160,173,0.15);
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+// ── Mock HCHB task data ────────────────────────────────
+const INITIAL_TASKS = [
+  {
+    id: 1, status: "overdue",
+    patient: "Adams, W M.", patientId: "7201",
+    type: "New Activity Assigned",
+    visitType: "Skilled Nursing Visit",
+    scheduledFor: "Apr 27, 2026 — 9:00 AM",
+    address: "1842 Maple Ridge Dr, Denver CO",
+    physician: "Dr. Karen Ellison",
+    dueLabel: "Due: 2 hours ago",
+    receivedAt: "8:20 AM · Apr 27",
+    notes: "Patient reported increased shortness of breath overnight.",
+    source: "HCHB",
+  },
+  {
+    id: 2, status: "overdue",
+    patient: "Nguyen, Ming T.", patientId: "6850",
+    type: "Care Plan Update Required",
+    visitType: "Physical Therapy Eval",
+    scheduledFor: "Apr 27, 2026 — 10:30 AM",
+    address: "304 Sunrise Blvd, Aurora CO",
+    physician: "Dr. James Park",
+    dueLabel: "Due: yesterday",
+    receivedAt: "7:45 AM · Apr 26",
+    notes: "Review updated fall risk assessment before visit.",
+    source: "HCHB",
+  },
+  {
+    id: 3, status: "pending",
+    patient: "Okafor, Chukwuma E.", patientId: "9102",
+    type: "Medication Reconciliation",
+    visitType: "Home Health Aide Visit",
+    scheduledFor: "Apr 28, 2026 — 8:00 AM",
+    address: "5519 Crestview Ln, Littleton CO",
+    physician: "Dr. Sandra Moore",
+    dueLabel: "Due: tomorrow 8:00 AM",
+    receivedAt: "11:02 AM · Apr 27",
+    notes: "Confirm current medication list with caregiver on arrival.",
+    source: "HCHB",
+  },
+  {
+    id: 4, status: "pending",
+    patient: "Martinez, Rosa L.", patientId: "4477",
+    type: "Discharge Documentation",
+    visitType: "MSW Follow-Up",
+    scheduledFor: "Apr 29, 2026 — 1:00 PM",
+    address: "221 Birchwood Ct, Englewood CO",
+    physician: "Dr. Tom Reyes",
+    dueLabel: "Due: Apr 29",
+    receivedAt: "9:30 AM · Apr 27",
+    notes: "Finalize discharge summary and upload to patient record.",
+    source: "HCHB",
+  },
+  {
+    id: 5, status: "pending",
+    patient: "Patel, Ravi D.", patientId: "5533",
+    type: "Lab Results Review",
+    visitType: "Telehealth Check-In",
+    scheduledFor: "Apr 30, 2026 — 11:00 AM",
+    address: "Remote / Telehealth",
+    physician: "Dr. Anita Sharma",
+    dueLabel: "Due: Apr 30",
+    receivedAt: "10:15 AM · Apr 27",
+    notes: "CBC and BMP results available — review prior to call.",
+    source: "HCHB",
+  },
+];
+
+// ── Inbox Component ────────────────────────────────────
+function InboxTab() {
+  const [tasks, setTasks] = useState(INITIAL_TASKS);
+  const [selected, setSelected] = useState(null);
+  const [filter, setFilter] = useState("all");
+
+  const overdue = tasks.filter(t => t.status === "overdue");
+  const pending  = tasks.filter(t => t.status === "pending");
+  const done     = tasks.filter(t => t.status === "acknowledged");
+
+  function acknowledge(id) {
+    setTasks(prev => prev.map(t => t.id === id ? {...t, status: "acknowledged"} : t));
+    setSelected(null);
+  }
+
+  if (selected) {
+    const t = tasks.find(t => t.id === selected);
+    const isDone = t.status === "acknowledged";
+    return (
+      <div className="detail-panel">
+        <div className="detail-back" onClick={() => setSelected(null)}>
+          ‹ Back to Tasks
+        </div>
+        <div className="detail-card">
+          <div className="detail-card-header">
+            <h3>{t.patient}</h3>
+            <p>{t.type}</p>
+          </div>
+          <div className="detail-body">
+            <div className="detail-row">
+              <span className="detail-label">Visit Type</span>
+              <span className="detail-value">{t.visitType}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Scheduled</span>
+              <span className="detail-value">{t.scheduledFor}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Address</span>
+              <span className="detail-value">{t.address}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Physician</span>
+              <span className="detail-value">{t.physician}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Patient ID</span>
+              <span className="detail-value">#{t.patientId}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Notes</span>
+              <span className="detail-value">{t.notes}</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Received</span>
+              <span className="detail-value">{t.receivedAt}</span>
+            </div>
+            <div className="detail-row" style={{borderBottom:"none"}}>
+              <span className="detail-label">Source</span>
+              <span className="detail-value">
+                <span className="task-source">{t.source}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+        {!isDone && (
+          <div className="detail-actions">
+            <button className="btn-reject" onClick={() => setSelected(null)}>Dismiss</button>
+            <button className="btn-acknowledge" onClick={() => acknowledge(t.id)}>✓ Acknowledge</button>
+          </div>
+        )}
+        {isDone && (
+          <p style={{textAlign:"center", marginTop:14, fontSize:13, color:"#aaa"}}>✓ Acknowledged</p>
+        )}
+      </div>
+    );
+  }
+
+  const TaskCard = ({ t }) => (
+    <div
+      className={`task-card ${t.status === "overdue" ? "overdue" : ""} ${t.status === "acknowledged" ? "acknowledged" : ""}`}
+      onClick={() => setSelected(t.id)}
+    >
+      <div className="task-card-top">
+        <span className="task-patient">{t.patient}</span>
+        <span className="task-time">{t.receivedAt.split("·")[0].trim()}</span>
+      </div>
+      <div className="task-type">{t.type}</div>
+      <div className="task-meta">{t.visitType} · {t.scheduledFor.split("—")[0].trim()}</div>
+      <div className={`task-due ${t.status === "overdue" ? "overdue" : "ok"}`}>{t.dueLabel}</div>
+      <span className="task-source">{t.source}</span>
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="inbox-header">
+        <span className="inbox-title">My Tasks</span>
+        <span className="inbox-filter" onClick={() => {}}>Filter ▾</span>
+      </div>
+
+      {overdue.length > 0 && (
+        <>
+          <div className="inbox-section-label">⚠ Overdue ({overdue.length})</div>
+          {overdue.map(t => <TaskCard key={t.id} t={t} />)}
+        </>
+      )}
+
+      {pending.length > 0 && (
+        <>
+          <div className="inbox-section-label">Upcoming ({pending.length})</div>
+          {pending.map(t => <TaskCard key={t.id} t={t} />)}
+        </>
+      )}
+
+      {done.length > 0 && (
+        <>
+          <div className="inbox-section-label">Completed ({done.length})</div>
+          {done.map(t => <TaskCard key={t.id} t={t} />)}
+        </>
+      )}
+
+      {tasks.length === 0 && (
+        <p style={{textAlign:"center", color:"#aaa", marginTop:40, fontSize:14}}>All caught up 🎉</p>
+      )}
+    </div>
+  );
+}
+
+// ── Shift Component ────────────────────────────────────
+function ShiftTab() {
+  const [swapShift, setSwapShift] = useState(null);
+  const [colleague, setColleague] = useState("Sarah Kim");
+
+  async function sendSwap() {
+    const payload = {
+      accessorIds: ["69442498464086241764544e"],
+      channels: ["notificationCenter","push"],
+      content: {
+        en_US: { text: `New Shift Swap Requested: ${swapShift} → ${colleague}` },
+        de_DE: { text: `New Shift Swap Requested: ${swapShift} → ${colleague}` }
+      },
+      icon: { en_US: {type:"font",char:""}, de_DE: {type:"font",char:""} },
+      image: {
+        en_US: { type:"image", href:"https://i.pinimg.com/474x/66/9b/d7/669bd7e734f2e0615d94fb1af77cc6aa.jpg", width:600, height:400 },
+        de_DE: { type:"image", href:"https://i.pinimg.com/474x/66/9b/d7/669bd7e734f2e0615d94fb1af77cc6aa.jpg", width:600, height:400 }
+      },
+      link: "https://forrester2026.staffbase.com/content/page/6954863938dc171a5131ea69"
+    };
+    try {
+      const res = await fetch("https://forrester2026.staffbase.com/api/branch/notifications", {
+        method:"POST",
+        headers:{
+          "Authorization":"Basic Njk1YWE0MDg2ZTc1MjM1NzVlZWQxYjdjOnddXUhjM2w7bVJXT2U5aGpSU2oqZihFZHY1VTE2bWNvbzRKcTl+IUpIUEwxSnZVNGd6dGY3eGNiWkJOKEs1MiE=",
+          "Content-Type":"application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      alert(res.ok ? "Shift swap request sent!" : "Error sending request");
+    } catch { alert("Network error"); }
+    setSwapShift(null);
+  }
+
+  return (
+    <div>
+      <div className="date-range">Apr 27 – May 3, 2026</div>
+      <div className="nav-arrows"><span>‹</span><span>›</span></div>
+      <div className="week-days">
+        {[["Mo","27"],["Tu","28"],["We","29"],["Th","30"],["Fr","1"],["Sa","2"],["Su","3"]].map(([d,n],i) => (
+          <div key={i} className={i===0 ? "active-day" : ""}>{d}<br/>{n}</div>
+        ))}
+      </div>
+      <div className="summary-bar">28 hrs &nbsp;/&nbsp; 4 visits</div>
+
+      <div className="day-label">Mo, Apr 27</div>
+      <div className="shift-card">
+        <div className="shift-time">8am – 4pm</div>
+        <div className="shift-details">Morning Field Visit</div>
+        <div className="shift-details">Adams, W M. · Okafor, C.E. · Patel, R.</div>
+        <div className="shift-meta-row">8 hrs</div>
+        <button className="swap-btn" onClick={() => setSwapShift("8am – 4pm, Apr 27")}>Request Swap</button>
+      </div>
+
+      <div className="day-label">We, Apr 29</div>
+      <div className="shift-card">
+        <div className="shift-time">9am – 1pm</div>
+        <div className="shift-details">Telehealth Block</div>
+        <div className="shift-details">Patel, R. · Martinez, R.</div>
+        <div className="shift-meta-row">4 hrs</div>
+        <button className="swap-btn" onClick={() => setSwapShift("9am – 1pm, Apr 29")}>Request Swap</button>
+      </div>
+
+      <div className="day-label">Fr, May 1</div>
+      <div className="shift-card">
+        <div className="shift-time">10am – 6pm</div>
+        <div className="shift-details">Afternoon Field Visit</div>
+        <div className="shift-details">Nguyen, M. · Martinez, R.</div>
+        <div className="shift-meta-row">8 hrs</div>
+        <button className="swap-btn" onClick={() => setSwapShift("10am – 6pm, May 1")}>Request Swap</button>
+      </div>
+
+      {swapShift && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <span className="modal-close" onClick={() => setSwapShift(null)}>×</span>
+            <h3>Request Shift Swap</h3>
+            <p style={{fontSize:13, color:"#666", margin:"8px 0 12px"}}>
+              <strong>Shift:</strong> {swapShift}
+            </p>
+            <label style={{fontSize:14, fontWeight:600, color:"#4A4A4A"}}>Swap with colleague:</label>
+            <select
+              className="modal-select"
+              value={colleague}
+              onChange={e => setColleague(e.target.value)}
+            >
+              <option>Sarah Kim</option>
+              <option>James Oduya</option>
+              <option>Priya Nair</option>
+              <option>Carlos Mendez</option>
+            </select>
+            <br/><br/>
+            <button className="swap-btn" onClick={sendSwap}>Send Request</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── App Root ───────────────────────────────────────────
+function App() {
+  const [tab, setTab] = useState("inbox");
+  const [tasks] = useState(INITIAL_TASKS);
+  const overdueCount = tasks.filter(t => t.status === "overdue").length;
+
+  return (
+    <div className="app-shell">
+      <div className="top-bar">
+        <div className="top-bar-row">
+          <div>
+            <div className="top-bar-greeting">Good morning,</div>
+            <div className="top-bar-name">Morgan Avery</div>
+          </div>
+          <div className="top-bar-badge">
+            <span className="badge-icon">🔔</span>
+            {overdueCount > 0 && <span className="badge-dot">{overdueCount}</span>}
+          </div>
+        </div>
+      </div>
+
+      <div className="tab-bar">
+        <button
+          className={`tab-btn ${tab === "inbox" ? "active" : ""}`}
+          onClick={() => setTab("inbox")}
+        >
+          📋 Tasks {overdueCount > 0 && `(${overdueCount})`}
+        </button>
+        <button
+          className={`tab-btn ${tab === "shifts" ? "active" : ""}`}
+          onClick={() => setTab("shifts")}
+        >
+          🗓 My Shifts
+        </button>
+      </div>
+
+      <div className="tab-content">
+        {tab === "inbox" ? <InboxTab /> : <ShiftTab />}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
