@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Lineage YouTube</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: transparent;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.widget {
+  width: 650px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-top: none;
+  border-right: none;
+  border-radius: 0 0 0 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: -6px 6px 28px rgba(0,0,0,0.5);
+}
+
+/* HEADER */
+.widget-header {
+  background: linear-gradient(135deg, #1a3a5c, #0e2a45);
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #ff0000;
+  flex-shrink: 0;
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.lineage-logo {
+  background: #1f6feb; color: white; font-weight: 800;
+  font-size: 13px; padding: 3px 8px; border-radius: 4px; letter-spacing: 1.5px;
+  flex-shrink: 0;
+}
+.header-title { font-size: 15px; font-weight: 700; color: #79c0ff; }
+.header-sub { font-size: 11px; color: #8b949e; margin-top: 2px; }
+.yt-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: #ff000022; border: 1px solid #ff0000;
+  border-radius: 12px; padding: 4px 12px;
+  font-size: 11px; color: #ff4444; font-weight: 700; white-space: nowrap;
+}
+.yt-dot {
+  width: 7px; height: 7px; background: #ff0000;
+  border-radius: 50%; animation: pulse 1.4s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* VIDEO AREA — 16:9 ratio */
+.video-area {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 */
+  background: #000;
+  flex-shrink: 0;
+}
+.video-area iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+/* FOOTER */
+.widget-footer {
+  background: #0d1117;
+  border-top: 1px solid #21262d;
+  padding: 5px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.footer-left { font-size: 10px; color: #484f58; }
+.footer-clock { font-size: 10px; color: #6e7681; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<div class="widget">
+
+  <!-- HEADER -->
+  <div class="widget-header">
+    <div class="header-left">
+      <div class="lineage-logo">LINEAGE</div>
+      <div>
+        <div class="header-title">Featured Video</div>
+        <div class="header-sub">youtube.com · Lineage</div>
+      </div>
+    </div>
+    <div class="yt-badge"><div class="yt-dot"></div>▶ YOUTUBE</div>
+  </div>
+
+  <!-- VIDEO -->
+  <div class="video-area">
+    <iframe
+      src="https://www.youtube.com/embed/8BU5OQZ9XrM?rel=0&modestbranding=1&autohide=1&showinfo=0&autoplay=1&mute=1"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen>
+    </iframe>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="widget-footer">
+    <div class="footer-left">YouTube · youtube.com/watch?v=8BU5OQZ9XrM</div>
+    <div class="footer-clock" id="footer-clock"></div>
+  </div>
+
+</div>
+
+<script>
+function tick() {
+  var now = new Date();
+  document.getElementById('footer-clock').textContent =
+    now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' · ' +
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
