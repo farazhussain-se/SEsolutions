@@ -3,145 +3,127 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Lineage Ops – Atlanta (Lithia Springs)</title>
+<title>Lineage Ops – Atlanta</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
-  background: #0d1117;
+  background: transparent;
   color: #e6edf3;
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
   min-height: 100vh;
-  padding: 0;
 }
 
 .widget {
-  width: 300px;
-  background: #161b22;
+  width: 380px;
+  background: rgba(22, 27, 34, 0.96);
   border: 1px solid #30363d;
   border-top: none;
   border-right: none;
-  border-radius: 0 0 0 10px;
+  border-radius: 0 0 0 14px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: -4px 4px 20px rgba(0,0,0,0.5);
+  box-shadow: -6px 6px 28px rgba(0,0,0,0.6);
 }
 
 /* ── HEADER ── */
 .widget-header {
   background: linear-gradient(135deg, #1a3a5c, #0e2a45);
-  padding: 5px 9px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 2px solid #1f6feb;
-  flex-shrink: 0;
 }
-.header-left { display: flex; align-items: center; gap: 6px; }
+.header-left { display: flex; align-items: center; gap: 9px; }
 .lineage-logo {
   background: #1f6feb; color: white; font-weight: 800;
-  font-size: 9px; padding: 2px 5px; border-radius: 3px; letter-spacing: 1px;
+  font-size: 13px; padding: 3px 8px; border-radius: 4px; letter-spacing: 1.5px;
 }
-.facility-name { font-size: 10px; font-weight: 600; color: #79c0ff; line-height: 1.2; }
-.facility-sub { font-size: 8px; color: #8b949e; }
+.facility-name { font-size: 15px; font-weight: 700; color: #79c0ff; line-height: 1.2; }
+.facility-sub { font-size: 11px; color: #8b949e; margin-top: 1px; }
 .live-badge {
-  display: flex; align-items: center; gap: 3px;
+  display: flex; align-items: center; gap: 5px;
   background: #0d2e0d; border: 1px solid #238636;
-  border-radius: 10px; padding: 2px 5px; font-size: 8px; color: #56d364;
-  white-space: nowrap; flex-shrink: 0;
+  border-radius: 12px; padding: 4px 10px; font-size: 11px; color: #56d364;
+  font-weight: 700; white-space: nowrap;
 }
 .live-dot {
-  width: 4px; height: 4px; background: #56d364;
+  width: 7px; height: 7px; background: #56d364;
   border-radius: 50%; animation: pulse 1.4s infinite;
 }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
 /* ── SECTIONS ── */
 .section {
-  padding: 5px 9px;
+  padding: 10px 14px;
   border-bottom: 1px solid #21262d;
-  flex-shrink: 0;
 }
+.section:last-of-type { border-bottom: none; }
 
 .section-title {
-  font-size: 8px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 1px; color: #8b949e; margin-bottom: 4px;
-  display: flex; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.3px; color: #8b949e; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 5px;
 }
 
 /* ── SHIFT ── */
 .shift-row {
   display: flex; align-items: center; justify-content: space-between;
-  background: #1c2128; border-radius: 3px;
-  padding: 3px 6px; margin-bottom: 2px;
-  border-left: 2px solid #30363d;
+  background: #1c2128; border-radius: 5px;
+  padding: 7px 10px; margin-bottom: 4px;
+  border-left: 3px solid #30363d;
 }
 .shift-row:last-child { margin-bottom: 0; }
-.shift-row.active { border-left-color: #56d364; background: #0d2e0d33; }
-.shift-left { display: flex; align-items: center; gap: 5px; }
-.shift-name { font-size: 9px; font-weight: 700; white-space: nowrap; }
-.shift-time { font-size: 8px; color: #79c0ff; }
-.shift-super { font-size: 8px; color: #8b949e; white-space: nowrap; }
+.shift-row.active { border-left-color: #56d364; background: #0d2e0d44; }
+.shift-left { display: flex; align-items: center; gap: 8px; }
+.shift-name { font-size: 14px; font-weight: 800; }
+.shift-time { font-size: 13px; color: #79c0ff; }
+.shift-super { font-size: 12px; color: #8b949e; }
 .shift-badge {
   background: #56d36422; color: #56d364;
-  border: 1px solid #56d36455; border-radius: 8px;
-  font-size: 7px; padding: 1px 4px; font-weight: 600; white-space: nowrap; margin-left: 4px;
+  border: 1px solid #56d36455; border-radius: 10px;
+  font-size: 10px; padding: 2px 7px; font-weight: 700; margin-left: 6px;
 }
-
-/* ── CREW (2-col compact) ── */
-.crew-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 3px;
-}
-.crew-card {
-  background: #1c2128; border-radius: 3px;
-  padding: 3px 5px; display: flex; align-items: center; gap: 4px;
-}
-.avatar {
-  width: 18px; height: 18px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 7px; font-weight: 700; color: white; flex-shrink: 0;
-}
-.crew-name { font-size: 8px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.crew-role { font-size: 7px; color: #8b949e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* ── SAFETY ── */
-.safety-box {
-  background: #0d2412;
-  border: 1px solid #238636; border-radius: 4px;
-  padding: 5px 7px;
-}
-.safety-label { font-size: 7px; color: #56d364; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 2px; }
-.safety-text { font-size: 9px; color: #d2ffd2; line-height: 1.4; }
-.tip-nav { display: flex; align-items: center; gap: 3px; margin-top: 4px; }
-.tip-dot { width: 5px; height: 5px; border-radius: 50%; background: #30363d; cursor: pointer; transition: background .2s; }
-.tip-dot.active { background: #56d364; }
 
 /* ── ALERTS ── */
 .alert-item {
-  display: flex; align-items: flex-start; gap: 5px;
-  background: #1c2128; border-radius: 3px;
-  padding: 4px 6px; margin-bottom: 3px;
-  border-left: 2px solid #da3633;
+  display: flex; align-items: flex-start; gap: 9px;
+  background: #1c2128; border-radius: 5px;
+  padding: 8px 10px; margin-bottom: 5px;
+  border-left: 3px solid #da3633;
 }
 .alert-item:last-child { margin-bottom: 0; }
 .alert-item.warn { border-left-color: #d29922; }
 .alert-item.info { border-left-color: #1f6feb; }
-.alert-icon { font-size: 10px; flex-shrink: 0; line-height: 1.5; }
-.alert-title { font-size: 8px; font-weight: 700; }
-.alert-desc { font-size: 7px; color: #8b949e; margin-top: 1px; line-height: 1.3; }
-.alert-time { font-size: 7px; color: #6e7681; margin-top: 1px; }
+.alert-icon { font-size: 18px; flex-shrink: 0; line-height: 1.4; }
+.alert-title { font-size: 13px; font-weight: 700; line-height: 1.3; }
+.alert-desc { font-size: 11px; color: #8b949e; margin-top: 2px; line-height: 1.4; }
+.alert-time { font-size: 10px; color: #6e7681; margin-top: 3px; }
+
+/* ── SAFETY ── */
+.safety-box {
+  background: #0d2412;
+  border: 1px solid #238636; border-radius: 6px;
+  padding: 9px 11px;
+}
+.safety-label { font-size: 10px; color: #56d364; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.safety-text { font-size: 13px; color: #d2ffd2; line-height: 1.5; }
+.tip-nav { display: flex; gap: 5px; margin-top: 6px; }
+.tip-dot { width: 7px; height: 7px; border-radius: 50%; background: #30363d; cursor: pointer; transition: background .2s; }
+.tip-dot.active { background: #56d364; }
 
 /* ── FOOTER ── */
 .widget-footer {
   background: #0d1117; border-top: 1px solid #21262d;
-  padding: 3px 9px; display: flex;
-  justify-content: space-between; align-items: center; flex-shrink: 0;
+  padding: 5px 14px; display: flex;
+  justify-content: space-between; align-items: center;
 }
-.footer-src { font-size: 7px; color: #484f58; }
-.footer-clock { font-size: 7px; color: #6e7681; font-variant-numeric: tabular-nums; }
+.footer-clock { font-size: 12px; color: #6e7681; font-variant-numeric: tabular-nums; font-weight: 600; }
+.footer-date  { font-size: 12px; color: #484f58; }
 </style>
 </head>
 <body>
@@ -153,58 +135,35 @@ body {
       <div class="lineage-logo">LINEAGE</div>
       <div>
         <div class="facility-name">Atlanta – Lithia Springs</div>
-        <div class="facility-sub">737 Douglas Hill Rd · GA 30122</div>
+        <div class="facility-sub">GA 30122 · Live Ops Dashboard</div>
       </div>
     </div>
-    <div class="live-badge"><div class="live-dot"></div>LIVE OPS</div>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
   </div>
 
   <!-- SHIFT -->
   <div class="section">
-    <div class="section-title">🕐 Shift Schedule · Today</div>
+    <div class="section-title">🕐 Shift Schedule</div>
     <div class="shift-row" id="shift-1st">
       <div class="shift-left">
         <div class="shift-name">1st</div>
-        <div class="shift-time">06:00 AM – 02:00 PM</div>
+        <div class="shift-time">6:00 AM – 2:00 PM</div>
       </div>
-      <div class="shift-super">Sup: James Okafor</div>
+      <div class="shift-super">James Okafor</div>
     </div>
     <div class="shift-row" id="shift-2nd">
       <div class="shift-left">
         <div class="shift-name">2nd</div>
-        <div class="shift-time">02:00 PM – 10:00 PM</div>
+        <div class="shift-time">2:00 PM – 10:00 PM</div>
       </div>
-      <div class="shift-super">Sup: Linda Cho</div>
+      <div class="shift-super">Linda Cho</div>
     </div>
     <div class="shift-row" id="shift-3rd">
       <div class="shift-left">
         <div class="shift-name">3rd</div>
-        <div class="shift-time">10:00 PM – 06:00 AM</div>
+        <div class="shift-time">10:00 PM – 6:00 AM</div>
       </div>
-      <div class="shift-super">Sup: Ray Santos</div>
-    </div>
-  </div>
-
-  <!-- CREW -->
-  <div class="section">
-    <div class="section-title">👷 Crew Assignment</div>
-    <div class="crew-grid">
-      <div class="crew-card"><div class="avatar" style="background:#1f6feb">MT</div><div><div class="crew-name">Marcus T.</div><div class="crew-role">Lead Forklift</div></div></div>
-      <div class="crew-card"><div class="avatar" style="background:#238636">DR</div><div><div class="crew-name">Diana R.</div><div class="crew-role">Dock Supv.</div></div></div>
-      <div class="crew-card"><div class="avatar" style="background:#8957e5">JH</div><div><div class="crew-name">Joel H.</div><div class="crew-role">Reach Truck</div></div></div>
-      <div class="crew-card"><div class="avatar" style="background:#db6d28">PM</div><div><div class="crew-name">Priya M.</div><div class="crew-role">QA / Temp</div></div></div>
-      <div class="crew-card"><div class="avatar" style="background:#1f6feb">CW</div><div><div class="crew-name">Cody W.</div><div class="crew-role">Pallet Sel.</div></div></div>
-      <div class="crew-card"><div class="avatar" style="background:#238636">TB</div><div><div class="crew-name">Tonya B.</div><div class="crew-role">Inbound Rec.</div></div></div>
-    </div>
-  </div>
-
-  <!-- SAFETY -->
-  <div class="section">
-    <div class="section-title">🦺 Safety Moment</div>
-    <div class="safety-box">
-      <div class="safety-label" id="tip-label">⚡ Tip #1 of 5</div>
-      <div class="safety-text" id="tip-text"></div>
-      <div class="tip-nav" id="tip-nav"></div>
+      <div class="shift-super">Ray Santos</div>
     </div>
   </div>
 
@@ -215,7 +174,7 @@ body {
       <div class="alert-icon">🥶</div>
       <div>
         <div class="alert-title">FREEZER TEMP — Cell F-4</div>
-        <div class="alert-desc">Reading -2°F (target -10°F). Maintenance dispatched.</div>
+        <div class="alert-desc">-2°F detected (target -10°F). Maintenance en route.</div>
         <div class="alert-time">07:42 AM · TempTrak</div>
       </div>
     </div>
@@ -223,23 +182,33 @@ body {
       <div class="alert-icon">🚛</div>
       <div>
         <div class="alert-title">DOCK CONGESTION — Doors 12–14</div>
-        <div class="alert-desc">3 reefer trailers queued. ~45 min clearance.</div>
-        <div class="alert-time">08:15 AM · YMS Gate Log</div>
+        <div class="alert-desc">3 trailers queued · ~45 min clearance</div>
+        <div class="alert-time">08:15 AM · YMS</div>
       </div>
     </div>
     <div class="alert-item info">
       <div class="alert-icon">🔧</div>
       <div>
         <div class="alert-title">EQUIP OOS — Crown RC 5500 #3</div>
-        <div class="alert-desc">Fault E-44. Est. repair 10:30 AM. Use #1 &amp; #5.</div>
-        <div class="alert-time">06:55 AM · WMS Tracker</div>
+        <div class="alert-desc">Est. repair 10:30 AM · Use units #1 &amp; #5</div>
+        <div class="alert-time">06:55 AM · WMS</div>
       </div>
+    </div>
+  </div>
+
+  <!-- SAFETY -->
+  <div class="section">
+    <div class="section-title">🦺 Safety Tip</div>
+    <div class="safety-box">
+      <div class="safety-label" id="tip-label">⚡ Tip #1 of 5</div>
+      <div class="safety-text" id="tip-text"></div>
+      <div class="tip-nav" id="tip-nav"></div>
     </div>
   </div>
 
   <!-- FOOTER -->
   <div class="widget-footer">
-    <div class="footer-src">WMS · TempTrak · YMS · Equipment</div>
+    <div class="footer-date" id="footer-date"></div>
     <div class="footer-clock" id="footer-clock"></div>
   </div>
 
@@ -247,15 +216,14 @@ body {
 
 <script>
 var TIPS = [
-  "Verify freezer door seals are fully engaged before walking away. A partial seal causes frost buildup and slip hazards within minutes.",
-  "On the Crown reach truck in Aisles 7–9, reduce speed to 2 mph at blind intersections. Sound horn twice at each corner.",
-  "PPE reminder: Insulated gloves and thermal jacket are mandatory in blast freeze cells. Exposure beyond 10 min requires a buddy check-in.",
+  "Verify freezer door seals are fully engaged before walking away. A partial seal causes frost buildup and slip hazards.",
+  "On Crown reach trucks in Aisles 7–9, reduce speed to 2 mph at blind intersections. Sound horn twice at each corner.",
+  "Insulated gloves and thermal jacket are mandatory in blast freeze cells. 10+ min exposure requires a buddy check-in.",
   "Dock plates must be fully seated and pinned before any pallet jack crosses. Never override the dock lock indicator.",
-  "Report any ammonia odor immediately to your shift supervisor. Evacuate and call emergency line: ext. 5555."
+  "Report any ammonia odor immediately — evacuate and call emergency line: ext. 5555. Do NOT locate the source."
 ];
 
 var tipIndex = 0;
-
 function renderTip() {
   document.getElementById('tip-label').textContent = '⚡ Tip #' + (tipIndex + 1) + ' of ' + TIPS.length;
   document.getElementById('tip-text').textContent = TIPS[tipIndex];
@@ -291,9 +259,10 @@ highlightShift();
 
 function updateClock() {
   var now = new Date();
-  var t = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-  var d = now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
-  document.getElementById('footer-clock').textContent = d + ' | ' + t;
+  document.getElementById('footer-clock').textContent =
+    now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('footer-date').textContent =
+    now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
 }
 updateClock();
 setInterval(updateClock, 1000);
