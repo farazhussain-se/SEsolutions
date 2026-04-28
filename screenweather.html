@@ -12,9 +12,8 @@ body {
   justify-content: flex-end;
   align-items: flex-start;
 }
-
 .widget {
-  width: 285px;
+  width: 650px;
   background: #ffffff;
   border-radius: 0 0 0 14px;
   border-top: none;
@@ -28,76 +27,87 @@ body {
 
 .header {
   background: linear-gradient(135deg, #1a3a5c, #0e2a45);
-  padding: 8px 12px;
+  padding: 12px 20px;
   border-bottom: 2px solid #1f6feb;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.location { font-size: 12px; font-weight: 700; color: #79c0ff; }
-.location-sub { font-size: 9px; color: #8b949e; margin-top: 2px; }
-.updated { font-size: 10px; color: #8b949e; text-align: right; }
-.updated-label { font-size: 9px; color: #6e7681; }
+.location { font-size: 17px; font-weight: 700; color: #79c0ff; }
+.location-sub { font-size: 12px; color: #8b949e; margin-top: 3px; }
+.updated { font-size: 12px; color: #8b949e; text-align: right; }
+.updated-label { font-size: 11px; color: #6e7681; }
 
+/* CURRENT + STATS side by side */
+.current-row {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid #e8ecf0;
+}
 .current {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid #e8ecf0;
+  gap: 16px;
+  padding: 20px 24px;
+  flex: 1;
+  border-right: 1px solid #e8ecf0;
 }
-.temp-block { display: flex; align-items: flex-start; gap: 3px; }
-.temp-main { font-size: 60px; font-weight: 800; color: #1a2332; line-height: 1; }
-.temp-unit { font-size: 22px; color: #57606a; margin-top: 7px; font-weight: 600; }
-.condition-block { text-align: right; }
-.condition-icon { font-size: 42px; line-height: 1; }
-.condition-text { font-size: 13px; color: #1a2332; margin-top: 4px; font-weight: 700; }
-.feels-like { font-size: 11px; color: #57606a; margin-top: 2px; }
+.temp-block { display: flex; align-items: flex-start; gap: 4px; }
+.temp-main { font-size: 80px; font-weight: 800; color: #1a2332; line-height: 1; }
+.temp-unit { font-size: 28px; color: #57606a; margin-top: 10px; font-weight: 600; }
+.condition-block { }
+.condition-icon { font-size: 52px; line-height: 1; }
+.condition-text { font-size: 16px; color: #1a2332; margin-top: 6px; font-weight: 700; }
+.feels-like { font-size: 13px; color: #57606a; margin-top: 3px; }
 
 .stats {
   display: flex;
-  justify-content: space-around;
-  padding: 10px 6px;
-  border-bottom: 1px solid #e8ecf0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px 24px;
   background: #f6f8fa;
+  min-width: 180px;
 }
+.stats-row { display: flex; justify-content: space-between; gap: 20px; }
 .stat { text-align: center; }
-.stat-val { font-size: 14px; font-weight: 700; color: #1a2332; }
-.stat-label { font-size: 9px; color: #57606a; text-transform: uppercase; letter-spacing: .7px; margin-top: 2px; }
+.stat-val { font-size: 16px; font-weight: 700; color: #1a2332; }
+.stat-label { font-size: 10px; color: #57606a; text-transform: uppercase; letter-spacing: .8px; margin-top: 2px; }
 
+/* FORECAST */
 .forecast-title {
-  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
   letter-spacing: 1.2px; color: #57606a;
-  padding: 8px 12px 4px;
+  padding: 12px 20px 6px;
 }
-.forecast { display: flex; padding: 0 8px 10px; gap: 5px; }
+.forecast { display: flex; padding: 0 14px 14px; gap: 8px; }
 .fc-day {
   flex: 1;
   background: #f6f8fa;
   border: 1px solid #e8ecf0;
-  border-radius: 7px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  padding: 8px 3px;
+  gap: 5px;
+  padding: 12px 6px;
 }
-.fc-dow { font-size: 12px; font-weight: 700; color: #1f6feb; }
-.fc-icon { font-size: 22px; line-height: 1; }
-.fc-hi  { font-size: 13px; font-weight: 700; color: #1a2332; }
-.fc-lo  { font-size: 11px; color: #57606a; }
+.fc-dow { font-size: 14px; font-weight: 700; color: #1f6feb; }
+.fc-icon { font-size: 30px; line-height: 1; }
+.fc-hi  { font-size: 16px; font-weight: 700; color: #1a2332; }
+.fc-lo  { font-size: 13px; color: #57606a; }
 
 .footer {
   background: #f6f8fa;
   border-top: 1px solid #e8ecf0;
-  padding: 4px 12px;
+  padding: 6px 20px;
   display: flex;
   justify-content: space-between;
 }
-.footer span { font-size: 9px; color: #8c959f; }
+.footer span { font-size: 11px; color: #8c959f; }
 
-.loading { padding: 24px; text-align: center; color: #57606a; font-size: 13px; }
+.loading { padding: 30px; text-align: center; color: #57606a; font-size: 15px; }
 </style>
 </head>
 <body>
@@ -116,24 +126,30 @@ body {
 
   <div id="loading" class="loading">Loading weather…</div>
 
-  <div id="weather-content" style="display:none; flex:1; flex-direction:column;">
-    <div class="current">
-      <div class="temp-block">
-        <div class="temp-main" id="temp">—</div>
-        <div class="temp-unit">°F</div>
-      </div>
-      <div class="condition-block">
-        <div class="condition-icon" id="cond-icon">🌤️</div>
-        <div class="condition-text" id="cond-text">—</div>
-        <div class="feels-like" id="feels">Feels like —</div>
-      </div>
-    </div>
+  <div id="weather-content" style="display:none; flex-direction:column;">
 
-    <div class="stats">
-      <div class="stat"><div class="stat-val" id="humidity">—</div><div class="stat-label">Humidity</div></div>
-      <div class="stat"><div class="stat-val" id="wind">—</div><div class="stat-label">Wind</div></div>
-      <div class="stat"><div class="stat-val" id="precip">—</div><div class="stat-label">Precip</div></div>
-      <div class="stat"><div class="stat-val" id="uv">—</div><div class="stat-label">UV</div></div>
+    <div class="current-row">
+      <div class="current">
+        <div class="temp-block">
+          <div class="temp-main" id="temp">—</div>
+          <div class="temp-unit">°F</div>
+        </div>
+        <div class="condition-block">
+          <div class="condition-icon" id="cond-icon">🌤️</div>
+          <div class="condition-text" id="cond-text">—</div>
+          <div class="feels-like" id="feels">Feels like —</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stats-row">
+          <div class="stat"><div class="stat-val" id="humidity">—</div><div class="stat-label">Humidity</div></div>
+          <div class="stat"><div class="stat-val" id="wind">—</div><div class="stat-label">Wind</div></div>
+        </div>
+        <div class="stats-row">
+          <div class="stat"><div class="stat-val" id="precip">—</div><div class="stat-label">Precip</div></div>
+          <div class="stat"><div class="stat-val" id="uv">—</div><div class="stat-label">UV Index</div></div>
+        </div>
+      </div>
     </div>
 
     <div class="forecast-title">4-Day Forecast</div>
