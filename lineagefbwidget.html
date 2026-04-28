@@ -57,31 +57,30 @@ body {
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-/* FEED AREA */
+/* FEED AREA — strict clip box */
 .feed-area {
   flex: 1;
   overflow: hidden;
   background: #f0f2f5;
   position: relative;
-  display: flex;
-  flex-direction: column;
 }
 
-/* Mask — clips any overflow Facebook renders outside its stated height */
-.feed-mask {
+/* 
+  The iframe is rendered taller than the container (1100px)
+  and shifted UP by ~340px to skip past Facebook's page
+  header (cover photo + logo + follow button + name/followers).
+  overflow:hidden on .feed-area clips everything outside.
+  pointer-events:none prevents user scrolling.
+*/
+.feed-area iframe {
   position: absolute;
-  inset: 0;
-  overflow: hidden;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-}
-
-.feed-mask iframe {
+  top: -340px;      /* ← adjust this value if post is cut off */
+  left: 0;
+  width: 648px;
+  height: 1100px;
   border: none;
+  pointer-events: none;  /* prevents scroll interaction on TV display */
   display: block;
-  /* Slightly oversized then scaled down to clip FB chrome */
-  transform-origin: top center;
 }
 
 /* LOADING OVERLAY */
@@ -95,12 +94,11 @@ body {
   justify-content: center;
   gap: 12px;
   z-index: 10;
-  transition: opacity 0.4s;
+  transition: opacity 0.5s;
 }
-.feed-loading .fb-icon { font-size: 36px; }
 .feed-loading p { font-size: 13px; color: #57606a; }
 .spinner {
-  width: 24px; height: 24px;
+  width: 26px; height: 26px;
   border: 3px solid #d0d7de;
   border-top-color: #1877f2;
   border-radius: 50%;
@@ -140,37 +138,22 @@ body {
 
   <!-- FEED -->
   <div class="feed-area">
-    <div class="feed-mask" id="feed-mask">
 
-      <!-- Loading state -->
-      <div class="feed-loading" id="feed-loading">
-        <div class="fb-icon">📘</div>
-        <div class="spinner"></div>
-        <p>Loading latest post…</p>
-      </div>
-
-      <!-- 
-        Meta Page Plugin — single post view:
-        - tabs parameter removed = shows page header + single latest post only
-        - hide_cover=true removes banner image to save vertical space
-        - show_facepile=false removes follower avatars
-        - height capped to feed-area height (600 - 42 header - 26 footer = 532px)
-        - adapt_container_width=true fills the 650px container
-      -->
-      <iframe
-        id="fb-iframe"
-        src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Flineagelogistics&tabs=&width=648&height=532&small_header=true&adapt_container_width=true&hide_cover=true&show_facepile=false&appId="
-        width="648"
-        height="532"
-        style="border:none; overflow:hidden;"
-        scrolling="no"
-        frameborder="0"
-        allowfullscreen="true"
-        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-        onload="document.getElementById('feed-loading').style.opacity='0'; setTimeout(()=>document.getElementById('feed-loading').style.display='none',400);">
-      </iframe>
-
+    <div class="feed-loading" id="feed-loading">
+      <div class="spinner"></div>
+      <p>Loading latest post…</p>
     </div>
+
+    <iframe
+      id="fb-iframe"
+      src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Flineagelogistics&tabs=timeline&width=648&height=1100&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId="
+      scrolling="no"
+      frameborder="0"
+      allowfullscreen="true"
+      allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+      onload="document.getElementById('feed-loading').style.opacity='0'; setTimeout(()=>document.getElementById('feed-loading').style.display='none',500);">
+    </iframe>
+
   </div>
 
   <!-- FOOTER -->
@@ -182,7 +165,6 @@ body {
 </div>
 
 <script>
-// Clock
 function tick() {
   var now = new Date();
   document.getElementById('footer-clock').textContent =
@@ -192,11 +174,11 @@ function tick() {
 tick();
 setInterval(tick, 1000);
 
-// Fallback — if iframe fails to fire onload (cross-origin block), hide spinner after 4s
+// Fallback hide spinner after 5s if onload doesn't fire (cross-origin)
 setTimeout(function() {
   var l = document.getElementById('feed-loading');
-  if (l) { l.style.opacity = '0'; setTimeout(function(){ l.style.display='none'; }, 400); }
-}, 4000);
+  if (l) { l.style.opacity='0'; setTimeout(function(){ l.style.display='none'; },500); }
+}, 5000);
 </script>
 </body>
 </html>
