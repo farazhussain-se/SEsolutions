@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Weather – Lineage Novi HQ</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: transparent;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+.widget {
+  width: 1200px;
+  background: #ffffff;
+  border-radius: 0 0 0 14px;
+  border-top: none;
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #d0d7de;
+  box-shadow: -6px 6px 28px rgba(0,0,0,0.15);
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #1a3a5c, #0e2a45);
+  padding: 16px 30px;
+  border-bottom: 2px solid #1f6feb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.location { font-size: 24px; font-weight: 700; color: #79c0ff; }
+.location-sub { font-size: 15px; color: #8b949e; margin-top: 4px; }
+.updated { font-size: 15px; color: #8b949e; text-align: right; }
+.updated-label { font-size: 13px; color: #6e7681; margin-bottom: 2px; }
+
+/* CURRENT ROW — 3 columns: temp | condition | stats */
+.current-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  border-bottom: 1px solid #e8ecf0;
+  gap: 0;
+}
+
+.temp-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 30px 40px;
+  border-right: 1px solid #e8ecf0;
+}
+.temp-main { font-size: 120px; font-weight: 800; color: #1a2332; line-height: 1; }
+.temp-unit { font-size: 40px; color: #57606a; margin-top: 14px; font-weight: 600; }
+
+.condition-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 40px;
+  border-right: 1px solid #e8ecf0;
+  gap: 6px;
+}
+.condition-icon { font-size: 72px; line-height: 1; }
+.condition-text { font-size: 22px; color: #1a2332; font-weight: 700; text-align: center; }
+.feels-like { font-size: 16px; color: #57606a; }
+
+/* STATS — 2x2 grid */
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  background: #f6f8fa;
+  align-self: stretch;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  border-left: 1px solid #e8ecf0;
+  border-bottom: 1px solid #e8ecf0;
+}
+.stat:nth-child(3),
+.stat:nth-child(4) { border-bottom: none; }
+.stat-val { font-size: 28px; font-weight: 800; color: #1a2332; }
+.stat-label {
+  font-size: 12px; color: #57606a;
+  text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;
+}
+
+/* FORECAST */
+.forecast-title {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.4px; color: #57606a;
+  padding: 16px 30px 8px;
+}
+.forecast { display: flex; padding: 0 20px 20px; gap: 12px; }
+.fc-day {
+  flex: 1;
+  background: #f6f8fa;
+  border: 1px solid #e8ecf0;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 10px;
+}
+.fc-dow { font-size: 18px; font-weight: 700; color: #1f6feb; }
+.fc-icon { font-size: 44px; line-height: 1; }
+.fc-hi  { font-size: 22px; font-weight: 800; color: #1a2332; }
+.fc-lo  { font-size: 17px; color: #57606a; }
+
+/* FOOTER */
+.footer {
+  background: #f6f8fa;
+  border-top: 1px solid #e8ecf0;
+  padding: 7px 30px;
+  display: flex;
+  justify-content: space-between;
+}
+.footer span { font-size: 12px; color: #8c959f; }
+
+.loading { padding: 40px; text-align: center; color: #57606a; font-size: 18px; }
+</style>
+</head>
+<body>
+<div class="widget">
+
+  <div class="header">
+    <div>
+      <div class="location">📍 Novi, MI</div>
+      <div class="location-sub">Lineage HQ · 46500 Humboldt Dr, Novi, MI 48377</div>
+    </div>
+    <div>
+      <div class="updated-label">Last updated</div>
+      <div class="updated" id="updated-time">—</div>
+    </div>
+  </div>
+
+  <div id="loading" class="loading">Loading weather…</div>
+
+  <div id="weather-content" style="display:none; flex-direction:column;">
+
+    <div class="current-row">
+      <div class="temp-block">
+        <div class="temp-main" id="temp">—</div>
+        <div class="temp-unit">°F</div>
+      </div>
+      <div class="condition-block">
+        <div class="condition-icon" id="cond-icon">🌤️</div>
+        <div class="condition-text" id="cond-text">—</div>
+        <div class="feels-like" id="feels">Feels like —</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-val" id="humidity">—</div><div class="stat-label">Humidity</div></div>
+        <div class="stat"><div class="stat-val" id="wind">—</div><div class="stat-label">Wind</div></div>
+        <div class="stat"><div class="stat-val" id="precip">—</div><div class="stat-label">Precip</div></div>
+        <div class="stat"><div class="stat-val" id="uv">—</div><div class="stat-label">UV Index</div></div>
+      </div>
+    </div>
+
+    <div class="forecast-title">4-Day Forecast</div>
+    <div class="forecast" id="forecast"></div>
+  </div>
+
+  <div class="footer">
+    <span>Open-Meteo · 42.4995°N, 83.4851°W · Novi, MI</span>
+    <span id="footer-clock"></span>
+  </div>
+
+</div>
+<script>
+function wcode(c) {
+  if (c===0)  return ['☀️','Clear'];
+  if (c<=2)   return ['🌤️','Partly Cloudy'];
+  if (c===3)  return ['☁️','Overcast'];
+  if (c<=49)  return ['🌫️','Fog'];
+  if (c<=57)  return ['🌧️','Drizzle'];
+  if (c<=65)  return ['🌧️','Rain'];
+  if (c<=77)  return ['❄️','Snow'];
+  if (c<=82)  return ['🌦️','Showers'];
+  if (c<=99)  return ['⛈️','Thunderstorm'];
+  return ['🌡️','Unknown'];
+}
+var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+async function loadWeather() {
+  try {
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=42.4995&longitude=-83.4851' +
+      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,' +
+      'weather_code,wind_speed_10m,precipitation,uv_index' +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min' +
+      '&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch' +
+      '&timezone=America%2FDetroit&forecast_days=5';
+    var res = await fetch(url);
+    var d = await res.json();
+    var c = d.current; var daily = d.daily;
+    var [icon, label] = wcode(c.weather_code);
+    document.getElementById('temp').textContent = Math.round(c.temperature_2m);
+    document.getElementById('cond-icon').textContent = icon;
+    document.getElementById('cond-text').textContent = label;
+    document.getElementById('feels').textContent = 'Feels like ' + Math.round(c.apparent_temperature) + '°F';
+    document.getElementById('humidity').textContent = c.relative_humidity_2m + '%';
+    document.getElementById('wind').textContent = Math.round(c.wind_speed_10m) + ' mph';
+    document.getElementById('precip').textContent = (c.precipitation||0).toFixed(2) + '"';
+    document.getElementById('uv').textContent = (c.uv_index||0).toFixed(1);
+    document.getElementById('updated-time').textContent =
+      new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    var fc = document.getElementById('forecast');
+    fc.innerHTML = '';
+    for (var i=1;i<=4;i++) {
+      var date = new Date(daily.time[i]+'T12:00:00');
+      var [fi] = wcode(daily.weather_code[i]);
+      fc.innerHTML += '<div class="fc-day">' +
+        '<div class="fc-dow">'+DAYS[date.getDay()]+'</div>' +
+        '<div class="fc-icon">'+fi+'</div>' +
+        '<div class="fc-hi">'+Math.round(daily.temperature_2m_max[i])+'°</div>' +
+        '<div class="fc-lo">'+Math.round(daily.temperature_2m_min[i])+'°</div>' +
+        '</div>';
+    }
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('weather-content').style.display = 'flex';
+  } catch(e) {
+    document.getElementById('loading').textContent = 'Unable to load weather data.';
+  }
+}
+loadWeather();
+setInterval(loadWeather, 10*60*1000);
+
+function tick() {
+  var now = new Date();
+  document.getElementById('footer-clock').textContent =
+    now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' · ' +
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
