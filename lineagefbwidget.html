@@ -57,7 +57,7 @@ body {
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-/* FEED AREA — strict clip box */
+/* FEED AREA */
 .feed-area {
   flex: 1;
   overflow: hidden;
@@ -65,21 +65,14 @@ body {
   position: relative;
 }
 
-/* 
-  The iframe is rendered taller than the container (1100px)
-  and shifted UP by ~340px to skip past Facebook's page
-  header (cover photo + logo + follow button + name/followers).
-  overflow:hidden on .feed-area clips everything outside.
-  pointer-events:none prevents user scrolling.
-*/
 .feed-area iframe {
   position: absolute;
-  top: -340px;      /* ← adjust this value if post is cut off */
+  top: -68px;
   left: 0;
   width: 648px;
   height: 1100px;
   border: none;
-  pointer-events: none;  /* prevents scroll interaction on TV display */
+  pointer-events: none;
   display: block;
 }
 
@@ -146,7 +139,7 @@ body {
 
     <iframe
       id="fb-iframe"
-      src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Flineagelogistics&tabs=timeline&width=648&height=1100&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId="
+      src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Flineagelogistics&tabs=timeline&width=648&height=1100&small_header=true&adapt_container_width=true&hide_cover=true&show_facepile=false&appId="
       scrolling="no"
       frameborder="0"
       allowfullscreen="true"
@@ -174,10 +167,10 @@ function tick() {
 tick();
 setInterval(tick, 1000);
 
-// Fallback hide spinner after 5s if onload doesn't fire (cross-origin)
+// Fallback: hide spinner after 5s if onload doesn't fire due to cross-origin
 setTimeout(function() {
   var l = document.getElementById('feed-loading');
-  if (l) { l.style.opacity='0'; setTimeout(function(){ l.style.display='none'; },500); }
+  if (l) { l.style.opacity='0'; setTimeout(function(){ l.style.display='none'; }, 500); }
 }, 5000);
 </script>
 </body>
