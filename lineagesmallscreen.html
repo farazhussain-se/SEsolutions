@@ -14,9 +14,8 @@ body {
   align-items: flex-start;
   min-height: 100vh;
 }
-
 .widget {
-  width: 285px;
+  width: 650px;
   background: rgba(22, 27, 34, 0.96);
   border: 1px solid #30363d;
   border-top: none;
@@ -30,91 +29,101 @@ body {
 
 .widget-header {
   background: linear-gradient(135deg, #1a3a5c, #0e2a45);
-  padding: 8px 11px;
+  padding: 12px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 2px solid #1f6feb;
 }
-.header-left { display: flex; align-items: center; gap: 7px; }
+.header-left { display: flex; align-items: center; gap: 12px; }
 .lineage-logo {
   background: #1f6feb; color: white; font-weight: 800;
-  font-size: 11px; padding: 2px 6px; border-radius: 3px; letter-spacing: 1.5px;
+  font-size: 15px; padding: 4px 10px; border-radius: 4px; letter-spacing: 1.5px;
   flex-shrink: 0;
 }
-.facility-name { font-size: 12px; font-weight: 700; color: #79c0ff; line-height: 1.2; }
-.facility-sub { font-size: 9px; color: #8b949e; margin-top: 1px; }
+.facility-name { font-size: 18px; font-weight: 700; color: #79c0ff; line-height: 1.2; }
+.facility-sub { font-size: 12px; color: #8b949e; margin-top: 2px; }
 .live-badge {
-  display: flex; align-items: center; gap: 4px;
+  display: flex; align-items: center; gap: 6px;
   background: #0d2e0d; border: 1px solid #238636;
-  border-radius: 10px; padding: 3px 7px; font-size: 9px; color: #56d364;
+  border-radius: 12px; padding: 5px 12px; font-size: 13px; color: #56d364;
   font-weight: 700; white-space: nowrap; flex-shrink: 0;
 }
 .live-dot {
-  width: 6px; height: 6px; background: #56d364;
+  width: 8px; height: 8px; background: #56d364;
   border-radius: 50%; animation: pulse 1.4s infinite;
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
 .section {
-  padding: 8px 11px;
+  padding: 14px 20px;
   border-bottom: 1px solid #21262d;
 }
 .section-title {
-  font-size: 9px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 1px; color: #8b949e; margin-bottom: 6px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.2px; color: #8b949e; margin-bottom: 10px;
 }
 
-.shift-row {
-  display: flex; align-items: center; justify-content: space-between;
-  background: #1c2128; border-radius: 4px;
-  padding: 6px 8px; margin-bottom: 3px;
-  border-left: 3px solid #30363d;
+/* SHIFT — 3 columns side by side */
+.shift-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
 }
-.shift-row:last-child { margin-bottom: 0; }
+.shift-row {
+  background: #1c2128; border-radius: 6px;
+  padding: 10px 12px;
+  border-left: 3px solid #30363d;
+  display: flex; flex-direction: column; gap: 4px;
+}
 .shift-row.active { border-left-color: #56d364; background: #0d2e0d44; }
-.shift-left { display: flex; align-items: center; gap: 6px; }
-.shift-name { font-size: 12px; font-weight: 800; }
-.shift-time { font-size: 11px; color: #79c0ff; }
-.shift-super { font-size: 10px; color: #8b949e; white-space: nowrap; }
+.shift-top { display: flex; align-items: center; gap: 8px; }
+.shift-name { font-size: 15px; font-weight: 800; }
 .shift-badge {
   background: #56d36422; color: #56d364;
   border: 1px solid #56d36455; border-radius: 8px;
-  font-size: 9px; padding: 1px 5px; font-weight: 700; margin-left: 5px;
+  font-size: 10px; padding: 2px 6px; font-weight: 700;
 }
+.shift-time { font-size: 13px; color: #79c0ff; }
+.shift-super { font-size: 12px; color: #8b949e; }
 
+/* ALERTS — 3 columns side by side */
+.alert-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
 .alert-item {
-  display: flex; align-items: flex-start; gap: 7px;
-  background: #1c2128; border-radius: 4px;
-  padding: 7px 8px; margin-bottom: 4px;
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #1c2128; border-radius: 6px;
+  padding: 10px 12px;
   border-left: 3px solid #da3633;
 }
-.alert-item:last-child { margin-bottom: 0; }
 .alert-item.warn { border-left-color: #d29922; }
 .alert-item.info { border-left-color: #1f6feb; }
-.alert-icon { font-size: 15px; flex-shrink: 0; line-height: 1.4; }
-.alert-title { font-size: 11px; font-weight: 700; line-height: 1.3; }
-.alert-desc { font-size: 10px; color: #8b949e; margin-top: 2px; line-height: 1.4; }
-.alert-time { font-size: 9px; color: #6e7681; margin-top: 2px; }
+.alert-icon { font-size: 20px; flex-shrink: 0; line-height: 1.4; }
+.alert-title { font-size: 13px; font-weight: 700; line-height: 1.3; }
+.alert-desc { font-size: 11px; color: #8b949e; margin-top: 3px; line-height: 1.4; }
+.alert-time { font-size: 10px; color: #6e7681; margin-top: 3px; }
 
 .safety-box {
   background: #0d2412;
-  border: 1px solid #238636; border-radius: 5px;
-  padding: 8px 10px;
+  border: 1px solid #238636; border-radius: 6px;
+  padding: 12px 14px;
 }
-.safety-label { font-size: 9px; color: #56d364; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 3px; }
-.safety-text { font-size: 11px; color: #d2ffd2; line-height: 1.5; }
-.tip-nav { display: flex; gap: 4px; margin-top: 5px; }
-.tip-dot { width: 6px; height: 6px; border-radius: 50%; background: #30363d; cursor: pointer; transition: background .2s; }
+.safety-label { font-size: 10px; color: #56d364; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+.safety-text { font-size: 14px; color: #d2ffd2; line-height: 1.6; }
+.tip-nav { display: flex; gap: 6px; margin-top: 8px; }
+.tip-dot { width: 8px; height: 8px; border-radius: 50%; background: #30363d; cursor: pointer; transition: background .2s; }
 .tip-dot.active { background: #56d364; }
 
 .widget-footer {
   background: #0d1117; border-top: 1px solid #21262d;
-  padding: 4px 11px; display: flex;
+  padding: 6px 20px; display: flex;
   justify-content: space-between; align-items: center;
 }
-.footer-clock { font-size: 10px; color: #6e7681; font-variant-numeric: tabular-nums; font-weight: 600; }
-.footer-date  { font-size: 10px; color: #484f58; }
+.footer-clock { font-size: 12px; color: #6e7681; font-variant-numeric: tabular-nums; font-weight: 600; }
+.footer-date  { font-size: 12px; color: #484f58; }
 </style>
 </head>
 <body>
@@ -125,61 +134,65 @@ body {
       <div class="lineage-logo">LINEAGE</div>
       <div>
         <div class="facility-name">Atlanta – Lithia Springs</div>
-        <div class="facility-sub">GA 30122 · Live Ops</div>
+        <div class="facility-sub">737 Douglas Hill Rd · GA 30122 · Live Ops Dashboard</div>
       </div>
     </div>
-    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    <div class="live-badge"><div class="live-dot"></div>LIVE OPS</div>
   </div>
 
   <div class="section">
     <div class="section-title">🕐 Shift Schedule</div>
-    <div class="shift-row" id="shift-1st">
-      <div class="shift-left">
-        <div class="shift-name">1st</div>
+    <div class="shift-grid">
+      <div class="shift-row" id="shift-1st">
+        <div class="shift-top">
+          <div class="shift-name">1st Shift</div>
+        </div>
         <div class="shift-time">6:00 AM – 2:00 PM</div>
+        <div class="shift-super">Sup: James Okafor</div>
       </div>
-      <div class="shift-super">James Okafor</div>
-    </div>
-    <div class="shift-row" id="shift-2nd">
-      <div class="shift-left">
-        <div class="shift-name">2nd</div>
+      <div class="shift-row" id="shift-2nd">
+        <div class="shift-top">
+          <div class="shift-name">2nd Shift</div>
+        </div>
         <div class="shift-time">2:00 PM – 10:00 PM</div>
+        <div class="shift-super">Sup: Linda Cho</div>
       </div>
-      <div class="shift-super">Linda Cho</div>
-    </div>
-    <div class="shift-row" id="shift-3rd">
-      <div class="shift-left">
-        <div class="shift-name">3rd</div>
+      <div class="shift-row" id="shift-3rd">
+        <div class="shift-top">
+          <div class="shift-name">3rd Shift</div>
+        </div>
         <div class="shift-time">10:00 PM – 6:00 AM</div>
+        <div class="shift-super">Sup: Ray Santos</div>
       </div>
-      <div class="shift-super">Ray Santos</div>
     </div>
   </div>
 
   <div class="section">
     <div class="section-title">🚨 Urgent Alerts</div>
-    <div class="alert-item">
-      <div class="alert-icon">🥶</div>
-      <div>
-        <div class="alert-title">FREEZER TEMP — Cell F-4</div>
-        <div class="alert-desc">-2°F detected (target -10°F). Maintenance en route.</div>
-        <div class="alert-time">07:42 AM · TempTrak</div>
+    <div class="alert-grid">
+      <div class="alert-item">
+        <div class="alert-icon">🥶</div>
+        <div>
+          <div class="alert-title">FREEZER TEMP — Cell F-4</div>
+          <div class="alert-desc">-2°F detected (target -10°F). Maintenance en route.</div>
+          <div class="alert-time">07:42 AM · TempTrak</div>
+        </div>
       </div>
-    </div>
-    <div class="alert-item warn">
-      <div class="alert-icon">🚛</div>
-      <div>
-        <div class="alert-title">DOCK CONGESTION — Doors 12–14</div>
-        <div class="alert-desc">3 trailers queued · ~45 min clearance</div>
-        <div class="alert-time">08:15 AM · YMS</div>
+      <div class="alert-item warn">
+        <div class="alert-icon">🚛</div>
+        <div>
+          <div class="alert-title">DOCK CONGESTION — Doors 12–14</div>
+          <div class="alert-desc">3 trailers queued · ~45 min clearance</div>
+          <div class="alert-time">08:15 AM · YMS</div>
+        </div>
       </div>
-    </div>
-    <div class="alert-item info">
-      <div class="alert-icon">🔧</div>
-      <div>
-        <div class="alert-title">EQUIP OOS — Crown RC 5500 #3</div>
-        <div class="alert-desc">Est. repair 10:30 AM · Use units #1 &amp; #5</div>
-        <div class="alert-time">06:55 AM · WMS</div>
+      <div class="alert-item info">
+        <div class="alert-icon">🔧</div>
+        <div>
+          <div class="alert-title">EQUIP OOS — Crown RC 5500 #3</div>
+          <div class="alert-desc">Est. repair 10:30 AM · Use units #1 &amp; #5</div>
+          <div class="alert-time">06:55 AM · WMS</div>
+        </div>
       </div>
     </div>
   </div>
@@ -237,7 +250,7 @@ function highlightShift() {
   var badge = document.createElement('span');
   badge.className = 'shift-badge';
   badge.textContent = '● ACTIVE';
-  el.querySelector('.shift-left').appendChild(badge);
+  el.querySelector('.shift-top').appendChild(badge);
 }
 highlightShift();
 
