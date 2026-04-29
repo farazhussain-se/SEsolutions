@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Ops Dashboard</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -15,7 +14,7 @@ body {
 
 .widget {
   width: 480px;
-  height: 820px;
+  height: 600px;
   background: #ffffff;
   border: 2px solid #d0d7de;
   border-radius: 16px;
@@ -25,143 +24,105 @@ body {
   box-shadow: 0 6px 32px rgba(0,0,0,0.13);
 }
 
-/* ── HEADER ── */
+/* HEADER */
 .widget-header {
   background: #1b1f24;
-  padding: 18px 24px;
+  padding: 10px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  border-bottom: 4px solid #1f6feb;
+  border-bottom: 3px solid #1f6feb;
 }
-.header-title {
-  font-size: 26px;
-  font-weight: 900;
-  color: #ffffff;
-  letter-spacing: 0.5px;
-}
-.header-sub {
-  font-size: 14px;
-  color: #8c959f;
-  margin-top: 3px;
-  font-weight: 500;
-}
+.header-title { font-size: 20px; font-weight: 900; color: #ffffff; }
+.header-sub { font-size: 11px; color: #8c959f; margin-top: 2px; }
 .live-badge {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 6px;
   background: #0d2e0d; border: 2px solid #238636;
-  border-radius: 20px; padding: 7px 16px;
-  font-size: 14px; color: #56d364; font-weight: 800;
-  white-space: nowrap; flex-shrink: 0;
+  border-radius: 16px; padding: 5px 12px;
+  font-size: 12px; color: #56d364; font-weight: 800; white-space: nowrap;
 }
 .live-dot {
-  width: 11px; height: 11px; background: #56d364;
+  width: 8px; height: 8px; background: #56d364;
   border-radius: 50%; animation: pulse 1.4s infinite;
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
 
-/* ── SECTION WRAPPER ── */
+/* SECTION */
 .section {
-  padding: 20px 24px;
-  border-bottom: 2px solid #e8ebef;
+  padding: 10px 18px;
+  border-bottom: 1px solid #e8ebef;
   flex-shrink: 0;
 }
-.section:last-of-type { border-bottom: none; }
-
 .section-title {
-  font-size: 12px; font-weight: 800; text-transform: uppercase;
-  letter-spacing: 1.8px; color: #57606a;
-  margin-bottom: 16px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #e8ebef;
-  display: flex; align-items: center; gap: 7px;
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 1.5px; color: #57606a;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e8ebef;
+  display: flex; align-items: center; gap: 6px;
 }
 
-/* ── SHIFT ── */
+/* SHIFT */
 .shift-row {
   display: flex; align-items: center; justify-content: space-between;
   background: #f6f8fa;
-  border-radius: 10px;
-  padding: 14px 18px;
-  margin-bottom: 12px;
-  border-left: 6px solid #d0d7de;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  border-left: 5px solid #d0d7de;
 }
 .shift-row:last-child { margin-bottom: 0; }
-.shift-row.active {
-  border-left-color: #1a9e3f;
-  background: #dafbe1;
-}
-.shift-name {
-  font-size: 24px; font-weight: 900; color: #1b1f24; line-height: 1.1;
-}
-.shift-time {
-  font-size: 17px; color: #1f6feb; font-weight: 600; margin-top: 4px;
-}
+.shift-row.active { border-left-color: #1a9e3f; background: #dafbe1; }
+.shift-name { font-size: 16px; font-weight: 900; color: #1b1f24; }
+.shift-time { font-size: 13px; color: #1f6feb; font-weight: 600; margin-top: 2px; }
 .shift-right { text-align: right; }
-.shift-super {
-  font-size: 16px; color: #57606a; font-weight: 500;
-}
+.shift-super { font-size: 12px; color: #57606a; }
 .shift-badge {
   display: inline-block;
-  background: #1a9e3f; color: #ffffff;
-  border-radius: 10px;
-  font-size: 13px; padding: 4px 14px;
-  font-weight: 800; margin-top: 6px;
-  letter-spacing: 0.5px;
+  background: #1a9e3f; color: #fff;
+  border-radius: 8px; font-size: 10px;
+  padding: 2px 10px; font-weight: 800; margin-top: 4px;
 }
 
-/* ── PRODUCTION ── */
+/* PRODUCTION */
 .prod-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 8px;
 }
 .prod-card {
   background: #f6f8fa;
-  border-radius: 12px;
-  padding: 18px 18px 14px;
-  display: flex; flex-direction: column; justify-content: center;
+  border-radius: 10px;
+  padding: 10px 12px;
   border: 1px solid #d0d7de;
-  border-top: 5px solid #d0d7de;
+  border-top: 4px solid #d0d7de;
 }
 .prod-card.green  { border-top-color: #1a9e3f; }
 .prod-card.blue   { border-top-color: #1f6feb; }
 .prod-card.orange { border-top-color: #bc4c00; }
 .prod-card.purple { border-top-color: #8250df; }
-
-.prod-label {
-  font-size: 12px; font-weight: 800; text-transform: uppercase;
-  letter-spacing: 1.2px; color: #57606a; margin-bottom: 8px;
-}
-.prod-value {
-  font-size: 42px; font-weight: 900; color: #1b1f24; line-height: 1;
-}
-.prod-unit {
-  font-size: 14px; font-weight: 600; color: #57606a; margin-top: 5px;
-}
-.prod-delta {
-  font-size: 14px; font-weight: 800; margin-top: 6px;
-}
+.prod-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #57606a; margin-bottom: 4px; }
+.prod-value { font-size: 30px; font-weight: 900; color: #1b1f24; line-height: 1; }
+.prod-unit { font-size: 11px; color: #57606a; margin-top: 3px; }
+.prod-delta { font-size: 11px; font-weight: 800; margin-top: 3px; }
 .prod-delta.up   { color: #1a9e3f; }
 .prod-delta.down { color: #cf222e; }
 .prod-delta.flat { color: #9a6700; }
 
-/* ── FOOTER ── */
+/* FOOTER */
 .widget-footer {
   background: #f6f8fa;
-  border-top: 2px solid #d0d7de;
-  padding: 10px 24px;
+  border-top: 1px solid #d0d7de;
+  padding: 7px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
   margin-top: auto;
 }
-.footer-src { font-size: 12px; color: #8c959f; }
-.footer-clock {
-  font-size: 17px; color: #1b1f24;
-  font-weight: 800; font-variant-numeric: tabular-nums;
-}
+.footer-src { font-size: 11px; color: #8c959f; }
+.footer-clock { font-size: 14px; color: #1b1f24; font-weight: 800; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
@@ -179,35 +140,26 @@ body {
   <!-- SHIFT -->
   <div class="section">
     <div class="section-title">🕐 Shift Schedule · Today</div>
-
     <div class="shift-row" id="shift-1st">
       <div>
         <div class="shift-name">1st Shift</div>
         <div class="shift-time">06:00 AM – 02:00 PM</div>
       </div>
-      <div class="shift-right">
-        <div class="shift-super">Sup: James Okafor</div>
-      </div>
+      <div class="shift-right"><div class="shift-super">Sup: James Okafor</div></div>
     </div>
-
     <div class="shift-row" id="shift-2nd">
       <div>
         <div class="shift-name">2nd Shift</div>
         <div class="shift-time">02:00 PM – 10:00 PM</div>
       </div>
-      <div class="shift-right">
-        <div class="shift-super">Sup: Linda Cho</div>
-      </div>
+      <div class="shift-right"><div class="shift-super">Sup: Linda Cho</div></div>
     </div>
-
     <div class="shift-row" id="shift-3rd">
       <div>
         <div class="shift-name">3rd Shift</div>
         <div class="shift-time">10:00 PM – 06:00 AM</div>
       </div>
-      <div class="shift-right">
-        <div class="shift-super">Sup: Ray Santos</div>
-      </div>
+      <div class="shift-right"><div class="shift-super">Sup: Ray Santos</div></div>
     </div>
   </div>
 
@@ -215,35 +167,30 @@ body {
   <div class="section">
     <div class="section-title">📦 Production · Current Shift</div>
     <div class="prod-grid">
-
       <div class="prod-card green">
         <div class="prod-label">Cases Picked</div>
         <div class="prod-value">3,847</div>
         <div class="prod-unit">of 5,200 goal</div>
         <div class="prod-delta up">▲ 74% to goal</div>
       </div>
-
       <div class="prod-card blue">
         <div class="prod-label">Pallets Built</div>
         <div class="prod-value">112</div>
         <div class="prod-unit">of 140 goal</div>
         <div class="prod-delta up">▲ 80% to goal</div>
       </div>
-
       <div class="prod-card orange">
         <div class="prod-label">Inbound Loads</div>
         <div class="prod-value">8</div>
         <div class="prod-unit">of 11 scheduled</div>
         <div class="prod-delta flat">● 3 pending</div>
       </div>
-
       <div class="prod-card purple">
         <div class="prod-label">Outbound Loads</div>
         <div class="prod-value">6</div>
         <div class="prod-unit">of 9 scheduled</div>
         <div class="prod-delta down">▼ 2 delayed</div>
       </div>
-
     </div>
   </div>
 
@@ -254,9 +201,7 @@ body {
   </div>
 
 </div>
-
 <script>
-// ── Active shift highlight ──
 function highlightShift() {
   var h = new Date().getHours();
   ['1st','2nd','3rd'].forEach(function(s) {
@@ -275,13 +220,12 @@ function highlightShift() {
 }
 highlightShift();
 
-// ── Live clock + header date ──
 function updateClock() {
   var now = new Date();
-  var d = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
-  var t = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-  document.getElementById('footer-clock').textContent = t;
-  document.getElementById('header-date').textContent = d;
+  document.getElementById('footer-clock').textContent =
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('header-date').textContent =
+    now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 }
 updateClock();
 setInterval(updateClock, 1000);
