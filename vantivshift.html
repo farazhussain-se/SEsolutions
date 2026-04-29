@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Shift Schedule</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: transparent;
+  width: 100%;
+}
+
+.widget {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #d0d7de;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #1b1f24, #24292f);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #1f6feb;
+}
+.header-title { font-size: 14px; font-weight: 800; color: #fff; }
+.header-sub   { font-size: 10px; color: #8c959f; margin-top: 1px; }
+.live-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: #0d2e0d; border: 1px solid #238636;
+  border-radius: 12px; padding: 3px 10px;
+  font-size: 10px; font-weight: 800; color: #56d364;
+}
+.live-dot {
+  width: 7px; height: 7px;
+  background: #56d364; border-radius: 50%;
+  animation: pulse 1.4s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* SHIFTS */
+.shifts { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+
+.shift-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f6f8fa;
+  border-radius: 8px;
+  padding: 8px 12px;
+  border-left: 4px solid #d0d7de;
+  transition: background 0.2s;
+}
+.shift-row.active {
+  border-left-color: #1a9e3f;
+  background: #dafbe1;
+}
+.shift-row.next {
+  border-left-color: #1f6feb;
+  background: #ddf4ff;
+}
+
+.shift-name { font-size: 14px; font-weight: 800; color: #1b1f24; }
+.shift-time { font-size: 11px; color: #57606a; margin-top: 1px; }
+
+.shift-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.shift-super { font-size: 11px; color: #57606a; }
+.shift-badge {
+  font-size: 9px; font-weight: 800;
+  padding: 2px 8px; border-radius: 8px;
+  color: #fff;
+}
+.shift-badge.active-badge { background: #1a9e3f; }
+.shift-badge.next-badge   { background: #1f6feb; }
+
+/* FOOTER */
+.footer {
+  background: #f6f8fa;
+  border-top: 1px solid #e8ecf0;
+  padding: 5px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-src   { font-size: 9px; color: #8c959f; }
+.footer-clock { font-size: 11px; font-weight: 700; color: #1b1f24; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="widget">
+
+  <div class="header">
+    <div>
+      <div class="header-title">🕐 Shift Schedule</div>
+      <div class="header-sub" id="header-date">—</div>
+    </div>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  </div>
+
+  <div class="shifts">
+    <div class="shift-row" id="shift-1st">
+      <div>
+        <div class="shift-name">1st Shift</div>
+        <div class="shift-time">06:00 AM – 02:00 PM</div>
+      </div>
+      <div class="shift-right">
+        <div class="shift-super">James Okafor</div>
+      </div>
+    </div>
+    <div class="shift-row" id="shift-2nd">
+      <div>
+        <div class="shift-name">2nd Shift</div>
+        <div class="shift-time">02:00 PM – 10:00 PM</div>
+      </div>
+      <div class="shift-right">
+        <div class="shift-super">Linda Cho</div>
+      </div>
+    </div>
+    <div class="shift-row" id="shift-3rd">
+      <div>
+        <div class="shift-name">3rd Shift</div>
+        <div class="shift-time">10:00 PM – 06:00 AM</div>
+      </div>
+      <div class="shift-right">
+        <div class="shift-super">Ray Santos</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-src">Shift Operations</div>
+    <div class="footer-clock" id="footer-clock"></div>
+  </div>
+
+</div>
+<script>
+const SHIFTS = [
+  { id: '1st', start: 6,  end: 14 },
+  { id: '2nd', start: 14, end: 22 },
+  { id: '3rd', start: 22, end: 6  },
+];
+
+function getActiveShift(h) {
+  if (h >= 6  && h < 14) return '1st';
+  if (h >= 14 && h < 22) return '2nd';
+  return '3rd';
+}
+function getNextShift(active) {
+  const order = ['1st','2nd','3rd'];
+  return order[(order.indexOf(active) + 1) % 3];
+}
+
+function highlightShifts() {
+  const h      = new Date().getHours();
+  const active = getActiveShift(h);
+  const next   = getNextShift(active);
+
+  SHIFTS.forEach(({ id }) => {
+    const row = document.getElementById('shift-' + id);
+    row.classList.remove('active', 'next');
+    const old = row.querySelector('.shift-badge');
+    if (old) old.remove();
+  });
+
+  const activeRow = document.getElementById('shift-' + active);
+  activeRow.classList.add('active');
+  const ab = document.createElement('div');
+  ab.className = 'shift-badge active-badge';
+  ab.textContent = '● ACTIVE';
+  activeRow.querySelector('.shift-right').appendChild(ab);
+
+  const nextRow = document.getElementById('shift-' + next);
+  nextRow.classList.add('next');
+  const nb = document.createElement('div');
+  nb.className = 'shift-badge next-badge';
+  nb.textContent = '▶ UP NEXT';
+  nextRow.querySelector('.shift-right').appendChild(nb);
+}
+
+function tick() {
+  const now = new Date();
+  document.getElementById('footer-clock').textContent =
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('header-date').textContent =
+    now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+
+highlightShifts();
+tick();
+setInterval(tick, 1000);
+setInterval(highlightShifts, 60 * 1000);
+</script>
+</body>
+</html>
