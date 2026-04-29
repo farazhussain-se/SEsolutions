@@ -9,15 +9,18 @@ body { background: transparent; }
 
 .video-area {
   position: relative;
-  width: 650px;
-  padding-top: 56.25%;
+  width: 100%;             /* fills whatever container it's in */
+  padding-top: 56.25%;    /* 16:9 */
   background: #000;
+  overflow: hidden;
 }
 .video-area iframe {
   position: absolute;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100%;
+  top: 50%;
+  left: 50%;
+  width: 110%;            /* overscan to push letterbox bars off-screen */
+  height: 110%;
+  transform: translate(-50%, -50%);
   border: none;
   display: block;
 }
