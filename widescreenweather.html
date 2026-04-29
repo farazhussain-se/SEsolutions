@@ -5,170 +5,223 @@
 <title>Weather Widget</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: transparent;
-}
 
-.widget-shell {
+html, body {
   width: 100%;
-  overflow: hidden;
-  position: relative;
+  height: 100%;
+  background: transparent;
+  font-family: 'Segoe UI', Arial, sans-serif;
 }
 
 .widget {
-  width: 1200px;
-  height: 200px;
+  width: 100%;
+  height: 100%;
   background: #ffffff;
-  border-radius: 0 0 0 14px;
+  border-radius: 14px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid #d0d7de;
-  box-shadow: -6px 6px 28px rgba(0,0,0,0.15);
-  transform-origin: top left;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  --s: 1;   /* scale factor set by JS */
 }
 
+/* ── HEADER ────────────────────────────────── */
 .header {
   background: linear-gradient(135deg, #1a3a5c, #0e2a45);
-  padding: 8px 24px;
-  border-bottom: 2px solid #1f6feb;
+  padding: calc(6px * var(--s)) calc(16px * var(--s));
+  border-bottom: calc(2px * var(--s)) solid #1f6feb;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
+  gap: 8px;
 }
-.location { font-size: 16px; font-weight: 700; color: #79c0ff; }
-.location-sub { font-size: 11px; color: #8b949e; margin-top: 1px; }
-.updated-wrap { text-align: right; }
-.updated-label { font-size: 10px; color: #6e7681; }
-.updated { font-size: 11px; color: #8b949e; }
+.location      { font-size: calc(13px * var(--s)); font-weight: 700; color: #79c0ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.location-sub  { font-size: calc(9px  * var(--s)); color: #8b949e; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.updated-wrap  { text-align: right; flex-shrink: 0; }
+.updated-label { font-size: calc(8px  * var(--s)); color: #6e7681; }
+.updated       { font-size: calc(9px  * var(--s)); color: #8b949e; }
 
-.main-row {
+/* ── BODY ──────────────────────────────────── */
+.body {
   flex: 1;
   display: flex;
-  align-items: stretch;
   overflow: hidden;
+  min-height: 0;
 }
 
-.temp-block {
+/* WIDE mode — horizontal row (default) */
+.widget.wide .body { flex-direction: row; align-items: stretch; }
+.widget.wide .temp-block {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 0 28px;
+  gap: calc(4px * var(--s));
+  padding: 0 calc(20px * var(--s));
   border-right: 1px solid #e8ecf0;
   flex-shrink: 0;
 }
-.temp-main { font-size: 72px; font-weight: 800; color: #1a2332; line-height: 1; }
-.temp-unit { font-size: 26px; color: #57606a; font-weight: 600; align-self: flex-start; margin-top: 8px; }
-
-.condition-block {
+.widget.wide .condition-block {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 28px;
+  gap: calc(10px * var(--s));
+  padding: 0 calc(20px * var(--s));
   border-right: 1px solid #e8ecf0;
   flex-shrink: 0;
 }
-.condition-icon { font-size: 52px; line-height: 1; }
-.condition-text-wrap { display: flex; flex-direction: column; gap: 4px; }
-.condition-text { font-size: 20px; color: #1a2332; font-weight: 700; }
-.feels-like { font-size: 13px; color: #57606a; }
-
-.stats {
+.widget.wide .stats {
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-around;
   flex: 1;
-  padding: 0 20px;
+  padding: 0 calc(12px * var(--s));
   background: #f6f8fa;
-  gap: 10px;
+  gap: calc(8px * var(--s));
 }
-.stat { text-align: center; }
-.stat-val { font-size: 22px; font-weight: 800; color: #1a2332; }
-.stat-label { font-size: 10px; color: #57606a; text-transform: uppercase; letter-spacing: .9px; margin-top: 3px; }
 
+/* TALL/SQUARE mode — stacked column */
+.widget.tall .body { flex-direction: column; align-items: stretch; }
+.widget.tall .temp-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(4px * var(--s));
+  padding: calc(8px * var(--s)) calc(12px * var(--s));
+  border-bottom: 1px solid #e8ecf0;
+  flex-shrink: 0;
+}
+.widget.tall .condition-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(10px * var(--s));
+  padding: calc(8px * var(--s)) calc(12px * var(--s));
+  border-bottom: 1px solid #e8ecf0;
+  flex-shrink: 0;
+}
+.widget.tall .stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  justify-items: center;
+  flex: 1;
+  padding: calc(8px * var(--s));
+  background: #f6f8fa;
+  gap: calc(6px * var(--s));
+}
+
+/* ── SHARED ELEMENTS ───────────────────────── */
+.temp-main  { font-size: calc(60px * var(--s)); font-weight: 800; color: #1a2332; line-height: 1; }
+.temp-unit  { font-size: calc(22px * var(--s)); color: #57606a; font-weight: 600; align-self: flex-start; margin-top: calc(6px * var(--s)); }
+.condition-icon { font-size: calc(40px * var(--s)); line-height: 1; }
+.condition-text-wrap { display: flex; flex-direction: column; gap: calc(3px * var(--s)); }
+.condition-text { font-size: calc(16px * var(--s)); color: #1a2332; font-weight: 700; }
+.feels-like { font-size: calc(11px * var(--s)); color: #57606a; }
+.stat { text-align: center; }
+.stat-val   { font-size: calc(18px * var(--s)); font-weight: 800; color: #1a2332; }
+.stat-label { font-size: calc(8px  * var(--s)); color: #57606a; text-transform: uppercase; letter-spacing: .8px; margin-top: calc(2px * var(--s)); }
+
+/* ── FOOTER ────────────────────────────────── */
 .footer {
   background: #f6f8fa;
   border-top: 1px solid #e8ecf0;
-  padding: 4px 24px;
+  padding: calc(3px * var(--s)) calc(12px * var(--s));
   display: flex;
   justify-content: space-between;
   flex-shrink: 0;
+  gap: 8px;
+  overflow: hidden;
 }
-.footer span { font-size: 10px; color: #8c959f; }
+.footer span { font-size: calc(8px * var(--s)); color: #8c959f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.loading { flex:1; display:flex; align-items:center; justify-content:center; color: #57606a; font-size: 15px; }
+.loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #57606a;
+  font-size: calc(13px * var(--s));
+}
 </style>
 </head>
 <body>
 
-<div class="widget-shell" id="widget-shell">
-  <div class="widget" id="widget">
+<div class="widget wide" id="widget">
 
-    <div class="header">
-      <div>
-        <div class="location" id="loc-city">📍 Detecting location…</div>
-        <div class="location-sub" id="loc-sub"> </div>
-      </div>
-      <div class="updated-wrap">
-        <div class="updated-label">Last updated</div>
-        <div class="updated" id="updated-time">—</div>
-      </div>
+  <div class="header">
+    <div style="min-width:0;">
+      <div class="location" id="loc-city">📍 Detecting location…</div>
+      <div class="location-sub" id="loc-sub"> </div>
     </div>
-
-    <div id="loading" class="loading">Loading weather…</div>
-
-    <div id="weather-content" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
-      <div class="main-row">
-
-        <div class="temp-block">
-          <div class="temp-main" id="temp">—</div>
-          <div class="temp-unit">°F</div>
-        </div>
-
-        <div class="condition-block">
-          <div class="condition-icon" id="cond-icon">🌤️</div>
-          <div class="condition-text-wrap">
-            <div class="condition-text" id="cond-text">—</div>
-            <div class="feels-like" id="feels">Feels like —</div>
-          </div>
-        </div>
-
-        <div class="stats">
-          <div class="stat"><div class="stat-val" id="humidity">—</div><div class="stat-label">Humidity</div></div>
-          <div class="stat"><div class="stat-val" id="wind">—</div><div class="stat-label">Wind</div></div>
-          <div class="stat"><div class="stat-val" id="precip">—</div><div class="stat-label">Precip</div></div>
-          <div class="stat"><div class="stat-val" id="uv">—</div><div class="stat-label">UV Index</div></div>
-        </div>
-
-      </div>
+    <div class="updated-wrap">
+      <div class="updated-label">Last updated</div>
+      <div class="updated" id="updated-time">—</div>
     </div>
-
-    <div class="footer">
-      <span id="footer-coords">Open-Meteo</span>
-      <span id="footer-clock"></span>
-    </div>
-
   </div>
+
+  <div id="loading" class="loading">Loading weather…</div>
+
+  <div id="weather-content" style="display:none; flex:1; flex-direction:column; overflow:hidden; min-height:0;">
+    <div class="body" id="body-row">
+
+      <div class="temp-block">
+        <div class="temp-main" id="temp">—</div>
+        <div class="temp-unit">°F</div>
+      </div>
+
+      <div class="condition-block">
+        <div class="condition-icon" id="cond-icon">🌤️</div>
+        <div class="condition-text-wrap">
+          <div class="condition-text" id="cond-text">—</div>
+          <div class="feels-like" id="feels">Feels like —</div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="stat-val" id="humidity">—</div><div class="stat-label">Humidity</div></div>
+        <div class="stat"><div class="stat-val" id="wind">—</div><div class="stat-label">Wind</div></div>
+        <div class="stat"><div class="stat-val" id="precip">—</div><div class="stat-label">Precip</div></div>
+        <div class="stat"><div class="stat-val" id="uv">—</div><div class="stat-label">UV Index</div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    <span id="footer-coords">Open-Meteo</span>
+    <span id="footer-clock"></span>
+  </div>
+
 </div>
 
 <script>
-// ── Scaling ──────────────────────────────────────────────────────────────────
-const BASE_WIDTH = 1200, BASE_HEIGHT = 200;
-const shell  = document.getElementById('widget-shell');
-const widget = document.getElementById('widget');
+// ── Layout + scale ────────────────────────────────────────────────────────────
+const widgetEl = document.getElementById('widget');
 
-function scaleWidget() {
-  const scale = shell.offsetWidth / BASE_WIDTH;
-  widget.style.transform = `scale(${scale})`;
-  shell.style.height = (BASE_HEIGHT * scale) + 'px';
+function applyLayout() {
+  const w = widgetEl.offsetWidth;
+  const h = widgetEl.offsetHeight;
+  const ratio = w / h;
+
+  // Switch layout mode
+  if (ratio >= 2.2) {
+    widgetEl.classList.add('wide');
+    widgetEl.classList.remove('tall');
+  } else {
+    widgetEl.classList.add('tall');
+    widgetEl.classList.remove('wide');
+  }
+
+  // Scale factor based on smaller dimension so content never overflows
+  const base = ratio >= 2.2 ? h / 200 : w / 320;
+  widgetEl.style.setProperty('--s', Math.min(base, 3).toFixed(3));
 }
-scaleWidget();
-new ResizeObserver(scaleWidget).observe(shell);
-window.addEventListener('resize', scaleWidget);
 
-// ── Weather codes ────────────────────────────────────────────────────────────
+applyLayout();
+new ResizeObserver(applyLayout).observe(widgetEl);
+
+// ── Weather codes ─────────────────────────────────────────────────────────────
 function wcode(c) {
   if (c===0)  return ['☀️','Clear'];
   if (c<=2)   return ['🌤️','Partly Cloudy'];
@@ -182,54 +235,51 @@ function wcode(c) {
   return ['🌡️','Unknown'];
 }
 
-// ── Reverse geocode via Open-Meteo search API ────────────────────────────────
+// ── Reverse geocode ───────────────────────────────────────────────────────────
 async function reverseGeocode(lat, lon) {
   try {
-    // Open-Meteo doesn't have reverse geocode, so use nominatim (free, no key)
     var res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
       { headers: { 'Accept-Language': 'en' } }
     );
     var d = await res.json();
-    var city  = d.address.city || d.address.town || d.address.village || d.address.county || '';
-    var state = d.address.state_code || d.address.state || '';
+    var city    = d.address.city || d.address.town || d.address.village || d.address.county || '';
+    var state   = d.address.state_code || d.address.state || '';
     var country = d.address.country_code ? d.address.country_code.toUpperCase() : '';
-    var label = country === 'US'
+    var label   = country === 'US'
       ? `${city}${state ? ', ' + state : ''}`
       : `${city}${country ? ', ' + country : ''}`;
     return label || 'Your Location';
-  } catch(e) {
-    return 'Your Location';
-  }
+  } catch(e) { return 'Your Location'; }
 }
 
-// ── Fetch & render weather ───────────────────────────────────────────────────
+// ── Weather fetch ─────────────────────────────────────────────────────────────
 async function loadWeather(lat, lon, locationLabel, timezone) {
   try {
-    var tz = timezone || 'auto';
+    var tz  = timezone || 'auto';
     var url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
       `&current=temperature_2m,apparent_temperature,relative_humidity_2m,` +
       `weather_code,wind_speed_10m,precipitation,uv_index` +
       `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch` +
       `&timezone=${encodeURIComponent(tz)}`;
     var res = await fetch(url);
-    var d = await res.json();
-    var c = d.current;
+    var d   = await res.json();
+    var c   = d.current;
     var [icon, label] = wcode(c.weather_code);
 
-    document.getElementById('loc-city').textContent = '📍 ' + locationLabel;
-    document.getElementById('loc-sub').textContent  = `${lat.toFixed(4)}°N, ${Math.abs(lon).toFixed(4)}°${lon < 0 ? 'W' : 'E'}`;
+    document.getElementById('loc-city').textContent    = '📍 ' + locationLabel;
+    document.getElementById('loc-sub').textContent     = `${lat.toFixed(4)}°N, ${Math.abs(lon).toFixed(4)}°${lon < 0 ? 'W' : 'E'}`;
     document.getElementById('footer-coords').textContent =
       `Open-Meteo · ${lat.toFixed(4)}°N, ${Math.abs(lon).toFixed(4)}°${lon < 0 ? 'W' : 'E'} · ${locationLabel}`;
 
-    document.getElementById('temp').textContent = Math.round(c.temperature_2m);
+    document.getElementById('temp').textContent      = Math.round(c.temperature_2m);
     document.getElementById('cond-icon').textContent = icon;
     document.getElementById('cond-text').textContent = label;
-    document.getElementById('feels').textContent = 'Feels like ' + Math.round(c.apparent_temperature) + '°F';
-    document.getElementById('humidity').textContent = c.relative_humidity_2m + '%';
-    document.getElementById('wind').textContent = Math.round(c.wind_speed_10m) + ' mph';
-    document.getElementById('precip').textContent = (c.precipitation||0).toFixed(2) + '"';
-    document.getElementById('uv').textContent = (c.uv_index||0).toFixed(1);
+    document.getElementById('feels').textContent     = 'Feels like ' + Math.round(c.apparent_temperature) + '°F';
+    document.getElementById('humidity').textContent  = c.relative_humidity_2m + '%';
+    document.getElementById('wind').textContent      = Math.round(c.wind_speed_10m) + ' mph';
+    document.getElementById('precip').textContent    = (c.precipitation||0).toFixed(2) + '"';
+    document.getElementById('uv').textContent        = (c.uv_index||0).toFixed(1);
     document.getElementById('updated-time').textContent =
       new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
 
@@ -240,7 +290,7 @@ async function loadWeather(lat, lon, locationLabel, timezone) {
   }
 }
 
-// ── Location resolution ──────────────────────────────────────────────────────
+// ── Location resolution ───────────────────────────────────────────────────────
 const DEFAULTS = { lat: 40.7128, lon: -74.0060, label: 'New York, NY', tz: 'America/New_York' };
 
 async function initLocation() {
@@ -250,15 +300,13 @@ async function initLocation() {
   }
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
-      var lat = pos.coords.latitude;
-      var lon = pos.coords.longitude;
+      var lat   = pos.coords.latitude;
+      var lon   = pos.coords.longitude;
       var label = await reverseGeocode(lat, lon);
       loadWeather(lat, lon, label, 'auto');
-      // refresh on same coords every 10 min
       setInterval(() => loadWeather(lat, lon, label, 'auto'), 10*60*1000);
     },
     () => {
-      // Denied or unavailable — fall back to New York
       loadWeather(DEFAULTS.lat, DEFAULTS.lon, DEFAULTS.label, DEFAULTS.tz);
       setInterval(() => loadWeather(DEFAULTS.lat, DEFAULTS.lon, DEFAULTS.label, DEFAULTS.tz), 10*60*1000);
     },
@@ -268,7 +316,7 @@ async function initLocation() {
 
 initLocation();
 
-// ── Clock ────────────────────────────────────────────────────────────────────
+// ── Clock ─────────────────────────────────────────────────────────────────────
 function tick() {
   var now = new Date();
   document.getElementById('footer-clock').textContent =
