@@ -9,8 +9,8 @@ body { background: transparent; }
 
 .video-area {
   position: relative;
-  width: 100%;             /* fills whatever container it's in */
-  padding-top: 56.25%;    /* 16:9 */
+  width: 100%;
+  padding-top: 56.25%;
   background: #000;
   overflow: hidden;
 }
@@ -18,9 +18,11 @@ body { background: transparent; }
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 110%;            /* overscan to push letterbox bars off-screen */
-  height: 110%;
-  transform: translate(-50%, -50%);
+  width: 177.78%;          /* 16:9 inverse ratio — scales to fill height */
+  height: 177.78%;         /* same multiplier keeps it proportional */
+  min-width: 100%;
+  min-height: 100%;
+  transform: translate(-50%, -50%) scale(1.25);   /* 25% zoom kills the bars */
   border: none;
   display: block;
 }
