@@ -1,0 +1,35 @@
+<!-- LOCATION PICKER — hidden after selection -->
+<div id="loc-picker" style="
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  background: #f6f8fa;
+  width: 100%;
+">
+  <div style="font-size: 13px; font-weight: 600; color: #1a2332;">Select your location</div>
+  <div style="display:flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+    <button onclick="selectLocation('deerfield')" style="
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #1a3a5c, #0e2a45);
+      color: #79c0ff;
+      border: 1px solid #1f6feb;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    ">📍 Deerfield, IL</button>
+    <button onclick="selectLocation('mountainhome')" style="
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #1a3a5c, #0e2a45);
+      color: #79c0ff;
+      border: 1px solid #1f6feb;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    ">📍 Mountain Home, AK</button>
+  </div>
+</div>
