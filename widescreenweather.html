@@ -2,28 +2,33 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<title>Weather – Lineage Novi HQ</title>
+<title>Weather</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
   background: transparent;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
 }
+
+/* Outer shell fills whatever block it's placed in */
+.widget-shell {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Inner widget is always designed at 1200px wide — JS scales it down */
 .widget {
   width: 1200px;
   height: 200px;
   background: #ffffff;
   border-radius: 0 0 0 14px;
-  border-top: none;
-  border-right: none;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid #d0d7de;
   box-shadow: -6px 6px 28px rgba(0,0,0,0.15);
+  transform-origin: top left;
 }
 
 /* HEADER */
@@ -42,7 +47,7 @@ body {
 .updated-label { font-size: 10px; color: #6e7681; }
 .updated { font-size: 11px; color: #8b949e; }
 
-/* MAIN ROW — all content in one flex row */
+/* MAIN ROW */
 .main-row {
   flex: 1;
   display: flex;
@@ -76,7 +81,7 @@ body {
 .condition-text { font-size: 20px; color: #1a2332; font-weight: 700; }
 .feels-like { font-size: 13px; color: #57606a; }
 
-/* STATS — horizontal single row */
+/* STATS */
 .stats {
   display: flex;
   align-items: center;
@@ -105,59 +110,81 @@ body {
 </style>
 </head>
 <body>
-<div class="widget">
 
-  <!-- HEADER -->
-  <div class="header">
-    <div>
-      <div class="location">📍 Novi, MI</div>
-      <div class="location-sub">Lineage HQ · 46500 Humboldt Dr, Novi, MI 48377</div>
-    </div>
-    <div class="updated-wrap">
-      <div class="updated-label">Last updated</div>
-      <div class="updated" id="updated-time">—</div>
-    </div>
-  </div>
+<!-- Shell fills the parent block; inner .widget scales to fit -->
+<div class="widget-shell" id="widget-shell">
+  <div class="widget" id="widget">
 
-  <div id="loading" class="loading">Loading weather…</div>
-
-  <div id="weather-content" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
-    <div class="main-row">
-
-      <!-- TEMP -->
-      <div class="temp-block">
-        <div class="temp-main" id="temp">—</div>
-        <div class="temp-unit">°F</div>
+    <!-- HEADER -->
+    <div class="header">
+      <div>
+        <div class="location">📍 Novi, MI</div>
+        <div class="location-sub">Lineage HQ · 46500 Humboldt Dr, Novi, MI 48377</div>
       </div>
+      <div class="updated-wrap">
+        <div class="updated-label">Last updated</div>
+        <div class="updated" id="updated-time">—</div>
+      </div>
+    </div>
 
-      <!-- CONDITION -->
-      <div class="condition-block">
-        <div class="condition-icon" id="cond-icon">🌤️</div>
-        <div class="condition-text-wrap">
-          <div class="condition-text" id="cond-text">—</div>
-          <div class="feels-like" id="feels">Feels like —</div>
+    <div id="loading" class="loading">Loading weather…</div>
+
+    <div id="weather-content" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
+      <div class="main-row">
+
+        <!-- TEMP -->
+        <div class="temp-block">
+          <div class="temp-main" id="temp">—</div>
+          <div class="temp-unit">°F</div>
         </div>
-      </div>
 
-      <!-- STATS -->
-      <div class="stats">
-        <div class="stat"><div class="stat-val" id="humidity">—</div><div class="stat-label">Humidity</div></div>
-        <div class="stat"><div class="stat-val" id="wind">—</div><div class="stat-label">Wind</div></div>
-        <div class="stat"><div class="stat-val" id="precip">—</div><div class="stat-label">Precip</div></div>
-        <div class="stat"><div class="stat-val" id="uv">—</div><div class="stat-label">UV Index</div></div>
-      </div>
+        <!-- CONDITION -->
+        <div class="condition-block">
+          <div class="condition-icon" id="cond-icon">🌤️</div>
+          <div class="condition-text-wrap">
+            <div class="condition-text" id="cond-text">—</div>
+            <div class="feels-like" id="feels">Feels like —</div>
+          </div>
+        </div>
 
+        <!-- STATS -->
+        <div class="stats">
+          <div class="stat"><div class="stat-val" id="humidity">—</div><div class="stat-label">Humidity</div></div>
+          <div class="stat"><div class="stat-val" id="wind">—</div><div class="stat-label">Wind</div></div>
+          <div class="stat"><div class="stat-val" id="precip">—</div><div class="stat-label">Precip</div></div>
+          <div class="stat"><div class="stat-val" id="uv">—</div><div class="stat-label">UV Index</div></div>
+        </div>
+
+      </div>
     </div>
-  </div>
 
-  <!-- FOOTER -->
-  <div class="footer">
-    <span>Open-Meteo · 42.4995°N, 83.4851°W · Novi, MI</span>
-    <span id="footer-clock"></span>
-  </div>
+    <!-- FOOTER -->
+    <div class="footer">
+      <span>Open-Meteo · 42.4995°N, 83.4851°W · Novi, MI</span>
+      <span id="footer-clock"></span>
+    </div>
 
+  </div>
 </div>
+
 <script>
+// ── Responsive scaling ───────────────────────────────────────────────────────
+const BASE_WIDTH = 1200;
+const BASE_HEIGHT = 200;
+const shell  = document.getElementById('widget-shell');
+const widget = document.getElementById('widget');
+
+function scaleWidget() {
+  const scale = shell.offsetWidth / BASE_WIDTH;
+  widget.style.transform = `scale(${scale})`;
+  shell.style.height = (BASE_HEIGHT * scale) + 'px'; // collapse shell to scaled height
+}
+
+scaleWidget();
+new ResizeObserver(scaleWidget).observe(shell);
+window.addEventListener('resize', scaleWidget);
+
+// ── Weather codes ────────────────────────────────────────────────────────────
 function wcode(c) {
   if (c===0)  return ['☀️','Clear'];
   if (c<=2)   return ['🌤️','Partly Cloudy'];
@@ -171,6 +198,7 @@ function wcode(c) {
   return ['🌡️','Unknown'];
 }
 
+// ── Weather fetch ────────────────────────────────────────────────────────────
 async function loadWeather() {
   try {
     var url = 'https://api.open-meteo.com/v1/forecast?latitude=42.4995&longitude=-83.4851' +
@@ -201,6 +229,7 @@ async function loadWeather() {
 loadWeather();
 setInterval(loadWeather, 10*60*1000);
 
+// ── Clock ────────────────────────────────────────────────────────────────────
 function tick() {
   var now = new Date();
   document.getElementById('footer-clock').textContent =
