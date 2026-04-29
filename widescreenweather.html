@@ -8,15 +8,12 @@
 
 html, body {
   width: 100%;
-  height: 160px; /* ← CHANGED: was 100% — fixed height so srcdoc iframe has a real size */
   background: transparent;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
 
 .widget {
   width: 100%;
-  height: 160px;     /* ← CHANGED: was 100% — matches html/body above */
-  min-height: 120px;
   background: #ffffff;
   border-radius: 14px;
   display: flex;
@@ -46,14 +43,17 @@ html, body {
 
 /* ── BODY ──────────────────────────────────── */
 .body {
-  flex: 1;
   display: flex;
   overflow: hidden;
   min-height: 0;
 }
 
-/* WIDE mode */
-.widget.wide .body { flex-direction: row; align-items: stretch; }
+/* WIDE mode — horizontal row */
+.widget.wide .body {
+  flex-direction: row;
+  align-items: stretch;
+  height: calc(120px * var(--s));
+}
 .widget.wide .temp-block {
   display: flex;
   align-items: center;
@@ -81,8 +81,11 @@ html, body {
   gap: calc(8px * var(--s));
 }
 
-/* TALL/SQUARE mode */
-.widget.tall .body { flex-direction: column; align-items: stretch; }
+/* TALL/SQUARE mode — stacked column */
+.widget.tall .body {
+  flex-direction: column;
+  align-items: stretch;
+}
 .widget.tall .temp-block {
   display: flex;
   align-items: center;
@@ -106,7 +109,6 @@ html, body {
   grid-template-columns: 1fr 1fr;
   align-items: center;
   justify-items: center;
-  flex: 1;
   padding: calc(8px * var(--s));
   background: #f6f8fa;
   gap: calc(6px * var(--s));
@@ -137,10 +139,10 @@ html, body {
 .footer span { font-size: calc(8px * var(--s)); color: #8c959f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .loading {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: calc(20px * var(--s));
   color: #57606a;
   font-size: calc(13px * var(--s));
 }
@@ -163,7 +165,7 @@ html, body {
 
   <div id="loading" class="loading">Loading weather…</div>
 
-  <div id="weather-content" style="display:none; flex:1; flex-direction:column; overflow:hidden; min-height:0;">
+  <div id="weather-content" style="display:none; flex-direction:column; overflow:hidden;">
     <div class="body" id="body-row">
 
       <div class="temp-block">
@@ -199,23 +201,25 @@ html, body {
 <script>
 // ── Layout + scale ────────────────────────────────────────────────────────────
 const widgetEl = document.getElementById('widget');
-const BASE_HEIGHT = 160; /* ← CHANGED: was 200, matches the new fixed CSS height */
+
+// Base design widths: wide mode designed at 800px, tall at 320px
+const BASE_WIDE = 800;
+const BASE_TALL = 320;
+// Breakpoint: below this width switch to tall/stacked layout
+const WIDE_BREAKPOINT = 420;
 
 function applyLayout() {
   const w = widgetEl.offsetWidth;
-  const h = widgetEl.offsetHeight;
-  const ratio = w / h;
 
-  if (ratio >= 2.2) {
+  if (w >= WIDE_BREAKPOINT) {
     widgetEl.classList.add('wide');
     widgetEl.classList.remove('tall');
+    widgetEl.style.setProperty('--s', Math.min(w / BASE_WIDE, 2).toFixed(3));
   } else {
     widgetEl.classList.add('tall');
     widgetEl.classList.remove('wide');
+    widgetEl.style.setProperty('--s', Math.min(w / BASE_TALL, 2).toFixed(3));
   }
-
-  const base = ratio >= 2.2 ? h / BASE_HEIGHT : w / 320;
-  widgetEl.style.setProperty('--s', Math.min(base, 3).toFixed(3));
 }
 
 applyLayout();
@@ -246,32 +250,29 @@ async function reverseGeocode(lat, lon) {
     var city    = d.address.city || d.address.town || d.address.village || d.address.county || '';
     var state   = d.address.state_code || d.address.state || '';
     var country = d.address.country_code ? d.address.country_code.toUpperCase() : '';
-    var label   = country === 'US'
+    return country === 'US'
       ? `${city}${state ? ', ' + state : ''}`
-      : `${city}${country ? ', ' + country : ''}`;
-    return label || 'Your Location';
+      : `${city}${country ? ', ' + country : ''}` || 'Your Location';
   } catch(e) { return 'Your Location'; }
 }
 
 // ── Weather fetch ─────────────────────────────────────────────────────────────
 async function loadWeather(lat, lon, locationLabel, timezone) {
   try {
-    var tz  = timezone || 'auto';
     var url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
       `&current=temperature_2m,apparent_temperature,relative_humidity_2m,` +
       `weather_code,wind_speed_10m,precipitation,uv_index` +
       `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch` +
-      `&timezone=${encodeURIComponent(tz)}`;
+      `&timezone=${encodeURIComponent(timezone || 'auto')}`;
     var res = await fetch(url);
     var d   = await res.json();
     var c   = d.current;
     var [icon, label] = wcode(c.weather_code);
 
-    document.getElementById('loc-city').textContent    = '📍 ' + locationLabel;
-    document.getElementById('loc-sub').textContent     = `${lat.toFixed(4)}°N, ${Math.abs(lon).toFixed(4)}°${lon < 0 ? 'W' : 'E'}`;
+    document.getElementById('loc-city').textContent  = '📍 ' + locationLabel;
+    document.getElementById('loc-sub').textContent   = `${lat.toFixed(4)}°N, ${Math.abs(lon).toFixed(4)}°${lon < 0 ? 'W' : 'E'}`;
     document.getElementById('footer-coords').textContent =
       `Open-Meteo · ${lat.toFixed(4)}°N, ${Math.abs(lon).toFixed(4)}°${lon < 0 ? 'W' : 'E'} · ${locationLabel}`;
-
     document.getElementById('temp').textContent      = Math.round(c.temperature_2m);
     document.getElementById('cond-icon').textContent = icon;
     document.getElementById('cond-text').textContent = label;
@@ -285,6 +286,7 @@ async function loadWeather(lat, lon, locationLabel, timezone) {
 
     document.getElementById('loading').style.display = 'none';
     document.getElementById('weather-content').style.display = 'flex';
+    applyLayout(); // re-scale after content renders
   } catch(e) {
     document.getElementById('loading').textContent = 'Unable to load weather data.';
   }
@@ -300,8 +302,7 @@ async function initLocation() {
   }
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
-      var lat   = pos.coords.latitude;
-      var lon   = pos.coords.longitude;
+      var lat = pos.coords.latitude, lon = pos.coords.longitude;
       var label = await reverseGeocode(lat, lon);
       loadWeather(lat, lon, label, 'auto');
       setInterval(() => loadWeather(lat, lon, label, 'auto'), 10*60*1000);
