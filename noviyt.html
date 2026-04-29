@@ -9,9 +9,10 @@ body { background: transparent; }
 
 .video-area {
   position: relative;
-  width: 650px;
-  padding-top: 56.25%;
+  width: 100%;             /* adaptive width */
+  padding-top: 56.25%;    /* 16:9 — change to 75% if still cropped (4:3) */
   background: #000;
+  overflow: hidden;
 }
 .video-area iframe {
   position: absolute;
