@@ -72,18 +72,23 @@ html, body { width: 100%; background: transparent; font-family: 'Segoe UI', Aria
 }
 .footer span { color: #8c959f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.loading { display: flex; align-items: center; justify-content: center; color: #57606a; padding: 20px; }
+/* ── LOADING — fixed so it never clips ── */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #57606a;
+  padding: 16px;
+  width: 100%;          /* fills widget width */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
 
-/* ═══════════════════════════════════
+/* ═══════════════════════════════
    TIER STYLES
-   nano   < 120px wide  — temp + icon only
-   micro  < 200px wide  — temp + condition
-   small  < 350px wide  — temp + condition + feels
-   compact< 500px wide  — + 2x2 stats
-   medium ≥ 500px wide  — full current row + stats
-   large  ≥ 500px + tall — + 3-day forecast
-   xl     ≥ 650px + tall — + hourly chart
-═══════════════════════════════════ */
+═══════════════════════════════ */
 
 /* ── NANO ── */
 .widget.nano .header,
@@ -91,6 +96,7 @@ html, body { width: 100%; background: transparent; font-family: 'Segoe UI', Aria
 .widget.nano .stats,
 .widget.nano .forecast,
 .widget.nano .chart-wrap { display: none !important; }
+.widget.nano .loading    { font-size: 11px; padding: 8px; }
 .widget.nano .cond-info  { display: none; }
 .widget.nano .current    { justify-content: center; align-items: center; padding: 8px; gap: 6px; }
 .widget.nano .temp-val   { font-size: 48px; }
@@ -103,6 +109,7 @@ html, body { width: 100%; background: transparent; font-family: 'Segoe UI', Aria
 .widget.micro .stats,
 .widget.micro .forecast,
 .widget.micro .chart-wrap { display: none !important; }
+.widget.micro .loading   { font-size: 11px; padding: 8px; }
 .widget.micro .feels     { display: none; }
 .widget.micro .current   { justify-content: center; align-items: center; padding: 10px 12px; gap: 8px; }
 .widget.micro .temp-val  { font-size: 40px; }
@@ -114,6 +121,7 @@ html, body { width: 100%; background: transparent; font-family: 'Segoe UI', Aria
 .widget.small .stats,
 .widget.small .forecast,
 .widget.small .chart-wrap { display: none !important; }
+.widget.small .loading   { font-size: 12px; }
 .widget.small .loc-sub   { display: none; }
 .widget.small .upd-label { display: none; }
 .widget.small .header    { padding: 5px 12px; }
@@ -131,6 +139,7 @@ html, body { width: 100%; background: transparent; font-family: 'Segoe UI', Aria
 /* ── COMPACT ── */
 .widget.compact .forecast,
 .widget.compact .chart-wrap { display: none !important; }
+.widget.compact .loading    { font-size: 12px; }
 .widget.compact .loc-sub    { display: none; }
 .widget.compact .upd-label  { font-size: 8px; }
 .widget.compact .header     { padding: 5px 14px; }
@@ -151,6 +160,7 @@ html, body { width: 100%; background: transparent; font-family: 'Segoe UI', Aria
 /* ── MEDIUM ── */
 .widget.medium .forecast,
 .widget.medium .chart-wrap  { display: none !important; }
+.widget.medium .loading     { font-size: 13px; }
 .widget.medium .header      { padding: 6px 18px; }
 .widget.medium .loc-city    { font-size: 13px; }
 .widget.medium .loc-sub     { font-size: 9px; }
@@ -171,6 +181,7 @@ html, body { width: 100%; background: transparent; font-family: 'Segoe UI', Aria
 
 /* ── LARGE ── */
 .widget.large .chart-wrap  { display: none !important; }
+.widget.large .loading     { font-size: 14px; }
 .widget.large .header      { padding: 7px 20px; }
 .widget.large .loc-city    { font-size: 14px; }
 .widget.large .loc-sub     { font-size: 9px; }
@@ -196,6 +207,7 @@ html, body { width: 100%; background: transparent; font-family: 'Segoe UI', Aria
 .widget.large .footer span { font-size: 9px; }
 
 /* ── XL ── */
+.widget.xl .loading     { font-size: 15px; }
 .widget.xl .header      { padding: 8px 22px; }
 .widget.xl .loc-city    { font-size: 15px; }
 .widget.xl .loc-sub     { font-size: 10px; }
@@ -228,7 +240,7 @@ html, body { width: 100%; background: transparent; font-family: 'Segoe UI', Aria
 
   <div class="header" id="header">
     <div style="min-width:0; flex:1;">
-      <div class="loc-city" id="loc-city">📍 Detecting…</div>
+      <div class="loc-city" id="loc-city">📍 New York, NY</div>
       <div class="loc-sub"  id="loc-sub"></div>
     </div>
     <div style="text-align:right; flex-shrink:0;">
@@ -237,4 +249,262 @@ html, body { width: 100%; background: transparent; font-family: 'Segoe UI', Aria
     </div>
   </div>
 
-  <div id="loading" class="loading">Loa
+  <div id="loading" class="loading">Loading weather…</div>
+
+  <div class="current" id="current" style="display:none;">
+    <div class="temp-wrap">
+      <div class="temp-val" id="temp">—</div>
+      <div class="temp-unit">°F</div>
+    </div>
+    <div class="cond-wrap" style="display:flex; align-items:center; gap:10px;">
+      <div class="cond-icon" id="cond-icon">🌤️</div>
+      <div class="cond-info">
+        <div class="cond-text" id="cond-text">—</div>
+        <div class="feels"     id="feels">Feels like —</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats" id="stats" style="display:none;">
+    <div class="stat"><div class="stat-val" id="humidity">—</div><div class="stat-lbl">Humidity</div></div>
+    <div class="stat"><div class="stat-val" id="wind">—</div><div class="stat-lbl">Wind</div></div>
+    <div class="stat"><div class="stat-val" id="precip">—</div><div class="stat-lbl">Precip</div></div>
+    <div class="stat"><div class="stat-val" id="uv">—</div><div class="stat-lbl">UV Index</div></div>
+  </div>
+
+  <div class="forecast" id="forecast" style="display:none;">
+    <div class="fc-day" id="fc0"></div>
+    <div class="fc-day" id="fc1"></div>
+    <div class="fc-day" id="fc2"></div>
+  </div>
+
+  <div class="chart-wrap" id="chart-wrap" style="display:none; padding:10px 22px 14px;">
+    <canvas id="chart-canvas" height="60"></canvas>
+  </div>
+
+  <div class="footer" id="footer" style="display:none;">
+    <span id="footer-coords">Open-Meteo</span>
+    <span id="footer-clock"></span>
+  </div>
+
+</div>
+
+<script>
+// ── Tier definitions ──────────────────────────────────────────────────────────
+const TIERS = [
+  { name: 'xl',      minW: 650, minH: 300 },
+  { name: 'large',   minW: 500, minH: 220 },
+  { name: 'medium',  minW: 420, minH: 0   },
+  { name: 'compact', minW: 280, minH: 0   },
+  { name: 'small',   minW: 180, minH: 0   },
+  { name: 'micro',   minW: 120, minH: 0   },
+  { name: 'nano',    minW: 0,   minH: 0   },
+];
+
+const TIER_SHOW = {
+  nano:    { header:false, stats:false, forecast:false, chart:false, footer:false },
+  micro:   { header:false, stats:false, forecast:false, chart:false, footer:false },
+  small:   { header:true,  stats:false, forecast:false, chart:false, footer:true  },
+  compact: { header:true,  stats:true,  forecast:false, chart:false, footer:true  },
+  medium:  { header:true,  stats:true,  forecast:false, chart:false, footer:true  },
+  large:   { header:true,  stats:true,  forecast:true,  chart:false, footer:true  },
+  xl:      { header:true,  stats:true,  forecast:true,  chart:true,  footer:true  },
+};
+
+const widgetEl = document.getElementById('widget');
+let currentTier = '';
+let hourlyTemps = [];
+let weatherReady = false;
+
+function getTier(w, h) {
+  for (const t of TIERS) {
+    if (w >= t.minW && h >= t.minH) return t.name;
+  }
+  return 'nano';
+}
+
+function applyTier() {
+  const w = widgetEl.offsetWidth;
+  const h = widgetEl.offsetHeight || 9999;
+  const tier = getTier(w, h);
+  if (tier === currentTier) return;
+  currentTier = tier;
+  TIERS.forEach(t => widgetEl.classList.remove(t.name));
+  widgetEl.classList.add(tier);
+  if (!weatherReady) return;
+  const s = TIER_SHOW[tier];
+  document.getElementById('header').style.display     = s.header   ? 'flex'  : 'none';
+  document.getElementById('footer').style.display     = s.footer   ? 'flex'  : 'none';
+  document.getElementById('stats').style.display      = s.stats    ? 'flex'  : 'none';
+  document.getElementById('forecast').style.display   = s.forecast ? 'flex'  : 'none';
+  document.getElementById('chart-wrap').style.display = s.chart    ? 'block' : 'none';
+  if (s.chart && hourlyTemps.length > 0) setTimeout(drawChart, 50);
+}
+
+new ResizeObserver(applyTier).observe(widgetEl);
+applyTier();
+
+// ── Weather codes ─────────────────────────────────────────────────────────────
+function wcode(c) {
+  if (c===0)  return ['☀️','Clear'];
+  if (c<=2)   return ['🌤️','Partly Cloudy'];
+  if (c===3)  return ['☁️','Overcast'];
+  if (c<=49)  return ['🌫️','Fog'];
+  if (c<=57)  return ['🌧️','Drizzle'];
+  if (c<=65)  return ['🌧️','Rain'];
+  if (c<=77)  return ['❄️','Snow'];
+  if (c<=82)  return ['🌦️','Showers'];
+  if (c<=99)  return ['⛈️','Thunderstorm'];
+  return ['🌡️','Unknown'];
+}
+
+// ── Chart ─────────────────────────────────────────────────────────────────────
+function drawChart() {
+  const canvas = document.getElementById('chart-canvas');
+  if (!canvas || hourlyTemps.length === 0) return;
+  const W = canvas.offsetWidth || 600;
+  canvas.width = W * 2; canvas.height = 140;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(2, 1);
+  const temps = hourlyTemps.slice(0, 24);
+  const minT = Math.min(...temps) - 3, maxT = Math.max(...temps) + 3;
+  const px = i => (i / (temps.length - 1)) * (W - 24) + 12;
+  const py = t => 10 + (1 - (t - minT) / (maxT - minT)) * 65;
+  const grad = ctx.createLinearGradient(0, 0, 0, 80);
+  grad.addColorStop(0, 'rgba(31,111,235,0.20)');
+  grad.addColorStop(1, 'rgba(31,111,235,0)');
+  ctx.beginPath();
+  ctx.moveTo(px(0), py(temps[0]));
+  for (let i = 1; i < temps.length; i++) {
+    const cpx = (px(i-1)+px(i))/2;
+    ctx.bezierCurveTo(cpx,py(temps[i-1]),cpx,py(temps[i]),px(i),py(temps[i]));
+  }
+  ctx.lineTo(px(temps.length-1), 80); ctx.lineTo(px(0), 80); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(px(0), py(temps[0]));
+  for (let i = 1; i < temps.length; i++) {
+    const cpx = (px(i-1)+px(i))/2;
+    ctx.bezierCurveTo(cpx,py(temps[i-1]),cpx,py(temps[i]),px(i),py(temps[i]));
+  }
+  ctx.strokeStyle = '#1f6feb'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#57606a'; ctx.font = '10px Segoe UI,Arial,sans-serif'; ctx.textAlign = 'center';
+  [0,6,12,18,23].forEach(i => {
+    if (i < temps.length) {
+      ctx.fillText(Math.round(temps[i])+'°', px(i), py(temps[i])-5);
+      ctx.fillStyle = '#8b949e';
+      ctx.fillText(`${i}:00`, px(i), 96);
+      ctx.fillStyle = '#57606a';
+    }
+  });
+}
+
+// ── Reverse geocode ───────────────────────────────────────────────────────────
+async function reverseGeocode(lat, lon) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+      { headers: { 'Accept-Language': 'en' } }
+    );
+    const d = await res.json();
+    const city  = d.address.city || d.address.town || d.address.village || d.address.county || '';
+    const state = d.address.state_code || d.address.state || '';
+    const cc    = d.address.country_code ? d.address.country_code.toUpperCase() : '';
+    return cc === 'US' ? `${city}${state ? ', '+state : ''}` : `${city}${cc ? ', '+cc : ''}` || 'Your Location';
+  } catch { return 'Your Location'; }
+}
+
+// ── Forecast builder ──────────────────────────────────────────────────────────
+function buildFcDay(el, label, code, hi, lo) {
+  const [icon] = wcode(code);
+  el.innerHTML = `<div class="fc-lbl">${label}</div><div class="fc-icon">${icon}</div><div class="fc-hi">${Math.round(hi)}°</div><div class="fc-lo">${Math.round(lo)}°</div>`;
+}
+
+// ── Weather fetch ─────────────────────────────────────────────────────────────
+async function loadWeather(lat, lon, locationLabel, timezone) {
+  try {
+    const tz  = timezone || 'auto';
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,precipitation,uv_index` +
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
+      `&hourly=temperature_2m` +
+      `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch` +
+      `&timezone=${encodeURIComponent(tz)}&forecast_days=4`;
+    const res = await fetch(url);
+    const d   = await res.json();
+    const c   = d.current;
+    const [icon, label] = wcode(c.weather_code);
+    hourlyTemps = d.hourly.temperature_2m.slice(0, 24);
+
+    document.getElementById('loc-city').textContent = '📍 ' + locationLabel;
+    document.getElementById('loc-sub').textContent  = `${lat.toFixed(4)}°N, ${Math.abs(lon).toFixed(4)}°${lon<0?'W':'E'}`;
+    document.getElementById('footer-coords').textContent =
+      `Open-Meteo · ${lat.toFixed(4)}°N, ${Math.abs(lon).toFixed(4)}°${lon<0?'W':'E'} · ${locationLabel}`;
+    document.getElementById('temp').textContent      = Math.round(c.temperature_2m);
+    document.getElementById('cond-icon').textContent = icon;
+    document.getElementById('cond-text').textContent = label;
+    document.getElementById('feels').textContent     = 'Feels like ' + Math.round(c.apparent_temperature) + '°F';
+    document.getElementById('humidity').textContent  = c.relative_humidity_2m + '%';
+    document.getElementById('wind').textContent      = Math.round(c.wind_speed_10m) + ' mph';
+    document.getElementById('precip').textContent    = (c.precipitation||0).toFixed(2) + '"';
+    document.getElementById('uv').textContent        = (c.uv_index||0).toFixed(1);
+    document.getElementById('upd-time').textContent  =
+      new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const today = new Date().getDay();
+    for (let i = 0; i < 3; i++) {
+      buildFcDay(document.getElementById('fc'+i),
+        dayNames[(today+i+1)%7],
+        d.daily.weather_code[i+1],
+        d.daily.temperature_2m_max[i+1],
+        d.daily.temperature_2m_min[i+1]);
+    }
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('current').style.display = 'flex';
+    weatherReady = true;
+    currentTier = '';   // force tier re-evaluation
+    applyTier();
+  } catch(e) {
+    document.getElementById('loading').textContent = '⚠️ Unable to load weather.';
+  }
+}
+
+// ── Location — load default IMMEDIATELY, upgrade silently if geo available ────
+const DEFAULTS = { lat: 40.7128, lon: -74.0060, label: 'New York, NY', tz: 'America/New_York' };
+
+function initLocation() {
+  // Show New York right away — no waiting for geo permission
+  loadWeather(DEFAULTS.lat, DEFAULTS.lon, DEFAULTS.label, DEFAULTS.tz);
+  setInterval(() => loadWeather(DEFAULTS.lat, DEFAULTS.lon, DEFAULTS.label, DEFAULTS.tz), 10*60*1000);
+
+  // Silently upgrade to actual location if browser permits
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude, lon = pos.coords.longitude;
+        const label = await reverseGeocode(lat, lon);
+        loadWeather(lat, lon, label, 'auto');
+      },
+      () => {}, // already showing default, ignore
+      { timeout: 8000 }
+    );
+  }
+}
+
+initLocation();
+
+// ── Clock ─────────────────────────────────────────────────────────────────────
+function tick() {
+  const now = new Date();
+  const el = document.getElementById('footer-clock');
+  if (el) el.textContent =
+    now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' · ' +
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
