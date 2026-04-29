@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<title>Weather</title>
+<title>Weather Widget</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -10,14 +10,12 @@ body {
   background: transparent;
 }
 
-/* Outer shell fills whatever block it's placed in */
 .widget-shell {
   width: 100%;
   overflow: hidden;
   position: relative;
 }
 
-/* Inner widget is always designed at 1200px wide — JS scales it down */
 .widget {
   width: 1200px;
   height: 200px;
@@ -31,7 +29,6 @@ body {
   transform-origin: top left;
 }
 
-/* HEADER */
 .header {
   background: linear-gradient(135deg, #1a3a5c, #0e2a45);
   padding: 8px 24px;
@@ -47,7 +44,6 @@ body {
 .updated-label { font-size: 10px; color: #6e7681; }
 .updated { font-size: 11px; color: #8b949e; }
 
-/* MAIN ROW */
 .main-row {
   flex: 1;
   display: flex;
@@ -55,7 +51,6 @@ body {
   overflow: hidden;
 }
 
-/* TEMP */
 .temp-block {
   display: flex;
   align-items: center;
@@ -67,7 +62,6 @@ body {
 .temp-main { font-size: 72px; font-weight: 800; color: #1a2332; line-height: 1; }
 .temp-unit { font-size: 26px; color: #57606a; font-weight: 600; align-self: flex-start; margin-top: 8px; }
 
-/* CONDITION */
 .condition-block {
   display: flex;
   align-items: center;
@@ -81,7 +75,6 @@ body {
 .condition-text { font-size: 20px; color: #1a2332; font-weight: 700; }
 .feels-like { font-size: 13px; color: #57606a; }
 
-/* STATS */
 .stats {
   display: flex;
   align-items: center;
@@ -95,7 +88,6 @@ body {
 .stat-val { font-size: 22px; font-weight: 800; color: #1a2332; }
 .stat-label { font-size: 10px; color: #57606a; text-transform: uppercase; letter-spacing: .9px; margin-top: 3px; }
 
-/* FOOTER */
 .footer {
   background: #f6f8fa;
   border-top: 1px solid #e8ecf0;
@@ -111,15 +103,13 @@ body {
 </head>
 <body>
 
-<!-- Shell fills the parent block; inner .widget scales to fit -->
 <div class="widget-shell" id="widget-shell">
   <div class="widget" id="widget">
 
-    <!-- HEADER -->
     <div class="header">
       <div>
-        <div class="location">📍 Novi, MI</div>
-        <div class="location-sub">Lineage HQ · 46500 Humboldt Dr, Novi, MI 48377</div>
+        <div class="location" id="loc-city">📍 Detecting location…</div>
+        <div class="location-sub" id="loc-sub"> </div>
       </div>
       <div class="updated-wrap">
         <div class="updated-label">Last updated</div>
@@ -132,13 +122,11 @@ body {
     <div id="weather-content" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
       <div class="main-row">
 
-        <!-- TEMP -->
         <div class="temp-block">
           <div class="temp-main" id="temp">—</div>
           <div class="temp-unit">°F</div>
         </div>
 
-        <!-- CONDITION -->
         <div class="condition-block">
           <div class="condition-icon" id="cond-icon">🌤️</div>
           <div class="condition-text-wrap">
@@ -147,7 +135,6 @@ body {
           </div>
         </div>
 
-        <!-- STATS -->
         <div class="stats">
           <div class="stat"><div class="stat-val" id="humidity">—</div><div class="stat-label">Humidity</div></div>
           <div class="stat"><div class="stat-val" id="wind">—</div><div class="stat-label">Wind</div></div>
@@ -158,9 +145,8 @@ body {
       </div>
     </div>
 
-    <!-- FOOTER -->
     <div class="footer">
-      <span>Open-Meteo · 42.4995°N, 83.4851°W · Novi, MI</span>
+      <span id="footer-coords">Open-Meteo</span>
       <span id="footer-clock"></span>
     </div>
 
@@ -168,18 +154,16 @@ body {
 </div>
 
 <script>
-// ── Responsive scaling ───────────────────────────────────────────────────────
-const BASE_WIDTH = 1200;
-const BASE_HEIGHT = 200;
+// ── Scaling ──────────────────────────────────────────────────────────────────
+const BASE_WIDTH = 1200, BASE_HEIGHT = 200;
 const shell  = document.getElementById('widget-shell');
 const widget = document.getElementById('widget');
 
 function scaleWidget() {
   const scale = shell.offsetWidth / BASE_WIDTH;
   widget.style.transform = `scale(${scale})`;
-  shell.style.height = (BASE_HEIGHT * scale) + 'px'; // collapse shell to scaled height
+  shell.style.height = (BASE_HEIGHT * scale) + 'px';
 }
-
 scaleWidget();
 new ResizeObserver(scaleWidget).observe(shell);
 window.addEventListener('resize', scaleWidget);
@@ -198,18 +182,46 @@ function wcode(c) {
   return ['🌡️','Unknown'];
 }
 
-// ── Weather fetch ────────────────────────────────────────────────────────────
-async function loadWeather() {
+// ── Reverse geocode via Open-Meteo search API ────────────────────────────────
+async function reverseGeocode(lat, lon) {
   try {
-    var url = 'https://api.open-meteo.com/v1/forecast?latitude=42.4995&longitude=-83.4851' +
-      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,' +
-      'weather_code,wind_speed_10m,precipitation,uv_index' +
-      '&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch' +
-      '&timezone=America%2FDetroit';
+    // Open-Meteo doesn't have reverse geocode, so use nominatim (free, no key)
+    var res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+      { headers: { 'Accept-Language': 'en' } }
+    );
+    var d = await res.json();
+    var city  = d.address.city || d.address.town || d.address.village || d.address.county || '';
+    var state = d.address.state_code || d.address.state || '';
+    var country = d.address.country_code ? d.address.country_code.toUpperCase() : '';
+    var label = country === 'US'
+      ? `${city}${state ? ', ' + state : ''}`
+      : `${city}${country ? ', ' + country : ''}`;
+    return label || 'Your Location';
+  } catch(e) {
+    return 'Your Location';
+  }
+}
+
+// ── Fetch & render weather ───────────────────────────────────────────────────
+async function loadWeather(lat, lon, locationLabel, timezone) {
+  try {
+    var tz = timezone || 'auto';
+    var url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&current=temperature_2m,apparent_temperature,relative_humidity_2m,` +
+      `weather_code,wind_speed_10m,precipitation,uv_index` +
+      `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch` +
+      `&timezone=${encodeURIComponent(tz)}`;
     var res = await fetch(url);
     var d = await res.json();
     var c = d.current;
     var [icon, label] = wcode(c.weather_code);
+
+    document.getElementById('loc-city').textContent = '📍 ' + locationLabel;
+    document.getElementById('loc-sub').textContent  = `${lat.toFixed(4)}°N, ${Math.abs(lon).toFixed(4)}°${lon < 0 ? 'W' : 'E'}`;
+    document.getElementById('footer-coords').textContent =
+      `Open-Meteo · ${lat.toFixed(4)}°N, ${Math.abs(lon).toFixed(4)}°${lon < 0 ? 'W' : 'E'} · ${locationLabel}`;
+
     document.getElementById('temp').textContent = Math.round(c.temperature_2m);
     document.getElementById('cond-icon').textContent = icon;
     document.getElementById('cond-text').textContent = label;
@@ -220,14 +232,41 @@ async function loadWeather() {
     document.getElementById('uv').textContent = (c.uv_index||0).toFixed(1);
     document.getElementById('updated-time').textContent =
       new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
     document.getElementById('loading').style.display = 'none';
     document.getElementById('weather-content').style.display = 'flex';
   } catch(e) {
     document.getElementById('loading').textContent = 'Unable to load weather data.';
   }
 }
-loadWeather();
-setInterval(loadWeather, 10*60*1000);
+
+// ── Location resolution ──────────────────────────────────────────────────────
+const DEFAULTS = { lat: 40.7128, lon: -74.0060, label: 'New York, NY', tz: 'America/New_York' };
+
+async function initLocation() {
+  if (!navigator.geolocation) {
+    loadWeather(DEFAULTS.lat, DEFAULTS.lon, DEFAULTS.label, DEFAULTS.tz);
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      var lat = pos.coords.latitude;
+      var lon = pos.coords.longitude;
+      var label = await reverseGeocode(lat, lon);
+      loadWeather(lat, lon, label, 'auto');
+      // refresh on same coords every 10 min
+      setInterval(() => loadWeather(lat, lon, label, 'auto'), 10*60*1000);
+    },
+    () => {
+      // Denied or unavailable — fall back to New York
+      loadWeather(DEFAULTS.lat, DEFAULTS.lon, DEFAULTS.label, DEFAULTS.tz);
+      setInterval(() => loadWeather(DEFAULTS.lat, DEFAULTS.lon, DEFAULTS.label, DEFAULTS.tz), 10*60*1000);
+    },
+    { timeout: 6000 }
+  );
+}
+
+initLocation();
 
 // ── Clock ────────────────────────────────────────────────────────────────────
 function tick() {
