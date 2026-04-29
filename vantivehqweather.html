@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Weather – Vantive Deerfield HQ</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: transparent;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+.widget {
+  width: 1200px;
+  height: 200px;
+  background: #ffffff;
+  border-radius: 0 0 0 14px;
+  border-top: none;
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #d0d7de;
+  box-shadow: -6px 6px 28px rgba(0,0,0,0.15);
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #1a3a5c, #0e2a45);
+  padding: 8px 24px;
+  border-bottom: 2px solid #1f6feb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.location { font-size: 16px; font-weight: 700; color: #79c0ff; }
+.location-sub { font-size: 11px; color: #8b949e; margin-top: 1px; }
+.updated-wrap { text-align: right; }
+.updated-label { font-size: 10px; color: #6e7681; }
+.updated { font-size: 11px; color: #8b949e; }
+
+/* MAIN ROW — all content in one flex row */
+.main-row {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+/* TEMP */
+.temp-block {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 28px;
+  border-right: 1px solid #e8ecf0;
+  flex-shrink: 0;
+}
+.temp-main { font-size: 72px; font-weight: 800; color: #1a2332; line-height: 1; }
+.temp-unit { font-size: 26px; color: #57606a; font-weight: 600; align-self: flex-start; margin-top: 8px; }
+
+/* CONDITION */
+.condition-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 28px;
+  border-right: 1px solid #e8ecf0;
+  flex-shrink: 0;
+}
+.condition-icon { font-size: 52px; line-height: 1; }
+.condition-text-wrap { display: flex; flex-direction: column; gap: 4px; }
+.condition-text { font-size: 20px; color: #1a2332; font-weight: 700; }
+.feels-like { font-size: 13px; color: #57606a; }
+
+/* STATS — horizontal single row */
+.stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex: 1;
+  padding: 0 20px;
+  background: #f6f8fa;
+  gap: 10px;
+}
+.stat { text-align: center; }
+.stat-val { font-size: 22px; font-weight: 800; color: #1a2332; }
+.stat-label { font-size: 10px; color: #57606a; text-transform: uppercase; letter-spacing: .9px; margin-top: 3px; }
+
+/* FOOTER */
+.footer {
+  background: #f6f8fa;
+  border-top: 1px solid #e8ecf0;
+  padding: 4px 24px;
+  display: flex;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.footer span { font-size: 10px; color: #8c959f; }
+
+.loading { flex:1; display:flex; align-items:center; justify-content:center; color: #57606a; font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="widget">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="location">📍 Deerfield, IL</div>
+      <div class="location-sub">Vantive HQ · 510 Lake Cook Road, Deerfield, IL 60015</div>
+    </div>
+    <div class="updated-wrap">
+      <div class="updated-label">Last updated</div>
+      <div class="updated" id="updated-time">—</div>
+    </div>
+  </div>
+
+  <div id="loading" class="loading">Loading weather…</div>
+
+  <div id="weather-content" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
+    <div class="main-row">
+
+      <!-- TEMP -->
+      <div class="temp-block">
+        <div class="temp-main" id="temp">—</div>
+        <div class="temp-unit">°F</div>
+      </div>
+
+      <!-- CONDITION -->
+      <div class="condition-block">
+        <div class="condition-icon" id="cond-icon">🌤️</div>
+        <div class="condition-text-wrap">
+          <div class="condition-text" id="cond-text">—</div>
+          <div class="feels-like" id="feels">Feels like —</div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats">
+        <div class="stat"><div class="stat-val" id="humidity">—</div><div class="stat-label">Humidity</div></div>
+        <div class="stat"><div class="stat-val" id="wind">—</div><div class="stat-label">Wind</div></div>
+        <div class="stat"><div class="stat-val" id="precip">—</div><div class="stat-label">Precip</div></div>
+        <div class="stat"><div class="stat-val" id="uv">—</div><div class="stat-label">UV Index</div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span>Open-Meteo · 42.1711°N, 87.8445°W · Deerfield, IL</span>
+    <span id="footer-clock"></span>
+  </div>
+
+</div>
+<script>
+function wcode(c) {
+  if (c===0)  return ['☀️','Clear'];
+  if (c<=2)   return ['🌤️','Partly Cloudy'];
+  if (c===3)  return ['☁️','Overcast'];
+  if (c<=49)  return ['🌫️','Fog'];
+  if (c<=57)  return ['🌧️','Drizzle'];
+  if (c<=65)  return ['🌧️','Rain'];
+  if (c<=77)  return ['❄️','Snow'];
+  if (c<=82)  return ['🌦️','Showers'];
+  if (c<=99)  return ['⛈️','Thunderstorm'];
+  return ['🌡️','Unknown'];
+}
+
+async function loadWeather() {
+  try {
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=42.1711&longitude=-87.8445' +
+      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,' +
+      'weather_code,wind_speed_10m,precipitation,uv_index' +
+      '&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch' +
+      '&timezone=America%2FChicago';
+    var res = await fetch(url);
+    var d = await res.json();
+    var c = d.current;
+    var [icon, label] = wcode(c.weather_code);
+    document.getElementById('temp').textContent = Math.round(c.temperature_2m);
+    document.getElementById('cond-icon').textContent = icon;
+    document.getElementById('cond-text').textContent = label;
+    document.getElementById('feels').textContent = 'Feels like ' + Math.round(c.apparent_temperature) + '°F';
+    document.getElementById('humidity').textContent = c.relative_humidity_2m + '%';
+    document.getElementById('wind').textContent = Math.round(c.wind_speed_10m) + ' mph';
+    document.getElementById('precip').textContent = (c.precipitation||0).toFixed(2) + '"';
+    document.getElementById('uv').textContent = (c.uv_index||0).toFixed(1);
+    document.getElementById('updated-time').textContent =
+      new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('weather-content').style.display = 'flex';
+  } catch(e) {
+    document.getElementById('loading').textContent = 'Unable to load weather data.';
+  }
+}
+loadWeather();
+setInterval(loadWeather, 10*60*1000);
+
+function tick() {
+  var now = new Date();
+  document.getElementById('footer-clock').textContent =
+    now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' · ' +
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
