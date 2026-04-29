@@ -8,14 +8,15 @@
 
 html, body {
   width: 100%;
-  height: 100%;
+  height: 160px; /* ← CHANGED: was 100% — fixed height so srcdoc iframe has a real size */
   background: transparent;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
 
 .widget {
   width: 100%;
-  height: 100%;
+  height: 160px;     /* ← CHANGED: was 100% — matches html/body above */
+  min-height: 120px;
   background: #ffffff;
   border-radius: 14px;
   display: flex;
@@ -23,7 +24,7 @@ html, body {
   overflow: hidden;
   border: 1px solid #d0d7de;
   box-shadow: 0 4px 24px rgba(0,0,0,0.12);
-  --s: 1;   /* scale factor set by JS */
+  --s: 1;
 }
 
 /* ── HEADER ────────────────────────────────── */
@@ -51,7 +52,7 @@ html, body {
   min-height: 0;
 }
 
-/* WIDE mode — horizontal row (default) */
+/* WIDE mode */
 .widget.wide .body { flex-direction: row; align-items: stretch; }
 .widget.wide .temp-block {
   display: flex;
@@ -80,7 +81,7 @@ html, body {
   gap: calc(8px * var(--s));
 }
 
-/* TALL/SQUARE mode — stacked column */
+/* TALL/SQUARE mode */
 .widget.tall .body { flex-direction: column; align-items: stretch; }
 .widget.tall .temp-block {
   display: flex;
@@ -198,13 +199,13 @@ html, body {
 <script>
 // ── Layout + scale ────────────────────────────────────────────────────────────
 const widgetEl = document.getElementById('widget');
+const BASE_HEIGHT = 160; /* ← CHANGED: was 200, matches the new fixed CSS height */
 
 function applyLayout() {
   const w = widgetEl.offsetWidth;
   const h = widgetEl.offsetHeight;
   const ratio = w / h;
 
-  // Switch layout mode
   if (ratio >= 2.2) {
     widgetEl.classList.add('wide');
     widgetEl.classList.remove('tall');
@@ -213,8 +214,7 @@ function applyLayout() {
     widgetEl.classList.remove('wide');
   }
 
-  // Scale factor based on smaller dimension so content never overflows
-  const base = ratio >= 2.2 ? h / 200 : w / 320;
+  const base = ratio >= 2.2 ? h / BASE_HEIGHT : w / 320;
   widgetEl.style.setProperty('--s', Math.min(base, 3).toFixed(3));
 }
 
