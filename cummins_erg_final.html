@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cummins ERG Learning</title>
+    <style>
+        :root {
+            --red: #CC0000;
+            --red-dark: #8B0000;
+            --text: #1A1A1A;
+            --grey: #666;
+            --border: #E8E8E8;
+            --white: #fff;
+            --bg: #F6F7F9;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+
+        body { background: #d8d8d8; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+        .app {
+            width: 375px;
+            height: 400px;
+            background: var(--white);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            position: relative;
+        }
+
+        /* HEADER */
+        header {
+            padding: 12px 16px 10px;
+            border-bottom: 2px solid var(--red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--white);
+            flex-shrink: 0;
+        }
+        .brand { display: flex; align-items: center; gap: 7px; }
+        .brand-c {
+            width: 26px; height: 26px; background: var(--red); border-radius: 5px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 900; font-size: 14px;
+        }
+        .brand-text { line-height: 1.1; }
+        .brand-main { font-size: 13px; font-weight: 800; color: var(--red); }
+        .brand-sub { font-size: 9px; color: var(--grey); letter-spacing: 0.3px; }
+        .bell { font-size: 16px; cursor: pointer; }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            background: var(--white);
+        }
+        .tab {
+            padding: 8px 0;
+            margin-right: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--grey);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+        .tab.active { color: var(--text); border-bottom: 2px solid var(--red); }
+
+        /* SCROLL AREA */
+        .scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px;
+            scrollbar-width: none;
+            background: var(--bg);
+        }
+        .scroll::-webkit-scrollbar { display: none; }
+
+        /* COURSE GRID */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .card {
+            background: var(--white);
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+
+        /* Visual banner — pure CSS, no images */
+        .card-visual {
+            height: 80px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            padding: 8px;
+        }
+        .card-visual-icon {
+            font-size: 36px;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.25;
+        }
+        .card-badge {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: white;
+            background: rgba(0,0,0,0.28);
+            padding: 2px 7px;
+            border-radius: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        .status-pill {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            font-size: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            color: white;
+        }
+        .pill-required { background: rgba(204,0,0,0.85); }
+        .pill-progress { background: rgba(215,100,0,0.9); }
+        .pill-new { background: rgba(22,101,52,0.9); }
+
+        .card-body { padding: 8px 10px 10px; }
+        .card-title { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.3; margin-bottom: 4px; }
+        .card-meta { font-size: 10px; color: var(--grey); display: flex; align-items: center; gap: 4px; }
+        .card-dot { width: 3px; height: 3px; background: var(--grey); border-radius: 50%; }
+
+        /* DETAIL PANEL */
+        .detail {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--white);
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+        .detail.open { transform: translateX(0); }
+
+        .detail-hero {
+            height: 110px;
+            flex-shrink: 0;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            padding: 12px 16px;
+        }
+        .detail-hero-icon {
+            font-size: 60px;
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.22;
+        }
+        .detail-erg-tag {
+            font-size: 10px;
+            font-weight: 700;
+            color: white;
+            background: rgba(0,0,0,0.3);
+            padding: 3px 10px;
+            border-radius: 12px;
+            position: relative;
+            z-index: 1;
+        }
+        .detail-scroll { flex: 1; overflow-y: auto; padding: 14px 16px 80px; scrollbar-width: none; }
+        .detail-scroll::-webkit-scrollbar { display: none; }
+        .detail-title { font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+        .detail-meta-row { display: flex; gap: 12px; font-size: 11px; color: var(--grey); margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+        .detail-section-label { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+        .detail-desc { font-size: 12px; color: var(--grey); line-height: 1.6; margin-bottom: 14px; }
+        .module-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+        .module-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--grey); }
+        .module-num {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: var(--red); color: white;
+            font-size: 10px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .detail-cta {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            padding: 12px 16px;
+            background: var(--white);
+            border-top: 1px solid var(--border);
+        }
+        .detail-cta button {
+            width: 100%; background: var(--red); color: white;
+            border: none; padding: 12px; border-radius: 10px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+        }
+        .back-btn {
+            background: none; border: none; font-size: 18px;
+            color: var(--grey); cursor: pointer; padding: 0;
+        }
+        .detail-top { display: flex; align-items: center; gap: 8px; padding: 10px 16px 6px; }
+        .detail-top span { font-size: 13px; font-weight: 700; color: var(--text); }
+    </style>
+</head>
+<body>
+<div class="app" id="app">
+
+    <header>
+        <div class="brand">
+            <div class="brand-c">C</div>
+            <div class="brand-text">
+                <div class="brand-main">Cummins ERG Learning</div>
+                <div class="brand-sub">Women in Cummins &nbsp;·&nbsp; Cummins Racial Equality</div>
+            </div>
+        </div>
+        <div class="bell">🔔</div>
+    </header>
+
+    <div class="tabs">
+        <div class="tab active" id="tab-my" onclick="switchTab('my')">My Learnings</div>
+        <div class="tab" id="tab-rec" onclick="switchTab('rec')">Recommended</div>
+    </div>
+
+    <div class="scroll" id="main"></div>
+
+    <div class="detail" id="detail">
+        <div class="detail-top">
+            <button class="back-btn" onclick="closeDetail()">&#8592;</button>
+            <span>Course Details</span>
+        </div>
+        <div class="detail-hero" id="d-hero">
+            <div class="detail-hero-icon" id="d-icon"></div>
+            <div class="detail-erg-tag" id="d-erg"></div>
+        </div>
+        <div class="detail-scroll">
+            <div class="detail-title" id="d-title"></div>
+            <div class="detail-meta-row" id="d-meta"></div>
+            <div class="detail-section-label">About this Course</div>
+            <div class="detail-desc" id="d-desc"></div>
+            <div class="detail-section-label">Modules</div>
+            <ul class="module-list" id="d-modules"></ul>
+        </div>
+        <div class="detail-cta"><button>Start Learning</button></div>
+    </div>
+</div>
+
+<script>
+var courses = {
+    my: [
+        {
+            id: 1,
+            title: "Gender Equity Foundations",
+            erg: "Women in Cummins",
+            type: "Online",
+            duration: "45 min",
+            due: "Overdue",
+            status: "required",
+            icon: "&#9792;&#65039;",
+            grad: "linear-gradient(135deg,#8B0000,#CC0000)",
+            desc: "Explore the principles of gender equity at Cummins. Learn to recognize systemic barriers facing women in manufacturing and engineering, and gain tools to advocate for equitable practices on your team.",
+            modules: ["Understanding Gender Equity vs. Equality", "Barriers for Women in STEM", "Advocating for Equitable Policies", "Building Inclusive Team Culture"]
+        },
+        {
+            id: 2,
+            title: "Racial Equity in the Workplace",
+            erg: "Cummins Racial Equality",
+            type: "Online",
+            duration: "1 hr",
+            due: "Due May 10",
+            status: "progress",
+            icon: "&#9994;",
+            grad: "linear-gradient(135deg,#7F1D1D,#991B1B)",
+            desc: "Build practical skills to recognize, address, and dismantle systemic racism in your team and workflows. Grounded in Cummins' commitment to racial equality across all global operations.",
+            modules: ["History of Racial Inequity at Work", "Recognizing Systemic Racism", "Microaggressions and How to Respond", "Accountability and Action Steps"]
+        },
+        {
+            id: 3,
+            title: "Women in Cummins Monthly Session",
+            erg: "Women in Cummins",
+            type: "Live Event",
+            duration: "2 hrs",
+            due: "May 8",
+            status: null,
+            icon: "&#127908;",
+            grad: "linear-gradient(135deg,#6B213E,#BE185D)",
+            desc: "Monthly live virtual session hosted by Women in Cummins. This month: Breaking Barriers — stories from women leaders across Cummins engineering and manufacturing divisions.",
+            modules: ["Welcome and ERG Updates", "Guest Speaker: Career Stories", "Breakout Discussions", "Q&A and Action Planning"]
+        },
+        {
+            id: 4,
+            title: "CRE Bystander Intervention",
+            erg: "Cummins Racial Equality",
+            type: "Online",
+            duration: "1 hr",
+            due: "Due May 15",
+            status: "new",
+            icon: "&#128110;",
+            grad: "linear-gradient(135deg,#1F2937,#374151)",
+            desc: "Evidence-based bystander intervention techniques to safely and effectively respond to discrimination and racial bias incidents in the Cummins workplace. Learn the 5 Ds framework.",
+            modules: ["What is Bystander Intervention?", "The 5 Ds Framework", "Practicing Safe Intervention", "After the Moment: Follow-Up Steps"]
+        }
+    ],
+    rec: [
+        {
+            id: 5,
+            title: "Inclusive Hiring for Diverse Teams",
+            erg: "WIC + Cummins Racial Equality",
+            type: "Online",
+            duration: "45 min",
+            due: "Optional",
+            status: null,
+            icon: "&#128101;",
+            grad: "linear-gradient(135deg,#1E3A8A,#2563EB)",
+            desc: "Reduce bias across every stage of the hiring process. Learn to write inclusive job descriptions, design structured interviews, and make equitable offer decisions at Cummins.",
+            modules: ["Inclusive Job Descriptions", "Structured Interview Design", "Reducing Evaluation Bias", "Equitable Offer Decisions"]
+        },
+        {
+            id: 6,
+            title: "Cultural Intelligence (CQ)",
+            erg: "Cummins Racial Equality",
+            type: "Online",
+            duration: "1.5 hrs",
+            due: "Optional",
+            status: "new",
+            icon: "&#127758;",
+            grad: "linear-gradient(135deg,#14532D,#16A34A)",
+            desc: "Build your Cultural Intelligence to collaborate more effectively across Cummins global teams and diverse communities. Deepen awareness of cultural dimensions that shape workplace behavior.",
+            modules: ["CQ Foundations", "Cultural Dimensions at Work", "Adapting Your Communication Style", "Global Team Collaboration"]
+        },
+        {
+            id: 7,
+            title: "Pay Equity Workshop",
+            erg: "Women in Cummins",
+            type: "Live Event",
+            duration: "1.5 hrs",
+            due: "May 14",
+            status: null,
+            icon: "&#9878;&#65039;",
+            grad: "linear-gradient(135deg,#78350F,#D97706)",
+            desc: "An interactive workshop on pay equity data at Cummins. Review how compensation decisions are made, learn how to read pay equity reports, and explore strategies to close gender pay gaps.",
+            modules: ["Understanding Pay Equity Data", "Reading Compensation Reports", "Negotiation Strategies for Employees", "Manager Responsibilities in Pay Equity"]
+        },
+        {
+            id: 8,
+            title: "Allyship in Action",
+            erg: "WIC + Cummins Racial Equality",
+            type: "Online",
+            duration: "30 min",
+            due: "Optional",
+            status: null,
+            icon: "&#129309;",
+            grad: "linear-gradient(135deg,#4C1D95,#7C3AED)",
+            desc: "Go beyond awareness and take meaningful action as an ally. Practical strategies for amplifying underrepresented voices, calling out bias, and sustaining ally behaviors over time at Cummins.",
+            modules: ["Defining Active Allyship", "Amplifying Underrepresented Voices", "Calling Out vs. Calling In", "Sustaining Ally Behaviors"]
+        }
+    ]
+};
+
+var currentTab = "my";
+
+function statusPill(s) {
+    if (!s) return "";
+    if (s === "required") return '<div class="status-pill pill-required">Required</div>';
+    if (s === "progress") return '<div class="status-pill pill-progress">In Progress</div>';
+    if (s === "new") return '<div class="status-pill pill-new">New</div>';
+    return "";
+}
+
+function typeIcon(t) {
+    return t === "Live Event" ? "&#128197; " : "&#128187; ";
+}
+
+function renderGrid(list) {
+    return '<div class="grid">' + list.map(function(c) {
+        return '<div class="card" onclick="openDetail(' + c.id + ')">' +
+            '<div class="card-visual" style="background:' + c.grad + '">' +
+                statusPill(c.status) +
+                '<div class="card-visual-icon">' + c.icon + '</div>' +
+                '<span class="card-badge">' + c.erg + '</span>' +
+            '</div>' +
+            '<div class="card-body">' +
+                '<div class="card-title">' + c.title + '</div>' +
+                '<div class="card-meta">' + typeIcon(c.type) + c.type + '<div class="card-dot"></div>' + c.duration + '<div class="card-dot"></div>' + c.due + '</div>' +
+            '</div>' +
+        '</div>';
+    }).join('') + '</div>';
+}
+
+function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById("tab-my").classList.toggle("active", tab === "my");
+    document.getElementById("tab-rec").classList.toggle("active", tab === "rec");
+    document.getElementById("main").innerHTML = renderGrid(courses[tab]);
+}
+
+function getAllCourses() {
+    return courses.my.concat(courses.rec);
+}
+
+function openDetail(id) {
+    var c = getAllCourses().find(function(x){ return x.id === id; });
+    if (!c) return;
+    document.getElementById("d-hero").style.background = c.grad;
+    document.getElementById("d-icon").innerHTML = c.icon;
+    document.getElementById("d-erg").textContent = c.erg;
+    document.getElementById("d-title").textContent = c.title;
+    document.getElementById("d-meta").innerHTML =
+        typeIcon(c.type) + c.type +
+        "&nbsp;&nbsp;|&nbsp;&nbsp;&#9200; " + c.duration +
+        "&nbsp;&nbsp;|&nbsp;&nbsp;&#128197; " + c.due;
+    document.getElementById("d-desc").textContent = c.desc;
+    document.getElementById("d-modules").innerHTML = c.modules.map(function(m, i) {
+        return '<li class="module-item"><div class="module-num">' + (i+1) + '</div>' + m + '</li>';
+    }).join('');
+    document.getElementById("detail").classList.add("open");
+}
+
+function closeDetail() {
+    document.getElementById("detail").classList.remove("open");
+}
+
+switchTab("my");
+</script>
+</body>
+</html>
