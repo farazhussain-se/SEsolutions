@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="widget-name" content="ERG Learning Hub (Cummins)">
+    <meta name="widget-description" content="Cummins ERG learning portal for DEI courses, leadership development, and inclusion training">
+    <title>Cummins ERG Learning Hub</title>
+    <style>
+        /* --- CSS STYLING (Cummins Branding) --- */
+        :root {
+            /* Cummins Brand Colors - Pantone 485C / Brand Book 2021 */
+            --c-red: #DA291C;
+            --c-black: #000000;
+            --c-white: #FFFFFF;
+            --c-gray-bg: #F4F4F4;
+            --c-gray-mid: #666666;
+            --c-gray-light: #E8E8E8;
+
+            /* Semantic Mappings */
+            --sb-primary: var(--c-black);
+            --sb-accent:  var(--c-red);
+            --sb-text:    var(--c-black);
+            --sb-bg:      var(--c-gray-bg);
+            --sb-card-bg: #FFFFFF;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: var(--sb-bg);
+            color: var(--sb-text);
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- HERO BANNER --- */
+        .hero-banner {
+            width: 100%;
+            height: 220px;
+            background-image: url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1600&q=80');
+            background-size: cover;
+            background-position: center top;
+            position: relative;
+            margin-bottom: -4px;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.3) 100%);
+            display: flex;
+            align-items: center;
+            padding: 0 40px;
+            gap: 20px;
+        }
+
+        .hero-logo-box {
+            background-color: var(--c-red);
+            color: white;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            padding: 10px 14px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .hero-text { display: flex; flex-direction: column; }
+
+        .hero-title {
+            color: white;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            line-height: 1.1;
+        }
+
+        .hero-tagline {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.95rem;
+            font-weight: 400;
+            margin-top: 6px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* --- WIDGET HEADER --- */
+        .widget-header {
+            background-color: var(--c-black);
+            color: var(--c-white);
+            padding: 24px 24px 0 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 12px; }
+
+        .header-icon {
+            background-color: var(--c-red);
+            color: white;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .header-subtitle {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+            display: block;
+            margin-top: 3px;
+        }
+
+        .header-stats { display: flex; gap: 40px; }
+
+        .cw-stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+        }
+
+        .cw-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--c-red);
+        }
+
+        .cw-stat-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.75);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        /* --- TABS --- */
+        .filter-bar {
+            display: flex;
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .filter-tab {
+            color: rgba(255,255,255,0.55);
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding-bottom: 12px;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+        }
+
+        .filter-tab:hover { color: white; }
+
+        .filter-tab.active { color: white; }
+
+        .filter-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 3px;
+            background-color: var(--c-red);
+            border-radius: 3px 3px 0 0;
+        }
+
+        /* --- CONTENT CONTAINER --- */
+        .content-container {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* --- COURSE GRID --- */
+        .event-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .event-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+                gap: 24px;
+            }
+        }
+
+        .event-card {
+            background: var(--sb-card-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border: 1px solid var(--c-gray-light);
+        }
+
+        .event-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.14);
+        }
+
+        .card-thumbnail {
+            height: 180px;
+            background-color: #ccc;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        /* Category pill on thumbnail */
+        .category-pill {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background-color: var(--c-black);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            z-index: 2;
+        }
+
+        .live-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background-color: var(--c-red);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+            z-index: 2;
+        }
+
+        .upcoming-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background-color: rgba(0,0,0,0.82);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+            backdrop-filter: blur(4px);
+        }
+
+        .archive-badge {
+            position: absolute;
+            top: 12px; right: 12px;
+            background-color: rgba(102,102,102,0.9);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+
+        .card-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .event-date {
+            font-size: 0.78rem;
+            color: var(--c-gray-mid);
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .event-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            color: var(--c-black);
+            line-height: 1.3;
+        }
+
+        .event-desc {
+            font-size: 0.9rem;
+            color: #444;
+            line-height: 1.55;
+            flex-grow: 1;
+        }
+
+        /* Duration / level meta */
+        .course-meta {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .meta-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--c-gray-mid);
+            background: var(--c-gray-light);
+            padding: 3px 8px;
+            border-radius: 2px;
+        }
+
+        .meta-tag.accent {
+            background: rgba(218,41,28,0.08);
+            color: var(--c-red);
+        }
+
+        .card-footer {
+            padding: 14px 20px;
+            border-top: 1px solid var(--c-gray-light);
+            background-color: #fafafa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .open-btn {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--c-black);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .open-btn::after { content: " →"; margin-left: 2px; transition: margin-left 0.2s; }
+        .event-card:hover .open-btn::after { margin-left: 5px; }
+
+        .calendar-btn {
+            background: none;
+            border: 1px solid var(--c-gray-light);
+            border-radius: 2px;
+            padding: 6px 10px;
+            cursor: pointer;
+            color: var(--c-gray-mid);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .calendar-btn:hover {
+            border-color: var(--c-red);
+            color: var(--c-red);
+            background-color: rgba(218,41,28,0.04);
+        }
+        .calendar-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+        /* --- DETAIL VIEW --- */
+        .detail-wrapper {
+            padding: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .custom-player-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            background-color: #000;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+            margin-bottom: 32px;
+        }
+
+        .player-background {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.85;
+        }
+
+        .player-gradient {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.95) 100%);
+        }
+
+        .player-logo-box {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            background-color: var(--c-red);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1rem;
+            padding: 10px 14px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border-radius: 2px;
+            letter-spacing: 1px;
+        }
+
+        .player-text-overlay {
+            position: absolute;
+            bottom: 90px;
+            left: 24px;
+            color: white;
+            z-index: 10;
+        }
+        .player-brand-name { font-size: 1.5rem; font-weight: 700; display: block; }
+        .player-sub-name { font-size: 1.1rem; font-weight: 300; opacity: 0.85; }
+
+        .player-controls {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            right: 24px;
+            height: 56px;
+            background-color: rgba(0, 0, 0, 0.88);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-radius: 3px;
+            backdrop-filter: blur(5px);
+        }
+
+        .control-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin-right: 20px; }
+        .control-btn svg { fill: white; width: 24px; height: 24px; }
+        .control-btn:hover svg { fill: var(--c-red); }
+
+        .progress-track {
+            flex-grow: 1;
+            height: 4px;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            margin: 0 20px;
+            position: relative;
+            cursor: pointer;
+        }
+        .progress-fill {
+            width: 35%;
+            height: 100%;
+            background-color: var(--c-red);
+            border-radius: 2px;
+        }
+
+        .time-display {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-right: 20px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .right-controls { display: flex; gap: 16px; align-items: center; }
+
+        .detail-info {
+            background: var(--sb-card-bg);
+            border-radius: 4px;
+            padding: 32px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+            border: 1px solid var(--c-gray-light);
+        }
+
+        .detail-category {
+            display: inline-block;
+            background: var(--c-red);
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 2px;
+            margin-bottom: 14px;
+        }
+
+        .detail-title { margin: 0 0 8px 0; font-size: 1.9rem; color: var(--c-black); font-weight: 700; }
+        .detail-meta { color: var(--c-gray-mid); font-size: 0.95rem; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--c-gray-light); }
+        .back-btn { background: none; border: none; color: var(--c-black); font-weight: 700; cursor: pointer; padding: 0; margin-bottom: 24px; display: flex; align-items: center; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .back-btn:hover { color: var(--c-red); }
+
+        .loader { text-align: center; padding: 60px; color: var(--c-black); opacity: 0.5; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+
+        <div class="hero-banner">
+            <div class="hero-overlay">
+                <div class="hero-logo-box">ERG</div>
+                <div class="hero-text">
+                    <h1 class="hero-title">ERG Learning Hub</h1>
+                    <span class="hero-tagline">Cummins Inc. &mdash; Power Onward</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="mainHeader" class="widget-header">
+            <div class="header-top">
+                <div class="header-left">
+                    <div class="header-icon">ERG</div>
+                    <div>
+                        <div class="header-title">ERG Learning &amp; Development</div>
+                        <span class="header-subtitle" data-i18n="subtitle">Inclusion, Leadership &amp; DEI Courses</span>
+                    </div>
+                </div>
+
+                <div class="header-stats">
+                    <div class="cw-stat-item">
+                        <span id="statLive" class="cw-stat-value">0</span>
+                        <span class="cw-stat-label" data-i18n="statLive">Live Now</span>
+                    </div>
+                    <div class="cw-stat-item">
+                        <span id="statUpcoming" class="cw-stat-value">0</span>
+                        <span class="cw-stat-label" data-i18n="statUpcoming">Upcoming</span>
+                    </div>
+                    <div class="cw-stat-item">
+                        <span id="statReplays" class="cw-stat-value">0</span>
+                        <span class="cw-stat-label" data-i18n="statReplays">On Demand</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-tab active" onclick="app.filterEvents('all', this)" data-i18n="filterAll">All Courses</div>
+                <div class="filter-tab" onclick="app.filterEvents('live', this)" data-i18n="filterLive">Live Now</div>
+                <div class="filter-tab" onclick="app.filterEvents('upcoming', this)" data-i18n="filterUpcoming">Upcoming</div>
+                <div class="filter-tab" onclick="app.filterEvents('archive', this)" data-i18n="filterArchive">On Demand</div>
+            </div>
+        </div>
+
+        <div class="content-container">
+            <div id="loader" class="loader" data-i18n="loading">Loading courses...</div>
+
+            <div id="listView" class="hidden">
+                <div id="eventListContainer" class="event-list"></div>
+                <div id="noEventsMessage" class="hidden" style="text-align:center; opacity:0.5; padding:40px;" data-i18n="noEvents">No courses in this category.</div>
+            </div>
+
+            <div id="detailView" class="hidden detail-wrapper">
+                <button class="back-btn" onclick="app.showList()" data-i18n="back">&larr; Back to Courses</button>
+
+                <div class="custom-player-container">
+                    <div class="player-background" id="playerBg" style="background-image: url('');"></div>
+                    <div class="player-gradient"></div>
+                    <div class="player-logo-box">ERG</div>
+                    <div class="player-text-overlay">
+                        <span class="player-brand-name">Cummins</span>
+                        <span class="player-sub-name">ERG Learning</span>
+                    </div>
+                    <div class="player-controls">
+                        <button class="control-btn">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                        <button class="control-btn">
+                            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                        </button>
+                        <div class="progress-track"><div class="progress-fill"></div></div>
+                        <div class="time-display">00:00</div>
+                        <div class="right-controls">
+                            <button class="control-btn" style="margin:0;"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-info">
+                    <span id="detailCategory" class="detail-category"></span>
+                    <h2 id="detailTitle" class="detail-title"></h2>
+                    <div id="detailDate" class="detail-meta"></div>
+                    <p id="detailDesc" style="line-height:1.65; font-size:1.05rem; color:#333;"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Language detection ---
+        const LANG = (() => {
+          const l = navigator.language || '';
+          if (l.startsWith('de')) return 'de';
+          if (l.startsWith('fr')) return 'fr';
+          if (l.startsWith('es')) return 'es';
+          if (l.startsWith('ja')) return 'ja';
+          if (l === 'en-GB')      return 'en-GB';
+          return 'en-US';
+        })();
+        document.documentElement.lang = LANG;
+        const LOCALE = {
+          'de': 'de-DE', 'fr': 'fr-FR', 'es': 'es-ES',
+          'ja': 'ja-JP', 'en-GB': 'en-GB', 'en-US': 'en-US'
+        }[LANG];
+        const HOUR12 = LANG === 'en-GB' || LANG === 'en-US';
+
+        // --- Translations ---
+        const T = {
+            de: {
+                subtitle: 'Inklusion, Führung & DEI-Kurse',
+                statLive: 'Jetzt live', statUpcoming: 'Demnächst', statReplays: 'Auf Abruf',
+                filterAll: 'Alle Kurse', filterLive: 'Jetzt live', filterUpcoming: 'Demnächst', filterArchive: 'Auf Abruf',
+                loading: 'Kurse werden geladen...', noEvents: 'Keine Kurse in dieser Kategorie.',
+                back: '← Zurück zu Kursen', openBtn: 'Öffnen', calendarBtn: 'Zum Kalender',
+                watchBtn: 'Aufzeichnung ansehen', badgeUpcoming: 'Demnächst', badgeArchive: 'Auf Abruf',
+                calendarAlert: 'Kurs „${title}" wurde zum Kalender hinzugefügt! (Simulation)',
+                errorLoad: 'Kurse konnten nicht geladen werden.',
+            },
+            fr: {
+                subtitle: 'Inclusion, Leadership & Cours DEI',
+                statLive: 'En direct', statUpcoming: 'À venir', statReplays: 'À la demande',
+                filterAll: 'Tous les cours', filterLive: 'En direct', filterUpcoming: 'À venir', filterArchive: 'À la demande',
+                loading: 'Chargement des cours...', noEvents: 'Aucun cours dans cette catégorie.',
+                back: '← Retour aux cours', openBtn: 'Ouvrir', calendarBtn: 'Ajouter au calendrier',
+                watchBtn: 'Visionner le replay', badgeUpcoming: 'À venir', badgeArchive: 'À la demande',
+                calendarAlert: 'Le cours « ${title} » a été ajouté à votre calendrier ! (Simulation)',
+                errorLoad: 'Impossible de charger les cours.',
+            },
+            es: {
+                subtitle: 'Inclusión, Liderazgo y Cursos DEI',
+                statLive: 'En directo', statUpcoming: 'Próximamente', statReplays: 'Bajo demanda',
+                filterAll: 'Todos los cursos', filterLive: 'En directo', filterUpcoming: 'Próximamente', filterArchive: 'Bajo demanda',
+                loading: 'Cargando cursos...', noEvents: 'No hay cursos en esta categoría.',
+                back: '← Volver a cursos', openBtn: 'Abrir', calendarBtn: 'Añadir al calendario',
+                watchBtn: 'Ver grabación', badgeUpcoming: 'Próximamente', badgeArchive: 'Bajo demanda',
+                calendarAlert: 'El curso «${title}» se ha añadido a tu calendario. (Simulación)',
+                errorLoad: 'No se pudieron cargar los cursos.',
+            },
+            ja: {
+                subtitle: 'インクルージョン、リーダーシップ & DEIコース',
+                statLive: 'ライブ中', statUpcoming: '予定', statReplays: 'オンデマンド',
+                filterAll: 'すべてのコース', filterLive: 'ライブ中', filterUpcoming: '予定', filterArchive: 'オンデマンド',
+                loading: 'コースを読み込んでいます...', noEvents: 'このカテゴリーにコースはありません。',
+                back: '← コース一覧に戻る', openBtn: '開く', calendarBtn: 'カレンダーに追加',
+                watchBtn: '録画を視聴', badgeUpcoming: '予定', badgeArchive: 'オンデマンド',
+                calendarAlert: 'コース「${title}」をカレンダーに追加しました！（シミュレーション）',
+                errorLoad: 'コースを読み込めませんでした。',
+            },
+            'en-GB': {
+                subtitle: 'Inclusion, Leadership & DEI Courses',
+                statLive: 'Live Now', statUpcoming: 'Upcoming', statReplays: 'On Demand',
+                filterAll: 'All Courses', filterLive: 'Live Now', filterUpcoming: 'Upcoming', filterArchive: 'On Demand',
+                loading: 'Loading courses...', noEvents: 'No courses in this category.',
+                back: '← Back to Courses', openBtn: 'Open', calendarBtn: 'Add to Calendar',
+                watchBtn: 'Watch Recording', badgeUpcoming: 'Upcoming', badgeArchive: 'On Demand',
+                calendarAlert: 'Course "${title}" has been added to your calendar! (Simulation)',
+                errorLoad: 'Could not load courses.',
+            },
+            'en-US': {
+                subtitle: 'Inclusion, Leadership & DEI Courses',
+                statLive: 'Live Now', statUpcoming: 'Upcoming', statReplays: 'On Demand',
+                filterAll: 'All Courses', filterLive: 'Live Now', filterUpcoming: 'Upcoming', filterArchive: 'On Demand',
+                loading: 'Loading courses...', noEvents: 'No courses in this category.',
+                back: '← Back to Courses', openBtn: 'Open', calendarBtn: 'Add to Calendar',
+                watchBtn: 'Watch Recording', badgeUpcoming: 'Upcoming', badgeArchive: 'On Demand',
+                calendarAlert: 'Course "${title}" has been added to your calendar! (Simulation)',
+                errorLoad: 'Could not load courses.',
+            },
+        };
+        const t = T[LANG] ?? T['en-US'];
+
+        function tr(key, vars = {}) {
+            let s = t[key] || key;
+            for (const [k, v] of Object.entries(vars)) {
+                s = s.replace(`\${${k}}`, v);
+            }
+            return s;
+        }
+
+        const LANG_SUFFIX = { 'de': 'De', 'fr': 'Fr', 'es': 'Es', 'ja': 'Ja', 'en-GB': '', 'en-US': '' };
+        function loc(obj, key) {
+            const suffix = LANG_SUFFIX[LANG] || '';
+            return (suffix ? obj[key + suffix] : undefined) ?? obj[key];
+        }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (t[key] !== undefined) el.textContent = t[key];
+            });
+        }
+
+        const listDateFormatter = new Intl.DateTimeFormat(LOCALE, {
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: HOUR12,
+        });
+
+        const detailDateFormatter = new Intl.DateTimeFormat(LOCALE, {
+            weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: HOUR12,
+        });
+
+        const CONFIG = {
+            apiEndpoint: 'https://your-backend-service.example.com/api/courses',
+            useMockData: true
+        };
+
+        // --- ERG Course Data (Cummins) ---
+        const MOCK_DATA = [
+            // LIVE
+            {
+                id: 1,
+                title: 'ERG Leader Live Q&A: Allyship in Action',
+                titleDe: 'ERG-Leiter Live-Q&A: Allyship in der Praxis',
+                titleFr: 'Q&R en direct des leaders ERG : Allyship en action',
+                titleEs: 'Q&A en vivo líderes ERG: Allyship en acción',
+                titleJa: 'ERGリーダーライブQ&A：アライシップ実践',
+                category: 'Allyship',
+                duration: '60 min',
+                level: 'All Levels',
+                date: new Date(new Date().getTime() - 1000 * 60 * 20).toISOString(),
+                description: 'Join our ERG leaders for a live discussion on how Cummins employees can practice meaningful allyship in the workplace every day.',
+                descriptionDe: 'Nehmen Sie an einer Live-Diskussion mit unseren ERG-Leitern teil, wie Cummins-Mitarbeiter im Alltag echte Allyship praktizieren können.',
+                descriptionFr: 'Rejoignez nos leaders ERG pour une discussion en direct sur la pratique de l\'allyship dans l\'environnement de travail.',
+                descriptionEs: 'Únase a nuestros líderes ERG para una discusión en vivo sobre cómo practicar la alianza significativa en el lugar de trabajo.',
+                descriptionJa: 'ERGリーダーとともに、職場でのアライシップを実践する方法についてライブで議論します。',
+                isLive: true,
+                status: 'live',
+                imageUrl: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=800&q=80'
+            },
+            // UPCOMING
+            {
+                id: 2,
+                title: 'ERG Foundations: Starting Your Journey',
+                titleDe: 'ERG-Grundlagen: Den Einstieg finden',
+                titleFr: 'Fondements des ERG : Commencer votre parcours',
+                titleEs: 'Fundamentos ERG: Comenzando tu camino',
+                titleJa: 'ERG基礎：あなたの旅の始まり',
+                category: 'Foundations',
+                duration: '90 min',
+                level: 'New Members',
+                date: '2026-05-10T14:00:00.000Z',
+                description: 'An orientation for new ERG members covering the history, purpose, and strategic alignment of Cummins employee resource groups globally.',
+                descriptionDe: 'Eine Einführung für neue ERG-Mitglieder zu Geschichte, Zweck und strategischer Ausrichtung der Cummins Mitarbeitergruppen weltweit.',
+                descriptionFr: 'Une orientation pour les nouveaux membres ERG couvrant l\'histoire, les objectifs et l\'alignement stratégique des groupes de ressources.',
+                descriptionEs: 'Una orientación para nuevos miembros ERG que cubre la historia, el propósito y la alineación estratégica de los grupos de recursos.',
+                descriptionJa: '新ERGメンバー向けのオリエンテーション。Cumminsの従業員リソースグループの歴史、目的、戦略的整合性を紹介。',
+                isLive: false,
+                status: 'upcoming',
+                imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 3,
+                title: 'Inclusive Leadership for ERG Leaders',
+                titleDe: 'Inklusive Führung für ERG-Leiter',
+                titleFr: 'Leadership inclusif pour les leaders ERG',
+                titleEs: 'Liderazgo inclusivo para líderes ERG',
+                titleJa: 'ERGリーダーのためのインクルーシブリーダーシップ',
+                category: 'Leadership',
+                duration: '2 hrs',
+                level: 'ERG Leaders',
+                date: '2026-05-15T15:00:00.000Z',
+                description: 'Develop skills to lead with empathy and drive inclusion across Cummins ERG chapters. Topics include psychological safety, sponsorship, and cross-cultural communication.',
+                descriptionDe: 'Entwickeln Sie Fähigkeiten zur empathischen Führung und zur Förderung von Inklusion in Cummins ERG-Kapiteln. Themen: psychologische Sicherheit, Sponsorship, interkulturelle Kommunikation.',
+                descriptionFr: 'Développez vos compétences pour diriger avec empathie et promouvoir l\'inclusion. Thèmes : sécurité psychologique, parrainage et communication interculturelle.',
+                descriptionEs: 'Desarrolle habilidades para liderar con empatía. Temas: seguridad psicológica, patrocinio y comunicación intercultural.',
+                descriptionJa: '共感を持ってリードし、ERGチャプター全体でインクルージョンを推進するスキルを養います。心理的安全性、スポンサーシップ、異文化コミュニケーション。',
+                isLive: false,
+                status: 'upcoming',
+                imageUrl: 'https://images.unsplash.com/photo-1531545514256-b1400bc00f31?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 4,
+                title: 'Unconscious Bias in the Workplace',
+                titleDe: 'Unbewusste Vorurteile am Arbeitsplatz',
+                titleFr: 'Les biais inconscients en milieu de travail',
+                titleEs: 'Sesgo inconsciente en el lugar de trabajo',
+                titleJa: '職場における無意識の偏見',
+                category: 'DEI Essentials',
+                duration: '45 min',
+                level: 'All Employees',
+                date: '2026-05-22T13:00:00.000Z',
+                description: 'Understand how unconscious bias affects hiring, collaboration, and decision-making at Cummins, and learn practical strategies to mitigate its impact.',
+                descriptionDe: 'Verstehen Sie, wie unbewusste Vorurteile Einstellungen, Zusammenarbeit und Entscheidungsprozesse bei Cummins beeinflussen und lernen Sie Strategien zur Reduzierung.',
+                descriptionFr: 'Comprendre comment les biais inconscients affectent le recrutement, la collaboration et la prise de décision, et apprendre des stratégies pratiques.',
+                descriptionEs: 'Comprenda cómo el sesgo inconsciente afecta la contratación, la colaboración y la toma de decisiones, y aprenda estrategias prácticas.',
+                descriptionJa: '無意識の偏見が採用、協働、意思決定に与える影響を理解し、その影響を軽減する実践的な戦略を学びます。',
+                isLive: false,
+                status: 'upcoming',
+                imageUrl: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 5,
+                title: 'Cultural Competence & Global Inclusion',
+                titleDe: 'Kulturelle Kompetenz & globale Inklusion',
+                titleFr: 'Compétence culturelle et inclusion mondiale',
+                titleEs: 'Competencia cultural e inclusión global',
+                titleJa: '文化的コンピテンシーとグローバルインクルージョン',
+                category: 'Global Inclusion',
+                duration: '75 min',
+                level: 'Intermediate',
+                date: '2026-06-03T16:00:00.000Z',
+                description: 'Explore how Cummins operates across 190+ countries and how cultural awareness strengthens ERG impact globally. Features perspectives from APAC, EMEA, and Americas.',
+                descriptionDe: 'Erkunden Sie Cummins\' globales Engagement und wie kulturelles Bewusstsein die ERG-Wirkung weltweit stärkt. Perspektiven aus APAC, EMEA und Amerika.',
+                descriptionFr: 'Explorez comment Cummins opère dans 190+ pays et comment la sensibilisation culturelle renforce l\'impact des ERG à l\'échelle mondiale.',
+                descriptionEs: 'Explore cómo Cummins opera en más de 190 países y cómo la conciencia cultural fortalece el impacto de los ERG globalmente.',
+                descriptionJa: 'Cumminsが190以上の国々でどのように運営されているか、そして文化的認識がERGのグローバルな影響力をどのように強化するかを探ります。',
+                isLive: false,
+                status: 'upcoming',
+                imageUrl: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 6,
+                title: 'ERG Metrics & Measuring DEI Impact',
+                titleDe: 'ERG-Kennzahlen & DEI-Wirkung messen',
+                titleFr: 'Métriques ERG & mesure de l\'impact DEI',
+                titleEs: 'Métricas ERG y medición del impacto DEI',
+                titleJa: 'ERGメトリクスとDEIインパクトの測定',
+                category: 'Strategy',
+                duration: '60 min',
+                level: 'ERG Leaders',
+                date: '2026-06-12T14:00:00.000Z',
+                description: 'Learn how to set measurable goals, track ERG engagement, and present data-driven DEI impact reports to Cummins senior leadership.',
+                descriptionDe: 'Lernen Sie, messbare Ziele zu setzen, ERG-Engagement zu verfolgen und datenbasierte DEI-Wirkungsberichte für die Führungsebene zu erstellen.',
+                descriptionFr: 'Apprenez à fixer des objectifs mesurables, à suivre l\'engagement ERG et à présenter des rapports d\'impact DEI fondés sur les données.',
+                descriptionEs: 'Aprenda a establecer objetivos medibles, rastrear el compromiso ERG y presentar informes de impacto DEI basados en datos a la alta dirección.',
+                descriptionJa: '測定可能な目標を設定し、ERGエンゲージメントを追跡し、データドリブンなDEIインパクトレポートをシニアリーダーシップに提示する方法を学びます。',
+                isLive: false,
+                status: 'upcoming',
+                imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80'
+            },
+            // ON DEMAND / ARCHIVE
+            {
+                id: 10,
+                title: 'Destination Zero: Sustainability & ERG Alignment',
+                titleDe: 'Destination Zero: Nachhaltigkeit & ERG-Ausrichtung',
+                titleFr: 'Destination Zéro : Durabilité et alignement ERG',
+                titleEs: 'Destino Cero: Sostenibilidad y alineación ERG',
+                titleJa: 'Destination Zero: サステナビリティとERGの整合性',
+                category: 'Sustainability',
+                duration: '50 min',
+                level: 'All Employees',
+                date: '2026-03-18T14:00:00.000Z',
+                description: 'How Cummins\' Destination Zero emissions strategy intersects with ERG initiatives for environmental justice and community engagement.',
+                descriptionDe: 'Wie Cummins\' Destination-Zero-Strategie mit ERG-Initiativen für Umweltgerechtigkeit und Gemeinschaftsengagement verknüpft ist.',
+                descriptionFr: 'Comment la stratégie Destination Zéro de Cummins s\'articule avec les initiatives ERG pour la justice environnementale et l\'engagement communautaire.',
+                descriptionEs: 'Cómo la estrategia Destination Zero de Cummins se intersecta con las iniciativas ERG para la justicia ambiental y el compromiso comunitario.',
+                descriptionJa: 'CumminsのDestination Zero排出戦略が環境正義とコミュニティエンゲージメントのERGイニシアチブとどのように交差するか。',
+                isLive: false,
+                status: 'archive',
+                imageUrl: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 11,
+                title: 'Belonging at Cummins: Annual DEI Summit Recap',
+                titleDe: 'Zugehörigkeit bei Cummins: Jahres-DEI-Gipfel',
+                titleFr: 'Appartenance chez Cummins : Récapitulatif du sommet DEI annuel',
+                titleEs: 'Pertenencia en Cummins: Resumen de la Cumbre DEI Anual',
+                titleJa: 'CumminsでのBelonging：年次DEIサミット概要',
+                category: 'Belonging',
+                duration: '2.5 hrs',
+                level: 'All Employees',
+                date: '2025-11-14T13:00:00.000Z',
+                description: 'Full recording of the 2025 Cummins DEI Summit. Panels cover intersectionality, ERG collaboration strategies, and employee stories from across the enterprise.',
+                descriptionDe: 'Vollständige Aufzeichnung des Cummins DEI-Gipfels 2025. Diskussionen zu Intersektionalität, ERG-Kooperationsstrategien und Mitarbeiterstimmen.',
+                descriptionFr: 'Enregistrement complet du Sommet DEI 2025. Les panels couvrent l\'intersectionnalité, les stratégies de collaboration ERG et les témoignages des employés.',
+                descriptionEs: 'Grabación completa de la Cumbre DEI 2025. Los paneles cubren interseccionalidad, estrategias de colaboración ERG e historias de empleados.',
+                descriptionJa: '2025 Cummins DEIサミットの完全録画。インターセクショナリティ、ERG協力戦略、従業員の声をカバーするパネル。',
+                isLive: false,
+                status: 'archive',
+                imageUrl: 'https://images.unsplash.com/photo-1560439514-4e9645039924?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 12,
+                title: 'Mental Health & Psychological Safety at Work',
+                titleDe: 'Psychische Gesundheit & psychologische Sicherheit',
+                titleFr: 'Santé mentale et sécurité psychologique au travail',
+                titleEs: 'Salud mental y seguridad psicológica en el trabajo',
+                titleJa: '職場でのメンタルヘルスと心理的安全性',
+                category: 'Well-being',
+                duration: '40 min',
+                level: 'All Employees',
+                date: '2025-10-10T15:00:00.000Z',
+                description: 'Exploring how ERGs can champion mental health awareness, reduce stigma, and build psychologically safe teams across Cummins global sites.',
+                descriptionDe: 'Wie ERGs Bewusstsein für psychische Gesundheit fördern, Stigmatisierung reduzieren und psychologisch sichere Teams aufbauen können.',
+                descriptionFr: 'Comment les ERGs peuvent promouvoir la sensibilisation à la santé mentale et construire des équipes psychologiquement sûres.',
+                descriptionEs: 'Cómo los ERGs pueden impulsar la conciencia sobre salud mental y construir equipos psicológicamente seguros en los sitios globales de Cummins.',
+                descriptionJa: 'ERGがメンタルヘルスの啓発を推進し、スティグマを減らし、心理的に安全なチームを構築する方法。',
+                isLive: false,
+                status: 'archive',
+                imageUrl: 'https://images.unsplash.com/photo-1573497620053-ea5300f94f21?auto=format&fit=crop&w=800&q=80'
+            }
+        ];
+
+        const app = {
+            allEvents: [],
+            currentFilter: 'all',
+
+            init: function() {
+                applyTranslations();
+                this.loadEvents();
+            },
+
+            loadEvents: async function() {
+                try {
+                    if (CONFIG.useMockData) {
+                        await new Promise(r => setTimeout(r, 500));
+                        this.allEvents = MOCK_DATA;
+                    } else {
+                        const response = await fetch(CONFIG.apiEndpoint);
+                        this.allEvents = await response.json();
+                    }
+                    this.updateStats();
+                    this.filterEvents('all', document.querySelector('.filter-tab.active'));
+                } catch (error) {
+                    console.error("Load error:", error);
+                    document.getElementById('loader').innerText = t.errorLoad;
+                }
+            },
+
+            updateStats: function() {
+                const liveCount     = this.allEvents.filter(e => e.status === 'live' || e.isLive).length;
+                const upcomingCount = this.allEvents.filter(e => e.status === 'upcoming').length;
+                const replayCount   = this.allEvents.filter(e => e.status === 'archive').length;
+                document.getElementById('statLive').innerText     = liveCount;
+                document.getElementById('statUpcoming').innerText = upcomingCount;
+                document.getElementById('statReplays').innerText  = replayCount;
+            },
+
+            filterEvents: function(category, tabElement) {
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                if (tabElement) tabElement.classList.add('active');
+                this.currentFilter = category;
+                let filtered = [];
+                if (category === 'all')      filtered = this.allEvents.filter(e => e.status !== 'archive');
+                else if (category === 'live') filtered = this.allEvents.filter(e => e.status === 'live' || e.isLive);
+                else if (category === 'upcoming') filtered = this.allEvents.filter(e => e.status === 'upcoming');
+                else if (category === 'archive')  filtered = this.allEvents.filter(e => e.status === 'archive');
+                this.renderList(filtered);
+            },
+
+            renderList: function(events) {
+                const container = document.getElementById('eventListContainer');
+                container.innerHTML = '';
+                document.getElementById('loader').classList.add('hidden');
+
+                if (events.length === 0) {
+                    document.getElementById('noEventsMessage').classList.remove('hidden');
+                    document.getElementById('listView').classList.remove('hidden');
+                    return;
+                } else {
+                    document.getElementById('noEventsMessage').classList.add('hidden');
+                }
+
+                events.sort((a, b) => {
+                    if (a.isLive && !b.isLive) return -1;
+                    if (!a.isLive && b.isLive) return 1;
+                    return new Date(a.date) - new Date(b.date);
+                });
+
+                events.forEach(event => {
+                    const card = document.createElement('div');
+                    card.className = 'event-card';
+                    card.onclick = (e) => {
+                        if (e.target.closest('.calendar-btn')) return;
+                        this.showDetail(event);
+                    };
+
+                    const dateStr = listDateFormatter.format(new Date(event.date));
+
+                    let badgeHtml = '';
+                    if (event.isLive || event.status === 'live') {
+                        badgeHtml = `<span class="live-badge">&#9679; LIVE</span>`;
+                    } else if (event.status === 'upcoming') {
+                        badgeHtml = `<span class="upcoming-badge">${t.badgeUpcoming}</span>`;
+                    } else if (event.status === 'archive') {
+                        badgeHtml = `<span class="archive-badge">${t.badgeArchive}</span>`;
+                    }
+
+                    let actionHtml = '';
+                    if (event.status === 'upcoming') {
+                        actionHtml = `
+                            <button class="calendar-btn" onclick="app.addToCalendar(event, '${loc(event, 'title').replace(/'/g, "\\'")}')">
+                                <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z"/></svg>
+                                ${t.calendarBtn}
+                            </button>`;
+                    } else if (event.status === 'archive') {
+                        actionHtml = `<button class="calendar-btn" style="border:none; padding-left:0;"><span style="font-size:0.8rem;">${t.watchBtn}</span></button>`;
+                    }
+
+                    const metaHtml = `
+                        <div class="course-meta">
+                            <span class="meta-tag accent">${event.category || 'ERG'}</span>
+                            ${event.duration ? `<span class="meta-tag">${event.duration}</span>` : ''}
+                            ${event.level ? `<span class="meta-tag">${event.level}</span>` : ''}
+                        </div>`;
+
+                    card.innerHTML = `
+                        <div class="card-thumbnail" style="background-image: url('${event.imageUrl}');">
+                            ${badgeHtml}
+                        </div>
+                        <div class="card-content">
+                            <span class="event-date">${dateStr}</span>
+                            <h4 class="event-title">${loc(event, 'title')}</h4>
+                            <p class="event-desc">${loc(event, 'description')}</p>
+                            ${metaHtml}
+                        </div>
+                        <div class="card-footer">
+                            <span class="open-btn">${t.openBtn}</span>
+                            ${actionHtml}
+                        </div>`;
+                    container.appendChild(card);
+                });
+
+                document.getElementById('listView').classList.remove('hidden');
+            },
+
+            addToCalendar: function(e, title) {
+                e.stopPropagation();
+                alert(tr('calendarAlert', { title }));
+            },
+
+            showDetail: function(event) {
+                document.getElementById('mainHeader').classList.add('hidden');
+                document.querySelector('.hero-banner').classList.add('hidden');
+                document.getElementById('listView').classList.add('hidden');
+                document.getElementById('detailView').classList.remove('hidden');
+
+                document.getElementById('detailCategory').textContent = event.category || 'ERG';
+                document.getElementById('detailTitle').innerText = loc(event, 'title');
+                document.getElementById('detailDesc').innerText = loc(event, 'description');
+                document.getElementById('detailDate').innerText = detailDateFormatter.format(new Date(event.date));
+                document.getElementById('playerBg').style.backgroundImage = `url('${event.imageUrl}')`;
+
+                document.querySelector('.player-brand-name').innerText = 'Cummins';
+                document.querySelector('.player-sub-name').innerText = event.category || 'ERG Learning';
+                window.scrollTo(0, 0);
+            },
+
+            showList: function() {
+                document.getElementById('detailView').classList.add('hidden');
+                document.getElementById('listView').classList.remove('hidden');
+                document.getElementById('mainHeader').classList.remove('hidden');
+                document.querySelector('.hero-banner').classList.remove('hidden');
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => { app.init(); });
+    </script>
+</body>
+</html>
