@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="widget-name" content="Cummins ERG Learning">
+    <meta name="widget-description" content="Cummins ERG Learning Hub for Women in Cummins and Cummins Racial Equality.">
+    <title>Cummins ERG Learning</title>
+    <style>
+        :root {
+            --primary-red: #CC0000;
+            --primary-red-light: #FFF0F0;
+            --text-dark: #1F1F1F;
+            --text-grey: #666666;
+            --bg-light: #F8F9FA;
+            --white: #FFFFFF;
+            --border-radius: 12px;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+        body {
+            background-color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 375px;
+            height: 812px;
+            background-color: var(--white);
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 44px 20px 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--white);
+            border-bottom: 2px solid var(--primary-red);
+        }
+
+        .brand { display: flex; align-items: center; gap: 8px; }
+
+        .brand-logo {
+            width: 28px; height: 28px;
+            background-color: var(--primary-red);
+            border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 13px; font-weight: 900;
+        }
+
+        .brand-sub { display: flex; flex-direction: column; line-height: 1.1; }
+        .brand-main { font-size: 14px; font-weight: 700; color: var(--primary-red); }
+        .brand-tagline { font-size: 10px; font-weight: 400; color: var(--text-grey); letter-spacing: 0.3px; }
+
+        .user-actions { display: flex; align-items: center; gap: 12px; }
+
+        /* Initials Avatar — no photo */
+        .cw-avatar {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary-red);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 12px; font-weight: 700;
+            cursor: pointer;
+            border: 2px solid var(--primary-red);
+            flex-shrink: 0;
+        }
+
+        /* ERG Banner */
+        .erg-banner {
+            background: linear-gradient(135deg, var(--primary-red) 0%, #8B0000 100%);
+            padding: 10px 20px;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .erg-banner-icon { font-size: 20px; }
+
+        .erg-banner-text { flex: 1; }
+        .erg-banner-title { font-size: 12px; font-weight: 700; color: white; }
+        .erg-banner-sub { font-size: 10px; color: rgba(255,255,255,0.8); }
+
+        .erg-banner-count {
+            background: rgba(255,255,255,0.2);
+            color: white; font-size: 11px; font-weight: 600;
+            padding: 3px 8px; border-radius: 10px;
+        }
+
+        .tabs { display: flex; padding: 0 20px; border-bottom: 1px solid #eee; margin-bottom: 16px; }
+
+        .cw-tab-btn {
+            background: none; border: none;
+            padding: 12px 0; margin-right: 24px;
+            font-size: 14px; font-weight: 500; color: var(--text-grey);
+            cursor: pointer; position: relative;
+        }
+
+        .cw-tab-btn.active { color: var(--text-dark); font-weight: 600; }
+        .cw-tab-btn.active::after {
+            content: ''; position: absolute; bottom: 0; left: 0;
+            width: 100%; height: 2px; background-color: var(--primary-red);
+        }
+
+        .content-area {
+            flex: 1; overflow-y: auto;
+            padding: 0 20px 20px 20px; scrollbar-width: none;
+        }
+        .content-area::-webkit-scrollbar { display: none; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .section-title { font-size: 18px; font-weight: 700; }
+        .cw-filter-btn { font-size: 12px; color: var(--text-grey); display: flex; align-items: center; gap: 4px; cursor: pointer; }
+
+        /* ERG Category Tags */
+        .erg-category {
+            display: inline-block; font-size: 9px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.4px;
+            padding: 2px 6px; border-radius: 4px; margin-bottom: 4px;
+        }
+        .erg-cat-dei { background: #FEE2E2; color: #991B1B; }
+        .erg-cat-inclusion { background: #E0F2FE; color: #075985; }
+        .erg-cat-ally { background: #F0FDF4; color: #166534; }
+        .erg-cat-leadership { background: #FFF7ED; color: #9A3412; }
+        .erg-cat-community { background: #F5F3FF; color: #5B21B6; }
+
+        /* Course Grid */
+        .course-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .course-card { background: var(--white); cursor: pointer; transition: transform 0.2s; }
+        .course-card:hover { transform: translateY(-2px); }
+
+        .card-img-wrap {
+            height: 100px; width: 100%;
+            background-color: #eee; border-radius: 8px;
+            margin-bottom: 8px; position: relative; overflow: hidden;
+        }
+
+        .card-img { width: 100%; height: 100%; object-fit: cover; }
+
+        .cw-status-badge {
+            position: absolute; top: 8px; left: 8px;
+            padding: 4px 8px; border-radius: 4px;
+            font-size: 10px; font-weight: 600; color: white;
+            backdrop-filter: blur(4px);
+        }
+        .status-required { background: rgba(204, 0, 0, 0.85); }
+        .status-inprogress { background: rgba(255, 140, 0, 0.9); }
+
+        .card-title {
+            font-size: 13px; font-weight: 600; margin-bottom: 4px; line-height: 1.3;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        .card-meta { font-size: 11px; color: var(--text-grey); display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
+        .card-due { font-size: 11px; color: var(--text-grey); }
+
+        /* Modal */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3); z-index: 100;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+
+        .modal-content {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 92%;
+            background: var(--white); border-radius: 20px 20px 0 0;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 101; display: flex; flex-direction: column;
+        }
+
+        .modal-active .modal-overlay { opacity: 1; pointer-events: auto; }
+        .modal-active .modal-content { transform: translateY(0); }
+
+        .modal-header {
+            padding: 20px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+        .modal-header h3 { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+        .cw-close-btn { font-size: 24px; cursor: pointer; background: none; border: none; color: var(--text-grey); }
+
+        .modal-scroll { overflow-y: auto; padding: 0 20px 100px 20px; flex: 1; }
+
+        .hero-img { width: 100%; height: 180px; background: #eee; border-radius: 12px; margin-bottom: 20px; object-fit: cover; }
+
+        .detail-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+
+        .detail-erg-group {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: var(--primary-red-light); color: var(--primary-red);
+            font-size: 11px; font-weight: 600; padding: 4px 10px;
+            border-radius: 20px; margin-bottom: 12px;
+        }
+
+        .detail-meta {
+            display: flex; gap: 16px; font-size: 13px; color: var(--text-grey);
+            margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #eee;
+        }
+
+        .detail-desc-title { font-weight: 600; margin-bottom: 8px; }
+        .detail-desc { font-size: 14px; color: var(--text-grey); line-height: 1.5; margin-bottom: 24px; }
+        .detail-desc ul { padding-left: 20px; margin-top: 8px; }
+
+        .cta-container {
+            position: absolute; bottom: 0; width: 100%;
+            padding: 20px; background: var(--white); border-top: 1px solid #eee;
+        }
+
+        .cw-btn {
+            width: 100%; background-color: var(--primary-red); color: white;
+            border: none; padding: 16px; border-radius: 12px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+        }
+
+        /* Notification Panel */
+        .notif-panel {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--white); z-index: 200; display: flex; flex-direction: column;
+            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .notif-panel.open { transform: translateX(0); }
+
+        .notif-header {
+            padding: 44px 20px 14px 20px; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid #eee;
+        }
+        .notif-header h2 { font-size: 18px; font-weight: 700; color: var(--text-dark); }
+        .notif-back-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-grey); padding: 4px; }
+
+        .cw-notif-count-badge {
+            background: var(--primary-red); color: white;
+            font-size: 12px; font-weight: 600; padding: 2px 8px;
+            border-radius: 10px; margin-left: 8px;
+        }
+
+        .notif-list { flex: 1; overflow-y: auto; scrollbar-width: none; }
+        .notif-list::-webkit-scrollbar { display: none; }
+
+        .notif-section-label {
+            font-size: 11px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.5px; color: var(--text-grey); padding: 16px 20px 8px;
+        }
+
+        .notif-item {
+            display: flex; gap: 12px; padding: 14px 20px;
+            border-bottom: 1px solid #f3f3f3; cursor: pointer; transition: background 0.15s;
+        }
+        .notif-item:hover { background: #fafafa; }
+        .notif-item.unread { background: var(--primary-red-light); }
+        .notif-item.unread:hover { background: #ffe0e0; }
+
+        .notif-icon-wrap {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+        .notif-icon-urgent { background: #FEE2E2; }
+        .notif-icon-due { background: #FEF3C7; }
+        .notif-icon-assign { background: #E0E7FF; }
+        .notif-icon-complete { background: #D1FAE5; }
+        .notif-icon-event { background: #F3E8FF; }
+
+        .notif-body { flex: 1; min-width: 0; }
+        .notif-title { font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 2px; line-height: 1.3; }
+        .notif-desc {
+            font-size: 12px; color: var(--text-grey); line-height: 1.4;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .notif-time { font-size: 11px; color: #aaa; margin-top: 4px; }
+        .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary-red); flex-shrink: 0; margin-top: 6px; }
+        .notif-empty { text-align: center; padding: 60px 20px; color: var(--text-grey); }
+        .notif-empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+        .bell-btn {
+            position: relative; cursor: pointer; user-select: none;
+            display: flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; font-size: 18px; line-height: 1;
+        }
+        .cw-bell-badge {
+            position: absolute; top: -2px; right: -2px;
+            width: 8px; height: 8px; background: red; border-radius: 50%;
+        }
+
+        /* Profile Panel */
+        .profile-panel {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-light); z-index: 200;
+            display: flex; flex-direction: column;
+            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .profile-panel.open { transform: translateX(0); }
+
+        .profile-header { padding: 44px 20px 20px 20px; background: var(--white); border-bottom: 1px solid #eee; }
+        .profile-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .profile-header-top h2 { font-size: 18px; font-weight: 700; color: var(--text-dark); }
+        .profile-back-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-grey); padding: 4px; }
+
+        .profile-card { display: flex; gap: 14px; align-items: center; }
+
+        /* Initials avatar in profile — no photo */
+        .profile-avatar {
+            width: 56px; height: 56px; border-radius: 50%;
+            background-color: var(--primary-red);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 18px; font-weight: 700;
+            border: 3px solid var(--primary-red);
+            position: relative; flex-shrink: 0;
+        }
+
+        .cw-profile-level-badge {
+            position: absolute; bottom: -4px; right: -4px;
+            background: var(--primary-red); color: white;
+            font-size: 10px; font-weight: 700;
+            width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--white);
+        }
+
+        .profile-info h3 { font-size: 16px; font-weight: 700; color: var(--text-dark); margin-bottom: 2px; }
+        .profile-info .profile-role { font-size: 12px; color: var(--text-grey); margin-bottom: 6px; }
+
+        .xp-bar-wrap { display: flex; align-items: center; gap: 8px; }
+        .xp-bar { flex: 1; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+        .xp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary-red), #FF4444); border-radius: 3px; transition: width 0.6s ease; }
+        .xp-label { font-size: 11px; color: var(--primary-red); font-weight: 600; white-space: nowrap; }
+
+        .profile-scroll { flex: 1; overflow-y: auto; padding: 16px 20px 20px; scrollbar-width: none; }
+        .profile-scroll::-webkit-scrollbar { display: none; }
+
+        /* ERG Membership Card */
+        .erg-membership-card {
+            background: linear-gradient(135deg, var(--primary-red) 0%, #8B0000 100%);
+            border-radius: 12px; padding: 16px; margin-bottom: 16px; color: white;
+        }
+        .erg-membership-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; margin-bottom: 6px; }
+        .erg-membership-groups { display: flex; flex-wrap: wrap; gap: 6px; }
+        .erg-group-chip { background: rgba(255,255,255,0.2); color: white; font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 20px; }
+
+        /* Stats Row */
+        .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .cw-stat-card { background: var(--white); border-radius: 12px; padding: 14px 10px; text-align: center; }
+        .cw-stat-value { font-size: 22px; font-weight: 700; color: var(--text-dark); }
+        .cw-stat-label { font-size: 11px; color: var(--text-grey); margin-top: 2px; }
+
+        /* Streak */
+        .streak-card { background: var(--white); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+        .streak-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .streak-header h4 { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+        .streak-count { font-size: 13px; font-weight: 600; color: var(--primary-red); }
+        .streak-days { display: flex; justify-content: space-between; }
+        .streak-day { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .streak-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .streak-dot.done { background: var(--primary-red); color: white; }
+        .streak-dot.today { background: var(--primary-red-light); color: var(--primary-red); border: 2px solid var(--primary-red); }
+        .streak-dot.future { background: #f0f0f0; color: #ccc; }
+        .streak-day-label { font-size: 10px; color: var(--text-grey); }
+
+        /* Badges */
+        .badges-section { background: var(--white); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+        .badges-section h4 { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 12px; }
+        .badges-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .cw-badge-item { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; }
+        .cw-badge-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .cw-badge-icon.earned { background: var(--primary-red-light); }
+        .cw-badge-icon.locked { background: #f0f0f0; filter: grayscale(1); opacity: 0.5; }
+        .cw-badge-name { font-size: 10px; color: var(--text-grey); line-height: 1.2; }
+
+        /* Leaderboard */
+        .leaderboard-section { background: var(--white); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+        .leaderboard-section h4 { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 12px; }
+        .lb-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+        .lb-row:last-child { border-bottom: none; }
+        .lb-row.is-you { background: var(--primary-red-light); margin: 0 -16px; padding: 10px 16px; border-radius: 8px; }
+        .lb-rank { width: 24px; font-size: 14px; font-weight: 700; color: var(--text-grey); text-align: center; flex-shrink: 0; }
+        .lb-rank.gold { color: #F59E0B; }
+        .lb-rank.silver { color: #9CA3AF; }
+        .lb-rank.bronze { color: #D97706; }
+
+        /* Initials avatar for leaderboard — no photos */
+        .lb-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700; color: white;
+            flex-shrink: 0;
+        }
+
+        .lb-info { flex: 1; min-width: 0; }
+        .lb-name { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+        .lb-dept { font-size: 11px; color: var(--text-grey); }
+        .lb-xp { font-size: 13px; font-weight: 700; color: var(--primary-red); flex-shrink: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <header>
+            <div class="brand">
+                <div class="brand-logo">C</div>
+                <div class="brand-sub">
+                    <div class="brand-main">Cummins ERG</div>
+                    <div class="brand-tagline">Learning Hub</div>
+                </div>
+            </div>
+            <div class="user-actions">
+                <div class="bell-btn" onclick="toggleNotifications()">
+                    🔔
+                    <div class="cw-bell-badge" id="bell-badge"></div>
+                </div>
+                <div class="cw-avatar" onclick="toggleProfile()">JP</div>
+            </div>
+        </header>
+
+        <div class="erg-banner">
+            <div class="erg-banner-icon">🤝</div>
+            <div class="erg-banner-text">
+                <div class="erg-banner-title">My ERG Groups</div>
+                <div class="erg-banner-sub">Women in Cummins · Cummins Racial Equality</div>
+            </div>
+            <div class="erg-banner-count">2 Active</div>
+        </div>
+
+        <div class="tabs">
+            <button class="cw-tab-btn active" onclick="switchTab('learnings')">My Learnings</button>
+            <button class="cw-tab-btn" onclick="switchTab('recommended')">Recommended</button>
+        </div>
+
+        <div class="content-area" id="main-content"></div>
+
+        <!-- Profile Panel -->
+        <div class="profile-panel" id="profile-panel">
+            <div class="profile-header">
+                <div class="profile-header-top">
+                    <div style="display:flex;align-items:center;gap:4px;">
+                        <button class="profile-back-btn" onclick="toggleProfile()">←</button>
+                        <h2>My Profile</h2>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <div class="profile-avatar">
+                        JP
+                        <div class="cw-profile-level-badge">8</div>
+                    </div>
+                    <div class="profile-info">
+                        <h3>Jordan Patel</h3>
+                        <div class="profile-role">Operations · Columbus, IN</div>
+                        <div class="xp-bar-wrap">
+                            <div class="xp-bar"><div class="xp-bar-fill" style="width:65%"></div></div>
+                            <div class="xp-label">1,950 / 3,000 XP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-scroll" id="profile-scroll"></div>
+        </div>
+
+        <!-- Notification Panel -->
+        <div class="notif-panel" id="notif-panel">
+            <div class="notif-header">
+                <div style="display:flex; align-items:center;">
+                    <button class="notif-back-btn" onclick="toggleNotifications()">←</button>
+                    <h2><span>Notifications</span> <span class="cw-notif-count-badge" id="notif-count"></span></h2>
+                </div>
+                <button class="notif-back-btn" onclick="markAllRead()" style="font-size:14px;">✓ All</button>
+            </div>
+            <div class="notif-list" id="notif-list"></div>
+        </div>
+
+        <!-- Course Detail Modal -->
+        <div class="modal-overlay" id="modal-overlay" onclick="closeModal()"></div>
+        <div class="modal-content" id="modal-content">
+            <div class="modal-header">
+                <h3>Course Details</h3>
+                <button class="cw-close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-scroll" id="modal-body"></div>
+            <div class="cta-container">
+                <button class="cw-btn">Start Learning</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const numFmt = new Intl.NumberFormat();
+
+        // Avatar color palette for leaderboard initials
+        const avatarColors = ['#CC0000','#8B0000','#B22222','#C0392B','#922B21','#7B241C','#D35400','#784212'];
+
+        function getInitials(name) {
+            return name.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
+        }
+
+        function getAvatarColor(name) {
+            let hash = 0;
+            for (let c of name) hash = c.charCodeAt(0) + ((hash << 5) - hash);
+            return avatarColors[Math.abs(hash) % avatarColors.length];
+        }
+
+        // --- PROFILE DATA ---
+        const profileData = {
+            level: 8, xp: 1950, xpNext: 3000,
+            completed: 11, hoursLearned: 22, certificates: 4, streak: 4,
+            streakDays: [
+                { label: 'Mon', done: true },
+                { label: 'Tue', done: true },
+                { label: 'Wed', done: true },
+                { label: 'Thu', done: true },
+                { label: 'Fri', done: false, today: true },
+                { label: 'Sat', done: false },
+                { label: 'Sun', done: false }
+            ],
+            badges: [
+                { emoji: '👩‍💼', name: 'WIC Member', earned: true },
+                { emoji: '✊', name: 'CRE Member', earned: true },
+                { emoji: '🔥', name: '4-Day Streak', earned: true },
+                { emoji: '🌍', name: 'Ally', earned: true },
+                { emoji: '🏆', name: 'Top Contributor', earned: false },
+                { emoji: '🎯', name: 'Completionist', earned: false },
+                { emoji: '💡', name: 'Champion', earned: false },
+                { emoji: '⭐', name: 'ERG Leader', earned: false }
+            ],
+            leaderboard: [
+                { name: 'Aisha Thompson', dept: 'CRE · HR', xp: 3410 },
+                { name: 'Maria Santos', dept: 'Women in Cummins · Engineering', xp: 3080 },
+                { name: 'Jordan Patel', dept: 'CRE · WIC · Operations', xp: 1950, isYou: true },
+                { name: 'Latoya Williams', dept: 'CRE · Marketing', xp: 1830 },
+                { name: 'Priya Nair', dept: 'Women in Cummins · Finance', xp: 1740 },
+                { name: 'Diana Reyes', dept: 'WIC · Product', xp: 1520 },
+                { name: 'Keisha Monroe', dept: 'CRE · Engineering', xp: 1390 }
+            ]
+        };
+
+        function renderProfile() {
+            const d = profileData;
+            const scroll = document.getElementById('profile-scroll');
+
+            let html = `
+                <div class="erg-membership-card">
+                    <div class="erg-membership-title">My ERG Memberships</div>
+                    <div class="erg-membership-groups">
+                        <span class="erg-group-chip">👩‍💼 Women in Cummins</span>
+                        <span class="erg-group-chip">✊ Cummins Racial Equality</span>
+                    </div>
+                </div>
+                <div class="stats-row">
+                    <div class="cw-stat-card"><div class="cw-stat-value">${d.completed}</div><div class="cw-stat-label">Completed</div></div>
+                    <div class="cw-stat-card"><div class="cw-stat-value">${d.hoursLearned}h</div><div class="cw-stat-label">Learned</div></div>
+                    <div class="cw-stat-card"><div class="cw-stat-value">${d.certificates}</div><div class="cw-stat-label">Certificates</div></div>
+                </div>
+            `;
+
+            const streakDaysHtml = d.streakDays.map(day => {
+                const cls = day.done ? 'done' : (day.today ? 'today' : 'future');
+                const icon = day.done ? '✓' : (day.today ? '·' : '');
+                return `<div class="streak-day"><div class="streak-dot ${cls}">${icon}</div><div class="streak-day-label">${day.label}</div></div>`;
+            }).join('');
+
+            html += `
+                <div class="streak-card">
+                    <div class="streak-header">
+                        <h4>🔥 Learning Streak</h4>
+                        <div class="streak-count">${d.streak} days</div>
+                    </div>
+                    <div class="streak-days">${streakDaysHtml}</div>
+                </div>
+            `;
+
+            const badgesHtml = d.badges.map(b => `
+                <div class="cw-badge-item">
+                    <div class="cw-badge-icon ${b.earned ? 'earned' : 'locked'}">${b.emoji}</div>
+                    <div class="cw-badge-name">${b.name}</div>
+                </div>
+            `).join('');
+
+            html += `
+                <div class="badges-section">
+                    <h4>Achievements · ${d.badges.filter(b => b.earned).length}/${d.badges.length}</h4>
+                    <div class="badges-grid">${badgesHtml}</div>
+                </div>
+            `;
+
+            const rankCls = ['gold', 'silver', 'bronze'];
+            const rankIcon = ['🥇', '🥈', '🥉'];
+
+            const lbHtml = d.leaderboard.map((p, i) => {
+                const rank = i < 3
+                    ? `<span class="lb-rank ${rankCls[i]}">${rankIcon[i]}</span>`
+                    : `<span class="lb-rank">${i + 1}</span>`;
+                const initials = getInitials(p.name);
+                const color = p.isYou ? '#CC0000' : getAvatarColor(p.name);
+                return `
+                    <div class="lb-row ${p.isYou ? 'is-you' : ''}">
+                        ${rank}
+                        <div class="lb-avatar" style="background-color:${color}">${initials}</div>
+                        <div class="lb-info">
+                            <div class="lb-name">${p.name}${p.isYou ? ' (You)' : ''}</div>
+                            <div class="lb-dept">${p.dept}</div>
+                        </div>
+                        <div class="lb-xp">${numFmt.format(p.xp)} XP</div>
+                    </div>
+                `;
+            }).join('');
+
+            html += `
+                <div class="leaderboard-section">
+                    <h4>🏅 ERG Leaderboard</h4>
+                    ${lbHtml}
+                </div>
+            `;
+
+            scroll.innerHTML = html;
+        }
+
+        function toggleProfile() {
+            const panel = document.getElementById('profile-panel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) renderProfile();
+        }
+
+        // --- NOTIFICATIONS ---
+        const notifications = [
+            {
+                id: 'n1', type: 'urgent', unread: true, courseId: 1,
+                title: 'Overdue: Gender Equity Foundations',
+                desc: 'This required Women in Cummins training was due 3 days ago. Please complete it to stay on track.',
+                time: '2 hours ago'
+            },
+            {
+                id: 'n2', type: 'due', unread: true, courseId: 2,
+                title: 'Due Soon: Racial Equity in the Workplace',
+                desc: 'Your in-progress CRE course is due in 5 days. You're 55% through — keep going!',
+                time: '5 hours ago'
+            },
+            {
+                id: 'n3', type: 'event', unread: true, courseId: 3,
+                title: 'Reminder: Women in Cummins Monthly Session',
+                desc: 'Live virtual session on May 8. Topic: Breaking Barriers in Engineering & Leadership.',
+                time: 'Yesterday'
+            },
+            {
+                id: 'n4', type: 'assign', unread: true, courseId: 5,
+                title: 'New Assignment: CRE Bystander Intervention',
+                desc: 'Your ERG chapter lead assigned you this training for the Cummins Racial Equality development track.',
+                time: 'Yesterday'
+            },
+            {
+                id: 'n5', type: 'due', unread: false, courseId: 4,
+                title: 'Upcoming: WIC Pay Equity Workshop',
+                desc: 'Pre-read materials for the May 14 Women in Cummins Pay Equity workshop are now available.',
+                time: '2 days ago'
+            },
+            {
+                id: 'n6', type: 'complete', unread: false, courseId: null,
+                title: 'Congrats! Inclusion Foundations completed',
+                desc: 'You've successfully completed Inclusion Foundations. Your certificate is ready to download.',
+                time: '3 days ago'
+            },
+            {
+                id: 'n7', type: 'assign', unread: false, courseId: 7,
+                title: 'Recommended: Cultural Intelligence (CQ)',
+                desc: 'Based on your ERG activity, this course is recommended to deepen your cross-cultural skills.',
+                time: '4 days ago'
+            }
+        ];
+
+        const notifIconMap = {
+            urgent:   { cls: 'notif-icon-urgent',  emoji: '🚨' },
+            due:      { cls: 'notif-icon-due',      emoji: '⏰' },
+            assign:   { cls: 'notif-icon-assign',   emoji: '📋' },
+            complete: { cls: 'notif-icon-complete', emoji: '✅' },
+            event:    { cls: 'notif-icon-event',    emoji: '📅' }
+        };
+
+        function renderNotifications() {
+            const list = document.getElementById('notif-list');
+            const unread = notifications.filter(n => n.unread);
+            const read = notifications.filter(n => !n.unread);
+            document.getElementById('notif-count').textContent = unread.length || '';
+            document.getElementById('bell-badge').style.display = unread.length > 0 ? 'block' : 'none';
+            let html = '';
+            if (unread.length > 0) {
+                html += `<div class="notif-section-label">New</div>`;
+                unread.forEach(n => { html += renderNotifItem(n); });
+            }
+            if (read.length > 0) {
+                html += `<div class="notif-section-label">Earlier</div>`;
+                read.forEach(n => { html += renderNotifItem(n); });
+            }
+            if (!notifications.length) {
+                html = `<div class="notif-empty"><div class="notif-empty-icon">🔔</div><div>No notifications</div></div>`;
+            }
+            list.innerHTML = html;
+        }
+
+        function renderNotifItem(n) {
+            const icon = notifIconMap[n.type] || notifIconMap.assign;
+            return `
+                <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="openNotification('${n.id}')">
+                    <div class="notif-icon-wrap ${icon.cls}">${icon.emoji}</div>
+                    <div class="notif-body">
+                        <div class="notif-title">${n.title}</div>
+                        <div class="notif-desc">${n.desc}</div>
+                        <div class="notif-time">${n.time}</div>
+                    </div>
+                    ${n.unread ? '<div class="notif-dot"></div>' : ''}
+                </div>
+            `;
+        }
+
+        function toggleNotifications() {
+            const panel = document.getElementById('notif-panel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) renderNotifications();
+        }
+
+        function openNotification(nId) {
+            const notif = notifications.find(n => n.id === nId);
+            if (!notif) return;
+            notif.unread = false;
+            renderNotifications();
+            if (notif.courseId) { toggleNotifications(); openDetails(notif.courseId); }
+        }
+
+        function markAllRead() {
+            notifications.forEach(n => { n.unread = false; });
+            renderNotifications();
+        }
+
+        // --- COURSE DATA (Women in Cummins + Cummins Racial Equality) ---
+        const myLearningsData = [
+            {
+                id: 1,
+                title: 'Gender Equity Foundations',
+                image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300',
+                status: 'Required', type: 'Online', duration: '45 min', dueDate: 'Overdue',
+                ergGroup: 'Women in Cummins', ergCategory: 'inclusion',
+                description: 'Explore the principles of gender equity, understand systemic barriers faced by women in engineering and manufacturing, and learn how to advocate for equitable practices at Cummins.',
+                modules: ['Understanding Gender Equity vs. Equality', 'Barriers in STEM & Manufacturing', 'Advocating for Equitable Policies', 'Building an Inclusive Team Culture']
+            },
+            {
+                id: 2,
+                title: 'Racial Equity in the Workplace',
+                image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=300',
+                status: 'In progress', type: 'Online', duration: '1 hr', dueDate: 'Due May 10',
+                ergGroup: 'Cummins Racial Equality', ergCategory: 'dei',
+                description: 'Understand the history and impact of racial inequity in the workplace and build practical skills to recognize, address, and dismantle systemic racism in your teams and workflows.',
+                modules: ['History of Racial Inequity at Work', 'Recognizing Systemic Racism', 'Microaggressions & How to Respond', 'Accountability & Action Steps']
+            },
+            {
+                id: 3,
+                title: 'Women in Cummins Monthly Session',
+                image: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80&w=300',
+                status: null, type: 'Event', duration: '2 hrs', dueDate: 'May 8',
+                ergGroup: 'Women in Cummins', ergCategory: 'community',
+                description: 'Live virtual session hosted by Women in Cummins. Topic: Breaking Barriers — Stories from Women Leaders in Engineering & Manufacturing at Cummins.',
+                modules: ['Welcome & ERG Updates', 'Guest Speaker: Career Stories', 'Breakout Discussions', 'Q&A & Action Planning']
+            },
+            {
+                id: 4,
+                title: 'Pay Equity Workshop',
+                image: 'https://images.unsplash.com/photo-1573164574572-cb89e39749b4?auto=format&fit=crop&q=80&w=300',
+                status: null, type: 'Event', duration: '1.5 hrs', dueDate: 'May 14',
+                ergGroup: 'Women in Cummins', ergCategory: 'leadership',
+                description: 'An interactive workshop examining pay equity data at Cummins, how to read compensation reports, and strategies for employees and managers to close gender pay gaps.',
+                modules: ['Understanding Pay Equity Data', 'Reading Compensation Reports', 'Negotiation Strategies', 'Manager Responsibilities']
+            }
+        ];
+
+        const recommendedData = [
+            {
+                id: 5,
+                title: 'CRE Bystander Intervention',
+                image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=300',
+                status: 'In progress', type: 'Online', duration: '1 hr', dueDate: 'Due in 5 days',
+                ergGroup: 'Cummins Racial Equality', ergCategory: 'ally',
+                description: 'Learn evidence-based bystander intervention techniques to safely and effectively respond to discrimination and racial bias incidents in the workplace.',
+                modules: ['What is Bystander Intervention?', 'The 5 Ds Framework', 'Practicing Safe Intervention', 'After the Moment: Follow-Up']
+            },
+            {
+                id: 6,
+                title: 'Inclusive Hiring for Diverse Teams',
+                image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&q=80&w=300',
+                status: null, type: 'Online', duration: '45 min', dueDate: 'Optional',
+                ergGroup: 'Women in Cummins · CRE', ergCategory: 'dei',
+                description: 'Reduce hiring bias and build more diverse, equitable, and inclusive teams at Cummins through structured interviewing and inclusive job description practices.',
+                modules: ['Inclusive Job Descriptions', 'Structured Interview Design', 'Blind Resume Review', 'Equitable Offer Decisions']
+            },
+            {
+                id: 7,
+                title: 'Cultural Intelligence (CQ)',
+                image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=300',
+                status: 'New', type: 'Online', duration: '1.5 hrs', dueDate: 'Optional',
+                ergGroup: 'Cummins Racial Equality', ergCategory: 'inclusion',
+                description: 'Build your Cultural Intelligence (CQ) to collaborate more effectively across global teams and diverse communities inside and outside Cummins.',
+                modules: ['CQ Foundations', 'Cultural Dimensions', 'Adapting Communication', 'Global Team Collaboration']
+            }
+        ];
+
+        const ergCategoryMap = {
+            dei:        { label: 'DEI',       cls: 'erg-cat-dei' },
+            inclusion:  { label: 'Inclusion', cls: 'erg-cat-inclusion' },
+            ally:       { label: 'Allyship',  cls: 'erg-cat-ally' },
+            leadership: { label: 'Leadership',cls: 'erg-cat-leadership' },
+            community:  { label: 'Community', cls: 'erg-cat-community' }
+        };
+
+        // --- RENDER ---
+        function renderGrid(data, title) {
+            const typeMap = { 'Online': '🖥️ Online', 'Event': '📅 Event' };
+            let html = `
+                <div class="section-header">
+                    <div class="section-title">${title}</div>
+                    <div class="cw-filter-btn">Filter ▾</div>
+                </div>
+                <div class="course-grid">
+            `;
+            data.forEach(course => {
+                let badgeHtml = '';
+                if (course.status) {
+                    const bc = course.status === 'Required' ? 'status-required' : 'status-inprogress';
+                    badgeHtml = `<span class="cw-status-badge ${bc}">${course.status}</span>`;
+                }
+                const cat = ergCategoryMap[course.ergCategory] || {};
+                html += `
+                    <div class="course-card" onclick="openDetails(${course.id})">
+                        <div class="card-img-wrap">
+                            <img src="${course.image}" class="card-img" alt="${course.title}">
+                            ${badgeHtml}
+                        </div>
+                        ${cat.label ? `<span class="erg-category ${cat.cls}">${cat.label}</span>` : ''}
+                        <div class="card-title">${course.title}</div>
+                        <div class="card-meta"><span>${typeMap[course.type] || course.type}</span> • <span>${course.duration}</span></div>
+                        <div class="card-due">${course.dueDate}</div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            return html;
+        }
+
+        function switchTab(tabName) {
+            const buttons = document.querySelectorAll('.cw-tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            const container = document.getElementById('main-content');
+            if (tabName === 'learnings') {
+                buttons[0].classList.add('active');
+                container.innerHTML = renderGrid(myLearningsData, 'My ERG Learnings');
+            } else {
+                buttons[1].classList.add('active');
+                container.innerHTML = renderGrid(recommendedData, 'Recommended for You');
+            }
+        }
+
+        function openDetails(id) {
+            const course = [...myLearningsData, ...recommendedData].find(c => c.id === id);
+            if (!course) return;
+            const typeMap = { 'Online': '🖥️ Online', 'Event': '📅 Event' };
+            const modulesHtml = course.modules.map(m => `<li style="margin-bottom:8px;color:#555;">${m}</li>`).join('');
+            document.getElementById('modal-body').innerHTML = `
+                <img src="${course.image.replace('w=300','w=600')}" class="hero-img">
+                <h2 class="detail-title">${course.title}</h2>
+                <div class="detail-erg-group">🤝 ${course.ergGroup}</div>
+                <div class="detail-meta">
+                    <span>${typeMap[course.type] || course.type}</span>
+                    <span>⏱ ${course.duration}</span>
+                    <span>📅 ${course.dueDate}</span>
+                </div>
+                <div class="detail-desc-title">About this Course</div>
+                <div class="detail-desc">
+                    ${course.description}
+                    <ul style="margin-top:10px;">${modulesHtml}</ul>
+                </div>
+            `;
+            document.body.classList.add('modal-active');
+        }
+
+        function closeModal() {
+            document.body.classList.remove('modal-active');
+        }
+
+        // Init
+        switchTab('learnings');
+        renderNotifications();
+    </script>
+</body>
+</html>
