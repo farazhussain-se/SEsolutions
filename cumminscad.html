@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engineering Dashboard - CAD/Line</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --border: #e9ecef;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --accent-blue: #007bff;
+            --accent-green: #28a745;
+            --accent-orange: #fd7e14;
+            --accent-red: #dc3545;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.4;
+            max-width: 320px; /* Narrow sidebar */
+            margin: 0 auto;
+        }
+
+        .dashboard {
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, #0056b3 100%);
+            color: white;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .header h2 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .section {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin: 0 0 12px 0;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-left: auto;
+        }
+
+        .status-up { background: rgba(40, 167, 69, 0.1); color: var(--accent-green); }
+        .status-down { background: rgba(220, 53, 69, 0.1); color: var(--accent-red); }
+        .status-update { background: rgba(253, 126, 20, 0.1); color: var(--accent-orange); }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 12px 8px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+        }
+
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0 0 2px 0;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .update-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .update-item:last-child {
+            border-bottom: none;
+        }
+
+        .update-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .update-cad { background: var(--accent-blue); color: white; }
+        .update-line { background: var(--accent-green); color: white; }
+
+        .update-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .update-title {
+            font-weight: 500;
+            margin: 0 0 2px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .update-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .refresh-btn {
+            background: none;
+            border: none;
+            color: var(--accent-blue);
+            font-size: 12px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: auto;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(0, 123, 255, 0.1);
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-orange));
+            transition: width 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard" role="main">
+        <header class="header" aria-label="Engineering Dashboard Header">
+            <h2>Engineering Dashboard</h2>
+            <p>VP Industrial Engineering · Live Updates</p>
+        </header>
+
+        <section class="section" aria-label="Line Status">
+            <div class="section-title">
+                Production Line Status
+                <span class="status-badge status-up pulse">All Lines UP</span>
+            </div>
+            <div class="metric-grid">
+                <div class="metric">
+                    <div class="metric-value" data-kpi="oee">94.2%</div>
+                    <p class="metric-label">OEE</p>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" data-kpi="output">1,247</div>
+                    <p class="metric-label">Units Today</p>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" data-kpi="downtime">00:14</div>
+                    <p class="metric-label">Downtime</p>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" data-kpi="target">92%</div>
+                    <p class="metric-label">Target</p>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 94.2%"></div>
+            </div>
+        </section>
+
+        <section class="section" aria-label="Recent Updates">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 class="section-title">Recent Updates</h3>
+                <button class="refresh-btn" onclick="refreshData()" aria-label="Refresh updates">
+                    ↻ Refresh
+                </button>
+            </div>
+            <div id="updates-list">
+                <div class="update-item">
+                    <div class="update-icon update-cad">CAD</div>
+                    <div class="update-details">
+                        <div class="update-title">Fixture Rev B approved</div>
+                        <p class="update-time">2 min ago</p>
+                    </div>
+                </div>
+                <div class="update-item">
+                    <div class="update-icon update-line">📊</div>
+                    <div class="update-details">
+                        <div class="update-title">Line 3: Minor jam cleared</div>
+                        <p class="update-time">5 min ago</p>
+                    </div>
+                </div>
+                <div class="update-item">
+                    <div class="update-icon update-cad">CAD</div>
+                    <div class="update-details">
+                        <div class="update-title">Tooling model uploaded</div>
+                        <p class="update-time">12 min ago</p>
+                    </div>
+                </div>
+                <div class="update-item">
+                    <div class="update-icon update-line">⚠️</div>
+                    <div class="update-details">
+                        <div class="update-title">Line 1 quality alert</div>
+                        <p class="update-time">18 min ago</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Mock data for demo - replace with real API fetch
+        const mockData = {
+            oee: 94.2,
+            output: 1247,
+            downtime: '00:14',
+            target: 92,
+            updates: [
+                { type: 'CAD', title: 'Fixture Rev B approved', time: '2 min ago' },
+                { type: 'Line', title: 'Line 3: Minor jam cleared', time: '5 min ago' },
+                { type: 'CAD', title: 'Tooling model uploaded', time: '12 min ago' },
+                { type: 'Alert', title: 'Line 1 quality alert', time: '18 min ago' }
+            ]
+        };
+
+        function updateMetrics() {
+            document.querySelector('[data-kpi="oee"]').textContent = mockData.oee + '%';
+            document.querySelector('[data-kpi="output"]').textContent = mockData.output.toLocaleString();
+            document.querySelector('[data-kpi="downtime"]').textContent = mockData.downtime;
+            document.querySelector('[data-kpi="target"]').textContent = mockData.target + '%';
+            document.querySelector('.progress-fill').style.width = mockData.oee + '%';
+        }
+
+        function renderUpdates(updates) {
+            const container = document.getElementById('updates-list');
+            container.innerHTML = updates.map(update => `
+                <div class="update-item">
+                    <div class="update-icon update-${update.type.toLowerCase()}">${update.type === 'CAD' ? 'CAD' : update.type === 'Line' ? '📊' : '⚠️'}</div>
+                    <div class="update-details">
+                        <div class="update-title">${update.title}</div>
+                        <p class="update-time">${update.time}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function refreshData() {
+            // Simulate API refresh
+            mockData.oee = Math.min(100, (mockData.oee + (Math.random() - 0.5) * 2)).toFixed(1);
+            mockData.output += Math.floor(Math.random() * 10);
+            updateMetrics();
+
+            // Rotate updates
+            const times = ['1 min ago', '3 min ago', '8 min ago', '15 min ago'];
+            mockData.updates.forEach(u => u.time = times[Math.floor(Math.random() * times.length)]);
+
+            renderUpdates(mockData.updates);
+        }
+
+        // Initial render
+        updateMetrics();
+        renderUpdates(mockData.updates);
+
+        // Auto-refresh every 30s
+        setInterval(refreshData, 30000);
+    </script>
+</body>
+</html>
