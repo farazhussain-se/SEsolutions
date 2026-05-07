@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Field Crew Badge – Marcus Rivera</title>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { overflow: hidden; height: auto; background: transparent; }
+        body {
+            padding: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        @keyframes pulse-ring {
+            0%   { box-shadow: 0 0 0 0 rgba(232,115,42,0.65); }
+            70%  { box-shadow: 0 0 0 8px rgba(232,115,42,0); }
+            100% { box-shadow: 0 0 0 0 rgba(232,115,42,0); }
+        }
+        .pulse { border-radius: 50%; animation: pulse-ring 2s infinite; }
+
+        .voltage-stripe {
+            background: repeating-linear-gradient(
+                45deg,
+                #1b2d5b,
+                #1b2d5b 6px,
+                #243a78 6px,
+                #243a78 12px
+            );
+        }
+
+        button { cursor: pointer; background: none; border: none; font: inherit; }
+    </style>
+</head>
+<body>
+    <div id="root">Loading badge…</div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const EMPLOYEE = {
+            id:               "HEN-PD-38291",
+            firstName:        "Marcus",
+            lastName:         "Rivera",
+            title:            "Journeyman Lineman",
+            classification:   "IBEW Journeyman · Class A",
+            department:       "Power Delivery Crew 7",
+            division:         "Henkels Division – Power Delivery",
+            project:          "Greenfield 345kV Substation · Denton, TX",
+            shift:            "06:00 – 16:30",
+            reportTime:       "05:30 AM (Yard)",
+            expires:          "2027-03-31",
+            ppeStatus:        "Compliant",
+            incidentFreeDays: 312,
+            safetyHours:      4280,
+            arcFlash:         "PPE Cat 2  (8 cal/cm²)",
+            hardHat:          "Red – Journeyman",
+            certifications: [
+                { label: "OSHA 30 – Construction",   status: "active"   },
+                { label: "NFPA 70E – Arc Flash",      status: "active"   },
+                { label: "CPR / First Aid / AED",     status: "active"   },
+                { label: "CDL Class A",               status: "active"   },
+                { label: "Aerial Lift / MEWP",        status: "active"   },
+                { label: "Rigging & Signaling",       status: "expiring" },
+            ],
+            clearances: [
+                { label: "Distribution  (≤ 35 kV)",        granted: true  },
+                { label: "Sub-Transmission  (≤ 115 kV)",   granted: true  },
+                { label: "Transmission  (≤ 345 kV)",       granted: true  },
+                { label: "Extra-High Voltage  (≥ 500 kV)", granted: false },
+                { label: "Substation Yard Entry",          granted: true  },
+                { label: "Energized Line Work",            granted: true  },
+            ]
+        };
+
+        const C = {
+            bg:      '#ffffff',
+            surface: '#f8fafc',
+            border:  '#e2e8f0',
+            divider: '#f1f5f9',
+            text:    '#0f172a',
+            muted:   '#334155',
+            faint:   '#64748b',
+            dark:    '#1b2d5b',
+            accent:  '#e8732a',
+            success: { bg: '#f0fdf4', border: '#86efac', text: '#166534' },
+            warning: { bg: '#fffbeb', border: '#fde68a', text: '#92400e' },
+            error:   { bg: '#fef2f2', border: '#fecaca', text: '#991b1b' },
+            orange:  { bg: '#fff7ed', border: '#fed7aa', text: '#9a3412' },
+        };
+
+        const FieldBadge = () => {
+            const qrRef              = useRef(null);
+            const [time, setTime]    = useState('');
+            const [qrDone, setQrDone]= useState(false);
+            const [tab, setTab]      = useState('clearances');
+
+            useEffect(() => {
+                const tick = () =>
+                    setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+                tick();
+                const t = setInterval(tick, 1000);
+                return () => clearInterval(t);
+            }, []);
+
+            useEffect(() => {
+                if (qrRef.current && !qrDone) {
+                    qrRef.current.innerHTML = '';
+                    new QRCode(qrRef.current, {
+                        text: `FIELD-CREW|ID:${EMPLOYEE.id}|EMP:${EMPLOYEE.firstName}+${EMPLOYEE.lastName}|DIV:POWER-DELIVERY|LEVEL:JL`,
+                        width: 114, height: 114,
+                        colorDark: '#1b2d5b', colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                    setQrDone(true);
+                }
+            }, []);
+
+            return (
+                <div style={{ maxWidth: 340, margin: '0 auto' }}>
+                    <div style={{
+                        background: C.bg, borderRadius: 14,
+                        overflow: 'hidden', border: `1px solid ${C.border}`,
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.10)'
+                    }}>
+
+                        {/* ── Header bar ── */}
+                        <div style={{
+                            background: C.dark, padding: '7px 13px',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                        }}>
+                            <span style={{ color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span className="pulse" style={{ width: 8, height: 8, background: '#e8732a', display: 'inline-block', flexShrink: 0 }} />
+                                FIELD CREW ACTIVE
+                            </span>
+                            <span style={{ color: '#93a8c9', fontSize: 10, fontFamily: 'monospace' }}>{time}</span>
+                        </div>
+
+                        {/* ── Voltage stripe ── */}
+                        <div className="voltage-stripe" style={{ padding: '5px 13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ color: '#fff', fontSize: 10, fontWeight: 800, letterSpacing: '0.07em' }}>
+                                ⚡ POWER DELIVERY – JOURNEYMAN LINEMAN
+                            </span>
+                            <span style={{
+                                background: C.accent, color: '#fff',
+                                fontSize: 8, fontWeight: 900,
+                                padding: '2px 7px', borderRadius: 3,
+                                letterSpacing: '0.05em'
+                            }}>HEN</span>
+                        </div>
+
+                        {/* ── Profile row ── */}
+                        <div style={{
+                            padding: '13px 13px 11px',
+                            borderBottom: `1px solid ${C.divider}`,
+                            display: 'flex', gap: 11, alignItems: 'flex-start'
+                        }}>
+                            {/* QR code */}
+                            <div style={{ flexShrink: 0 }}>
+                                <div style={{ padding: 4, border: `2px solid ${C.border}`, borderRadius: 8, background: '#fff' }}>
+                                    <div ref={qrRef} />
+                                </div>
+                                <p style={{ textAlign: 'center', fontSize: 8, color: C.faint, fontFamily: 'monospace', marginTop: 3 }}>
+                                    {EMPLOYEE.id}
+                                </p>
+                            </div>
+
+                            {/* Info */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 7 }}>
+                                    <div style={{
+                                        background: C.dark, color: '#fff',
+                                        fontWeight: 800, fontSize: 9,
+                                        padding: '2px 6px', borderRadius: 3, letterSpacing: '0.05em'
+                                    }}>HENKELS DIV.</div>
+                                    <div style={{
+                                        background: C.accent, color: '#fff',
+                                        fontWeight: 800, fontSize: 9,
+                                        padding: '2px 6px', borderRadius: 3, letterSpacing: '0.05em'
+                                    }}>POWER DELIVERY</div>
+                                </div>
+
+                                <p style={{ fontSize: 18, fontWeight: 800, color: C.text, lineHeight: 1.1, marginBottom: 3 }}>
+                                    {EMPLOYEE.firstName}<br />{EMPLOYEE.lastName}
+                                </p>
+                                <p style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>
+                                    {EMPLOYEE.title}
+                                </p>
+                                <p style={{ fontSize: 9, color: C.muted, marginBottom: 1 }}>{EMPLOYEE.classification}</p>
+                                <p style={{ fontSize: 9, color: C.faint, marginBottom: 7 }}>{EMPLOYEE.department}</p>
+
+                                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                    <span style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: 3,
+                                        background: C.success.bg, borderRadius: 99, padding: '2px 7px',
+                                        border: `1px solid ${C.success.border}`
+                                    }}>
+                                        <span style={{ fontSize: 8, fontWeight: 700, color: C.success.text }}>✓ PPE {EMPLOYEE.ppeStatus}</span>
+                                    </span>
+                                    <span style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: 3,
+                                        background: C.orange.bg, borderRadius: 99, padding: '2px 7px',
+                                        border: `1px solid ${C.orange.border}`
+                                    }}>
+                                        <span style={{ fontSize: 8, fontWeight: 700, color: C.orange.text }}>🪖 {EMPLOYEE.hardHat}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Stats row ── */}
+                        <div style={{
+                            background: C.surface, padding: '8px 13px',
+                            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+                            gap: 5, borderBottom: `1px solid ${C.divider}`
+                        }}>
+                            <MetaBlock icon="⏰" label="Shift" value={EMPLOYEE.shift} />
+                            <MetaBlock icon="🛡" label="Incident Free" value={`${EMPLOYEE.incidentFreeDays} days`} />
+                            <MetaBlock icon="⚡" label="Arc Flash" value={EMPLOYEE.arcFlash} />
+                        </div>
+
+                        {/* ── Project row ── */}
+                        <div style={{
+                            background: '#fff7ed', padding: '6px 13px',
+                            borderBottom: `1px solid ${C.divider}`,
+                            display: 'flex', alignItems: 'center', gap: 6
+                        }}>
+                            <span style={{ fontSize: 11 }}>📍</span>
+                            <div>
+                                <span style={{ fontSize: 8, fontWeight: 800, color: '#c2410c', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Current Project  </span>
+                                <span style={{ fontSize: 10, fontWeight: 600, color: '#431407' }}>{EMPLOYEE.project}</span>
+                            </div>
+                        </div>
+
+                        {/* ── Tabs ── */}
+                        <div style={{ display: 'flex', borderBottom: `1px solid ${C.divider}` }}>
+                            <TabBtn label="Clearances"     active={tab === 'clearances'} accent={C.accent} onClick={() => setTab('clearances')} />
+                            <TabBtn label="Certifications" active={tab === 'certs'}      accent={C.accent} onClick={() => setTab('certs')} />
+                        </div>
+
+                        {/* ── Tab content ── */}
+                        <div style={{ padding: '10px 13px 13px' }}>
+                            {tab === 'clearances' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                                    {EMPLOYEE.clearances.map((z, i) => (
+                                        <ClearanceRow key={i} label={z.label} granted={z.granted} />
+                                    ))}
+                                </div>
+                            )}
+                            {tab === 'certs' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                                    {EMPLOYEE.certifications.map((c, i) => (
+                                        <CertRow key={i} label={c.label} status={c.status} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ── Footer ── */}
+                        <div style={{
+                            background: C.dark, padding: '6px 13px',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                        }}>
+                            <span style={{ color: '#93a8c9', fontSize: 9 }}>Expires: {EMPLOYEE.expires}</span>
+                            <span style={{ color: '#93a8c9', fontSize: 9 }}>🛡 {EMPLOYEE.safetyHours.toLocaleString()} Safety Hrs</span>
+                        </div>
+                    </div>
+
+                    <p style={{ textAlign: 'center', fontSize: 10, color: '#9ca3af', marginTop: 7 }}>
+                        Authorized Personnel Only · Do not share this badge
+                    </p>
+                </div>
+            );
+        };
+
+        /* ── Sub-components ── */
+
+        const MetaBlock = ({ icon, label, value }) => (
+            <div>
+                <p style={{ fontSize: 8, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', marginBottom: 1 }}>{icon} {label}</p>
+                <p style={{ fontSize: 9, fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{value}</p>
+            </div>
+        );
+
+        const TabBtn = ({ label, active, accent, onClick }) => (
+            <button onClick={onClick} style={{
+                flex: 1, padding: '7px 4px', fontSize: 11, fontWeight: 700,
+                color: active ? accent : '#64748b',
+                borderBottom: active ? `2px solid ${accent}` : '2px solid transparent',
+                transition: 'all 0.15s'
+            }}>
+                {label}
+            </button>
+        );
+
+        const ClearanceRow = ({ label, granted }) => (
+            <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '7px 10px', borderRadius: 7,
+                background: granted ? '#f0fdf4' : '#fef2f2',
+                border: `1px solid ${granted ? '#86efac' : '#fecaca'}`
+            }}>
+                <span style={{ fontSize: 13 }}>{granted ? '✅' : '🚫'}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: granted ? '#166534' : '#991b1b', lineHeight: 1.2 }}>{label}</span>
+            </div>
+        );
+
+        const CertRow = ({ label, status }) => {
+            const s = {
+                active:   { bg: '#f0fdf4', border: '#86efac', text: '#166534', badge: 'Active'   },
+                expiring: { bg: '#fffbeb', border: '#fde68a', text: '#92400e', badge: 'Expiring' },
+                expired:  { bg: '#fef2f2', border: '#fecaca', text: '#991b1b', badge: 'Expired'  }
+            }[status] || { bg: '#f0fdf4', border: '#86efac', text: '#166534', badge: 'Active' };
+
+            return (
+                <div style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '7px 10px', borderRadius: 7,
+                    background: s.bg, border: `1px solid ${s.border}`
+                }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: '#0f172a' }}>🏅 {label}</span>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: s.text, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.badge}</span>
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<FieldBadge />);
+    </script>
+</body>
+</html>
