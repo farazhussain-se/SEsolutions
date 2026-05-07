@@ -15,7 +15,7 @@ html, body {
 
 /* ── Widget fills its container ── */
 .widget {
-  container-type: size;
+  container-type: inline-size;
   container-name: w;
   width: 100%; height: 100%;
   min-height: 0;
@@ -87,39 +87,38 @@ html, body {
 }
 
 /* ══════════════════════════════════
-   HEIGHT-BASED COLLAPSE
-   container-type: size enables max-height queries
+   HEIGHT TIERS — driven by JS data-h attribute
+   (more reliable than @container height queries
+   in iframe / Staffbase embed contexts)
 ══════════════════════════════════ */
 
-/* < 500px: hide safety tip, mild compression */
-@container w (max-height: 499px) {
-  .section-safety { display: none; }
-  .section        { padding: clamp(5px, 1.5cqi, 9px) clamp(8px, 2.5cqi, 16px); }
-  .section-title  { margin-bottom: 5px; }
-  .shift-row      { padding: 6px 10px; gap: 2px; }
-  .alert-item     { padding: 6px 10px; }
-}
+/* md: < 540px — hide safety tip, mild compression */
+.widget[data-h="md"] .section-safety,
+.widget[data-h="sm"] .section-safety,
+.widget[data-h="xs"] .section-safety { display: none; }
 
-/* < 380px: strip alert detail, compress padding hard */
-@container w (max-height: 379px) {
-  .alert-desc     { display: none; }
-  .alert-time     { display: none; }
-  .section        { padding: 5px clamp(8px, 2.5cqi, 14px); }
-  .section-title  { margin-bottom: 4px; font-size: 9px; }
-  .widget-header  { padding: 7px clamp(8px, 2.5cqi, 14px); }
-  .shift-row      { padding: 5px 9px; gap: 1px; }
-  .widget-footer  { padding: 4px clamp(8px, 2.5cqi, 14px); }
-}
+.widget[data-h="md"] .section       { padding: 6px clamp(8px, 2.5cqi, 16px); }
+.widget[data-h="md"] .section-title { margin-bottom: 5px; }
+.widget[data-h="md"] .shift-row     { padding: 6px 10px; gap: 2px; }
+.widget[data-h="md"] .alert-item    { padding: 6px 10px; }
 
-/* < 320px: hide alerts entirely, ultra-compact shifts */
-@container w (max-height: 319px) {
-  .section-alerts { display: none; }
-  .section        { padding: 4px clamp(8px, 2.5cqi, 12px); }
-  .widget-header  { padding: 6px clamp(8px, 2.5cqi, 12px); }
-  .shift-row      { padding: 4px 8px; gap: 1px; }
-  .shift-super    { display: none; }
-  .widget-footer  { padding: 3px clamp(8px, 2.5cqi, 12px); }
-}
+/* sm: < 400px — strip alert detail, compress harder */
+.widget[data-h="sm"] .alert-desc    { display: none; }
+.widget[data-h="sm"] .alert-time    { display: none; }
+.widget[data-h="sm"] .section       { padding: 5px clamp(8px, 2.5cqi, 14px); }
+.widget[data-h="sm"] .section-title { margin-bottom: 4px; font-size: 9px; }
+.widget[data-h="sm"] .widget-header { padding: 7px clamp(8px, 2.5cqi, 14px); }
+.widget[data-h="sm"] .shift-row     { padding: 5px 9px; gap: 1px; }
+.widget[data-h="sm"] .widget-footer { padding: 4px clamp(8px, 2.5cqi, 14px); }
+.widget[data-h="sm"] .alert-item    { padding: 5px 9px; }
+
+/* xs: ≤ 320px — hide alerts, ultra-compact shifts */
+.widget[data-h="xs"] .section-alerts { display: none; }
+.widget[data-h="xs"] .section        { padding: 4px clamp(8px, 2.5cqi, 12px); }
+.widget[data-h="xs"] .widget-header  { padding: 6px clamp(8px, 2.5cqi, 12px); }
+.widget[data-h="xs"] .shift-row      { padding: 4px 8px; gap: 1px; }
+.widget[data-h="xs"] .shift-super    { display: none; }
+.widget[data-h="xs"] .widget-footer  { padding: 3px clamp(8px, 2.5cqi, 12px); }
 
 /* ══════════════════════════════════
    SECTIONS
@@ -380,6 +379,34 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 1000);
+
+/* ── Height tier detection ─────────────────────────
+   Uses window.innerHeight (iframe viewport height) as
+   the primary signal, with ResizeObserver on the widget
+   element as a fallback for non-iframe contexts.
+──────────────────────────────────────────────────── */
+var widget = document.querySelector('.widget');
+
+function applyHeightTier(h) {
+  widget.dataset.h = h <= 320 ? 'xs' : h <= 400 ? 'sm' : h <= 540 ? 'md' : 'lg';
+}
+
+function measureHeight() {
+  // window.innerHeight = iframe viewport in embedded contexts
+  var h = window.innerHeight || document.documentElement.clientHeight || 9999;
+  applyHeightTier(h);
+}
+
+measureHeight();
+window.addEventListener('resize', measureHeight);
+
+// ResizeObserver watches the widget's own rendered height
+// (catches cases where the embed resizes without a window resize event)
+if (window.ResizeObserver) {
+  new ResizeObserver(function(entries) {
+    applyHeightTier(entries[0].contentRect.height);
+  }).observe(widget);
+}
 </script>
 </body>
 </html>
