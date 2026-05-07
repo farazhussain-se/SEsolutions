@@ -5,128 +5,193 @@
 <title>Job Site Weather – Denton TX</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body {
+
+html, body {
+  width: 100%; height: 100%;
   font-family: 'Segoe UI', Arial, sans-serif;
   background: transparent;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
 }
+
+/* ── Widget fills its container ── */
 .widget {
-  width: 650px;
+  container-type: inline-size;
+  container-name: w;
+  width: 100%; height: 100%;
+  min-height: 300px;
   background: #ffffff;
-  border-radius: 0 0 0 14px;
-  border-top: none;
-  border-right: none;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid #d0d7de;
-  box-shadow: -6px 6px 28px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
 }
 
-/* HEADER */
+/* ══════════════════════════════════
+   HEADER
+══════════════════════════════════ */
 .header {
+  flex-shrink: 0;
   background: linear-gradient(135deg, #1b2d5b, #111d3a);
-  padding: 12px 20px;
+  padding: clamp(7px, 2cqi, 12px) clamp(10px, 3cqi, 20px);
   border-bottom: 2px solid #e8732a;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
-.header-left { display: flex; align-items: center; gap: 12px; }
-.mastec-mark {
+.header-left  { display: flex; align-items: center; gap: clamp(6px, 1.5cqi, 12px); min-width: 0; }
+.mastec-mark  {
+  flex-shrink: 0;
   background: #e8732a; color: #fff;
-  font-weight: 900; font-size: 12px;
-  padding: 3px 9px; border-radius: 4px;
-  letter-spacing: 1px; flex-shrink: 0;
+  font-weight: 900; font-size: clamp(9px, 2cqi, 12px);
+  padding: 3px clamp(5px, 1.5cqi, 9px); border-radius: 3px; letter-spacing: .8px;
 }
-.location     { font-size: 16px; font-weight: 700; color: #93b8e8; }
-.location-sub { font-size: 11px; color: #6b7fa0; margin-top: 3px; }
-.updated      { font-size: 12px; color: #8b949e; text-align: right; }
-.updated-label{ font-size: 11px; color: #6e7681; }
+.location     { font-size: clamp(12px, 2.8cqi, 16px); font-weight: 700; color: #93b8e8; white-space: nowrap; }
+.location-sub { font-size: clamp(8px, 1.6cqi, 11px); color: #6b7fa0; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.header-right { flex-shrink: 0; text-align: right; }
+.updated-label{ font-size: clamp(8px, 1.6cqi, 11px); color: #6e7681; }
+.updated      { font-size: clamp(9px, 1.8cqi, 12px); color: #8b949e; }
 
-/* CURRENT + STATS */
+@container w (max-width: 299px) {
+  .location-sub { display: none; }
+  .header-right { display: none; }
+}
+
+/* ══════════════════════════════════
+   CURRENT ROW  (temp + stats)
+   — side by side ≥ 450px, stacked below
+══════════════════════════════════ */
 .current-row {
+  flex-shrink: 0;
   display: flex;
   align-items: stretch;
   border-bottom: 1px solid #e8ecf0;
 }
+
+/* temp + condition block */
 .current {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px 24px;
+  gap: clamp(8px, 2.5cqi, 16px);
+  padding: clamp(12px, 3cqi, 20px) clamp(12px, 4cqi, 24px);
   flex: 1;
   border-right: 1px solid #e8ecf0;
 }
-.temp-block { display: flex; align-items: flex-start; gap: 4px; }
-.temp-main  { font-size: 80px; font-weight: 800; color: #1a2332; line-height: 1; }
-.temp-unit  { font-size: 28px; color: #57606a; margin-top: 10px; font-weight: 600; }
-.condition-icon { font-size: 52px; line-height: 1; }
-.condition-text { font-size: 16px; color: #1a2332; margin-top: 6px; font-weight: 700; }
-.feels-like { font-size: 13px; color: #57606a; margin-top: 3px; }
+.temp-block    { display: flex; align-items: flex-start; gap: 3px; }
+.temp-main     { font-size: clamp(36px, 13cqi, 80px); font-weight: 800; color: #1a2332; line-height: 1; }
+.temp-unit     { font-size: clamp(14px, 4.5cqi, 28px); color: #57606a; margin-top: clamp(4px, 1cqi, 10px); font-weight: 600; }
+.condition-icon{ font-size: clamp(28px, 9cqi, 52px); line-height: 1; }
+.condition-text{ font-size: clamp(11px, 2.5cqi, 16px); color: #1a2332; margin-top: 5px; font-weight: 700; }
+.feels-like    { font-size: clamp(9px, 2cqi, 13px); color: #57606a; margin-top: 3px; }
 
+/* stats sidebar */
 .stats {
   display: flex; flex-direction: column;
-  justify-content: center; gap: 10px;
-  padding: 20px 24px;
-  background: #f6f8fa; min-width: 180px;
+  justify-content: center; gap: clamp(6px, 1.5cqi, 10px);
+  padding: clamp(10px, 2.5cqi, 20px) clamp(10px, 3cqi, 24px);
+  background: #f6f8fa;
+  min-width: clamp(120px, 30cqi, 180px);
 }
-.stats-row { display: flex; justify-content: space-between; gap: 20px; }
-.stat { text-align: center; }
-.stat-val   { font-size: 16px; font-weight: 700; color: #1a2332; }
-.stat-label { font-size: 10px; color: #57606a; text-transform: uppercase; letter-spacing: .8px; margin-top: 2px; }
+.stats-row { display: flex; justify-content: space-between; gap: clamp(10px, 3cqi, 20px); }
+.stat      { text-align: center; }
+.stat-val  { font-size: clamp(12px, 3cqi, 16px); font-weight: 700; color: #1a2332; }
+.stat-label{ font-size: clamp(8px, 1.6cqi, 10px); color: #57606a; text-transform: uppercase; letter-spacing: .6px; margin-top: 2px; }
 
-/* CREW ADVISORY */
+/* Stack at small sizes */
+@container w (max-width: 449px) {
+  .current-row { flex-direction: column; }
+  .current     { border-right: none; border-bottom: 1px solid #e8ecf0; }
+  .stats {
+    min-width: 0; width: 100%;
+    flex-direction: row; flex-wrap: nowrap;
+    padding: clamp(8px, 2.5cqi, 12px) clamp(10px, 3cqi, 16px);
+    gap: 0;
+  }
+  .stats-row { flex: 1; justify-content: space-around; gap: 0; }
+}
+
+/* ══════════════════════════════════
+   CREW ADVISORY
+══════════════════════════════════ */
 .advisory {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 20px;
+  flex-shrink: 0;
+  display: flex; align-items: center;
+  gap: clamp(6px, 1.5cqi, 12px);
+  padding: clamp(7px, 1.8cqi, 10px) clamp(10px, 3cqi, 20px);
   border-bottom: 1px solid #e8ecf0;
+  flex-wrap: wrap;
 }
-.adv-dot {
-  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-}
+.adv-dot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .adv-dot.green  { background: #1a9e3f; }
 .adv-dot.yellow { background: #d29922; }
 .adv-dot.red    { background: #da3633; }
 .adv-label {
-  font-size: 11px; font-weight: 800; text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: clamp(9px, 2cqi, 11px); font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
 }
 .adv-label.green  { color: #1a9e3f; }
 .adv-label.yellow { color: #9a6700; }
 .adv-label.red    { color: #da3633; }
-.adv-text { font-size: 12px; color: #57606a; margin-left: 4px; }
+.adv-text  { font-size: clamp(9px, 1.8cqi, 12px); color: #57606a; }
 
-/* FORECAST */
-.forecast-title {
-  font-size: 11px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 1.2px; color: #57606a;
-  padding: 12px 20px 6px;
+@container w (max-width: 299px) {
+  .adv-text { display: none; }
 }
-.forecast { display: flex; padding: 0 14px 14px; gap: 8px; }
+
+/* ══════════════════════════════════
+   FORECAST
+══════════════════════════════════ */
+.forecast-title {
+  flex-shrink: 0;
+  font-size: clamp(8px, 1.8cqi, 11px); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px; color: #57606a;
+  padding: clamp(8px, 2cqi, 12px) clamp(10px, 3cqi, 20px) clamp(4px, 1cqi, 6px);
+}
+.forecast {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(4px, 1cqi, 8px);
+  padding: 0 clamp(10px, 3cqi, 14px) clamp(10px, 2.5cqi, 14px);
+}
+
+/* 2×2 grid at very small */
+@container w (max-width: 299px) {
+  .forecast { grid-template-columns: repeat(2, 1fr); }
+}
+
 .fc-day {
-  flex: 1; background: #f6f8fa;
-  border: 1px solid #e8ecf0; border-radius: 8px;
+  background: #f6f8fa; border: 1px solid #e8ecf0; border-radius: 8px;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 5px; padding: 12px 6px;
+  gap: clamp(3px, 0.8cqi, 5px);
+  padding: clamp(8px, 2cqi, 12px) clamp(4px, 1cqi, 6px);
 }
-.fc-dow  { font-size: 14px; font-weight: 700; color: #e8732a; }
-.fc-icon { font-size: 30px; line-height: 1; }
-.fc-hi   { font-size: 16px; font-weight: 700; color: #1a2332; }
-.fc-lo   { font-size: 13px; color: #57606a; }
+.fc-dow  { font-size: clamp(10px, 2.2cqi, 14px); font-weight: 700; color: #e8732a; }
+.fc-icon { font-size: clamp(20px, 6cqi, 30px); line-height: 1; }
+.fc-hi   { font-size: clamp(12px, 2.8cqi, 16px); font-weight: 700; color: #1a2332; }
+.fc-lo   { font-size: clamp(9px, 2cqi, 13px); color: #57606a; }
 
-/* FOOTER */
+/* ══════════════════════════════════
+   FOOTER
+══════════════════════════════════ */
 .footer {
+  flex-shrink: 0;
+  margin-top: auto;
   background: #f6f8fa; border-top: 1px solid #e8ecf0;
-  padding: 6px 20px; display: flex; justify-content: space-between;
+  padding: clamp(4px, 1cqi, 6px) clamp(10px, 3cqi, 20px);
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 8px;
 }
-.footer span { font-size: 11px; color: #8c959f; }
-.footer .brand { font-size: 11px; font-weight: 800; color: #e8732a; }
+.footer-brand { font-size: clamp(8px, 1.8cqi, 11px); font-weight: 800; color: #e8732a; white-space: nowrap; }
+.footer-clock { font-size: clamp(8px, 1.8cqi, 11px); color: #8c959f; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
-.loading { padding: 30px; text-align: center; color: #57606a; font-size: 15px; }
+@container w (max-width: 299px) {
+  .footer-clock { display: none; }
+}
+
+.loading { padding: 30px; text-align: center; color: #57606a; font-size: clamp(11px, 2.5cqi, 15px); }
 </style>
 </head>
 <body>
@@ -136,12 +201,12 @@ body {
   <div class="header">
     <div class="header-left">
       <div class="mastec-mark">MASTEC</div>
-      <div>
+      <div style="min-width:0">
         <div class="location">📍 Denton, TX</div>
         <div class="location-sub">Greenfield 345kV Substation – Job Site Weather</div>
       </div>
     </div>
-    <div style="text-align:right">
+    <div class="header-right">
       <div class="updated-label">Last updated</div>
       <div class="updated" id="updated-time">—</div>
     </div>
@@ -149,9 +214,9 @@ body {
 
   <div id="loading" class="loading">Loading weather…</div>
 
-  <div id="weather-content" style="display:none; flex-direction:column;">
+  <div id="weather-content" style="display:none; flex-direction:column; flex:1;">
 
-    <!-- CURRENT -->
+    <!-- CURRENT + STATS -->
     <div class="current-row">
       <div class="current">
         <div class="temp-block">
@@ -177,7 +242,7 @@ body {
     </div>
 
     <!-- CREW ADVISORY -->
-    <div class="advisory" id="advisory">
+    <div class="advisory">
       <div class="adv-dot green" id="adv-dot"></div>
       <span class="adv-label green" id="adv-label">CREW ADVISORY</span>
       <span class="adv-text" id="adv-text">—</span>
@@ -186,12 +251,13 @@ body {
     <!-- FORECAST -->
     <div class="forecast-title">4-Day Forecast</div>
     <div class="forecast" id="forecast"></div>
+
   </div>
 
   <!-- FOOTER -->
   <div class="footer">
-    <span class="brand">Henkels &amp; McCoy · Power Delivery</span>
-    <span id="footer-clock"></span>
+    <span class="footer-brand">Henkels &amp; McCoy · Power Delivery</span>
+    <span class="footer-clock" id="footer-clock"></span>
   </div>
 
 </div>
@@ -210,16 +276,10 @@ function wcode(c) {
 }
 
 function getAdvisory(code, windMph) {
-  if (code >= 80) {
-    return { cls: 'red',    label: 'STOP WORK',       text: 'Thunderstorm/lightning — all aerial and energized line work suspended immediately.' };
-  }
-  if (windMph >= 28) {
-    return { cls: 'red',    label: 'STOP WORK',       text: 'Wind exceeds 28 mph — aerial lift and elevated work suspended per OSHA 1926.' };
-  }
-  if (windMph >= 20 || code >= 51) {
-    return { cls: 'yellow', label: 'USE CAUTION',     text: 'Elevated wind or precipitation — monitor conditions. Restrict bucket truck operations above 25 ft.' };
-  }
-  return { cls: 'green',  label: 'CLEAR TO WORK',   text: 'Conditions are within acceptable limits. Standard safety protocols apply.' };
+  if (code >= 80)    return { cls: 'red',    label: 'STOP WORK',     text: 'Thunderstorm/lightning — all aerial and energized line work suspended immediately.' };
+  if (windMph >= 28) return { cls: 'red',    label: 'STOP WORK',     text: 'Wind exceeds 28 mph — aerial lift and elevated work suspended per OSHA 1926.' };
+  if (windMph >= 20 || code >= 51) return { cls: 'yellow', label: 'USE CAUTION', text: 'Elevated wind or precipitation — restrict bucket truck operations above 25 ft.' };
+  return { cls: 'green', label: 'CLEAR TO WORK', text: 'Conditions within acceptable limits. Standard safety protocols apply.' };
 }
 
 var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -233,27 +293,25 @@ async function loadWeather() {
       '&daily=weather_code,temperature_2m_max,temperature_2m_min' +
       '&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch' +
       '&timezone=America%2FChicago&forecast_days=5';
-
     var res = await fetch(url);
-    var d   = await res.json();
-    var c   = d.current;
-    var daily = d.daily;
+    var d = await res.json();
+    var c = d.current, daily = d.daily;
     var [icon, label] = wcode(c.weather_code);
 
-    document.getElementById('temp').textContent       = Math.round(c.temperature_2m);
-    document.getElementById('cond-icon').textContent  = icon;
-    document.getElementById('cond-text').textContent  = label;
-    document.getElementById('feels').textContent      = 'Feels like ' + Math.round(c.apparent_temperature) + '°F';
-    document.getElementById('humidity').textContent   = c.relative_humidity_2m + '%';
-    document.getElementById('wind').textContent       = Math.round(c.wind_speed_10m) + ' mph';
-    document.getElementById('precip').textContent     = (c.precipitation || 0).toFixed(2) + '"';
-    document.getElementById('uv').textContent         = (c.uv_index || 0).toFixed(1);
+    document.getElementById('temp').textContent      = Math.round(c.temperature_2m);
+    document.getElementById('cond-icon').textContent = icon;
+    document.getElementById('cond-text').textContent = label;
+    document.getElementById('feels').textContent     = 'Feels like ' + Math.round(c.apparent_temperature) + '°F';
+    document.getElementById('humidity').textContent  = c.relative_humidity_2m + '%';
+    document.getElementById('wind').textContent      = Math.round(c.wind_speed_10m) + ' mph';
+    document.getElementById('precip').textContent    = (c.precipitation || 0).toFixed(2) + '"';
+    document.getElementById('uv').textContent        = (c.uv_index || 0).toFixed(1);
     document.getElementById('updated-time').textContent =
       new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
     var adv = getAdvisory(c.weather_code, c.wind_speed_10m);
-    document.getElementById('adv-dot').className   = 'adv-dot '   + adv.cls;
-    document.getElementById('adv-label').className = 'adv-label ' + adv.cls;
+    document.getElementById('adv-dot').className    = 'adv-dot '   + adv.cls;
+    document.getElementById('adv-label').className  = 'adv-label ' + adv.cls;
     document.getElementById('adv-label').textContent = adv.label;
     document.getElementById('adv-text').textContent  = adv.text;
 
