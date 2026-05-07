@@ -88,25 +88,37 @@ html, body {
 
 /* ══════════════════════════════════
    HEIGHT-BASED COLLAPSE
-   container-type: size enables cqb queries
+   container-type: size enables max-height queries
 ══════════════════════════════════ */
 
-/* < 400px tall: hide safety tip, tighten padding */
-@container w (max-height: 399px) {
+/* < 500px: hide safety tip, mild compression */
+@container w (max-height: 499px) {
   .section-safety { display: none; }
-  .section { padding: clamp(5px, 1.5cqi, 8px) clamp(8px, 2.5cqi, 16px); }
+  .section        { padding: clamp(5px, 1.5cqi, 9px) clamp(8px, 2.5cqi, 16px); }
   .section-title  { margin-bottom: 5px; }
   .shift-row      { padding: 6px 10px; gap: 2px; }
   .alert-item     { padding: 6px 10px; }
 }
 
-/* < 300px tall: also hide alerts, compress further */
-@container w (max-height: 299px) {
+/* < 380px: strip alert detail, compress padding hard */
+@container w (max-height: 379px) {
+  .alert-desc     { display: none; }
+  .alert-time     { display: none; }
+  .section        { padding: 5px clamp(8px, 2.5cqi, 14px); }
+  .section-title  { margin-bottom: 4px; font-size: 9px; }
+  .widget-header  { padding: 7px clamp(8px, 2.5cqi, 14px); }
+  .shift-row      { padding: 5px 9px; gap: 1px; }
+  .widget-footer  { padding: 4px clamp(8px, 2.5cqi, 14px); }
+}
+
+/* < 320px: hide alerts entirely, ultra-compact shifts */
+@container w (max-height: 319px) {
   .section-alerts { display: none; }
-  .section        { padding: 4px clamp(8px, 2.5cqi, 14px); }
-  .widget-header  { padding: 6px clamp(8px, 2.5cqi, 14px); }
-  .shift-row      { padding: 5px 8px; gap: 1px; }
+  .section        { padding: 4px clamp(8px, 2.5cqi, 12px); }
+  .widget-header  { padding: 6px clamp(8px, 2.5cqi, 12px); }
+  .shift-row      { padding: 4px 8px; gap: 1px; }
   .shift-super    { display: none; }
+  .widget-footer  { padding: 3px clamp(8px, 2.5cqi, 12px); }
 }
 
 /* ══════════════════════════════════
