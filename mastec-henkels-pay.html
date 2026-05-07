@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Pay – Patrick Anderson</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: transparent;
+}
+
+.widget {
+  width: 100%;
+  max-width: 420px;
+  margin: auto;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+}
+
+/* HEADER */
+.header {
+  background: #1e293b;
+  padding: 11px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header-left { display: flex; align-items: center; gap: 9px; }
+.ukg-mark {
+  background: #e8732a;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 3px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.06em;
+}
+.header-title { font-size: 13px; font-weight: 700; color: #fff; }
+.header-sub   { font-size: 9px; color: #94a3b8; margin-top: 1px; }
+.header-emp   { text-align: right; }
+.emp-name     { font-size: 11px; font-weight: 700; color: #e2e8f0; }
+.emp-role     { font-size: 9px; color: #64748b; margin-top: 1px; }
+
+/* PERIOD SELECTOR */
+.period-bar {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 8px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.period-label { font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+.period-tabs  { display: flex; gap: 6px; }
+.ptab {
+  font-size: 10px; font-weight: 700;
+  padding: 3px 9px; border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  color: #64748b; background: #fff;
+  cursor: pointer; transition: all 0.15s;
+}
+.ptab.active { background: #1e293b; border-color: #1e293b; color: #fff; }
+.ptab:hover:not(.active) { border-color: #cbd5e1; background: #f1f5f9; }
+
+/* GROSS HERO */
+.gross-hero {
+  padding: 18px 15px 14px;
+  text-align: center;
+  border-bottom: 1px solid #f1f5f9;
+}
+.gross-badge {
+  display: inline-block;
+  font-size: 9px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: #e8732a; background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 20px; padding: 2px 9px;
+  margin-bottom: 8px;
+}
+.gross-amount {
+  font-size: 36px; font-weight: 800;
+  color: #0f172a; letter-spacing: -0.02em;
+  line-height: 1;
+}
+.gross-amount span { font-size: 20px; vertical-align: super; margin-right: 2px; color: #475569; }
+.gross-sub {
+  font-size: 11px; color: #94a3b8;
+  margin-top: 5px;
+}
+
+/* HOURS GRID */
+.hours-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px;
+  background: #e2e8f0;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+.hour-cell {
+  background: #f8fafc;
+  padding: 10px 8px;
+  text-align: center;
+}
+.hour-val { font-size: 18px; font-weight: 800; color: #0f172a; }
+.hour-lbl { font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+.hour-sub { font-size: 9px; color: #64748b; margin-top: 1px; }
+.hour-cell.ot .hour-val { color: #e8732a; }
+
+/* EARNINGS BREAKDOWN */
+.breakdown {
+  padding: 12px 15px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.breakdown-title {
+  font-size: 10px; font-weight: 700;
+  color: #94a3b8; text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: 8px;
+}
+.earn-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 13px;
+}
+.earn-row:last-child { border-bottom: none; }
+.earn-label { color: #475569; font-weight: 500; }
+.earn-label small { font-size: 10px; color: #94a3b8; display: block; margin-top: 1px; }
+.earn-amount { font-weight: 700; color: #0f172a; }
+.earn-amount.ot { color: #e8732a; }
+.earn-amount.green { color: #16a34a; }
+.earn-amount.deduct { color: #64748b; }
+
+.divider-row {
+  display: flex; justify-content: space-between;
+  padding: 8px 0 4px;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 4px;
+}
+.divider-row .earn-label { font-weight: 700; color: #1e293b; font-size: 13px; }
+.divider-row .earn-amount { font-size: 15px; }
+
+/* NET PAY CARD */
+.net-card {
+  margin: 0 15px 12px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  padding: 11px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.net-label { font-size: 11px; font-weight: 700; color: #166534; }
+.net-sub   { font-size: 9px; color: #4ade80; margin-top: 2px; }
+.net-amount{ font-size: 22px; font-weight: 800; color: #15803d; letter-spacing: -0.01em; }
+
+/* YTD + PAYDAY ROW */
+.footer-info {
+  padding: 0 15px 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.info-chip {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 9px 11px;
+}
+.chip-lbl { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
+.chip-val { font-size: 13px; font-weight: 800; color: #0f172a; }
+.chip-sub { font-size: 9px; color: #64748b; margin-top: 1px; }
+
+/* FOOTER */
+.footer {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  padding: 6px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-left { font-size: 9px; color: #94a3b8; }
+.footer-right{ font-size: 9px; color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<div class="widget">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="ukg-mark">UKG</div>
+      <div>
+        <div class="header-title">My Pay</div>
+        <div class="header-sub">Henkels Division – Power Delivery</div>
+      </div>
+    </div>
+    <div class="header-emp">
+      <div class="emp-name">Patrick Anderson</div>
+      <div class="emp-role">Journeyman Lineman · IBEW</div>
+    </div>
+  </div>
+
+  <!-- PERIOD SELECTOR -->
+  <div class="period-bar">
+    <span class="period-label">Pay Period</span>
+    <div class="period-tabs">
+      <div class="ptab active">May 4–10</div>
+      <div class="ptab" onclick="switchPeriod(this, 'prev')">Apr 28–May 3</div>
+    </div>
+  </div>
+
+  <!-- GROSS HERO -->
+  <div class="gross-hero" id="grossHero">
+    <div class="gross-badge">Current Period Gross</div>
+    <div class="gross-amount"><span>$</span><span id="grossVal">2,862.50</span></div>
+    <div class="gross-sub" id="grossSub">Week of May 4–10, 2026 · Greenfield 345kV Substation</div>
+  </div>
+
+  <!-- HOURS GRID -->
+  <div class="hours-grid" id="hoursGrid">
+    <div class="hour-cell">
+      <div class="hour-val" id="regHrs">40</div>
+      <div class="hour-lbl">Regular</div>
+      <div class="hour-sub" id="regRate">@ $42.50/hr</div>
+    </div>
+    <div class="hour-cell ot">
+      <div class="hour-val" id="otHrs">10</div>
+      <div class="hour-lbl">Overtime</div>
+      <div class="hour-sub" id="otRate">@ $63.75/hr</div>
+    </div>
+    <div class="hour-cell">
+      <div class="hour-val" id="totHrs">50</div>
+      <div class="hour-lbl">Total Hrs</div>
+      <div class="hour-sub">5-day week</div>
+    </div>
+  </div>
+
+  <!-- EARNINGS BREAKDOWN -->
+  <div class="breakdown" id="breakdown">
+    <div class="breakdown-title">Earnings Breakdown</div>
+
+    <div class="earn-row">
+      <div class="earn-label">Regular Pay<small>40 hrs × $42.50</small></div>
+      <div class="earn-amount" id="regPay">$1,700.00</div>
+    </div>
+    <div class="earn-row">
+      <div class="earn-label">Overtime Pay<small>10 hrs × $63.75 (1.5×)</small></div>
+      <div class="earn-amount ot" id="otPay">$637.50</div>
+    </div>
+    <div class="earn-row">
+      <div class="earn-label">Per Diem<small>5 days × $105 · Non-taxable</small></div>
+      <div class="earn-amount green" id="perDiem">$525.00</div>
+    </div>
+
+    <div class="divider-row">
+      <div class="earn-label">Gross Pay</div>
+      <div class="earn-amount" id="grossBreak">$2,862.50</div>
+    </div>
+
+    <div class="earn-row" style="padding-top:4px;">
+      <div class="earn-label">Federal Tax<small>Est. withholding</small></div>
+      <div class="earn-amount deduct" id="fedTax">−$362.50</div>
+    </div>
+    <div class="earn-row">
+      <div class="earn-label">SS &amp; Medicare<small>FICA 7.65%</small></div>
+      <div class="earn-amount deduct" id="fica">−$178.21</div>
+    </div>
+    <div class="earn-row">
+      <div class="earn-label">IBEW Union Dues<small>Local 20 · Weekly</small></div>
+      <div class="earn-amount deduct">−$48.50</div>
+    </div>
+  </div>
+
+  <!-- NET PAY -->
+  <div class="net-card">
+    <div>
+      <div class="net-label">Estimated Net Pay</div>
+      <div class="net-sub">Direct deposit · May 16, 2026</div>
+    </div>
+    <div class="net-amount" id="netPay">$2,273.29</div>
+  </div>
+
+  <!-- YTD + PAYDAY -->
+  <div class="footer-info">
+    <div class="info-chip">
+      <div class="chip-lbl">YTD Gross</div>
+      <div class="chip-val">$54,380</div>
+      <div class="chip-sub">Jan 1 – May 10, 2026</div>
+    </div>
+    <div class="info-chip">
+      <div class="chip-lbl">Next Payday</div>
+      <div class="chip-val">May 16</div>
+      <div class="chip-sub">Direct deposit</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span class="footer-left">MasTec · Henkels &amp; McCoy · UKG Pro</span>
+    <span class="footer-right">EMP HEN-PD-38291</span>
+  </div>
+
+</div>
+
+<script>
+const PERIODS = {
+  current: {
+    label: "Week of May 4–10, 2026 · Greenfield 345kV Substation",
+    regHrs: 40, otHrs: 10, totHrs: 50,
+    regRate: 42.50, otRate: 63.75,
+    perDiem: 525.00,
+    fedTax: 362.50, fica: 178.21
+  },
+  prev: {
+    label: "Week of Apr 28–May 3, 2026 · I-35 Transmission Corridor",
+    regHrs: 40, otHrs: 10, totHrs: 50,
+    regRate: 42.50, otRate: 63.75,
+    perDiem: 525.00,
+    fedTax: 362.50, fica: 178.21
+  }
+};
+
+function fmt(n) {
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function render(key) {
+  const p = PERIODS[key];
+  const regPay   = p.regHrs * p.regRate;
+  const otPay    = p.otHrs  * p.otRate;
+  const gross    = regPay + otPay + p.perDiem;
+  const deduct   = p.fedTax + p.fica + 48.50;
+  const net      = gross - deduct;
+
+  document.getElementById('grossVal').textContent    = fmt(gross);
+  document.getElementById('grossSub').textContent    = p.label;
+  document.getElementById('regHrs').textContent      = p.regHrs;
+  document.getElementById('otHrs').textContent       = p.otHrs;
+  document.getElementById('totHrs').textContent      = p.totHrs;
+  document.getElementById('regRate').textContent     = `@ $${p.regRate.toFixed(2)}/hr`;
+  document.getElementById('otRate').textContent      = `@ $${p.otRate.toFixed(2)}/hr`;
+  document.getElementById('regPay').textContent      = `$${fmt(regPay)}`;
+  document.getElementById('otPay').textContent       = `$${fmt(otPay)}`;
+  document.getElementById('perDiem').textContent     = `$${fmt(p.perDiem)}`;
+  document.getElementById('grossBreak').textContent  = `$${fmt(gross)}`;
+  document.getElementById('fedTax').textContent      = `−$${fmt(p.fedTax)}`;
+  document.getElementById('fica').textContent        = `−$${fmt(p.fica)}`;
+  document.getElementById('netPay').textContent      = `$${fmt(net)}`;
+}
+
+function switchPeriod(el, key) {
+  document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  render(key || 'current');
+}
+
+// Default
+render('current');
+
+// Wire first tab back to current
+document.querySelector('.ptab.active').onclick = function() {
+  switchPeriod(this, 'current');
+};
+</script>
+</body>
+</html>
