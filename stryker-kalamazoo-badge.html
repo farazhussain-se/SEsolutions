@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stryker Badge – Kalamazoo</title>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { background: transparent; }
+        body { padding: 10px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        /* Focus ring — WCAG 2.4.7. Black on yellow brand for contrast on either bg */
+        :focus-visible { outline: 3px solid #111111; outline-offset: 2px; border-radius: 4px; }
+
+        @keyframes pulse-ring {
+            0%   { box-shadow: 0 0 0 0 rgba(255,181,17,0.7); }
+            70%  { box-shadow: 0 0 0 7px rgba(255,181,17,0); }
+            100% { box-shadow: 0 0 0 0 rgba(255,181,17,0); }
+        }
+        .pulse { border-radius: 50%; animation: pulse-ring 2s infinite; }
+
+        .stryker-stripe {
+            background: repeating-linear-gradient(
+                45deg,
+                #FFB511,
+                #FFB511 8px,
+                #f59e0b 8px,
+                #f59e0b 16px
+            );
+        }
+
+        button { cursor: pointer; background: none; border: none; font: inherit; }
+    </style>
+</head>
+<body>
+<div id="root">Loading…</div>
+
+<script type="text/babel">
+/* ─────────────────────────────────────────
+   STRYKER KALAMAZOO – EMPLOYEE DATA
+───────────────────────────────────────── */
+const EMPLOYEE = {
+    id:           "STR-K-47812",
+    firstName:    "Jordan",
+    lastName:     "Bennett",
+    title:        "Senior Manufacturing Technician",
+    department:   "Joint Replacement – Hip Systems",
+    site:         "Kalamazoo HQ / Plant 2",
+    address:      "2825 Airview Blvd · Kalamazoo, MI 49002",
+    division:     "Orthopaedics & Spine",
+    shift:        "Day  06:00 – 14:30",
+    expires:      "2027-09-30",
+    ppeStatus:    "Compliant",
+    cleanroomCls: "ISO Class 7",
+    safetyHours:  2160,
+    certifications: [
+        { label: "ISO 13485 – Medical QMS",   status: "active"   },
+        { label: "FDA 21 CFR 820 – QSR",       status: "active"   },
+        { label: "Cleanroom Gowning",          status: "active"   },
+        { label: "Good Documentation (GDP)",   status: "active"   },
+        { label: "Lock-Out / Tag-Out",         status: "active"   },
+        { label: "First Aid / CPR / AED",      status: "expiring" },
+    ],
+    zones: [
+        { name: "Cleanroom – ISO 7",      granted: true  },
+        { name: "Sterile Packaging",      granted: true  },
+        { name: "Implant Vault",          granted: true  },
+        { name: "R&D – Restricted",       granted: false },
+        { name: "Shipping & Receiving",   granted: true  },
+        { name: "Quality Lab",            granted: true  },
+    ]
+};
+
+/* ─────────────────────────────────────────
+   Stryker palette + WCAG-safe combos
+   Yellow (#FFB511) is decorative only — never used
+   for body text on white. Where it carries text, the
+   text is black (#111) → 11.5:1 contrast ✓
+───────────────────────────────────────── */
+const C = {
+    bg:      "#ffffff",
+    surface: "#fafafa",
+    border:  "#d4d4d4",
+    divider: "#f4f4f5",
+    text:    "#111111",   /* 18.4:1 on white ✓ */
+    muted:   "#374151",   /*  9.7:1 on white ✓ */
+    faint:   "#6b7280",   /*  4.6:1 on white ✓ */
+    dark:    "#111111",
+    yellow:  "#FFB511",   /* Stryker brand — decorative */
+    onYellow: "#111111",  /* black text on yellow: 11.5:1 ✓ */
+    accent:  "#a16207",   /* dark amber: 5.94:1 on white ✓ — used for body text where brand color needed */
+    success: { bg: "#f0fdf4", border: "#86efac", text: "#166534" }, /* 7.5:1 ✓ */
+    warning: { bg: "#fffbeb", border: "#fde68a", text: "#92400e" }, /* 5.7:1 ✓ */
+    error:   { bg: "#fef2f2", border: "#fecaca", text: "#991b1b" }, /* 5.9:1 ✓ */
+};
+
+const { useState, useEffect, useRef } = React;
+
+const Badge = () => {
+    const qrRef             = useRef(null);
+    const [time, setTime]   = useState("");
+    const [qrDone, setQrDone] = useState(false);
+    const [tab, setTab]     = useState("zones");
+
+    useEffect(() => {
+        const tick = () =>
+            setTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+        tick();
+        const t = setInterval(tick, 1000);
+        return () => clearInterval(t);
+    }, []);
+
+    useEffect(() => {
+        if (qrRef.current && !qrDone) {
+            qrRef.current.innerHTML = "";
+            new QRCode(qrRef.current, {
+                text: `STRYKER|ID:${EMPLOYEE.id}|${EMPLOYEE.firstName}+${EMPLOYEE.lastName}|SITE:KALAMAZOO`,
+                width: 116, height: 116,
+                colorDark: C.dark, colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            setQrDone(true);
+        }
+    }, []);
+
+    return (
+        <div style={{ maxWidth: 340, margin: "0 auto" }}>
+            <div style={{
+                background: C.bg,
+                borderRadius: 14,
+                overflow: "hidden",
+                border: `1px solid ${C.border}`,
+                boxShadow: "0 4px 20px rgba(0,0,0,0.10)"
+            }}>
+
+                {/* ── Header ── */}
+                <div style={{
+                    background: C.dark,
+                    padding: "8px 13px",
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    borderBottom: `3px solid ${C.yellow}`
+                }}>
+                    <span style={{ color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span className="pulse" style={{ width: 8, height: 8, background: C.yellow, display: "inline-block", flexShrink: 0 }} aria-hidden="true" />
+                        BADGE ACTIVE
+                    </span>
+                    <span style={{ color: C.yellow, fontSize: 12, fontWeight: 900, letterSpacing: "0.12em" }}>
+                        stryker
+                    </span>
+                    <span style={{ color: "#9ca3af", fontSize: 10, fontFamily: "monospace" }} aria-live="off">{time}</span>
+                </div>
+
+                {/* ── Yellow brand stripe ── */}
+                <div className="stryker-stripe" style={{ padding: "5px 13px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ color: C.onYellow, fontSize: 10, fontWeight: 800, letterSpacing: "0.07em" }}>
+                        ⚕ {EMPLOYEE.cleanroomCls.toUpperCase()} – CLEANROOM ACCESS
+                    </span>
+                    <span style={{
+                        background: C.dark, color: "#fff",
+                        fontSize: 8, fontWeight: 900,
+                        padding: "1px 6px", borderRadius: 3,
+                        letterSpacing: "0.05em"
+                    }}>KZO</span>
+                </div>
+
+                {/* ── Profile row ── */}
+                <div style={{
+                    padding: "13px 13px 11px",
+                    borderBottom: `1px solid ${C.divider}`,
+                    display: "flex", gap: 11, alignItems: "flex-start"
+                }}>
+
+                    {/* QR */}
+                    <div style={{ flexShrink: 0 }}>
+                        <div style={{ padding: 4, border: `2px solid ${C.border}`, borderRadius: 8, background: "#fff" }}
+                             role="img" aria-label={`QR code for employee ID ${EMPLOYEE.id}`}>
+                            <div ref={qrRef} />
+                        </div>
+                        <p style={{ textAlign: "center", fontSize: 8, color: C.faint, fontFamily: "monospace", marginTop: 3 }}>
+                            {EMPLOYEE.id}
+                        </p>
+                    </div>
+
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 6 }}>
+                            <div style={{
+                                background: C.dark, color: "#fff",
+                                fontWeight: 800, fontSize: 9,
+                                padding: "2px 6px", borderRadius: 3, letterSpacing: "0.05em"
+                            }}>STRYKER</div>
+                            <div style={{
+                                background: C.yellow, color: C.onYellow,
+                                fontWeight: 800, fontSize: 9,
+                                padding: "2px 6px", borderRadius: 3, letterSpacing: "0.05em"
+                            }}>KALAMAZOO</div>
+                        </div>
+
+                        <p style={{ fontSize: 18, fontWeight: 800, color: C.text, lineHeight: 1.1, marginBottom: 3 }}>
+                            {EMPLOYEE.firstName}<br />{EMPLOYEE.lastName}
+                        </p>
+                        <p style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 2 }}>
+                            {EMPLOYEE.title}
+                        </p>
+                        <p style={{ fontSize: 9, color: C.muted, marginBottom: 1 }}>{EMPLOYEE.department}</p>
+                        <p style={{ fontSize: 9, color: C.faint, marginBottom: 7 }}>{EMPLOYEE.site} · {EMPLOYEE.division}</p>
+
+                        <span style={{
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            background: C.success.bg, borderRadius: 99, padding: "2px 8px",
+                            border: `1px solid ${C.success.border}`
+                        }}>
+                            <span style={{ fontSize: 8, fontWeight: 700, color: C.success.text }}>✓ PPE {EMPLOYEE.ppeStatus}</span>
+                        </span>
+                    </div>
+                </div>
+
+                {/* ── Stats row ── */}
+                <div style={{
+                    background: C.surface, padding: "8px 13px",
+                    display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
+                    gap: 6, borderBottom: `1px solid ${C.divider}`
+                }}>
+                    <StatBlock icon="⏰" label="Shift"     value={EMPLOYEE.shift} />
+                    <StatBlock icon="🛡" label="Safety Hrs" value={`${EMPLOYEE.safetyHours.toLocaleString()}`} />
+                    <StatBlock icon="⚕" label="Cleanroom" value={EMPLOYEE.cleanroomCls} />
+                </div>
+
+                {/* ── Site address row ── */}
+                <div style={{
+                    background: "#fffbeb",
+                    padding: "5px 13px",
+                    borderBottom: `1px solid ${C.divider}`,
+                    display: "flex", alignItems: "center", gap: 6
+                }}>
+                    <span aria-hidden="true" style={{ fontSize: 10 }}>📍</span>
+                    <span style={{ fontSize: 9, fontWeight: 600, color: "#713f12" }}>
+                        {EMPLOYEE.address}
+                    </span>
+                </div>
+
+                {/* ── Tabs ── */}
+                <div style={{ display: "flex", borderBottom: `1px solid ${C.divider}` }} role="tablist">
+                    <TabBtn id="tab-zones" panelId="panel-zones" label="Zone Access"    active={tab === "zones"} onClick={() => setTab("zones")} />
+                    <TabBtn id="tab-certs" panelId="panel-certs" label="Certifications" active={tab === "certs"} onClick={() => setTab("certs")} />
+                </div>
+
+                {/* ── Tab content ── */}
+                <div style={{ padding: "10px 13px 13px" }}>
+                    {tab === "zones" && (
+                        <div id="panel-zones" role="tabpanel" aria-labelledby="tab-zones"
+                             style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                            {EMPLOYEE.zones.map((z, i) => <ZoneChip key={i} name={z.name} granted={z.granted} />)}
+                        </div>
+                    )}
+                    {tab === "certs" && (
+                        <div id="panel-certs" role="tabpanel" aria-labelledby="tab-certs"
+                             style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            {EMPLOYEE.certifications.map((c, i) => <CertRow key={i} label={c.label} status={c.status} />)}
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Footer ── */}
+                <div style={{
+                    background: C.dark, padding: "6px 13px",
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    borderTop: `2px solid ${C.yellow}`
+                }}>
+                    <span style={{ color: "#9ca3af", fontSize: 9 }}>Expires: {EMPLOYEE.expires}</span>
+                    <span style={{ color: C.yellow, fontSize: 9, fontWeight: 700 }}>Stryker · Kalamazoo</span>
+                </div>
+            </div>
+
+            <p style={{ textAlign: "center", fontSize: 10, color: "#6b7280", marginTop: 7 }}>
+                Authorized Personnel Only · Do not share or duplicate
+            </p>
+        </div>
+    );
+};
+
+/* ── Sub-components ── */
+
+const StatBlock = ({ icon, label, value }) => (
+    <div>
+        <p style={{ fontSize: 8, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", marginBottom: 1 }} aria-hidden="true">
+            {icon} {label}
+        </p>
+        <p style={{ fontSize: 9, fontWeight: 700, color: "#111111", lineHeight: 1.3 }}>{value}</p>
+    </div>
+);
+
+const TabBtn = ({ id, panelId, label, active, onClick }) => (
+    <button
+        id={id}
+        role="tab"
+        aria-selected={active}
+        aria-controls={panelId}
+        onClick={onClick}
+        style={{
+            flex: 1, padding: "8px 4px", fontSize: 11, fontWeight: 700,
+            color: active ? "#111111" : "#6b7280",
+            borderBottom: active ? `3px solid #FFB511` : "3px solid transparent",
+            transition: "all 0.15s",
+            minHeight: 36
+        }}
+    >
+        {label}
+    </button>
+);
+
+const ZoneChip = ({ name, granted }) => (
+    <div style={{
+        display: "flex", alignItems: "center", gap: 6,
+        padding: "7px 9px", borderRadius: 8,
+        background: granted ? "#f0fdf4" : "#fef2f2",
+        border: `1px solid ${granted ? "#86efac" : "#fecaca"}`
+    }}
+    role="status"
+    aria-label={`${name}: ${granted ? "Access granted" : "Access denied"}`}>
+        <span aria-hidden="true" style={{ fontSize: 12 }}>{granted ? "✅" : "🚫"}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: granted ? "#166534" : "#991b1b", lineHeight: 1.2 }}>{name}</span>
+    </div>
+);
+
+const CertRow = ({ label, status }) => {
+    const s = {
+        active:   { bg: "#f0fdf4", border: "#86efac", text: "#166534", badge: "Active"   },
+        expiring: { bg: "#fffbeb", border: "#fde68a", text: "#92400e", badge: "Expiring" },
+        expired:  { bg: "#fef2f2", border: "#fecaca", text: "#991b1b", badge: "Expired"  },
+    }[status] || { bg: "#f0fdf4", border: "#86efac", text: "#166534", badge: "Active" };
+
+    return (
+        <div style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            padding: "7px 10px", borderRadius: 8,
+            background: s.bg, border: `1px solid ${s.border}`
+        }}
+        role="status"
+        aria-label={`${label}: ${s.badge}`}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#111111" }}>🏅 {label}</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: s.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.badge}</span>
+        </div>
+    );
+};
+
+ReactDOM.createRoot(document.getElementById("root")).render(<Badge />);
+</script>
+</body>
+</html>
