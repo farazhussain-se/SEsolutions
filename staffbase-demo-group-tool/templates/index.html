@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staffbase Demo Group Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-brand">
+    <span class="brand-icon">⚡</span>
+    <span class="brand-name">Demo Group Tool</span>
+    <span class="brand-sep">|</span>
+    <span class="brand-instance" id="topbar-instance">faraz-test.staffbase.com</span>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-meta" id="topbar-meta"></div>
+    <div class="conn-dot" id="conn-dot" title="Connection status"></div>
+    <button class="settings-btn" onclick="openSettings()" title="Change environment">⚙ Settings</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <nav class="steps-nav">
+      <div class="step-item active" id="nav-1" onclick="goToStep(1)">
+        <div class="step-dot">1</div>
+        <div class="step-info"><span class="step-label">Brief</span><span class="step-sub">Paste or upload</span></div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item" id="nav-2" onclick="canGoTo(2) && goToStep(2)">
+        <div class="step-dot">2</div>
+        <div class="step-info"><span class="step-label">People</span><span class="step-sub">LinkedIn search</span></div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item" id="nav-3" onclick="canGoTo(3) && goToStep(3)">
+        <div class="step-dot">3</div>
+        <div class="step-info"><span class="step-label">Configure</span><span class="step-sub">Review & plan</span></div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item" id="nav-4" onclick="canGoTo(4) && goToStep(4)">
+        <div class="step-dot">4</div>
+        <div class="step-info"><span class="step-label">Results</span><span class="step-sub">Deploy status</span></div>
+      </div>
+    </nav>
+
+    <div class="sidebar-info" id="sidebar-info"></div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- ── Step 1: Brief ─────────────────────────────────────────────────── -->
+    <section class="step-panel active" id="panel-1">
+      <div class="panel-header">
+        <h1>Customer Brief</h1>
+        <p>Upload a <code>.docx</code> file or paste the demo brief below. We'll detect the company, industry, and configure everything accordingly.</p>
+      </div>
+
+      <div class="upload-row">
+        <input type="file" id="file-input" accept=".docx,.txt" onchange="handleFileUpload(this)">
+        <button class="btn btn-outline" onclick="document.getElementById('file-input').click()">
+          📎 Upload .docx
+        </button>
+        <span class="upload-filename" id="upload-filename"></span>
+      </div>
+
+      <textarea
+        id="brief-text"
+        class="brief-textarea"
+        placeholder="Paste the customer brief here…
+
+Example:
+Client: Emplify Health
+Emplify Health is a regional healthcare network serving communities across Wisconsin and Minnesota. With 15,000 employees spanning registered nurses, clinical managers, administrative staff, and frontline care workers, they need a mobile-first communications platform to replace fragmented email communication. Key goals: reach bedside nurses on shift, surface HR and compliance updates, and drive engagement across two major regions — Gundersen (La Crosse) and Bellin (Green Bay)."></textarea>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="analyzeBrief()">
+          Analyze Brief <span class="btn-arrow">→</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ── Step 2: People ────────────────────────────────────────────────── -->
+    <section class="step-panel" id="panel-2">
+      <div class="panel-header">
+        <h1>Find People on LinkedIn</h1>
+        <div class="analysis-pill" id="analysis-pill"></div>
+      </div>
+
+      <div class="analysis-card" id="analysis-card"></div>
+      <div class="intel-card" id="intel-card" style="display:none"></div>
+
+      <div class="search-categories" id="search-categories">
+        <div class="category-col" id="col-comms">
+          <div class="category-header comms">
+            <span class="cat-icon">📣</span>
+            <div><strong id="comms-title">Communications Team</strong><small>2–3 people</small></div>
+          </div>
+          <div class="profile-list" id="list-comms"><div class="empty-state">Click Search to find people</div></div>
+        </div>
+        <div class="category-col" id="col-corporate">
+          <div class="category-header corporate">
+            <span class="cat-icon">🏢</span>
+            <div><strong id="corporate-title">Corporate Staff</strong><small>Up to 6 people</small></div>
+          </div>
+          <div class="profile-list" id="list-corporate"><div class="empty-state">Click Search to find people</div></div>
+        </div>
+        <div class="category-col" id="col-frontline">
+          <div class="category-header frontline">
+            <span class="cat-icon">⚙️</span>
+            <div><strong id="frontline-title">Frontline Staff</strong><small>Up to 6 people</small></div>
+          </div>
+          <div class="profile-list" id="list-frontline"><div class="empty-state">Click Search to find people</div></div>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-outline" onclick="goToStep(1)">← Back</button>
+        <button class="btn btn-secondary" id="search-btn" onclick="searchLinkedIn()">
+          🔍 Search LinkedIn
+        </button>
+        <button class="btn btn-primary" id="to-configure-btn" style="display:none" onclick="goToStep(3)">
+          Configure →
+        </button>
+      </div>
+    </section>
+
+    <!-- ── Step 3: Configure ─────────────────────────────────────────────── -->
+    <section class="step-panel" id="panel-3">
+      <div class="panel-header">
+        <h1>Deployment Plan</h1>
+        <p>Review what will be applied to your Staffbase instance, then deploy.</p>
+      </div>
+
+      <div class="plan-grid" id="plan-grid"></div>
+
+      <div class="optional-step" id="manager-step">
+        <label class="toggle-row">
+          <input type="checkbox" id="assign-managers-toggle">
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">
+            <strong>Set manager hierarchy</strong>
+            <small>Optional · Builds an org chart by tiering job titles (VP/Director → Manager → IC) and PATCHing <code>profile.system_manager</code> on each user.</small>
+          </span>
+        </label>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-outline" onclick="goToStep(2)">← Back</button>
+        <button class="btn btn-deploy" id="deploy-btn" onclick="deploy()">
+          ⚡ Deploy to Staffbase
+        </button>
+      </div>
+    </section>
+
+    <!-- ── Step 4: Results ───────────────────────────────────────────────── -->
+    <section class="step-panel" id="panel-4">
+      <div id="results-container"></div>
+      <div class="action-row" style="margin-top:2rem">
+        <button class="btn btn-outline" onclick="resetApp()">↺ New Brief</button>
+        <button class="btn btn-primary" id="edit-hierarchy-btn" onclick="openHierarchyEditor()" style="display:none">
+          🏢 Edit Hierarchy
+        </button>
+        <button class="btn btn-danger" id="rollback-btn" onclick="rollbackDeploy()" style="display:none">
+          ↩ Roll Back This Deploy
+        </button>
+        <button class="btn btn-outline" onclick="openSnapshots()">🗂 All Snapshots</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Settings overlay + panel -->
+<div class="settings-overlay" id="settings-overlay" onclick="closeSettings()"></div>
+<div class="settings-panel" id="settings-panel">
+  <div class="sp-header">
+    <div>
+      <h2>Instance Settings</h2>
+      <p>Switch environments or update your API token</p>
+    </div>
+    <button class="sp-close" onclick="closeSettings()">✕</button>
+  </div>
+
+  <div class="sp-body">
+    <div class="form-group">
+      <label>Instance Base URL</label>
+      <input type="text" id="sp-base" placeholder="https://your-instance.staffbase.com/api" autocomplete="off">
+      <small>Include the trailing <code>/api</code></small>
+    </div>
+
+    <div class="form-group">
+      <label>API Token <span class="label-hint">(Basic auth — base64 appId:secret)</span></label>
+      <div class="token-row">
+        <input type="password" id="sp-token" placeholder="NjY…" autocomplete="new-password">
+        <button class="toggle-vis" id="token-vis-btn" onclick="toggleTokenVis()" title="Show/hide token">👁</button>
+      </div>
+    </div>
+
+    <div class="conn-result" id="conn-result"></div>
+
+    <div class="sp-actions">
+      <button class="btn btn-outline" onclick="testConnection()">🔌 Test Connection</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save & Apply</button>
+    </div>
+
+    <div class="sp-presets">
+      <h4>Presets</h4>
+      <div class="preset-list" id="preset-list">
+        <div class="preset-item" onclick="applyPreset('faraz-test')">
+          <span class="preset-name">faraz-test</span>
+          <span class="preset-sub">Default test instance</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sp-saved" id="sp-saved-instances"></div>
+  </div>
+</div>
+
+<!-- Hierarchy editor overlay + panel -->
+<div class="settings-overlay" id="hierarchy-overlay" onclick="closeHierarchyEditor()"></div>
+<div class="settings-panel" id="hierarchy-panel">
+  <div class="sp-header">
+    <div>
+      <h2>Edit Manager Hierarchy</h2>
+      <p>Pick each user's manager. Changes apply to the live Staffbase instance via PATCH <code>profile.system_manager</code>.</p>
+    </div>
+    <button class="sp-close" onclick="closeHierarchyEditor()">✕</button>
+  </div>
+  <div class="sp-body">
+    <div id="hierarchy-list"></div>
+    <div class="sp-actions" style="margin-top:1rem">
+      <button class="btn btn-outline" onclick="closeHierarchyEditor()">Cancel</button>
+      <button class="btn btn-primary" onclick="applyHierarchyEdits()">Apply Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Snapshots overlay + panel -->
+<div class="settings-overlay" id="snapshots-overlay" onclick="closeSnapshots()"></div>
+<div class="settings-panel" id="snapshots-panel">
+  <div class="sp-header">
+    <div>
+      <h2>Snapshots</h2>
+      <p>Each deploy saves a snapshot. Click Restore to roll the instance back to that state.</p>
+    </div>
+    <button class="sp-close" onclick="closeSnapshots()">✕</button>
+  </div>
+  <div class="sp-body">
+    <div id="snapshots-list" class="sp-saved"></div>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-text">Working…</div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

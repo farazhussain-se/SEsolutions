@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stryker Badge – Kalamazoo</title>
+    <title>Stryker Badge – Portage</title>
 
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -43,22 +43,22 @@
 
 <script type="text/babel">
 /* ─────────────────────────────────────────
-   STRYKER KALAMAZOO – EMPLOYEE DATA
+   STRYKER PORTAGE – EMPLOYEE DATA
 ───────────────────────────────────────── */
 const EMPLOYEE = {
-    id:           "STR-K-47812",
-    firstName:    "Jordan",
-    lastName:     "Bennett",
-    title:        "Senior Manufacturing Technician",
-    department:   "Joint Replacement – Hip Systems",
-    site:         "Kalamazoo HQ / Plant 2",
-    address:      "2825 Airview Blvd · Kalamazoo, MI 49002",
-    division:     "Orthopaedics & Spine",
+    id:           "STR-P-52041",
+    firstName:    "James",
+    lastName:     "Ferris",
+    title:        "Assembly Technician",
+    department:   "Instruments – Surgical Power Tools",
+    site:         "Portage Manufacturing",
+    address:      "4100 E. Milham Ave · Portage, MI 49002",
+    division:     "Instruments",
     shift:        "Day  06:00 – 14:30",
     expires:      "2027-09-30",
     ppeStatus:    "Compliant",
-    cleanroomCls: "ISO Class 7",
-    safetyHours:  2160,
+    cleanroomCls: "ISO Class 8",
+    safetyHours:  1685,
     certifications: [
         { label: "ISO 13485 – Medical QMS",   status: "active"   },
         { label: "FDA 21 CFR 820 – QSR",       status: "active"   },
@@ -68,9 +68,9 @@ const EMPLOYEE = {
         { label: "First Aid / CPR / AED",      status: "expiring" },
     ],
     zones: [
-        { name: "Cleanroom – ISO 7",      granted: true  },
-        { name: "Sterile Packaging",      granted: true  },
-        { name: "Implant Vault",          granted: true  },
+        { name: "Assembly Floor",         granted: true  },
+        { name: "Cleanroom – ISO 8",      granted: true  },
+        { name: "Tool Calibration Lab",   granted: true  },
         { name: "R&D – Restricted",       granted: false },
         { name: "Shipping & Receiving",   granted: true  },
         { name: "Quality Lab",            granted: true  },
@@ -120,7 +120,7 @@ const Badge = () => {
         if (qrRef.current && !qrDone) {
             qrRef.current.innerHTML = "";
             new QRCode(qrRef.current, {
-                text: `STRYKER|ID:${EMPLOYEE.id}|${EMPLOYEE.firstName}+${EMPLOYEE.lastName}|SITE:KALAMAZOO`,
+                text: `STRYKER|ID:${EMPLOYEE.id}|${EMPLOYEE.firstName}+${EMPLOYEE.lastName}|SITE:PORTAGE`,
                 width: 116, height: 116,
                 colorDark: C.dark, colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
@@ -166,7 +166,7 @@ const Badge = () => {
                         fontSize: 8, fontWeight: 900,
                         padding: "1px 6px", borderRadius: 3,
                         letterSpacing: "0.05em"
-                    }}>KZO</span>
+                    }}>PTG</span>
                 </div>
 
                 {/* ── Profile row ── */}
@@ -199,7 +199,7 @@ const Badge = () => {
                                 background: C.yellow, color: C.onYellow,
                                 fontWeight: 800, fontSize: 9,
                                 padding: "2px 6px", borderRadius: 3, letterSpacing: "0.05em"
-                            }}>KALAMAZOO</div>
+                            }}>PORTAGE</div>
                         </div>
 
                         <p style={{ fontSize: 18, fontWeight: 800, color: C.text, lineHeight: 1.1, marginBottom: 3 }}>
@@ -274,7 +274,7 @@ const Badge = () => {
                     borderTop: `2px solid ${C.yellow}`
                 }}>
                     <span style={{ color: "#9ca3af", fontSize: 9 }}>Expires: {EMPLOYEE.expires}</span>
-                    <span style={{ color: C.yellow, fontSize: 9, fontWeight: 700 }}>Stryker · Kalamazoo</span>
+                    <span style={{ color: C.yellow, fontSize: 9, fontWeight: 700 }}>Stryker · Portage</span>
                 </div>
             </div>
 

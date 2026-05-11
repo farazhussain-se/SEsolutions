@@ -1,0 +1,556 @@
+{
+  "id": "20260510-070007",
+  "base": "https://strykerdemo.staffbase.rocks/api",
+  "created": "2026-05-10T07:00:07.429212Z",
+  "posts": [
+    {
+      "id": "69fff268430fc74e53f7b56d",
+      "published": "2026-05-07T17:23:59.411Z",
+      "planned": "2026-05-07T17:23:59.411Z"
+    },
+    {
+      "id": "69fff2682fa4a35d008e1285",
+      "published": "2026-05-07T17:23:55.953Z",
+      "planned": "2026-05-07T17:23:55.953Z"
+    },
+    {
+      "id": "69fff2682fa4a35d008e1284",
+      "published": "2026-05-07T17:23:52.724Z",
+      "planned": "2026-05-07T17:23:52.724Z"
+    },
+    {
+      "id": "69fff2732fa4a35d008e12de",
+      "published": "2026-05-07T10:13:50.267Z",
+      "planned": "2026-05-07T10:13:50.267Z"
+    },
+    {
+      "id": "69fff274430fc74e53f7b5e2",
+      "published": "2025-07-07T19:12:16.522Z",
+      "planned": "2025-07-07T19:12:16.522Z"
+    },
+    {
+      "id": "69fff2692fa4a35d008e128d",
+      "published": "2025-03-24T14:07:50.819Z",
+      "planned": "2025-03-24T14:07:50.819Z"
+    },
+    {
+      "id": "69fff269430fc74e53f7b57e",
+      "published": "2025-03-20T15:18:34.751Z",
+      "planned": "2025-03-20T15:18:34.751Z"
+    },
+    {
+      "id": "69fff26b430fc74e53f7b587",
+      "published": "2025-03-19T20:20:10.136Z",
+      "planned": "2025-03-19T20:20:10.136Z"
+    },
+    {
+      "id": "69fff268430fc74e53f7b560",
+      "published": "2025-02-20T11:32:14.880Z",
+      "planned": "2025-02-20T11:32:14.880Z"
+    },
+    {
+      "id": "69fff277430fc74e53f7b5ec",
+      "published": "2025-02-20T11:13:22.416Z",
+      "planned": "2025-02-20T11:13:22.416Z"
+    },
+    {
+      "id": "69fff2652fa4a35d008e1270",
+      "published": "2024-01-18T09:46:43.151Z",
+      "planned": "2024-01-18T09:46:43.151Z"
+    },
+    {
+      "id": "69fff272de162540cb60c837",
+      "published": "2024-01-18T09:17:40.465Z",
+      "planned": "2024-01-18T09:17:40.465Z"
+    },
+    {
+      "id": "69fff272de162540cb60c83a",
+      "published": "2024-01-18T09:17:25.598Z",
+      "planned": "2024-01-18T09:17:25.598Z"
+    },
+    {
+      "id": "69fff2712fa4a35d008e12d1",
+      "published": "2024-01-18T09:17:00.808Z",
+      "planned": "2024-01-18T09:17:00.808Z"
+    },
+    {
+      "id": "69fff271de162540cb60c828",
+      "published": "2024-01-18T09:16:47.597Z",
+      "planned": "2024-01-18T09:16:47.597Z"
+    },
+    {
+      "id": "69fff26fde162540cb60c81c",
+      "published": "2024-01-18T09:16:16.994Z",
+      "planned": "2024-01-18T09:16:16.994Z"
+    },
+    {
+      "id": "69fff26d430fc74e53f7b5a9",
+      "published": "2024-01-18T09:13:56.999Z",
+      "planned": "2024-01-18T09:13:56.999Z"
+    },
+    {
+      "id": "69fff26d2fa4a35d008e12b5",
+      "published": "2024-01-18T08:55:27.695Z",
+      "planned": "2024-01-18T08:55:27.695Z"
+    },
+    {
+      "id": "69fff26c2fa4a35d008e12ae",
+      "published": "2024-01-18T08:55:22.927Z",
+      "planned": "2024-01-18T08:55:22.927Z"
+    },
+    {
+      "id": "69fff270430fc74e53f7b5c1",
+      "published": "2024-01-18T08:55:13.824Z",
+      "planned": "2024-01-18T08:55:13.824Z"
+    },
+    {
+      "id": "69fff273de162540cb60c842",
+      "published": "2024-01-17T09:41:15.632Z",
+      "planned": "2024-01-17T09:41:15.632Z"
+    },
+    {
+      "id": "69fff273de162540cb60c841",
+      "published": "2024-01-17T09:41:15.629Z",
+      "planned": "2024-01-17T09:41:15.629Z"
+    },
+    {
+      "id": "69fff276430fc74e53f7b5e7",
+      "published": "2024-01-17T09:40:48.896Z",
+      "planned": "2024-01-17T09:40:48.896Z"
+    },
+    {
+      "id": "69fff274de162540cb60c851",
+      "published": "2024-01-17T09:40:48.896Z",
+      "planned": "2024-01-17T09:40:48.896Z"
+    },
+    {
+      "id": "69fff2742fa4a35d008e12e6",
+      "published": "2024-01-17T09:37:57.374Z",
+      "planned": "2024-01-17T09:37:57.374Z"
+    },
+    {
+      "id": "69fff273de162540cb60c84a",
+      "published": "2024-01-17T09:35:49.286Z",
+      "planned": "2024-01-17T09:35:49.286Z"
+    },
+    {
+      "id": "69fff26ade162540cb60c7ed",
+      "published": "2024-01-17T08:40:46.825Z",
+      "planned": "2024-01-17T08:40:46.825Z"
+    },
+    {
+      "id": "69fff26b2fa4a35d008e12a2",
+      "published": "2024-01-17T08:40:20.493Z",
+      "planned": "2024-01-17T08:40:20.493Z"
+    },
+    {
+      "id": "69fff26cde162540cb60c808",
+      "published": "2024-01-16T15:38:17.412Z",
+      "planned": "2024-01-16T15:38:17.412Z"
+    },
+    {
+      "id": "69fff26fde162540cb60c814",
+      "published": "2023-11-15T10:13:44.869Z",
+      "planned": "2023-11-15T10:13:44.869Z"
+    },
+    {
+      "id": "69fff272430fc74e53f7b5cd",
+      "published": "2023-11-15T10:13:30.928Z",
+      "planned": "2023-11-15T10:13:30.928Z"
+    },
+    {
+      "id": "69fff25a430fc74e53f7b4dd",
+      "published": "2023-11-14T10:24:27.951Z",
+      "planned": "2023-11-14T10:24:27.951Z"
+    },
+    {
+      "id": "69fff2652fa4a35d008e126c",
+      "published": "2023-06-12T11:28:52.812Z",
+      "planned": "2023-06-12T11:28:52.812Z"
+    },
+    {
+      "id": "69fff265de162540cb60c7b7",
+      "published": "2023-06-09T11:05:39.321Z",
+      "planned": "2023-06-09T11:05:39.321Z"
+    },
+    {
+      "id": "69fff26d430fc74e53f7b5ae",
+      "published": "2022-12-29T13:48:31.652Z",
+      "planned": "2022-12-29T13:48:31.652Z"
+    },
+    {
+      "id": "69fff265de162540cb60c7bc",
+      "published": "2022-12-28T14:07:35.716Z",
+      "planned": "2022-12-28T14:07:35.716Z"
+    },
+    {
+      "id": "69fff2642fa4a35d008e1266",
+      "published": "2022-12-28T13:34:28.630Z",
+      "planned": "2022-12-28T13:34:28.630Z"
+    },
+    {
+      "id": "69fff266de162540cb60c7c0",
+      "published": "2022-12-22T16:17:37.644Z",
+      "planned": "2022-12-22T16:17:37.644Z"
+    },
+    {
+      "id": "69fff269de162540cb60c7e3",
+      "published": "2022-12-21T13:20:43.586Z",
+      "planned": "2022-12-21T13:20:43.586Z"
+    },
+    {
+      "id": "69fff268de162540cb60c7c7",
+      "published": "2022-12-20T17:20:09.721Z",
+      "planned": "2022-12-20T17:20:09.721Z"
+    },
+    {
+      "id": "69fff2692fa4a35d008e1294",
+      "published": "2022-11-24T16:02:33.817Z",
+      "planned": "2022-11-24T16:02:33.817Z"
+    },
+    {
+      "id": "69fff271430fc74e53f7b5c6",
+      "published": "2022-11-24T16:01:49.484Z",
+      "planned": "2022-11-24T16:01:49.484Z"
+    },
+    {
+      "id": "69fff26bde162540cb60c7f5",
+      "published": "2022-11-18T13:49:27.316Z",
+      "planned": "2022-11-18T13:49:27.316Z"
+    },
+    {
+      "id": "69fff26a2fa4a35d008e129c",
+      "published": "2022-05-02T17:18:00Z",
+      "planned": "2022-05-02T17:18:00Z"
+    },
+    {
+      "id": "69fff269430fc74e53f7b577",
+      "published": "2022-04-29T15:43:00Z",
+      "planned": "2022-04-29T15:43:00Z"
+    },
+    {
+      "id": "69fff26c430fc74e53f7b597",
+      "published": "2022-04-21T17:18:00Z",
+      "planned": "2022-04-21T17:18:00Z"
+    },
+    {
+      "id": "69fff263430fc74e53f7b548",
+      "published": "2022-04-15T18:49:25.020Z",
+      "planned": "2022-04-15T18:49:25.020Z"
+    },
+    {
+      "id": "69fff26d430fc74e53f7b5a3",
+      "published": "2022-03-18T15:13:00Z",
+      "planned": "2022-03-18T15:13:00Z"
+    },
+    {
+      "id": "69fff26c430fc74e53f7b59c",
+      "published": "2022-02-22T13:07:22.855Z",
+      "planned": "2022-02-22T13:07:22.855Z"
+    },
+    {
+      "id": "69fff2702fa4a35d008e12ca",
+      "published": "2021-10-27T12:01:48.394Z",
+      "planned": "2021-10-27T12:01:48.394Z"
+    },
+    {
+      "id": "69fff26b430fc74e53f7b594",
+      "published": "2021-02-17T14:07:13.822Z",
+      "planned": "2021-02-17T14:07:13.822Z"
+    },
+    {
+      "id": "69fff26bde162540cb60c7ff",
+      "published": "2021-02-17T14:07:13.819Z",
+      "planned": "2021-02-17T14:07:13.819Z"
+    },
+    {
+      "id": "69fff26b430fc74e53f7b58d",
+      "published": "2020-11-10T13:46:01.990Z",
+      "planned": "2020-11-10T13:46:01.990Z"
+    },
+    {
+      "id": "69fff265430fc74e53f7b551",
+      "published": "2020-10-01T11:25:20.316Z",
+      "planned": "2020-10-01T11:25:20.316Z"
+    }
+  ],
+  "channels": [
+    {
+      "id": "69fff2592fa4a35d008e1209",
+      "config": {
+        "localization": {
+          "en_US": {
+            "title": "New Hire Welcome Journey",
+            "description": "Your first 90 days at Stryker \u2014 onboarding, the Mission, and meeting your team."
+          }
+        },
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff2592fa4a35d008e1209"
+    },
+    {
+      "id": "69fff2642fa4a35d008e1263",
+      "config": {
+        "localization": {
+          "en_US": {
+            "title": "Diversity & Inclusion",
+            "description": "Stryker's commitment to inclusion \u2014 ERG news, programs, and stories."
+          }
+        },
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff2642fa4a35d008e1263"
+    },
+    {
+      "id": "69fff264430fc74e53f7b54d",
+      "config": {
+        "localization": {
+          "de_DE": {
+            "title": "Schnappschuss: Unternehmens Werte",
+            "description": null
+          },
+          "en_US": {
+            "title": "Snapshot: Together with Stryker",
+            "description": null
+          }
+        },
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff264430fc74e53f7b54d"
+    },
+    {
+      "id": "69fff266430fc74e53f7b55a",
+      "config": {
+        "localization": {
+          "en_US": {
+            "title": "Policy Updates",
+            "description": "Updates to Stryker's Code of Conduct, compliance policies, and SOPs."
+          }
+        },
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff266430fc74e53f7b55a"
+    },
+    {
+      "id": "69fff267430fc74e53f7b55c",
+      "config": {
+        "localization": {
+          "en_US": {
+            "title": "Open Enrollment Resources",
+            "description": "Benefits, 401(k), wellness, and total rewards information for Stryker employees."
+          }
+        },
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff267430fc74e53f7b55c"
+    },
+    {
+      "id": "69fff267de162540cb60c7c5",
+      "config": {
+        "localization": {
+          "en_US": {
+            "title": "Safety First",
+            "description": "Patient and product safety alerts, FCA/recall guidance, and OSHA notices for plant teams."
+          }
+        },
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff267de162540cb60c7c5"
+    },
+    {
+      "id": "69fff2672fa4a35d008e1277",
+      "config": {
+        "localization": {
+          "en_US": {
+            "title": "The Stryker Pulse",
+            "description": null
+          }
+        },
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff2672fa4a35d008e1277"
+    },
+    {
+      "id": "69fff2672fa4a35d008e1279",
+      "config": {
+        "localization": {
+          "de_DE": {
+            "title": "Unsere Mitarbeitenden",
+            "description": null
+          },
+          "en_US": {
+            "title": "Employee Recognition",
+            "description": "Spotlights from across MedSurg, Orthopaedics, and Neurotechnology divisions."
+          }
+        },
+        "wideMode": false,
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff2672fa4a35d008e1279"
+    },
+    {
+      "id": "69fff267430fc74e53f7b55e",
+      "config": {
+        "localization": {
+          "de_DE": {
+            "title": "Unternehmens News",
+            "description": null
+          },
+          "en_US": {
+            "title": "Sales Updates",
+            "description": "Field wins, account momentum, and commercial enablement for the global Stryker sales org."
+          }
+        },
+        "wideMode": false,
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff267430fc74e53f7b55e"
+    },
+    {
+      "id": "69fff269430fc74e53f7b570",
+      "config": {
+        "localization": {
+          "de_DE": {
+            "title": "CEO Blog",
+            "description": null
+          },
+          "en_US": {
+            "title": "CEO Blog",
+            "description": "Direct from Kevin Lobo on strategy, Mission, and what's next for Stryker."
+          }
+        },
+        "wideMode": false,
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff269430fc74e53f7b570"
+    },
+    {
+      "id": "69fff269de162540cb60c7e1",
+      "config": {
+        "localization": {
+          "de_DE": {
+            "title": "Soziale Verantwortung",
+            "description": null
+          },
+          "en_US": {
+            "title": "Corporate Social Responsibility",
+            "description": "Stryker's Together with Communities work, sustainability, and giving."
+          }
+        },
+        "wideMode": false,
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff269de162540cb60c7e1"
+    },
+    {
+      "id": "69fff26bde162540cb60c7fa",
+      "config": {
+        "localization": {
+          "de_DE": {
+            "title": "Warnungsmeldungen",
+            "description": null
+          },
+          "en_US": {
+            "title": "Alerts",
+            "description": "Time-sensitive operational, quality, and regulatory alerts."
+          }
+        },
+        "wideMode": false,
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff26bde162540cb60c7fa"
+    },
+    {
+      "id": "69fff26d2fa4a35d008e12bb",
+      "config": {
+        "localization": {
+          "de_DE": {
+            "title": "B\u00fcro News",
+            "description": null
+          },
+          "en_US": {
+            "title": "Office News",
+            "description": "Site and office updates across Stryker locations worldwide."
+          }
+        },
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff26d2fa4a35d008e12bb"
+    },
+    {
+      "id": "69fff271430fc74e53f7b5cb",
+      "config": {
+        "localization": {
+          "en_US": {
+            "title": "Manufacturing Excellence",
+            "description": null
+          }
+        },
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff271430fc74e53f7b5cb"
+    },
+    {
+      "id": "69fff2722fa4a35d008e12db",
+      "config": {
+        "localization": {
+          "en_US": {
+            "title": "Customer & Healthcare Stories",
+            "description": null
+          }
+        },
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff2722fa4a35d008e12db"
+    },
+    {
+      "id": "69fff273430fc74e53f7b5d4",
+      "config": {
+        "localization": {
+          "de_DE": {
+            "title": "Industrie News",
+            "description": null
+          },
+          "en_US": {
+            "title": "MedTech Industry",
+            "description": null
+          }
+        },
+        "sidebarVisible": true,
+        "showPageBackground": true,
+        "showAdminActions": true
+      },
+      "update_url": "https://strykerdemo.staffbase.rocks/api/installations/69fff273430fc74e53f7b5d4"
+    }
+  ]
+}

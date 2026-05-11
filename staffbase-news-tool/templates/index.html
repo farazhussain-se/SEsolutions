@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staffbase News Demo Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-brand">
+    <span class="brand-icon">📰</span>
+    <span class="brand-name">News Demo Tool</span>
+    <span class="brand-sep">|</span>
+    <span class="brand-instance" id="topbar-instance">strykerdemo.staffbase.rocks</span>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-meta" id="topbar-meta"></div>
+    <div class="conn-dot" id="conn-dot" title="Connection status"></div>
+    <button class="settings-btn" onclick="openSettings()" title="Change environment">⚙ Settings</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <nav class="steps-nav">
+      <div class="step-item active" id="nav-1" onclick="goToStep(1)">
+        <div class="step-dot">1</div>
+        <div class="step-info"><span class="step-label">Connect</span><span class="step-sub">Instance & token</span></div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item" id="nav-2" onclick="canGoTo(2) && goToStep(2)">
+        <div class="step-dot">2</div>
+        <div class="step-info"><span class="step-label">Scan</span><span class="step-sub">Channels & posts</span></div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item" id="nav-3" onclick="canGoTo(3) && goToStep(3)">
+        <div class="step-dot">3</div>
+        <div class="step-info"><span class="step-label">Configure</span><span class="step-sub">Demo date & industry</span></div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item" id="nav-4" onclick="canGoTo(4) && goToStep(4)">
+        <div class="step-dot">4</div>
+        <div class="step-info"><span class="step-label">Apply</span><span class="step-sub">Push to Staffbase</span></div>
+      </div>
+    </nav>
+
+    <div class="sidebar-info" id="sidebar-info"></div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- ── Step 1: Connect ───────────────────────────────────────────────── -->
+    <section class="step-panel active" id="panel-1">
+      <div class="panel-header">
+        <h1>Connect to Staffbase</h1>
+        <p>Pick a preset instance or enter a custom base URL + API token. The token is sent only on outgoing requests; nothing is stored server-side.</p>
+      </div>
+
+      <div class="connect-grid">
+        <div class="connect-form">
+          <div class="form-group">
+            <label>Instance Base URL</label>
+            <input type="text" id="connect-base" placeholder="https://strykerdemo.staffbase.rocks/api" autocomplete="off">
+            <small>Include the trailing <code>/api</code></small>
+          </div>
+          <div class="form-group">
+            <label>API Token <span class="label-hint">(Basic auth — base64 appId:secret)</span></label>
+            <div class="token-row">
+              <input type="password" id="connect-token" placeholder="NjY…" autocomplete="new-password">
+              <button class="toggle-vis" onclick="togglePwd('connect-token', this)" title="Show/hide token">👁</button>
+            </div>
+          </div>
+          <div class="conn-result" id="connect-result"></div>
+          <div class="action-row">
+            <button class="btn btn-outline" onclick="testConnect()">🔌 Test Connection</button>
+            <button class="btn btn-primary" onclick="saveAndScan()">Save & Scan →</button>
+          </div>
+        </div>
+
+        <div class="connect-presets">
+          <h4>Presets</h4>
+          <div class="preset-list" id="preset-list"></div>
+          <div class="hint">Tokens are never persisted to disk — paste the API token after picking the preset.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Step 2: Scan ──────────────────────────────────────────────────── -->
+    <section class="step-panel" id="panel-2">
+      <div class="panel-header">
+        <h1>Scan Results</h1>
+        <p>Below is everything visible to the API token. Posts without a publication date (drafts/planned) will be left untouched.</p>
+      </div>
+
+      <div class="scan-stats" id="scan-stats"></div>
+
+      <div class="scan-grid">
+        <div class="scan-col">
+          <h3>Channels <span class="muted" id="ch-count"></span></h3>
+          <div class="channel-list" id="channel-list"></div>
+        </div>
+        <div class="scan-col">
+          <h3>Recent Posts <span class="muted" id="post-count"></span></h3>
+          <div class="post-list" id="post-list"></div>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-outline" onclick="goToStep(1)">← Back</button>
+        <button class="btn btn-secondary" onclick="rescan()">↻ Rescan</button>
+        <button class="btn btn-primary" onclick="goToStep(3)">Configure →</button>
+      </div>
+    </section>
+
+    <!-- ── Step 3: Configure ─────────────────────────────────────────────── -->
+    <section class="step-panel" id="panel-3">
+      <div class="panel-header">
+        <h1>Configure Demo</h1>
+        <p>Pick the demo date, target industry, and customer name. We'll spread post dates realistically and propose channel renames.</p>
+      </div>
+
+      <div class="config-grid">
+        <div class="form-group">
+          <label>Demo Date</label>
+          <input type="date" id="cfg-demo-date">
+          <small>Posts will cluster in the days leading up to this date.</small>
+        </div>
+        <div class="form-group">
+          <label>Spread Window (days)</label>
+          <input type="number" id="cfg-span-days" value="90" min="14" max="365">
+          <small>Oldest post will be roughly this many days before demo date.</small>
+        </div>
+        <div class="form-group">
+          <label>Industry</label>
+          <select id="cfg-industry"></select>
+        </div>
+        <div class="form-group">
+          <label>Account / Customer Name</label>
+          <input type="text" id="cfg-account" placeholder="e.g. Stryker">
+          <small>Mentioned in the description of the top channel.</small>
+        </div>
+        <div class="form-group full">
+          <label class="toggle-row">
+            <input type="checkbox" id="cfg-rename">
+            <span class="toggle-slider"></span>
+            <span class="toggle-label">
+              <strong>Rename channels to match industry</strong>
+              <small>⚠ Naive: maps existing channels to industry templates by their position in the list. Review every rename in the preview before applying — the order in your instance may not align with the template order.</small>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-outline" onclick="goToStep(2)">← Back</button>
+        <button class="btn btn-primary" onclick="buildPlan()">Preview Plan →</button>
+      </div>
+
+      <div id="plan-preview" style="display:none">
+        <h2 class="section-title">Preview</h2>
+        <div class="plan-grid">
+          <div class="plan-card">
+            <div class="plan-card-head"><h3>Post Dates</h3><span class="muted" id="plan-post-count"></span></div>
+            <div class="plan-table" id="plan-posts"></div>
+          </div>
+          <div class="plan-card">
+            <div class="plan-card-head"><h3>Channel Renames</h3><span class="muted" id="plan-ch-count"></span></div>
+            <div class="plan-table" id="plan-channels"></div>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-deploy" onclick="goToStep(4)">⚡ Apply to Staffbase →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Step 4: Apply ─────────────────────────────────────────────────── -->
+    <section class="step-panel" id="panel-4">
+      <div class="panel-header">
+        <h1>Apply Changes</h1>
+        <p>This will <strong>PUT</strong> each post with a new <code>published</code> date and (optionally) rename channels. A snapshot is saved first so you can roll back.</p>
+      </div>
+
+      <div id="apply-confirm">
+        <div class="confirm-card" id="confirm-card"></div>
+        <div class="action-row">
+          <button class="btn btn-outline" onclick="goToStep(3)">← Back</button>
+          <button class="btn btn-deploy" onclick="apply()">⚡ Apply Now</button>
+        </div>
+      </div>
+
+      <div id="apply-results" style="display:none"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Settings overlay + panel -->
+<div class="settings-overlay" id="settings-overlay" onclick="closeSettings()"></div>
+<div class="settings-panel" id="settings-panel">
+  <div class="sp-header">
+    <div>
+      <h2>Instance Settings</h2>
+      <p>Switch environments or update your API token</p>
+    </div>
+    <button class="sp-close" onclick="closeSettings()">✕</button>
+  </div>
+
+  <div class="sp-body">
+    <div class="form-group">
+      <label>Instance Base URL</label>
+      <input type="text" id="sp-base" placeholder="https://your-instance.staffbase.com/api" autocomplete="off">
+      <small>Include the trailing <code>/api</code></small>
+    </div>
+
+    <div class="form-group">
+      <label>API Token <span class="label-hint">(Basic auth — base64 appId:secret)</span></label>
+      <div class="token-row">
+        <input type="password" id="sp-token" placeholder="NjY…" autocomplete="new-password">
+        <button class="toggle-vis" onclick="togglePwd('sp-token', this)" title="Show/hide token">👁</button>
+      </div>
+    </div>
+
+    <div class="conn-result" id="sp-conn-result"></div>
+
+    <div class="sp-actions">
+      <button class="btn btn-outline" onclick="testSettings()">🔌 Test Connection</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save & Apply</button>
+    </div>
+
+    <div class="sp-presets">
+      <h4>Presets</h4>
+      <div class="preset-list" id="sp-preset-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Snapshots overlay + panel -->
+<div class="settings-overlay" id="snapshots-overlay" onclick="closeSnapshots()"></div>
+<div class="settings-panel" id="snapshots-panel">
+  <div class="sp-header">
+    <div>
+      <h2>Snapshots</h2>
+      <p>Each apply saves a snapshot — restore to undo.</p>
+    </div>
+    <button class="sp-close" onclick="closeSnapshots()">✕</button>
+  </div>
+  <div class="sp-body">
+    <div id="snapshots-list" class="sp-saved"></div>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-text">Working…</div>
+  </div>
+</div>
+
+<script>
+  window.__PRESETS__   = {{ presets|tojson }};
+  window.__INDUSTRIES__ = {{ industries|tojson }};
+</script>
+<script src="/static/app.js"></script>
+</body>
+</html>
