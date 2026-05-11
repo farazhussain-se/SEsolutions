@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="widget-name" content="Stryker Learning">
+<meta name="widget-description" content="Stryker Portage learning hub — compliance, manufacturing, and skill-building courses for plant employees.">
+<title>Stryker Learning – Portage</title>
+<style>
+:root {
+  --stryker-yellow: #FFB511;
+  --stryker-yellow-tint: #fffbeb;
+  --stryker-amber: #a16207;   /* WCAG-AA on white: 5.94:1 ✓ */
+  --black: #111111;
+  --text-dark: #1f1f1f;
+  --text-grey: #4b5563;       /* 8.6:1 on white ✓ */
+  --text-faint: #6b7280;      /* 4.6:1 on white ✓ */
+  --border: #e5e7eb;
+  --divider: #f3f4f6;
+  --bg-light: #fafafa;
+  --white: #fff;
+  --radius: 12px;
+  --shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+body {
+  background: #e5e7eb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Focus ring for WCAG 2.4.7 */
+:focus-visible { outline: 3px solid var(--black); outline-offset: 2px; border-radius: 4px; }
+
+button { cursor: pointer; background: none; border: none; font: inherit; }
+
+.app {
+  width: min(800px, 100%);
+  height: 800px;
+  background: var(--white);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+header {
+  padding: 14px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--white);
+  border-bottom: 3px solid var(--stryker-yellow);
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark {
+  width: 28px; height: 28px;
+  background: var(--black);
+  color: var(--stryker-yellow);
+  font-weight: 900;
+  font-size: 16px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.brand-name { font-weight: 800; color: var(--text-dark); font-size: 16px; letter-spacing: 0.02em; }
+.brand-sub  { font-size: 11px; color: var(--text-faint); margin-left: 6px; }
+
+.user-actions { display: flex; align-items: center; gap: 14px; }
+.bell-btn {
+  position: relative;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--bg-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.bell-badge {
+  position: absolute; top: -2px; right: -2px;
+  background: var(--stryker-yellow);
+  color: var(--black);
+  font-size: 9px; font-weight: 900;
+  min-width: 16px; height: 16px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--white);
+}
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--bg-light) url('https://i.pravatar.cc/100?img=68') center/cover;
+  border: 2px solid var(--stryker-yellow);
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--divider);
+  background: var(--white);
+}
+.tab-btn {
+  padding: 14px 0;
+  margin-right: 28px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-faint);
+  position: relative;
+}
+.tab-btn.active { color: var(--text-dark); font-weight: 700; }
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 100%; height: 3px;
+  background: var(--stryker-yellow);
+  border-radius: 2px;
+}
+
+/* CONTENT */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px 28px;
+}
+.content::-webkit-scrollbar { width: 6px; }
+.content::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+.section-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.section-title { font-size: 20px; font-weight: 800; color: var(--text-dark); }
+.filter-btn {
+  font-size: 12px; font-weight: 600;
+  color: var(--text-grey);
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--white);
+}
+.filter-btn:hover { border-color: var(--black); }
+
+/* SAFETY BANNER */
+.safety-banner {
+  background: var(--stryker-yellow-tint);
+  border: 1px solid #fde68a;
+  border-left: 4px solid var(--stryker-yellow);
+  border-radius: 8px;
+  padding: 11px 14px;
+  margin-bottom: 18px;
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+}
+.safety-icon { font-size: 18px; flex-shrink: 0; }
+.safety-text { font-size: 12px; font-weight: 600; color: #713f12; line-height: 1.4; }
+.safety-text strong { color: #422006; }
+
+/* COURSE GRID */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 1px solid var(--divider);
+}
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--border); }
+.card-img {
+  height: 120px;
+  width: 100%;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-color: #ddd;
+}
+.card-badge {
+  position: absolute; top: 8px; left: 8px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--white);
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  letter-spacing: 0.03em;
+}
+.card-badge.required { background: #b91c1c; }   /* on dark: white text passes ✓ */
+.card-badge.inprogress { background: var(--black); }
+.card-badge.new { background: var(--stryker-yellow); color: var(--black); }
+.card-type {
+  position: absolute; bottom: 8px; right: 8px;
+  background: rgba(255,255,255,0.95);
+  font-size: 10px; font-weight: 700;
+  color: var(--black);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.card-body { padding: 10px 12px 12px; }
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.3;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-meta {
+  font-size: 11px;
+  color: var(--text-faint);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.card-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: #d1d5db; }
+.card-due-red { color: #b91c1c; font-weight: 700; }
+.card-due-amber { color: var(--stryker-amber); font-weight: 700; }
+
+/* PROFILE PANEL (slide-in) */
+.panel {
+  position: absolute;
+  top: 0; right: 0;
+  width: 340px; height: 100%;
+  background: var(--white);
+  box-shadow: -8px 0 24px rgba(0,0,0,0.12);
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+.panel.open { transform: translateX(0); }
+
+.panel-header {
+  padding: 14px 18px 16px;
+  background: var(--black);
+  color: var(--white);
+  border-bottom: 3px solid var(--stryker-yellow);
+}
+.panel-header-top { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.panel-back { color: var(--white); font-size: 18px; }
+.panel-header h2 { font-size: 15px; font-weight: 700; }
+
+.profile-row { display: flex; gap: 12px; align-items: center; }
+.profile-avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: #fff url('https://i.pravatar.cc/100?img=68') center/cover;
+  border: 3px solid var(--stryker-yellow);
+  position: relative;
+}
+.level-badge {
+  position: absolute; bottom: -4px; right: -4px;
+  background: var(--stryker-yellow);
+  color: var(--black);
+  font-size: 11px; font-weight: 900;
+  min-width: 22px; height: 22px;
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--black);
+}
+.profile-info h3 { font-size: 15px; font-weight: 700; color: var(--white); }
+.profile-info .role { font-size: 11px; color: #d4d4d8; margin-top: 2px; }
+
+.xp-bar-wrap { margin-top: 10px; }
+.xp-bar {
+  height: 6px; background: #374151;
+  border-radius: 3px; overflow: hidden;
+}
+.xp-bar-fill {
+  height: 100%; background: var(--stryker-yellow);
+  border-radius: 3px;
+}
+.xp-label { font-size: 10px; color: #d4d4d8; margin-top: 4px; }
+
+.panel-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+}
+.panel-scroll::-webkit-scrollbar { width: 5px; }
+.panel-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.stat-card {
+  background: var(--bg-light);
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+  border: 1px solid var(--divider);
+}
+.stat-val { font-size: 18px; font-weight: 800; color: var(--text-dark); }
+.stat-lbl { font-size: 9px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+
+.streak-card {
+  background: var(--stryker-yellow-tint);
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 18px;
+}
+.streak-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 11px; }
+.streak-header h4 { font-size: 12px; font-weight: 800; color: #713f12; letter-spacing: 0.04em; text-transform: uppercase; }
+.streak-count { font-size: 13px; font-weight: 800; color: #713f12; }
+.streak-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.streak-day { text-align: center; }
+.streak-dot {
+  width: 26px; height: 26px;
+  margin: 0 auto;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+}
+.streak-dot.done   { background: var(--stryker-yellow); color: var(--black); }
+.streak-dot.today  { background: var(--black); color: var(--stryker-yellow); border: 2px solid var(--stryker-yellow); }
+.streak-dot.future { background: var(--white); color: #d1d5db; border: 1.5px dashed #e5e7eb; }
+.streak-day-lbl { font-size: 9px; color: #713f12; margin-top: 3px; font-weight: 600; }
+
+.section-sub-title {
+  font-size: 11px; font-weight: 800;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.badge-item { text-align: center; }
+.badge-icon {
+  width: 44px; height: 44px;
+  margin: 0 auto 4px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px;
+}
+.badge-icon.earned { background: var(--stryker-yellow-tint); border: 2px solid var(--stryker-yellow); }
+.badge-icon.locked { background: var(--divider); opacity: 0.5; filter: grayscale(1); border: 2px solid var(--border); }
+.badge-name { font-size: 9px; font-weight: 600; color: var(--text-grey); line-height: 1.2; }
+
+.lb-list { display: flex; flex-direction: column; gap: 5px; }
+.lb-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: var(--bg-light);
+}
+.lb-row.you { background: var(--stryker-yellow-tint); border: 1px solid var(--stryker-yellow); }
+.lb-rank {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  font-size: 10px; font-weight: 800; color: var(--text-grey);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.lb-rank.top { background: var(--stryker-yellow); border-color: var(--stryker-yellow); color: var(--black); }
+.lb-name { flex: 1; font-size: 12px; font-weight: 700; color: var(--text-dark); }
+.lb-name small { display: block; font-size: 10px; font-weight: 500; color: var(--text-faint); }
+.lb-xp { font-size: 11px; font-weight: 800; color: #713f12; }
+
+/* NOTIFICATIONS PANEL */
+.notif-panel { /* same .panel base styles + own header */ }
+.notif-header {
+  padding: 14px 18px;
+  background: var(--black);
+  color: var(--white);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 3px solid var(--stryker-yellow);
+}
+.notif-header h2 { font-size: 15px; font-weight: 700; }
+.notif-list { flex: 1; overflow-y: auto; padding: 0; }
+.notif-item {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--divider);
+  display: flex;
+  gap: 11px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.notif-item.unread { background: var(--stryker-yellow-tint); border-left: 3px solid var(--stryker-yellow); }
+.notif-item:hover { background: var(--bg-light); }
+.notif-icon {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--bg-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.notif-body {}
+.notif-title { font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 3px; line-height: 1.3; }
+.notif-time  { font-size: 10px; color: var(--text-faint); }
+
+/* MODAL */
+.modal-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 200;
+  display: none;
+}
+.modal-overlay.open { display: block; }
+.modal {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%; max-width: 480px; max-height: 80%;
+  background: var(--white);
+  border-radius: var(--radius);
+  z-index: 201;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal.open { display: flex; }
+.modal-header {
+  background: var(--black);
+  color: var(--white);
+  padding: 12px 18px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 3px solid var(--stryker-yellow);
+}
+.modal-header h3 { font-size: 14px; font-weight: 700; }
+.modal-close { color: var(--white); font-size: 22px; line-height: 1; }
+.modal-img {
+  height: 160px;
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+}
+.modal-body { padding: 16px 18px; overflow-y: auto; }
+.modal-title { font-size: 18px; font-weight: 800; margin-bottom: 6px; color: var(--text-dark); }
+.modal-meta  { font-size: 11px; color: var(--text-faint); display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.modal-desc  { font-size: 13px; color: var(--text-grey); line-height: 1.55; margin-bottom: 14px; }
+.modal-sub   { font-size: 11px; font-weight: 800; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+.module-list { list-style: none; padding: 0; }
+.module-item {
+  padding: 9px 11px;
+  border: 1px solid var(--divider);
+  border-radius: 7px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dark);
+  display: flex; align-items: center; gap: 9px;
+}
+.module-num {
+  width: 22px; height: 22px;
+  background: var(--stryker-yellow-tint);
+  color: var(--stryker-amber);
+  border-radius: 50%;
+  font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-cta {
+  padding: 14px 18px;
+  border-top: 1px solid var(--divider);
+}
+.btn-primary {
+  width: 100%;
+  background: var(--black);
+  color: var(--white);
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+.btn-primary:hover { background: #27272a; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <div class="brand-mark">S</div>
+      <div>
+        <div class="brand-name">Stryker Learning</div>
+        <div class="brand-sub" style="margin-left:0; margin-top:1px;">Portage Plant</div>
+      </div>
+    </div>
+    <div class="user-actions">
+      <button class="bell-btn" onclick="toggleNotif()" aria-label="Notifications">
+        🔔
+        <span class="bell-badge" id="bellBadge">3</span>
+      </button>
+      <button class="avatar" onclick="toggleProfile()" aria-label="My Profile"></button>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchTab(this,'learnings')">My Learnings</button>
+    <button class="tab-btn"         role="tab" aria-selected="false" onclick="switchTab(this,'recommended')">Recommended</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="content"></div>
+
+  <!-- PROFILE PANEL -->
+  <aside class="panel" id="profilePanel" aria-hidden="true">
+    <div class="panel-header">
+      <div class="panel-header-top">
+        <button class="panel-back" onclick="toggleProfile()" aria-label="Close">←</button>
+        <h2>My Learning Profile</h2>
+      </div>
+      <div class="profile-row">
+        <div class="profile-avatar"><span class="level-badge">8</span></div>
+        <div class="profile-info">
+          <h3>James Ferris</h3>
+          <div class="role">Assembly Technician · Portage</div>
+          <div class="xp-bar-wrap">
+            <div class="xp-bar"><div class="xp-bar-fill" style="width:64%"></div></div>
+            <div class="xp-label">1,280 / 2,000 XP to Level 9</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-scroll" id="profileScroll"></div>
+  </aside>
+
+  <!-- NOTIFICATIONS PANEL -->
+  <aside class="panel notif-panel" id="notifPanel" aria-hidden="true">
+    <div class="notif-header">
+      <h2>Notifications</h2>
+      <button class="panel-back" onclick="toggleNotif()" aria-label="Close">←</button>
+    </div>
+    <div class="notif-list" id="notifList"></div>
+  </aside>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+  <div class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3>Course Details</h3>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
+    </div>
+    <div class="modal-img" id="modalImg"></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-cta">
+      <button class="btn-primary">Start Course</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── DATA ─────────────────────────────────────────────── */
+
+const myLearnings = [
+  {
+    id: 1,
+    title: "ISO 13485 – Annual Refresher",
+    img: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=400",
+    status: "Required", type: "Online", duration: "45 min",
+    due: "Due in 4 days", dueClass: "red",
+    desc: "Annual refresher on the ISO 13485 quality management system for medical device manufacturers. Covers documentation, traceability, and CAPA processes specific to Stryker Portage workflows.",
+    modules: ["QMS Overview & Scope", "Documentation Hierarchy", "CAPA & Nonconformance", "Audit Readiness"]
+  },
+  {
+    id: 2,
+    title: "Cleanroom Gowning – ISO Class 8",
+    img: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=400",
+    status: "In progress", type: "Online", duration: "30 min",
+    due: "May 18", dueClass: "amber",
+    desc: "Hands-on gowning protocol for ISO Class 8 cleanrooms in Building 2 Instruments Assembly. Includes garment selection, entry sequence, and behavioral controls inside the controlled environment.",
+    modules: ["Gowning Sequence", "Garment Inspection", "Cleanroom Behavior", "De-Gowning & Exit"]
+  },
+  {
+    id: 3,
+    title: "Good Documentation Practices (GDP)",
+    img: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=400",
+    status: "Required", type: "Online", duration: "25 min",
+    due: "May 15", dueClass: "red",
+    desc: "ALCOA principles applied to Device History Records (DHR), batch records, and traveler documentation. Critical for FDA 21 CFR Part 820 compliance.",
+    modules: ["ALCOA+ Principles", "Error Correction Protocol", "Electronic Records (21 CFR 11)", "Common Findings & Examples"]
+  },
+  {
+    id: 4,
+    title: "Bloodborne Pathogens – Annual",
+    img: "https://images.unsplash.com/photo-1583912086096-8c60d75a53f9?auto=format&fit=crop&q=80&w=400",
+    status: null, type: "Event", duration: "Full day",
+    due: "May 23", dueClass: "amber",
+    desc: "OSHA-required annual training for employees with potential exposure. In-person session in the Portage Training Center, Room A-103.",
+    modules: ["Morning – BBP Overview", "Exposure Control Plan", "PPE & Universal Precautions", "Post-Exposure Procedure"]
+  }
+];
+
+const recommended = [
+  {
+    id: 5,
+    title: "Lean Manufacturing – Yellow Belt",
+    img: "https://images.unsplash.com/photo-1565939884890-04a1a0a90e0b?auto=format&fit=crop&q=80&w=400",
+    status: "New", type: "Online", duration: "3 hr",
+    due: "Self-paced", dueClass: "",
+    desc: "Introduction to Lean principles, 5S, value stream mapping, and waste reduction. Counts toward your Stryker Operations Excellence pathway.",
+    modules: ["The 8 Wastes (DOWNTIME)", "5S Workplace Organization", "Value Stream Mapping", "Kaizen Events"]
+  },
+  {
+    id: 6,
+    title: "Surgical Power Tools – Anatomy",
+    img: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&q=80&w=400",
+    status: null, type: "Online", duration: "1 hr",
+    due: "Recommended", dueClass: "",
+    desc: "How surgeons use the System 9 product family. Understand the clinical purpose of the tools you build — sub-assembly tolerances suddenly make a lot more sense.",
+    modules: ["System 9 Product Family", "Orthopaedic Use Cases", "Surgical Workflow", "Field Service Insights"]
+  },
+  {
+    id: 7,
+    title: "Root Cause Analysis & CAPA",
+    img: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=400",
+    status: "New", type: "Online", duration: "1.5 hr",
+    due: "Optional", dueClass: "",
+    desc: "5-Whys, fishbone diagrams, and structured CAPA writing. Skills used by senior assembly techs and team leads when investigating line defects.",
+    modules: ["5-Whys Methodology", "Fishbone (Ishikawa)", "Writing Effective CAPAs", "Effectiveness Verification"]
+  },
+  {
+    id: 8,
+    title: "Ergonomics for Assembly Work",
+    img: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=400",
+    status: null, type: "Online", duration: "30 min",
+    due: "Recommended", dueClass: "",
+    desc: "Posture, repetitive motion, lifting technique, and bench-station setup tailored to instruments assembly cells. Reduce strain on a long 8-hour shift.",
+    modules: ["Neutral Posture Basics", "Repetitive Motion Risks", "Bench & Stool Setup", "Daily Stretch Routine"]
+  }
+];
+
+const notifs = [
+  { icon: '⚠️',  title: 'ISO 13485 refresher due in 4 days',         time: '2h ago',    unread: true },
+  { icon: '🆕',  title: 'New course: Lean Manufacturing – Yellow Belt', time: 'Yesterday', unread: true },
+  { icon: '🔥',  title: '5-day learning streak! Keep it going',         time: 'Yesterday', unread: true },
+  { icon: '✅',  title: 'CD4 Sterile Kit – Line Training completed',    time: 'May 5',     unread: false },
+  { icon: '🏅',  title: 'Badge earned: Quality Pro',                    time: 'May 4',     unread: false },
+  { icon: '📅',  title: 'Bloodborne Pathogens session scheduled May 23', time: 'May 1',    unread: false }
+];
+
+const profile = {
+  level: 8,
+  xp: 1280, xpNext: 2000,
+  completed: 14, hours: 22, certs: 5,
+  streak: 5,
+  streakDays: [
+    { lbl: 'Mon', done: true  },
+    { lbl: 'Tue', done: true  },
+    { lbl: 'Wed', done: true  },
+    { lbl: 'Thu', done: true  },
+    { lbl: 'Fri', done: true  },
+    { lbl: 'Sat', done: false },
+    { lbl: 'Sun', done: false, today: true }
+  ],
+  badges: [
+    { e: '🚀', n: 'Fast Starter',     earned: true  },
+    { e: '🔥', n: '5-Day Streak',     earned: true  },
+    { e: '✔', n: 'Quality Pro',       earned: true  },
+    { e: '⚕', n: 'Cleanroom Cert',   earned: true  },
+    { e: '🧰', n: 'Tool Master',      earned: true  },
+    { e: '🏆', n: 'Top 25%',          earned: true  },
+    { e: '💡', n: 'Lean Practitioner', earned: false },
+    { e: '⭐', n: 'All-Star',         earned: false }
+  ],
+  leaderboard: [
+    { name: 'Lisa Hartwell',  dept: 'Instruments – Tools',         xp: 2480, av: 'https://i.pravatar.cc/100?img=47' },
+    { name: 'Diane Park',     dept: 'Instruments – Sub-Assembly',  xp: 2210, av: 'https://i.pravatar.cc/100?img=24' },
+    { name: 'James Ferris',   dept: 'Instruments – Power Tools',   xp: 1280, av: 'https://i.pravatar.cc/100?img=68', you: true },
+    { name: 'Mark Velasquez', dept: 'Instruments – Sub-Assembly',  xp: 1150, av: 'https://i.pravatar.cc/100?img=14' },
+    { name: 'Tom Henson',     dept: 'Instruments – Power Tools',   xp: 1020, av: 'https://i.pravatar.cc/100?img=11' },
+    { name: 'Aisha Rahman',   dept: 'Instruments – QA',            xp:  940, av: 'https://i.pravatar.cc/100?img=49' }
+  ]
+};
+
+/* ── RENDER ───────────────────────────────────────────── */
+
+function renderGrid(data, title) {
+  const cards = data.map(c => {
+    let badgeHTML = '';
+    if (c.status === 'Required')    badgeHTML = `<span class="card-badge required">Required</span>`;
+    if (c.status === 'In progress') badgeHTML = `<span class="card-badge inprogress">In progress</span>`;
+    if (c.status === 'New')         badgeHTML = `<span class="card-badge new">New</span>`;
+
+    const dueCls = c.dueClass ? `card-due-${c.dueClass}` : '';
+    return `
+      <button class="card" onclick='openModal(${c.id})' aria-label="${c.title}">
+        <div class="card-img" style="background-image:url('${c.img}')">
+          ${badgeHTML}
+          <span class="card-type">${c.type}</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">${c.title}</div>
+          <div class="card-meta">
+            <span>${c.duration}</span>
+            <span class="dot"></span>
+            <span class="${dueCls}">${c.due}</span>
+          </div>
+        </div>
+      </button>
+    `;
+  }).join('');
+
+  return `
+    <div class="section-hdr">
+      <div class="section-title">${title}</div>
+      <button class="filter-btn">Filter ▾</button>
+    </div>
+    ${title === 'My Learnings' ? `
+      <div class="safety-banner">
+        <span class="safety-icon" aria-hidden="true">⚕️</span>
+        <span class="safety-text"><strong>Compliance Reminder:</strong> Two required courses are due within 5 days. Complete them to keep your cleanroom access active.</span>
+      </div>` : ''}
+    <div class="grid">${cards}</div>
+  `;
+}
+
+function switchTab(btn, tab) {
+  document.querySelectorAll('.tab-btn').forEach(t => {
+    t.classList.remove('active');
+    t.setAttribute('aria-selected', 'false');
+  });
+  btn.classList.add('active');
+  btn.setAttribute('aria-selected', 'true');
+  renderTab(tab);
+}
+
+function renderTab(tab) {
+  const c = document.getElementById('content');
+  if (tab === 'learnings')   c.innerHTML = renderGrid(myLearnings, 'My Learnings');
+  if (tab === 'recommended') c.innerHTML = renderGrid(recommended, 'Recommended for You');
+}
+
+/* Profile panel */
+function renderProfile() {
+  const d = profile;
+  const stats = `
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val">${d.completed}</div><div class="stat-lbl">Completed</div></div>
+      <div class="stat-card"><div class="stat-val">${d.hours}h</div><div class="stat-lbl">Learned</div></div>
+      <div class="stat-card"><div class="stat-val">${d.certs}</div><div class="stat-lbl">Certs</div></div>
+    </div>
+  `;
+  const streak = `
+    <div class="streak-card">
+      <div class="streak-header"><h4>🔥 Learning Streak</h4><span class="streak-count">${d.streak} days</span></div>
+      <div class="streak-days">
+        ${d.streakDays.map(day => {
+          const cls = day.done ? 'done' : (day.today ? 'today' : 'future');
+          const icon = day.done ? '✓' : (day.today ? '·' : '');
+          return `<div class="streak-day"><div class="streak-dot ${cls}">${icon}</div><div class="streak-day-lbl">${day.lbl}</div></div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  const badges = `
+    <div class="section-sub-title">Achievements</div>
+    <div class="badge-grid">
+      ${d.badges.map(b => `
+        <div class="badge-item">
+          <div class="badge-icon ${b.earned ? 'earned' : 'locked'}">${b.e}</div>
+          <div class="badge-name">${b.n}</div>
+        </div>`).join('')}
+    </div>
+  `;
+  const lb = `
+    <div class="section-sub-title">Team Leaderboard</div>
+    <div class="lb-list">
+      ${d.leaderboard.map((p, i) => `
+        <div class="lb-row ${p.you ? 'you' : ''}">
+          <div class="lb-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
+          <div class="lb-name">${p.name}${p.you ? ' (You)' : ''}<small>${p.dept}</small></div>
+          <div class="lb-xp">${p.xp.toLocaleString()} XP</div>
+        </div>`).join('')}
+    </div>
+  `;
+  document.getElementById('profileScroll').innerHTML = stats + streak + badges + lb;
+}
+
+/* Notifications panel */
+function renderNotifs() {
+  const list = document.getElementById('notifList');
+  list.innerHTML = notifs.map(n => `
+    <div class="notif-item ${n.unread ? 'unread' : ''}">
+      <div class="notif-icon">${n.icon}</div>
+      <div class="notif-body">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+    </div>
+  `).join('');
+  const unreadCount = notifs.filter(n => n.unread).length;
+  document.getElementById('bellBadge').textContent = unreadCount;
+  document.getElementById('bellBadge').style.display = unreadCount ? 'flex' : 'none';
+}
+
+function toggleProfile() {
+  const p = document.getElementById('profilePanel');
+  const open = p.classList.toggle('open');
+  p.setAttribute('aria-hidden', !open);
+}
+function toggleNotif() {
+  const n = document.getElementById('notifPanel');
+  const open = n.classList.toggle('open');
+  n.setAttribute('aria-hidden', !open);
+}
+
+/* Modal */
+function openModal(id) {
+  const c = [...myLearnings, ...recommended].find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('modalImg').style.backgroundImage = `url('${c.img}')`;
+  let badgeHTML = '';
+  if (c.status) badgeHTML = `<span class="card-badge" style="position:static; background:${c.status === 'Required' ? '#b91c1c' : c.status === 'New' ? '#FFB511' : '#111'}; color:${c.status === 'New' ? '#111' : '#fff'};">${c.status}</span>`;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-title">${c.title}</div>
+    <div class="modal-meta">
+      ${badgeHTML}
+      <span>${c.type}</span>
+      <span class="dot"></span>
+      <span>${c.duration}</span>
+      <span class="dot"></span>
+      <span class="${c.dueClass ? 'card-due-' + c.dueClass : ''}">${c.due}</span>
+    </div>
+    <div class="modal-desc">${c.desc}</div>
+    <div class="modal-sub">Course Modules</div>
+    <ul class="module-list">
+      ${c.modules.map((m, i) => `<li class="module-item"><span class="module-num">${i + 1}</span>${m}</li>`).join('')}
+    </ul>
+  `;
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+/* Init */
+renderTab('learnings');
+renderProfile();
+renderNotifs();
+</script>
+
+</body>
+</html>
