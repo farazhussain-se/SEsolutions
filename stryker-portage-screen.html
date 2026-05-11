@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Stryker Portage – Ops Board</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #e8ebef;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.widget {
+  width: min(480px, 96vw);
+  height: min(600px, 96vh);
+  background: #ffffff;
+  border: 2px solid #d4d4d8;
+  border-radius: clamp(8px, 2vw, 16px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.13);
+}
+
+/* HEADER */
+.widget-header {
+  background: #111111;
+  padding: clamp(6px, 1.5vh, 10px) clamp(12px, 3vw, 18px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  border-bottom: 3px solid #FFB511;
+}
+.header-brand {
+  display: flex; align-items: center; gap: clamp(6px, 1.5vw, 9px);
+}
+.brand-mark {
+  background: #FFB511; color: #111111;
+  font-weight: 900;
+  font-size: clamp(10px, 2.4vw, 13px);
+  padding: 3px clamp(6px, 1.5vw, 9px);
+  border-radius: 4px;
+  letter-spacing: .8px;
+  flex-shrink: 0;
+}
+.header-title {
+  font-size: clamp(13px, 3.5vw, 18px);
+  font-weight: 900; color: #ffffff;
+  letter-spacing: 0.02em;
+}
+.header-sub {
+  font-size: clamp(9px, 1.8vw, 11px);
+  color: #a1a1aa; margin-top: 2px;
+}
+/* LIVE badge — yellow tile, black text = 11.5:1 ✓ AAA */
+.live-badge {
+  display: flex; align-items: center; gap: clamp(4px, 1vw, 6px);
+  background: #FFB511;
+  border-radius: 16px;
+  padding: clamp(3px, 0.8vh, 5px) clamp(8px, 2vw, 12px);
+  font-size: clamp(9px, 2vw, 12px); color: #111111;
+  font-weight: 900; white-space: nowrap; flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+.live-dot {
+  width: clamp(6px, 1.5vw, 8px);
+  height: clamp(6px, 1.5vw, 8px);
+  background: #111111; border-radius: 50%;
+  animation: pulse 1.4s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* SECTION */
+.section {
+  padding: clamp(6px, 1.5vh, 10px) clamp(12px, 3vw, 18px);
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+.section-title {
+  font-size: clamp(8px, 1.8vw, 10px);
+  font-weight: 800; text-transform: uppercase;
+  letter-spacing: 1.5px; color: #4b5563;
+  margin-bottom: clamp(5px, 1.2vh, 8px);
+  padding-bottom: clamp(4px, 1vh, 6px);
+  border-bottom: 1px solid #e5e7eb;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* SHIFT */
+.shift-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #fafafa;
+  border-radius: clamp(5px, 1.2vw, 8px);
+  padding: clamp(5px, 1.2vh, 8px) clamp(8px, 2vw, 12px);
+  margin-bottom: clamp(4px, 1vh, 6px);
+  border-left: 5px solid #d4d4d8;
+}
+.shift-row:last-child { margin-bottom: 0; }
+.shift-row.active {
+  border-left-color: #FFB511;
+  background: #fffbeb;
+}
+.shift-name {
+  font-size: clamp(12px, 3vw, 16px);
+  font-weight: 900; color: #111111;
+}
+/* Shift time: amber #a16207 on light bg = 5.94:1 ✓ */
+.shift-time {
+  font-size: clamp(10px, 2.2vw, 13px);
+  color: #a16207; font-weight: 700; margin-top: 2px;
+}
+.shift-right { text-align: right; }
+.shift-super {
+  font-size: clamp(10px, 2vw, 12px); color: #4b5563;
+}
+/* Active badge: black text on yellow = 11.5:1 ✓ */
+.shift-badge {
+  display: inline-block;
+  background: #FFB511; color: #111111;
+  border-radius: 8px;
+  font-size: clamp(8px, 1.8vw, 10px);
+  padding: 2px 10px; font-weight: 900;
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+}
+
+/* PRODUCTION */
+.prod-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(5px, 1.5vw, 8px);
+}
+.prod-card {
+  background: #fafafa;
+  border-radius: clamp(6px, 1.5vw, 10px);
+  padding: clamp(7px, 1.5vh, 10px) clamp(8px, 2vw, 12px);
+  border: 1px solid #e5e7eb;
+  border-top: 4px solid #d4d4d8;
+}
+.prod-card.yellow { border-top-color: #FFB511; }
+.prod-card.green  { border-top-color: #1a9e3f; }
+.prod-card.dark   { border-top-color: #111111; }
+.prod-card.red    { border-top-color: #b91c1c; }
+
+.prod-label {
+  font-size: clamp(8px, 1.8vw, 10px);
+  font-weight: 800; text-transform: uppercase;
+  letter-spacing: 1px; color: #4b5563; margin-bottom: 4px;
+}
+.prod-value {
+  font-size: clamp(22px, 5.5vw, 30px);
+  font-weight: 900; color: #111111; line-height: 1;
+}
+.prod-value-sm {
+  font-size: clamp(20px, 5vw, 28px);
+}
+.prod-unit {
+  font-size: clamp(9px, 1.8vw, 11px);
+  color: #4b5563; margin-top: 3px;
+}
+.prod-delta {
+  font-size: clamp(9px, 1.8vw, 11px);
+  font-weight: 800; margin-top: 3px;
+}
+/* Deltas — colors selected for ≥4.5:1 on light card bg */
+.prod-delta.up   { color: #166534; }  /* 7.5:1 ✓ */
+.prod-delta.down { color: #991b1b; }  /* 5.9:1 ✓ */
+.prod-delta.flat { color: #92400e; }  /* 5.7:1 ✓ */
+
+/* FOOTER */
+.widget-footer {
+  background: #fafafa;
+  border-top: 1px solid #e5e7eb;
+  padding: clamp(5px, 1.2vh, 7px) clamp(12px, 3vw, 18px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: auto;
+}
+.footer-src {
+  font-size: clamp(9px, 1.8vw, 11px); color: #6b7280;
+}
+.footer-clock {
+  font-size: clamp(11px, 2.5vw, 14px);
+  color: #111111; font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+</style>
+</head>
+<body>
+<div class="widget">
+
+  <!-- HEADER -->
+  <div class="widget-header">
+    <div class="header-brand">
+      <div class="brand-mark">STR</div>
+      <div>
+        <div class="header-title">Portage Ops Board</div>
+        <div class="header-sub" id="header-date">Loading...</div>
+      </div>
+    </div>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  </div>
+
+  <!-- SHIFT -->
+  <div class="section">
+    <div class="section-title">⏱ Shift Schedule · Today</div>
+    <div class="shift-row" id="shift-day">
+      <div>
+        <div class="shift-name">Day Shift</div>
+        <div class="shift-time">06:00 AM – 02:30 PM</div>
+      </div>
+      <div class="shift-right"><div class="shift-super">Sup: Karen Mitchell</div></div>
+    </div>
+    <div class="shift-row" id="shift-pm">
+      <div>
+        <div class="shift-name">PM Shift</div>
+        <div class="shift-time">02:00 PM – 10:30 PM</div>
+      </div>
+      <div class="shift-right"><div class="shift-super">Sup: Marcus Webb</div></div>
+    </div>
+    <div class="shift-row" id="shift-night">
+      <div>
+        <div class="shift-name">Night Shift</div>
+        <div class="shift-time">10:00 PM – 06:00 AM</div>
+      </div>
+      <div class="shift-right"><div class="shift-super">Sup: David Chen</div></div>
+    </div>
+  </div>
+
+  <!-- PRODUCTION -->
+  <div class="section">
+    <div class="section-title">⚙ Production · Current Shift</div>
+    <div class="prod-grid">
+      <div class="prod-card yellow">
+        <div class="prod-label">Units Assembled</div>
+        <div class="prod-value">1,847</div>
+        <div class="prod-unit">of 2,400 goal</div>
+        <div class="prod-delta up">▲ 77% to goal</div>
+      </div>
+      <div class="prod-card green">
+        <div class="prod-label">First Pass Yield</div>
+        <div class="prod-value">98.4<span style="font-size:60%">%</span></div>
+        <div class="prod-unit">99% target</div>
+        <div class="prod-delta up">▲ on track</div>
+      </div>
+      <div class="prod-card dark">
+        <div class="prod-label">DHRs Released</div>
+        <div class="prod-value">28</div>
+        <div class="prod-unit">of 35 expected</div>
+        <div class="prod-delta flat">● 7 in review</div>
+      </div>
+      <div class="prod-card red">
+        <div class="prod-label">Open NCRs</div>
+        <div class="prod-value">3</div>
+        <div class="prod-unit">1 from prior shift</div>
+        <div class="prod-delta down">▲ 1 vs. yesterday</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="widget-footer">
+    <div class="footer-src">MES · QMS · TrackWise</div>
+    <div class="footer-clock" id="footer-clock"></div>
+  </div>
+
+</div>
+<script>
+function highlightShift() {
+  var h = new Date().getHours();
+  ['day','pm','night'].forEach(function(s) {
+    var el = document.getElementById('shift-' + s);
+    el.classList.remove('active');
+    var b = el.querySelector('.shift-badge');
+    if (b) b.remove();
+  });
+  var active = (h >= 6 && h < 14) ? 'day' : (h >= 14 && h < 22) ? 'pm' : 'night';
+  var el = document.getElementById('shift-' + active);
+  el.classList.add('active');
+  var badge = document.createElement('div');
+  badge.className = 'shift-badge';
+  badge.textContent = '● ACTIVE NOW';
+  el.querySelector('.shift-right').appendChild(badge);
+}
+highlightShift();
+
+function updateClock() {
+  var now = new Date();
+  document.getElementById('footer-clock').textContent =
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('header-date').textContent =
+    now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
