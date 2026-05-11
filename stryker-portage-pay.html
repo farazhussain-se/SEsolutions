@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Pay – James Ferris</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: transparent;
+}
+
+.widget {
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+}
+
+/* PERIOD TABS */
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 14px 14px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #e4e4e7;
+  color: #6b7280;
+  background: #fff;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tab.active { background: #111111; border-color: #111111; color: #fff; }
+.tab:hover:not(.active) { background: #fafafa; border-color: #d4d4d8; }
+
+/* PAY SECTION */
+.pay-section {
+  padding: 28px 20px 24px;
+  text-align: center;
+}
+
+.pay-icon {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: #fffbeb;
+  border: 2px solid #FFB511;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 18px;
+  font-size: 18px;
+}
+
+.net-label { font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 5px; }
+.net-amount {
+  font-size: 38px; font-weight: 800;
+  /* #15803d on white = 5.78:1 ✓ AA */
+  color: #15803d;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 20px;
+}
+.net-amount sup { font-size: 20px; vertical-align: super; font-weight: 700; color: #16a34a; }
+
+.divider { height: 1px; background: #f4f4f5; margin: 0 20px 20px; }
+
+.gross-label  { font-size: 11px; font-weight: 600; color: #6b7280; margin-bottom: 4px; }
+.gross-amount { font-size: 22px; font-weight: 700; color: #27272a; letter-spacing: -0.01em; }
+
+/* UKG ATTRIBUTES */
+.attrs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: #f4f4f5;
+  border-top: 1px solid #f4f4f5;
+}
+.attr {
+  background: #fff;
+  padding: 11px 14px;
+}
+.attr-label { font-size: 9px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+.attr-value { font-size: 12px; font-weight: 700; color: #111111; }
+
+/* FOOTER */
+.footer {
+  background: #fafafa;
+  border-top: 1px solid #f4f4f5;
+  padding: 7px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+/* UKG yellow tile with black text — 11.5:1 ✓ */
+.footer-ukg {
+  background: #FFB511;
+  color: #111111;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.06em;
+}
+.footer-next { font-size: 9px; color: #6b7280; }
+</style>
+</head>
+<body>
+
+<div class="widget">
+
+  <!-- PERIOD TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="select(this, 0)">May 4–10</div>
+    <div class="tab" onclick="select(this, 1)">Apr 27–May 3</div>
+    <div class="tab" onclick="select(this, 2)">Apr 20–26</div>
+    <div class="tab" onclick="select(this, 3)">Apr 13–19</div>
+  </div>
+
+  <!-- PAY DISPLAY -->
+  <div class="pay-section">
+    <div class="pay-icon">💵</div>
+    <div class="net-label">Net Pay</div>
+    <div class="net-amount"><sup>$</sup><span id="netVal">843.92</span></div>
+    <div class="divider"></div>
+    <div class="gross-label">Gross Pay</div>
+    <div class="gross-amount" id="grossVal">$ 1,127.00</div>
+  </div>
+
+  <!-- UKG ATTRIBUTES -->
+  <div class="attrs">
+    <div class="attr">
+      <div class="attr-label">Salary / Hourly</div>
+      <div class="attr-value">Hourly · $24.50</div>
+    </div>
+    <div class="attr">
+      <div class="attr-label">Pay Frequency</div>
+      <div class="attr-value">Bi-Weekly</div>
+    </div>
+    <div class="attr">
+      <div class="attr-label">Union Code</div>
+      <div class="attr-value">Non-Union</div>
+    </div>
+    <div class="attr">
+      <div class="attr-label">FLSA Type</div>
+      <div class="attr-value">Non-Exempt</div>
+    </div>
+    <div class="attr">
+      <div class="attr-label">Supervisor</div>
+      <div class="attr-value">Karen Mitchell</div>
+    </div>
+    <div class="attr">
+      <div class="attr-label">Employment Status</div>
+      <div class="attr-value">Active · Full-Time</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span class="footer-ukg">UKG Pro</span>
+    <span class="footer-next">Next payday: May 22, 2026</span>
+  </div>
+
+</div>
+
+<script>
+// 40 reg hrs × $24.50 = $980  ·  OT 1.5x = $36.75
+// Net ≈ gross × 0.7486 (FICA 7.65 + Fed ~10 + MI 4.25 + benefits 3)
+const PERIODS = [
+  { net: '843.92',  gross: '$ 1,127.00' }, // 40 reg + 4 OT
+  { net: '733.59',  gross: '$ 980.00'   }, // 40 reg + 0 OT
+  { net: '788.76',  gross: '$ 1,053.50' }, // 40 reg + 2 OT
+  { net: '733.59',  gross: '$ 980.00'   }, // 40 reg + 0 OT
+];
+
+function select(el, idx) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('netVal').textContent   = PERIODS[idx].net;
+  document.getElementById('grossVal').textContent = PERIODS[idx].gross;
+}
+</script>
+</body>
+</html>
