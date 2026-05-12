@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="widget-name" content="Air Canada">
+<meta name="widget-description" content="Air Canada crew/operations widget: next flight, flight search, boarding pass, AC stock, departure & arrival performance. Embeds into Staffbase mobile + desktop.">
+<title>Air Canada — Accueil</title>
+<style>
+  :root {
+    --ac-red: #D82F2F;
+    --ac-red-dark: #B12525;
+    --ac-black: #1a1a1a;
+    --ac-text: #2a2a2a;
+    --ac-muted: #8a8a8a;
+    --ac-line: #e6e6e6;
+    --ac-bg: #f5f6f7;
+    --ac-surface: #ffffff;
+    --ac-blue: #4FC3D9;
+    --ac-blue-soft: #d6f0f6;
+    --ac-up: #2EA0B5;
+    --ac-down: #D82F2F;
+    --radius: 14px;
+    --shadow: 0 8px 30px rgba(20,20,20,.10), 0 2px 6px rgba(20,20,20,.06);
+    --transition: all .25s cubic-bezier(.25,.8,.25,1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(135deg, #cfe9f0 0%, #e8f3f6 100%);
+    color: var(--ac-text);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  /* Outer widget shell — adapts to host width */
+  .ac-widget {
+    width: 100%;
+    max-width: 420px;
+    background: var(--ac-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* Header */
+  .ac-header {
+    background: var(--ac-black);
+    color: #fff;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    z-index: 5;
+  }
+  .ac-menu-btn {
+    background: none;
+    border: 0;
+    color: #fff;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: var(--transition);
+  }
+  .ac-menu-btn:hover { background: rgba(255,255,255,.1); }
+  .ac-menu-btn svg { width: 18px; height: 18px; }
+  .ac-title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: .2px;
+    flex: 1;
+  }
+  .ac-lang {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.18);
+    color: #fff;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: .5px;
+    transition: var(--transition);
+  }
+  .ac-lang:hover { background: rgba(255,255,255,.18); }
+
+  /* Slide-out menu */
+  .ac-drawer {
+    position: absolute;
+    top: 56px;
+    left: 0;
+    width: 78%;
+    max-width: 280px;
+    bottom: 0;
+    background: #fff;
+    box-shadow: 2px 0 18px rgba(0,0,0,.12);
+    transform: translateX(-105%);
+    transition: transform .28s ease;
+    z-index: 20;
+    padding: 14px 0;
+    overflow-y: auto;
+  }
+  .ac-drawer.open { transform: translateX(0); }
+  .ac-drawer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 22px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--ac-text);
+    border-left: 3px solid transparent;
+    transition: var(--transition);
+  }
+  .ac-drawer-item:hover { background: #f7f7f7; }
+  .ac-drawer-item.active { border-left-color: var(--ac-red); background: #fdf2f2; color: var(--ac-red); font-weight: 600; }
+  .ac-drawer-item svg { width: 18px; height: 18px; }
+  .ac-drawer-divider { height: 1px; background: var(--ac-line); margin: 8px 18px; }
+  .ac-scrim {
+    position: absolute;
+    inset: 56px 0 0 0;
+    background: rgba(0,0,0,.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s;
+    z-index: 15;
+  }
+  .ac-scrim.show { opacity: 1; pointer-events: auto; }
+
+  /* Body */
+  .ac-body { background: var(--ac-surface); }
+
+  /* Section labels */
+  .ac-section-label {
+    padding: 12px 16px 6px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--ac-muted);
+    letter-spacing: 1.2px;
+    background: #fafafa;
+    border-bottom: 1px solid var(--ac-line);
+  }
+
+  /* Flight card */
+  .ac-flight-card { padding: 14px 16px 16px; border-bottom: 6px solid #fafafa; }
+  .ac-flight-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .ac-flight-num {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .ac-logo {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--ac-red);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .ac-logo svg { width: 16px; height: 16px; }
+  .ac-status {
+    text-align: right;
+    font-size: 12px;
+  }
+  .ac-status-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--ac-text);
+    font-weight: 600;
+    justify-content: flex-end;
+  }
+  .ac-status-row svg { width: 13px; height: 13px; }
+  .ac-status-sub { font-size: 10.5px; color: var(--ac-red); margin-top: 1px; font-weight: 500; }
+
+  .ac-route {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .ac-airport { display: flex; flex-direction: column; }
+  .ac-airport.right { align-items: flex-end; }
+  .ac-iata { font-size: 22px; font-weight: 800; letter-spacing: 1px; line-height: 1; }
+  .ac-time { font-size: 22px; font-weight: 700; margin-top: 4px; letter-spacing: .3px; line-height: 1; }
+  .ac-date { font-size: 11px; color: var(--ac-muted); margin-top: 6px; }
+  .ac-route-mid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--ac-muted);
+    gap: 4px;
+    min-width: 80px;
+  }
+  .ac-update { font-size: 10px; }
+  .ac-plane-line {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--ac-text);
+  }
+  .ac-plane-line .dot { width: 7px; height: 7px; border-radius: 50%; border: 2px solid var(--ac-text); }
+  .ac-plane-line .dashes {
+    flex: 1;
+    border-top: 1.5px dashed var(--ac-text);
+    width: 38px;
+  }
+  .ac-plane-line svg { width: 16px; height: 16px; }
+  .ac-duration { font-size: 11px; color: var(--ac-muted); }
+
+  .ac-meta-grid {
+    margin-top: 14px;
+    border-top: 1px solid var(--ac-line);
+    padding-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px 8px;
+    font-size: 12px;
+  }
+  .ac-meta { display: flex; gap: 6px; align-items: baseline; }
+  .ac-meta-label { color: var(--ac-muted); text-transform: uppercase; font-size: 10px; letter-spacing: .5px; }
+  .ac-meta-value { font-weight: 700; }
+
+  .ac-pass-row {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--ac-line);
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    align-items: center;
+  }
+  .ac-pass-row .lbl { color: var(--ac-muted); text-transform: uppercase; font-size: 10px; letter-spacing: .5px; }
+  .ac-pass-row .val { font-weight: 700; margin-left: 6px; }
+
+  .ac-cabins {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    font-size: 12px;
+  }
+  .ac-cabin { text-align: center; padding: 4px 0; }
+  .ac-cabin-name { font-weight: 800; font-size: 16px; letter-spacing: .5px; }
+  .ac-cabin-name .neg { color: var(--ac-red); }
+  .ac-cabin-stats { color: var(--ac-muted); font-size: 11px; margin-top: 4px; line-height: 1.5; }
+  .ac-cabin-stats b { color: var(--ac-text); font-weight: 700; }
+
+  .ac-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .ac-btn {
+    flex: 1;
+    border: 0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: inherit;
+  }
+  .ac-btn-dark { background: #2a2a2a; color: #fff; }
+  .ac-btn-dark:hover { background: #000; }
+  .ac-btn-red { background: var(--ac-red); color: #fff; }
+  .ac-btn-red:hover { background: var(--ac-red-dark); }
+  .ac-btn-outline { background: #fff; color: var(--ac-text); border: 1px solid var(--ac-line); }
+  .ac-btn-outline:hover { background: #f7f7f7; }
+
+  /* Stock */
+  .ac-stock { padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 6px solid #fafafa; }
+  .ac-stock-time { font-size: 12px; color: var(--ac-text); border: 1px solid var(--ac-line); border-radius: 6px; padding: 6px 10px; }
+  .ac-stock-price { font-size: 14px; font-weight: 700; flex: 1; text-align: center; }
+  .ac-stock-pill {
+    background: var(--ac-blue-soft);
+    color: var(--ac-up);
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+  .ac-stock-pill.down { background: #fde6e6; color: var(--ac-down); }
+
+  /* Stats */
+  .ac-stats { padding: 0 16px 12px; border-bottom: 6px solid #fafafa; }
+  .ac-stats:last-child { border-bottom: 0; }
+  .ac-stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    text-align: center;
+    padding: 12px 0 6px;
+    gap: 6px;
+  }
+  .ac-stats-head { font-size: 10px; color: var(--ac-muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 600; }
+  .ac-stats-val { font-size: 16px; font-weight: 700; margin-top: 4px; }
+  .ac-stats-val.up { color: var(--ac-up); }
+  .ac-stats-val.down { color: var(--ac-down); }
+
+  /* Views (search / details / saved / boarding) */
+  .ac-view { display: none; padding: 16px; }
+  .ac-view.active { display: block; }
+  .ac-home { display: block; }
+  .ac-home.hidden { display: none; }
+
+  .ac-form-group { margin-bottom: 12px; }
+  .ac-form-label { font-size: 11px; color: var(--ac-muted); text-transform: uppercase; letter-spacing: .6px; font-weight: 600; margin-bottom: 5px; display: block; }
+  .ac-input, .ac-select {
+    width: 100%;
+    border: 1px solid var(--ac-line);
+    border-radius: 8px;
+    padding: 11px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    transition: var(--transition);
+  }
+  .ac-input:focus, .ac-select:focus { outline: none; border-color: var(--ac-red); box-shadow: 0 0 0 3px rgba(216,47,47,.12); }
+  .ac-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ac-swap-btn {
+    background: #fff;
+    border: 1px solid var(--ac-line);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: -8px auto;
+    position: relative;
+    z-index: 2;
+    transition: var(--transition);
+  }
+  .ac-swap-btn:hover { transform: rotate(180deg); border-color: var(--ac-red); color: var(--ac-red); }
+  .ac-swap-btn svg { width: 14px; height: 14px; }
+
+  .ac-results { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .ac-result-card {
+    border: 1px solid var(--ac-line);
+    border-radius: 10px;
+    padding: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    background: #fff;
+  }
+  .ac-result-card:hover { border-color: var(--ac-red); box-shadow: 0 4px 14px rgba(216,47,47,.10); transform: translateY(-1px); }
+  .ac-result-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .ac-result-flight { font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .ac-result-price { font-size: 16px; font-weight: 800; color: var(--ac-red); }
+  .ac-result-route {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+  }
+  .ac-result-route .col { display: flex; flex-direction: column; }
+  .ac-result-route .col.right { text-align: right; align-items: flex-end; }
+  .ac-result-route .iata { font-size: 16px; font-weight: 800; }
+  .ac-result-route .t { font-size: 13px; color: var(--ac-text); }
+  .ac-result-route .dur { color: var(--ac-muted); font-size: 11px; text-align: center; }
+  .ac-result-tags { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .ac-tag {
+    font-size: 10.5px;
+    background: #f1f1f1;
+    color: var(--ac-text);
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .ac-tag.green { background: #d9f4dc; color: #1f7a2a; }
+  .ac-tag.amber { background: #fff1d6; color: #8a5a00; }
+  .ac-tag.red { background: #ffe1e1; color: var(--ac-red); }
+
+  .ac-back {
+    background: none;
+    border: 0;
+    color: var(--ac-red);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .ac-back svg { width: 14px; height: 14px; }
+
+  .ac-detail-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .ac-detail-head h3 { font-size: 17px; }
+  .ac-detail-status {
+    background: #d9f4dc;
+    color: #1f7a2a;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .ac-detail-status.delay { background: #fff1d6; color: #8a5a00; }
+  .ac-detail-status.cancel { background: #ffe1e1; color: var(--ac-red); }
+
+  .ac-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+    margin-top: 10px;
+    padding: 12px;
+    background: #fafafa;
+    border-radius: 10px;
+  }
+  .ac-detail-grid div .l { font-size: 10px; color: var(--ac-muted); text-transform: uppercase; letter-spacing: .6px; }
+  .ac-detail-grid div .v { font-weight: 700; font-size: 14px; margin-top: 2px; }
+
+  /* Boarding pass */
+  .ac-bp {
+    background: linear-gradient(135deg, var(--ac-black) 0%, #333 100%);
+    color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 10px;
+    position: relative;
+  }
+  .ac-bp-top { padding: 16px; }
+  .ac-bp-band {
+    background: var(--ac-red);
+    padding: 4px 16px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+  }
+  .ac-bp-route {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    margin-top: 12px;
+  }
+  .ac-bp-route .iata { font-size: 30px; font-weight: 800; letter-spacing: 1px; }
+  .ac-bp-route .col.right { text-align: right; }
+  .ac-bp-route svg { width: 26px; height: 26px; color: #fff; }
+  .ac-bp-info {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(255,255,255,.3);
+    font-size: 11px;
+  }
+  .ac-bp-info .l { color: rgba(255,255,255,.55); text-transform: uppercase; font-size: 9.5px; letter-spacing: .6px; }
+  .ac-bp-info .v { font-weight: 700; font-size: 14px; margin-top: 2px; }
+  .ac-bp-bar {
+    background: #fff;
+    padding: 16px;
+    text-align: center;
+  }
+  .ac-bp-bar svg { width: 100%; max-width: 240px; height: 50px; }
+  .ac-bp-code { font-family: 'Courier New', monospace; font-size: 11px; color: #333; letter-spacing: 2px; margin-top: 4px; }
+  .ac-bp-notch-l, .ac-bp-notch-r {
+    position: absolute;
+    width: 18px; height: 18px;
+    background: var(--ac-surface);
+    border-radius: 50%;
+  }
+  .ac-bp-notch-l { left: -9px; top: calc(100% - 92px); }
+  .ac-bp-notch-r { right: -9px; top: calc(100% - 92px); }
+
+  /* Saved list */
+  .ac-saved-list { display: flex; flex-direction: column; gap: 10px; }
+  .ac-saved-empty {
+    text-align: center;
+    color: var(--ac-muted);
+    padding: 40px 20px;
+    font-size: 13px;
+  }
+  .ac-saved-empty svg { width: 40px; height: 40px; margin-bottom: 8px; opacity: .4; }
+
+  /* Toast */
+  .ac-toast {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--ac-black);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0,0,0,.3);
+    opacity: 0;
+    transition: all .3s;
+    z-index: 30;
+    pointer-events: none;
+    max-width: 80%;
+  }
+  .ac-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Responsive: side-by-side on desktop, stacked on mobile */
+  @media (min-width: 760px) {
+    .ac-widget { max-width: 880px; }
+    .ac-home-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 0;
+    }
+    .ac-flight-card { border-bottom: 0; border-right: 6px solid #fafafa; }
+    .ac-side { display: flex; flex-direction: column; }
+    .ac-section-label { background: #fafafa; }
+    .ac-bp-notch-l { top: calc(100% - 92px); }
+  }
+  @media (max-width: 360px) {
+    .ac-iata, .ac-time { font-size: 18px; }
+    .ac-cabin-name { font-size: 14px; }
+    .ac-meta-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="ac-widget" id="acWidget">
+
+  <!-- HEADER -->
+  <header class="ac-header">
+    <button class="ac-menu-btn" id="acMenuBtn" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="ac-title" id="acTitle">Accueil</div>
+    <button class="ac-lang" id="acLangBtn">EN</button>
+  </header>
+
+  <!-- DRAWER MENU -->
+  <nav class="ac-drawer" id="acDrawer">
+    <div class="ac-drawer-item active" data-view="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span data-i18n="nav_home">Accueil</span></div>
+    <div class="ac-drawer-item" data-view="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span data-i18n="nav_search">Rechercher un vol</span></div>
+    <div class="ac-drawer-item" data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span data-i18n="nav_saved">Mes vols</span></div>
+    <div class="ac-drawer-item" data-view="boarding"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/></svg><span data-i18n="nav_boarding">Carte d'embarquement</span></div>
+    <div class="ac-drawer-divider"></div>
+    <div class="ac-drawer-item" data-view="status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span data-i18n="nav_status">Statut des vols</span></div>
+    <div class="ac-drawer-item" data-view="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg><span data-i18n="nav_profile">Mon profil</span></div>
+  </nav>
+  <div class="ac-scrim" id="acScrim"></div>
+
+  <!-- BODY -->
+  <div class="ac-body">
+
+    <!-- ===== HOME VIEW (matches mockup) ===== -->
+    <div class="ac-home" id="acHome">
+      <div class="ac-home-grid">
+
+        <!-- Left column: next flight -->
+        <div>
+          <div class="ac-section-label" data-i18n="next_flight">PROCHAIN VOL</div>
+          <div class="ac-flight-card" id="acNextFlight">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <!-- Right column (or stacked on mobile) -->
+        <div class="ac-side">
+          <div class="ac-section-label" data-i18n="stock">BOURSE AIR CANADA</div>
+          <div class="ac-stock">
+            <div class="ac-stock-time" id="acStockTime">13:42 EST</div>
+            <div class="ac-stock-price" id="acStockPrice">13.57</div>
+            <div class="ac-stock-pill" id="acStockChange">+ 1.52%</div>
+          </div>
+
+          <div class="ac-section-label" data-i18n="departures">DÉPARTS</div>
+          <div class="ac-stats">
+            <div class="ac-stats-row">
+              <div><div class="ac-stats-head" data-i18n="actual">ACTUEL</div><div class="ac-stats-val up">↑ 28%</div></div>
+              <div><div class="ac-stats-head" data-i18n="month">MOIS</div><div class="ac-stats-val down">↓ 31%</div></div>
+              <div><div class="ac-stats-head" data-i18n="goal">OBJECTIF</div><div class="ac-stats-val">60%</div></div>
+            </div>
+          </div>
+
+          <div class="ac-section-label" data-i18n="arrivals">ARRIVÉES</div>
+          <div class="ac-stats">
+            <div class="ac-stats-row">
+              <div><div class="ac-stats-head" data-i18n="actual">ACTUEL</div><div class="ac-stats-val up">↑ 52%</div></div>
+              <div><div class="ac-stats-head" data-i18n="month">MOIS</div><div class="ac-stats-val down">↓ 54%</div></div>
+              <div><div class="ac-stats-head" data-i18n="goal">OBJECTIF</div><div class="ac-stats-val">74%</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SEARCH VIEW ===== -->
+    <div class="ac-view" id="acViewSearch">
+      <h3 style="margin-bottom: 14px; font-size: 17px;" data-i18n="search_title">Rechercher un vol</h3>
+
+      <div class="ac-form-group">
+        <label class="ac-form-label" data-i18n="from">DE</label>
+        <input class="ac-input" id="acFrom" placeholder="YYZ — Toronto Pearson" autocomplete="off" list="acAirports">
+      </div>
+
+      <button class="ac-swap-btn" id="acSwap" title="Swap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4M3 8l4-4 4 4M17 8v12M21 16l-4 4-4-4"/></svg>
+      </button>
+
+      <div class="ac-form-group">
+        <label class="ac-form-label" data-i18n="to">À</label>
+        <input class="ac-input" id="acTo" placeholder="YVR — Vancouver" autocomplete="off" list="acAirports">
+      </div>
+
+      <datalist id="acAirports">
+        <option value="YYZ — Toronto Pearson"></option>
+        <option value="YUL — Montréal-Trudeau"></option>
+        <option value="YVR — Vancouver"></option>
+        <option value="YYC — Calgary"></option>
+        <option value="YOW — Ottawa"></option>
+        <option value="YHZ — Halifax"></option>
+        <option value="YWG — Winnipeg"></option>
+        <option value="YEG — Edmonton"></option>
+        <option value="LHR — London Heathrow"></option>
+        <option value="CDG — Paris Charles de Gaulle"></option>
+        <option value="JFK — New York JFK"></option>
+        <option value="LAX — Los Angeles"></option>
+        <option value="NRT — Tokyo Narita"></option>
+        <option value="FRA — Frankfurt"></option>
+      </datalist>
+
+      <div class="ac-row-2">
+        <div class="ac-form-group">
+          <label class="ac-form-label" data-i18n="date">DATE</label>
+          <input type="date" class="ac-input" id="acDate">
+        </div>
+        <div class="ac-form-group">
+          <label class="ac-form-label" data-i18n="cabin">CABINE</label>
+          <select class="ac-select" id="acCabin">
+            <option value="Y" data-i18n="cabin_y">Économique</option>
+            <option value="O" data-i18n="cabin_o">Premium Économique</option>
+            <option value="J" data-i18n="cabin_j">Affaires</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="ac-btn ac-btn-red" id="acSearchBtn" style="width:100%; margin-top: 6px;" data-i18n="search_btn">Rechercher des vols</button>
+
+      <div class="ac-results" id="acResults"></div>
+    </div>
+
+    <!-- ===== DETAIL VIEW ===== -->
+    <div class="ac-view" id="acViewDetail">
+      <button class="ac-back" id="acDetailBack">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        <span data-i18n="back">Retour</span>
+      </button>
+      <div id="acDetailBody"></div>
+    </div>
+
+    <!-- ===== SAVED VIEW ===== -->
+    <div class="ac-view" id="acViewSaved">
+      <h3 style="margin-bottom: 14px; font-size: 17px;" data-i18n="saved_title">Mes vols enregistrés</h3>
+      <div id="acSavedList" class="ac-saved-list"></div>
+    </div>
+
+    <!-- ===== BOARDING PASS ===== -->
+    <div class="ac-view" id="acViewBoarding">
+      <h3 style="margin-bottom: 14px; font-size: 17px;" data-i18n="boarding_title">Carte d'embarquement</h3>
+      <div id="acBoardingBody"></div>
+    </div>
+
+    <!-- ===== STATUS VIEW ===== -->
+    <div class="ac-view" id="acViewStatus">
+      <h3 style="margin-bottom: 14px; font-size: 17px;" data-i18n="status_title">Statut des vols</h3>
+      <div class="ac-form-group">
+        <label class="ac-form-label" data-i18n="flight_no">NUMÉRO DE VOL</label>
+        <input class="ac-input" id="acStatusFlight" placeholder="AC 203">
+      </div>
+      <button class="ac-btn ac-btn-red" id="acStatusBtn" style="width:100%;" data-i18n="check_status">Vérifier le statut</button>
+      <div id="acStatusResult" style="margin-top: 14px;"></div>
+    </div>
+
+  </div>
+
+  <div class="ac-toast" id="acToast"></div>
+</div>
+
+<script>
+(function(){
+  // ===== i18n =====
+  const i18n = {
+    fr: {
+      title: "Accueil",
+      nav_home: "Accueil", nav_search: "Rechercher un vol", nav_saved: "Mes vols",
+      nav_boarding: "Carte d'embarquement", nav_status: "Statut des vols", nav_profile: "Mon profil",
+      next_flight: "PROCHAIN VOL", stock: "BOURSE AIR CANADA",
+      departures: "DÉPARTS", arrivals: "ARRIVÉES",
+      actual: "ACTUEL", month: "MOIS", goal: "OBJECTIF",
+      similar_flight: "Vol Semblable", register: "Enregistrer", saved: "Enregistré ✓",
+      search_title: "Rechercher un vol", from: "DE", to: "À", date: "DATE", cabin: "CABINE",
+      cabin_y: "Économique", cabin_o: "Premium Économique", cabin_j: "Affaires",
+      search_btn: "Rechercher des vols", back: "Retour",
+      saved_title: "Mes vols enregistrés", saved_empty: "Aucun vol enregistré.",
+      boarding_title: "Carte d'embarquement", status_title: "Statut des vols",
+      flight_no: "NUMÉRO DE VOL", check_status: "Vérifier le statut",
+      terminal: "TERMINAL", gate: "PORTE", seat: "SIÈGE", pass_type: "PASS TYPE",
+      duration: "Durée", update: "Mise à jour", waiting: "En attente", ahead: "Devant",
+      no_results: "Aucun vol trouvé pour cette route.", flight: "Vol",
+      scheduled: "Programmé", boarding_now: "Embarquement", delayed: "Retardé",
+      on_time: "À l'heure", return_ramp: "Retour à la rampe",
+      view_details: "Voir les détails", get_boarding: "Obtenir la carte d'embarquement",
+      passenger: "Passager", class: "Classe", boarding_time: "Embarquement",
+      depart: "Départ", arrive: "Arrivée", direct: "Direct", stops: "escale(s)",
+      remove: "Retirer", details: "Détails du vol",
+      check: "Statut récupéré pour"
+    },
+    en: {
+      title: "Home",
+      nav_home: "Home", nav_search: "Find a flight", nav_saved: "My flights",
+      nav_boarding: "Boarding pass", nav_status: "Flight status", nav_profile: "My profile",
+      next_flight: "NEXT FLIGHT", stock: "AIR CANADA STOCK",
+      departures: "DEPARTURES", arrivals: "ARRIVALS",
+      actual: "ACTUAL", month: "MONTH", goal: "TARGET",
+      similar_flight: "Similar Flight", register: "Save", saved: "Saved ✓",
+      search_title: "Find a flight", from: "FROM", to: "TO", date: "DATE", cabin: "CABIN",
+      cabin_y: "Economy", cabin_o: "Premium Economy", cabin_j: "Business",
+      search_btn: "Search flights", back: "Back",
+      saved_title: "My saved flights", saved_empty: "No saved flights yet.",
+      boarding_title: "Boarding pass", status_title: "Flight status",
+      flight_no: "FLIGHT NUMBER", check_status: "Check status",
+      terminal: "TERMINAL", gate: "GATE", seat: "SEAT", pass_type: "PASS TYPE",
+      duration: "Duration", update: "Updated", waiting: "Waiting", ahead: "Ahead",
+      no_results: "No flights found for this route.", flight: "Flight",
+      scheduled: "Scheduled", boarding_now: "Boarding", delayed: "Delayed",
+      on_time: "On Time", return_ramp: "Return to ramp",
+      view_details: "View details", get_boarding: "Get boarding pass",
+      passenger: "Passenger", class: "Class", boarding_time: "Boarding",
+      depart: "Depart", arrive: "Arrive", direct: "Direct", stops: "stop(s)",
+      remove: "Remove", details: "Flight details",
+      check: "Status retrieved for"
+    }
+  };
+  let lang = 'fr';
+  const t = (k) => (i18n[lang] && i18n[lang][k]) || k;
+
+  // ===== State =====
+  const SAVED_KEY = 'ac_widget_saved_flights';
+  let saved = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
+  const persist = () => localStorage.setItem(SAVED_KEY, JSON.stringify(saved));
+
+  // ===== Mock flight database =====
+  // Realistic AC routes; deterministic generation keyed off date so it feels consistent.
+  const AIRPORTS = {
+    YYZ: { city: 'Toronto', name: 'Pearson', tz: 'EST' },
+    YUL: { city: 'Montréal', name: 'Trudeau', tz: 'EST' },
+    YVR: { city: 'Vancouver', name: 'YVR', tz: 'PST' },
+    YYC: { city: 'Calgary', name: 'Calgary', tz: 'MST' },
+    YOW: { city: 'Ottawa', name: 'MacDonald-Cartier', tz: 'EST' },
+    YHZ: { city: 'Halifax', name: 'Stanfield', tz: 'AST' },
+    YWG: { city: 'Winnipeg', name: 'Richardson', tz: 'CST' },
+    YEG: { city: 'Edmonton', name: 'Edmonton', tz: 'MST' },
+    LHR: { city: 'London', name: 'Heathrow', tz: 'GMT' },
+    CDG: { city: 'Paris', name: 'CDG', tz: 'CET' },
+    JFK: { city: 'New York', name: 'JFK', tz: 'EST' },
+    LAX: { city: 'Los Angeles', name: 'LAX', tz: 'PST' },
+    NRT: { city: 'Tokyo', name: 'Narita', tz: 'JST' },
+    FRA: { city: 'Frankfurt', name: 'Frankfurt', tz: 'CET' }
+  };
+
+  const STATUSES = ['scheduled','on_time','boarding_now','delayed'];
+  const CABINS = { Y: 'Economy', O: 'Premium', J: 'Business' };
+
+  function parseAirport(input) {
+    if (!input) return null;
+    const m = input.match(/^([A-Z]{3})/i);
+    return m ? m[1].toUpperCase() : null;
+  }
+
+  function hash(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
+
+  function generateFlights(from, to, dateStr, cabin) {
+    if (!AIRPORTS[from] || !AIRPORTS[to] || from === to) return [];
+    const seed = hash(from + to + dateStr);
+    const flights = [];
+    const count = 3 + (seed % 3); // 3-5 flights
+    for (let i = 0; i < count; i++) {
+      const offset = (seed >> (i+1)) % 18;
+      const depHour = 6 + offset;
+      const depMin = ((seed >> i) % 12) * 5;
+      const durMin = 60 + ((seed >> (i+2)) % 540); // 1-10h
+      const arrTotal = depHour * 60 + depMin + durMin;
+      const arrHour = Math.floor((arrTotal % (24*60)) / 60);
+      const arrMin = arrTotal % 60;
+      const flightNum = 100 + ((seed + i*37) % 800);
+      const basePrice = 199 + ((seed + i*13) % 800);
+      const statusIdx = (seed + i) % STATUSES.length;
+      const stops = ((seed >> (i+3)) % 5) === 0 ? 1 : 0;
+      flights.push({
+        flightNum: 'AC ' + flightNum,
+        from, to, date: dateStr,
+        dep: pad(depHour) + ':' + pad(depMin),
+        arr: pad(arrHour) + ':' + pad(arrMin),
+        durationMin: durMin,
+        cabin,
+        price: basePrice + (cabin==='J'?1400:(cabin==='O'?500:0)),
+        status: STATUSES[statusIdx],
+        stops,
+        terminal: ['1','2','3','A'][(seed+i)%4],
+        gate: ['A1','B5','C12','D7','E3'][(seed+i+1)%5],
+        seat: ((seed+i)%30+1) + ['A','B','C','D','E','F'][(seed+i)%6]
+      });
+    }
+    return flights.sort((a,b) => a.dep.localeCompare(b.dep));
+  }
+
+  function pad(n) { return String(n).padStart(2,'0'); }
+  function durStr(min) {
+    const h = Math.floor(min/60), m = min%60;
+    return h + 'hr' + pad(m);
+  }
+  function statusTag(status) {
+    if (status === 'delayed') return { cls: 'amber', text: t('delayed') };
+    if (status === 'boarding_now') return { cls: 'green', text: t('boarding_now') };
+    if (status === 'on_time') return { cls: 'green', text: t('on_time') };
+    return { cls: '', text: t('scheduled') };
+  }
+
+  // ===== DOM helpers =====
+  const $ = (id) => document.getElementById(id);
+  const widget = $('acWidget');
+  const drawer = $('acDrawer');
+  const scrim = $('acScrim');
+
+  function showToast(msg) {
+    const el = $('acToast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => el.classList.remove('show'), 2200);
+  }
+
+  function setView(view) {
+    $('acHome').classList.toggle('hidden', view !== 'home');
+    document.querySelectorAll('.ac-view').forEach(v => v.classList.remove('active'));
+    if (view === 'search') $('acViewSearch').classList.add('active');
+    if (view === 'detail') $('acViewDetail').classList.add('active');
+    if (view === 'saved') { $('acViewSaved').classList.add('active'); renderSaved(); }
+    if (view === 'boarding') { $('acViewBoarding').classList.add('active'); renderBoardingPicker(); }
+    if (view === 'status') $('acViewStatus').classList.add('active');
+    // update drawer active
+    document.querySelectorAll('.ac-drawer-item').forEach(it => {
+      it.classList.toggle('active', it.dataset.view === view || (view === 'detail' && it.dataset.view === 'search'));
+    });
+    closeDrawer();
+  }
+
+  function openDrawer() { drawer.classList.add('open'); scrim.classList.add('show'); }
+  function closeDrawer() { drawer.classList.remove('open'); scrim.classList.remove('show'); }
+
+  // ===== Render home / next flight =====
+  function renderNextFlight() {
+    const f = {
+      flightNum: 'AC 203',
+      from: 'YYZ', to: 'YVR',
+      depDateFR: 'Jeu 13 Apr', arrDateFR: 'Ven 14 Apr',
+      depDateEN: 'Thu 13 Apr', arrDateEN: 'Fri 14 Apr',
+      dep: '07:45', arr: '10:46',
+      duration: '6hr01',
+      update: '15H30',
+      terminal1: 'A3', terminal2: 'T2',
+      gate1: 'B5', gate2: 'A1',
+      pass: 'B1/J10',
+      cabins: [
+        { code: 'J', booked: '-009', total: '012', waiting: '06', ahead: '06', neg: true },
+        { code: 'O', booked: '009', total: '124', waiting: '06', ahead: '06' },
+        { code: 'Y', booked: '009', total: '050', waiting: '06', ahead: '06' }
+      ]
+    };
+    const depDate = lang === 'fr' ? f.depDateFR : f.depDateEN;
+    const arrDate = lang === 'fr' ? f.arrDateFR : f.arrDateEN;
+    const isSaved = saved.some(s => s.flightNum === f.flightNum && s.from === f.from && s.to === f.to);
+
+    $('acNextFlight').innerHTML = `
+      <div class="ac-flight-top">
+        <div class="ac-flight-num">
+          <span class="ac-logo">${maple()}</span>
+          <span>${f.flightNum}</span>
+        </div>
+        <div class="ac-status">
+          <div class="ac-status-row">
+            <span>${t('scheduled')}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="ac-status-sub">${t('return_ramp')}</div>
+        </div>
+      </div>
+
+      <div class="ac-route">
+        <div class="ac-airport">
+          <span class="ac-iata">${f.from}</span>
+          <span class="ac-time">${f.dep}</span>
+          <span class="ac-date">${depDate}</span>
+        </div>
+        <div class="ac-route-mid">
+          <span class="ac-update">${t('update')}: ${f.update}</span>
+          <div class="ac-plane-line">
+            <span class="dot"></span>
+            <span class="dashes"></span>
+            ${planeIcon()}
+          </div>
+          <span class="ac-duration">${f.duration}</span>
+        </div>
+        <div class="ac-airport right">
+          <span class="ac-iata">${f.to}</span>
+          <span class="ac-time">${f.arr}</span>
+          <span class="ac-date">${arrDate}</span>
+        </div>
+      </div>
+
+      <div class="ac-meta-grid">
+        <div class="ac-meta"><span class="ac-meta-label">${t('terminal')}</span><span class="ac-meta-value">${f.terminal1}</span></div>
+        <div class="ac-meta"><span class="ac-meta-label">${t('seat')}</span><span class="ac-meta-value">---</span></div>
+        <div class="ac-meta"><span class="ac-meta-label">${t('terminal')}</span><span class="ac-meta-value">${f.terminal2}</span></div>
+        <div class="ac-meta"><span class="ac-meta-label">${t('gate')}</span><span class="ac-meta-value">${f.gate1}</span></div>
+        <div class="ac-meta"></div>
+        <div class="ac-meta"><span class="ac-meta-label">${t('gate')}</span><span class="ac-meta-value">${f.gate2}</span></div>
+      </div>
+
+      <div class="ac-pass-row">
+        <div><span class="lbl">${t('pass_type')}:</span><span class="val">${f.pass}</span></div>
+        <div><span class="val">DCS</span></div>
+      </div>
+
+      <div class="ac-cabins">
+        ${f.cabins.map(c => `
+          <div class="ac-cabin">
+            <div class="ac-cabin-name">${c.code} <span class="${c.neg?'neg':''}">${c.booked}</span>/${c.total}</div>
+            <div class="ac-cabin-stats">
+              ${t('waiting')}: <b>${c.waiting}</b><br>
+              ${t('ahead')}: <b>${c.ahead}</b>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="ac-actions">
+        <button class="ac-btn ac-btn-dark" id="acBtnSimilar">${t('similar_flight')}</button>
+        <button class="ac-btn ${isSaved?'ac-btn-outline':'ac-btn-red'}" id="acBtnRegister">${isSaved?t('saved'):t('register')}</button>
+      </div>
+    `;
+    $('acBtnSimilar').onclick = () => { setView('search'); $('acFrom').value = 'YYZ — Toronto Pearson'; $('acTo').value = 'YVR — Vancouver'; };
+    $('acBtnRegister').onclick = () => {
+      const exists = saved.findIndex(s => s.flightNum === f.flightNum);
+      if (exists >= 0) { saved.splice(exists, 1); showToast(lang==='fr'?'Vol retiré':'Flight removed'); }
+      else {
+        saved.push({ flightNum: f.flightNum, from: f.from, to: f.to, date: f.depDateEN, dep: f.dep, arr: f.arr, seat: '12A', gate: f.gate1, terminal: f.terminal1, cabin: 'J' });
+        showToast(lang==='fr'?'Vol enregistré':'Flight saved');
+      }
+      persist();
+      renderNextFlight();
+    };
+  }
+
+  // ===== Render search results =====
+  function renderResults(flights) {
+    const box = $('acResults');
+    if (!flights.length) {
+      box.innerHTML = `<div style="text-align:center;padding:30px;color:var(--ac-muted);font-size:13px;">${t('no_results')}</div>`;
+      return;
+    }
+    box.innerHTML = flights.map((f, i) => {
+      const tag = statusTag(f.status);
+      return `
+        <div class="ac-result-card" data-idx="${i}">
+          <div class="ac-result-head">
+            <div class="ac-result-flight">
+              <span class="ac-logo" style="width:22px;height:22px;">${maple(true)}</span>
+              ${f.flightNum}
+            </div>
+            <div class="ac-result-price">$${f.price}</div>
+          </div>
+          <div class="ac-result-route">
+            <div class="col"><span class="iata">${f.from}</span><span class="t">${f.dep}</span></div>
+            <div class="dur">${durStr(f.durationMin)}<br>${f.stops?f.stops+' '+t('stops'):t('direct')}</div>
+            <div class="col right"><span class="iata">${f.to}</span><span class="t">${f.arr}</span></div>
+          </div>
+          <div class="ac-result-tags">
+            <span class="ac-tag ${tag.cls}">${tag.text}</span>
+            <span class="ac-tag">${CABINS[f.cabin]}</span>
+            ${f.stops?`<span class="ac-tag amber">${f.stops} ${t('stops')}</span>`:`<span class="ac-tag green">${t('direct')}</span>`}
+          </div>
+        </div>
+      `;
+    }).join('');
+    box.querySelectorAll('.ac-result-card').forEach(card => {
+      card.onclick = () => renderDetail(flights[+card.dataset.idx]);
+    });
+  }
+
+  // ===== Render flight detail =====
+  function renderDetail(f) {
+    setView('detail');
+    const tag = statusTag(f.status);
+    const isSaved = saved.some(s => s.flightNum === f.flightNum && s.date === f.date);
+    $('acDetailBody').innerHTML = `
+      <div class="ac-detail-head">
+        <h3>${f.flightNum} • ${f.from} → ${f.to}</h3>
+        <span class="ac-detail-status ${tag.cls==='amber'?'delay':(tag.cls==='red'?'cancel':'')}">${tag.text}</span>
+      </div>
+
+      <div class="ac-route" style="padding: 14px 0;">
+        <div class="ac-airport">
+          <span class="ac-iata">${f.from}</span>
+          <span class="ac-time">${f.dep}</span>
+          <span class="ac-date">${AIRPORTS[f.from].city}</span>
+        </div>
+        <div class="ac-route-mid">
+          <div class="ac-plane-line"><span class="dot"></span><span class="dashes"></span>${planeIcon()}</div>
+          <span class="ac-duration">${durStr(f.durationMin)}</span>
+        </div>
+        <div class="ac-airport right">
+          <span class="ac-iata">${f.to}</span>
+          <span class="ac-time">${f.arr}</span>
+          <span class="ac-date">${AIRPORTS[f.to].city}</span>
+        </div>
+      </div>
+
+      <div class="ac-detail-grid">
+        <div><div class="l">${t('date')}</div><div class="v">${f.date}</div></div>
+        <div><div class="l">${t('cabin')}</div><div class="v">${CABINS[f.cabin]}</div></div>
+        <div><div class="l">${t('terminal')}</div><div class="v">${f.terminal}</div></div>
+        <div><div class="l">${t('gate')}</div><div class="v">${f.gate}</div></div>
+        <div><div class="l">${t('seat')}</div><div class="v">${f.seat}</div></div>
+        <div><div class="l">${t('duration')}</div><div class="v">${durStr(f.durationMin)}</div></div>
+      </div>
+
+      <div class="ac-actions" style="margin-top: 16px;">
+        <button class="ac-btn ${isSaved?'ac-btn-outline':'ac-btn-red'}" id="acDetailSave">
+          ${isSaved ? t('saved') : t('register')}
+        </button>
+        <button class="ac-btn ac-btn-dark" id="acDetailBoard">${t('get_boarding')}</button>
+      </div>
+    `;
+    $('acDetailSave').onclick = () => {
+      const idx = saved.findIndex(s => s.flightNum === f.flightNum && s.date === f.date);
+      if (idx >= 0) { saved.splice(idx, 1); showToast(lang==='fr'?'Vol retiré':'Flight removed'); }
+      else { saved.push(f); showToast(lang==='fr'?'Vol enregistré':'Flight saved'); }
+      persist();
+      renderDetail(f);
+    };
+    $('acDetailBoard').onclick = () => {
+      if (!saved.some(s => s.flightNum === f.flightNum && s.date === f.date)) {
+        saved.push(f); persist();
+      }
+      renderBoardingPass(f);
+    };
+  }
+
+  // ===== Saved list =====
+  function renderSaved() {
+    const box = $('acSavedList');
+    if (!saved.length) {
+      box.innerHTML = `
+        <div class="ac-saved-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          <div>${t('saved_empty')}</div>
+        </div>`;
+      return;
+    }
+    box.innerHTML = saved.map((f, i) => `
+      <div class="ac-result-card" data-idx="${i}">
+        <div class="ac-result-head">
+          <div class="ac-result-flight"><span class="ac-logo" style="width:22px;height:22px;">${maple(true)}</span>${f.flightNum}</div>
+          <button class="ac-tag red" data-remove="${i}" style="border:0;cursor:pointer;">${t('remove')}</button>
+        </div>
+        <div class="ac-result-route">
+          <div class="col"><span class="iata">${f.from}</span><span class="t">${f.dep||''}</span></div>
+          <div class="dur">${f.date||''}</div>
+          <div class="col right"><span class="iata">${f.to}</span><span class="t">${f.arr||''}</span></div>
+        </div>
+        <div class="ac-result-tags">
+          <span class="ac-tag green">${t('saved')}</span>
+          ${f.cabin?`<span class="ac-tag">${CABINS[f.cabin]||f.cabin}</span>`:''}
+          ${f.seat?`<span class="ac-tag">${t('seat')} ${f.seat}</span>`:''}
+        </div>
+      </div>
+    `).join('');
+    box.querySelectorAll('[data-remove]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        saved.splice(+b.dataset.remove, 1); persist(); renderSaved();
+      };
+    });
+    box.querySelectorAll('.ac-result-card').forEach((c, i) => {
+      c.onclick = (e) => { if (e.target.dataset.remove) return; renderBoardingPass(saved[i]); };
+    });
+  }
+
+  // ===== Boarding pass =====
+  function renderBoardingPicker() {
+    if (!saved.length) {
+      $('acBoardingBody').innerHTML = `
+        <div class="ac-saved-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/></svg>
+          <div>${lang==='fr'?'Enregistrez un vol pour obtenir la carte.':'Save a flight to get a boarding pass.'}</div>
+        </div>`;
+      return;
+    }
+    renderBoardingPass(saved[0]);
+  }
+
+  function renderBoardingPass(f) {
+    const code = (f.flightNum.replace(/\D/g,'') + f.from + f.to).toUpperCase();
+    $('acBoardingBody').innerHTML = `
+      ${saved.length > 1 ? `
+        <select class="ac-select" id="acBpSelect" style="margin-bottom:12px;">
+          ${saved.map((s, i) => `<option value="${i}" ${s.flightNum===f.flightNum&&s.date===f.date?'selected':''}>${s.flightNum} ${s.from}→${s.to} ${s.date||''}</option>`).join('')}
+        </select>` : ''}
+      <div class="ac-bp">
+        <div class="ac-bp-notch-l"></div><div class="ac-bp-notch-r"></div>
+        <div class="ac-bp-band">${t('boarding_title').toUpperCase()}</div>
+        <div class="ac-bp-top">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:center;gap:8px;font-weight:700;">
+              <span class="ac-logo">${maple()}</span> ${f.flightNum}
+            </div>
+            <div style="font-size:11px;opacity:.7;">${f.date||''}</div>
+          </div>
+          <div class="ac-bp-route">
+            <div class="col"><span class="iata">${f.from}</span><span style="font-size:11px;opacity:.7;">${AIRPORTS[f.from]?AIRPORTS[f.from].city:''}</span></div>
+            ${planeIcon()}
+            <div class="col right"><span class="iata">${f.to}</span><span style="font-size:11px;opacity:.7;">${AIRPORTS[f.to]?AIRPORTS[f.to].city:''}</span></div>
+          </div>
+          <div class="ac-bp-info">
+            <div><div class="l">${t('passenger')}</div><div class="v">DUPONT/JEAN</div></div>
+            <div><div class="l">${t('seat')}</div><div class="v">${f.seat||'12A'}</div></div>
+            <div><div class="l">${t('gate')}</div><div class="v">${f.gate||'B5'}</div></div>
+            <div><div class="l">${t('boarding_time')}</div><div class="v">${f.dep||'07:15'}</div></div>
+          </div>
+        </div>
+        <div class="ac-bp-bar">
+          ${barcodeSvg()}
+          <div class="ac-bp-code">${code}-${Date.now().toString().slice(-6)}</div>
+        </div>
+      </div>
+    `;
+    const sel = $('acBpSelect');
+    if (sel) sel.onchange = () => renderBoardingPass(saved[+sel.value]);
+  }
+
+  // ===== Status view =====
+  $('acStatusBtn') && ($('acStatusBtn').onclick = () => {
+    const num = $('acStatusFlight').value.trim().toUpperCase();
+    if (!num) return;
+    const seed = hash(num + new Date().toDateString());
+    const statusIdx = seed % STATUSES.length;
+    const tag = statusTag(STATUSES[statusIdx]);
+    const delay = statusIdx === 3 ? (10 + seed % 50) : 0;
+    $('acStatusResult').innerHTML = `
+      <div class="ac-result-card" style="cursor:default;">
+        <div class="ac-result-head">
+          <div class="ac-result-flight"><span class="ac-logo" style="width:22px;height:22px;">${maple(true)}</span>${num}</div>
+          <span class="ac-tag ${tag.cls}">${tag.text}</span>
+        </div>
+        <div style="font-size:13px;color:var(--ac-muted);margin-top:8px;">
+          ${t('check')} <b>${num}</b>.
+          ${delay?`${lang==='fr'?'Retard estimé':'Estimated delay'}: <b>${delay} min</b>.`:''}
+        </div>
+      </div>
+    `;
+  });
+
+  // ===== Icons =====
+  function maple(small) {
+    return `<svg viewBox="0 0 24 24" fill="#fff" style="width:${small?12:14}px;height:${small?12:14}px;"><path d="M12 2L13.5 7L18 5.5L16 10L21 11L17 14L19 18L14 17L13 22L12 19L11 22L10 17L5 18L7 14L3 11L8 10L6 5.5L10.5 7L12 2Z"/></svg>`;
+  }
+  function planeIcon() {
+    return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1L15 22v-1.5L13 19v-5.5l8 2.5z"/></svg>`;
+  }
+  function barcodeSvg() {
+    let bars = '';
+    let x = 0;
+    for (let i = 0; i < 60; i++) {
+      const w = 1 + (i * 7) % 4;
+      bars += `<rect x="${x}" y="0" width="${w}" height="50" fill="#1a1a1a"/>`;
+      x += w + 1 + (i % 3);
+    }
+    return `<svg viewBox="0 0 ${x} 50" preserveAspectRatio="none">${bars}</svg>`;
+  }
+
+  // ===== Wiring =====
+  $('acMenuBtn').onclick = () => drawer.classList.contains('open') ? closeDrawer() : openDrawer();
+  scrim.onclick = closeDrawer;
+  document.querySelectorAll('.ac-drawer-item').forEach(item => {
+    item.onclick = () => setView(item.dataset.view);
+  });
+
+  $('acLangBtn').onclick = () => {
+    lang = lang === 'fr' ? 'en' : 'fr';
+    $('acLangBtn').textContent = lang === 'fr' ? 'EN' : 'FR';
+    $('acTitle').textContent = t('title');
+    // re-translate all data-i18n
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      el.textContent = t(el.dataset.i18n);
+    });
+    renderNextFlight();
+  };
+
+  $('acSwap').onclick = () => {
+    const a = $('acFrom').value, b = $('acTo').value;
+    $('acFrom').value = b; $('acTo').value = a;
+  };
+
+  $('acSearchBtn').onclick = () => {
+    const from = parseAirport($('acFrom').value);
+    const to = parseAirport($('acTo').value);
+    const date = $('acDate').value || new Date().toISOString().slice(0,10);
+    const cabin = $('acCabin').value;
+    if (!from || !to) { showToast(lang==='fr'?'Sélectionnez les aéroports':'Pick both airports'); return; }
+    const results = generateFlights(from, to, date, cabin);
+    renderResults(results);
+  };
+
+  $('acDetailBack').onclick = () => setView('search');
+
+  // Default date = today
+  const today = new Date().toISOString().slice(0,10);
+  $('acDate').value = today;
+
+  // Live-ish stock update (simulated)
+  setInterval(() => {
+    const t = new Date();
+    $('acStockTime').textContent = pad(t.getHours()) + ':' + pad(t.getMinutes()) + ' EST';
+    const change = (Math.random() * 4 - 2);
+    const pct = change.toFixed(2);
+    const pill = $('acStockChange');
+    const price = $('acStockPrice');
+    const base = 13.57;
+    price.textContent = (base + change/4).toFixed(2);
+    pill.textContent = (change >= 0 ? '+ ' : '- ') + Math.abs(pct) + '%';
+    pill.classList.toggle('down', change < 0);
+  }, 8000);
+
+  // Initial render
+  renderNextFlight();
+})();
+</script>
+</body>
+</html>
