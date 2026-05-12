@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="widget-name" content="Air Canada">
 <meta name="widget-description" content="Air Canada crew/operations widget: next flight, flight search, boarding pass, AC stock, departure & arrival performance. Embeds into Staffbase mobile + desktop.">
-<title>Air Canada — Accueil</title>
+<title>Air Canada — Home</title>
 <style>
   :root {
     --ac-red: #D82F2F;
@@ -554,8 +554,8 @@
     <button class="ac-menu-btn" id="acMenuBtn" aria-label="Menu">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
-    <div class="ac-title" id="acTitle">Accueil</div>
-    <button class="ac-lang" id="acLangBtn">EN</button>
+    <div class="ac-title" id="acTitle">Home</div>
+    <button class="ac-lang" id="acLangBtn">FR</button>
   </header>
 
   <!-- DRAWER MENU -->
@@ -762,8 +762,15 @@
       check: "Status retrieved for"
     }
   };
-  let lang = 'fr';
+  let lang = 'en';
   const t = (k) => (i18n[lang] && i18n[lang][k]) || k;
+  function applyTranslations() {
+    $('acTitle').textContent = t('title');
+    $('acLangBtn').textContent = lang === 'fr' ? 'EN' : 'FR';
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      el.textContent = t(el.dataset.i18n);
+    });
+  }
 
   // ===== State =====
   const SAVED_KEY = 'ac_widget_saved_flights';
@@ -1223,12 +1230,7 @@
 
   $('acLangBtn').onclick = () => {
     lang = lang === 'fr' ? 'en' : 'fr';
-    $('acLangBtn').textContent = lang === 'fr' ? 'EN' : 'FR';
-    $('acTitle').textContent = t('title');
-    // re-translate all data-i18n
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      el.textContent = t(el.dataset.i18n);
-    });
+    applyTranslations();
     renderNextFlight();
   };
 
@@ -1268,6 +1270,7 @@
   }, 8000);
 
   // Initial render
+  applyTranslations();
   renderNextFlight();
 })();
 </script>
