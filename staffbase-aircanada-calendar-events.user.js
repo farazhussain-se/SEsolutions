@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Staffbase Planning — Air Canada Crew Events
 // @namespace    https://aircanada.staffbase.rocks/
-// @version      1.0.0
-// @description  Injects Air Canada crew/ops event cards into the Staffbase Editorial Calendar (demo)
+// @version      1.1.0
+// @description  Injects Air Canada crew/ops event cards into the Staffbase Editorial Calendar + adds Event option to Create dropdown + kebab menu on event popup (demo)
 // @author       Faraz Hussein · Staffbase SE Solutions
 // @match        https://aircanada.staffbase.rocks/studio/planning*
 // @match        https://aircanadademo.staffbase.rocks/studio/planning*
@@ -104,6 +104,17 @@
   // Earliest event date — used as the "calendar is rendered" sentinel.
   const SENTINEL_DATE = AC_EVENTS[0].date;
 
+  // Staffbase company-event editor URL — used by Create > Event + kebab "Edit"
+  const EVENT_EDITOR_URL = 'https://app.staffbase.com/studio/content/company-event/scheduled';
+
+  // Persist removed event IDs so the SPA observer doesn't resurrect them.
+  const REMOVED_KEY = 'ac_cal_removed_events';
+  let removedIds = new Set();
+  try { removedIds = new Set(JSON.parse(localStorage.getItem(REMOVED_KEY) || '[]')); } catch (_) {}
+  function persistRemoved() {
+    localStorage.setItem(REMOVED_KEY, JSON.stringify([...removedIds]));
+  }
+
   /* ══════════════════════════════════════════════════
      CSS  (detail panel only — cards use FC's own classes)
   ══════════════════════════════════════════════════ */
@@ -171,10 +182,44 @@
 
     .ac-badge {
       display: inline-block; font-size: 12px; font-weight: 600;
-      padding: 3px 10px; border-radius: 999px; margin-bottom: 10px;
+      padding: 3px 10px; border-radius: 999px;
     }
     .ac-badge.pub   { background: #dcfce7; color: #166534; }
     .ac-badge.sched { background: #fef9c3; color: #92400e; }
+
+    /* ── Status row + kebab menu ── */
+    .ac-pnl-toprow {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px; position: relative;
+    }
+    .ac-pnl-kebab {
+      background: none; border: 0; cursor: pointer;
+      width: 30px; height: 30px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      color: #6b7280; padding: 0;
+    }
+    .ac-pnl-kebab:hover { background: #f3f4f6; color: #111827; }
+    .ac-pnl-kebab svg { width: 18px; height: 18px; fill: currentColor; }
+    .ac-pnl-kebab-menu {
+      display: none;
+      position: absolute; right: 0; top: 36px;
+      background: #fff; border: 1px solid #e5e7eb;
+      border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+      min-width: 210px; z-index: 20; overflow: hidden;
+      padding: 4px 0;
+    }
+    .ac-pnl-kebab-menu.open { display: block; }
+    .ac-pnl-kebab-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px; font-size: 13px; line-height: 1.2;
+      background: none; border: 0; width: 100%; text-align: left;
+      cursor: pointer; color: #374151; text-decoration: none;
+      font-family: inherit;
+    }
+    .ac-pnl-kebab-item:hover { background: #f9fafb; }
+    .ac-pnl-kebab-item--danger { color: #b91c1c; }
+    .ac-pnl-kebab-item--danger:hover { background: #fef2f2; }
+    .ac-pnl-kebab-item svg { width: 16px; height: 16px; flex-shrink: 0; fill: currentColor; }
 
     .ac-pnl-title {
       font-size: 18px; font-weight: 700; color: #111827;
@@ -357,7 +402,22 @@
         <div class="ac-pnl-hdr-comm">${ev.community}</div>
       </div>
       <div class="ac-pnl-body">
-        <span class="ac-badge ${pub ? 'pub' : 'sched'}">${ev.status}</span>
+        <div class="ac-pnl-toprow">
+          <span class="ac-badge ${pub ? 'pub' : 'sched'}">${ev.status}</span>
+          <button class="ac-pnl-kebab" id="ac-pnl-kebab" aria-label="More options" aria-haspopup="menu">
+            <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+          </button>
+          <div class="ac-pnl-kebab-menu" id="ac-pnl-kebab-menu" role="menu">
+            <a class="ac-pnl-kebab-item" href="${EVENT_EDITOR_URL}" target="_blank" rel="noopener" role="menuitem">
+              <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              <span>Edit event</span>
+            </a>
+            <button class="ac-pnl-kebab-item ac-pnl-kebab-item--danger" id="ac-pnl-remove" role="menuitem">
+              <svg viewBox="0 0 24 24"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              <span>Remove from calendar</span>
+            </button>
+          </div>
+        </div>
         <h2 class="ac-pnl-title">${ev.title}</h2>
         <p class="ac-pnl-date">${fmtDate(ev)}</p>
         <p class="ac-pnl-author">Created by <a>${ev.createdBy}</a></p>
@@ -446,6 +506,27 @@
       </div>`;
 
     panel.querySelector('#ac-pnl-x').addEventListener('click', closePanel);
+
+    // Kebab menu wiring
+    const kebabBtn  = panel.querySelector('#ac-pnl-kebab');
+    const kebabMenu = panel.querySelector('#ac-pnl-kebab-menu');
+    kebabBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      kebabMenu.classList.toggle('open');
+    });
+    panel.addEventListener('click', (e) => {
+      if (!e.target.closest('#ac-pnl-kebab') && !e.target.closest('#ac-pnl-kebab-menu')) {
+        kebabMenu.classList.remove('open');
+      }
+    });
+    panel.querySelector('#ac-pnl-remove').addEventListener('click', () => {
+      removedIds.add(ev.id);
+      persistRemoved();
+      document.querySelector(`[data-ac-id="${ev.id}"]`)?.remove();
+      injectedCards = injectedCards.filter(c => c.dataset.acId !== ev.id);
+      closePanel();
+    });
+
     requestAnimationFrame(() => {
       panel.classList.add('open');
       document.getElementById('ac-panel-backdrop')?.classList.add('open');
@@ -482,6 +563,7 @@
     if (!m) return false;
 
     AC_EVENTS.forEach(ev => {
+      if (removedIds.has(ev.id)) return;
       if (document.querySelector(`[data-ac-id="${ev.id}"]`)) return;
 
       const colFrame = document.querySelector(
@@ -549,6 +631,55 @@
   }
 
   /* ══════════════════════════════════════════════════
+     CREATE-MENU INJECTION ("Event" option)
+     The "Create" dropdown is a Floating UI menu (.ds-action-menu)
+     that mounts/unmounts on open/close. We observe document.body
+     and append our menuitem whenever a fresh menu appears.
+  ══════════════════════════════════════════════════ */
+
+  function injectCreateMenuItem(menu) {
+    if (!menu || menu.querySelector('[data-ac-create-event]')) return;
+    // Only target the Planning create menu (which contains Post + Blocker).
+    const labels = Array.from(menu.querySelectorAll('.ds-action-menu__item-label'))
+      .map(s => s.textContent.trim());
+    if (!labels.includes('Post') || !labels.includes('Blocker')) return;
+
+    const link = document.createElement('a');
+    link.setAttribute('role', 'menuitem');
+    link.className = 'ds-action-menu__item ds-action-menu__item--default ds-action-menu__link-item';
+    link.href = EVENT_EDITOR_URL;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.tabIndex = -1;
+    link.setAttribute('data-ac-create-event', 'true');
+    link.innerHTML = `<span class="ds-action-menu__item-label">Event</span>`;
+
+    // Insert before Blocker so order becomes: Post, Email, Event, Blocker.
+    const blockerEl = Array.from(menu.children).find(el =>
+      el.querySelector?.('.ds-action-menu__item-label')?.textContent.trim() === 'Blocker'
+    );
+    if (blockerEl) menu.insertBefore(link, blockerEl);
+    else menu.appendChild(link);
+  }
+
+  let _createMenuObs = null;
+  function startCreateMenuObserver() {
+    if (_createMenuObs) return;
+    _createMenuObs = new MutationObserver(muts => {
+      for (const m of muts) {
+        for (const node of m.addedNodes) {
+          if (!(node instanceof HTMLElement)) continue;
+          if (node.classList?.contains('ds-action-menu')) injectCreateMenuItem(node);
+          node.querySelectorAll?.('.ds-action-menu').forEach(injectCreateMenuItem);
+        }
+      }
+    });
+    _createMenuObs.observe(document.body, { childList: true, subtree: true });
+    // Handle a menu that's already open at script load time.
+    document.querySelectorAll('.ds-action-menu').forEach(injectCreateMenuItem);
+  }
+
+  /* ══════════════════════════════════════════════════
      INIT + SPA WATCHER
   ══════════════════════════════════════════════════ */
 
@@ -559,6 +690,7 @@
     _reinjectObs = new MutationObserver(() => {
       if (!calendarReady()) return;
       const missing = AC_EVENTS.some(ev =>
+        !removedIds.has(ev.id) &&
         document.querySelector(`td[data-date="${ev.date}"]`) &&
         !document.querySelector(`[data-ac-id="${ev.id}"]`)
       );
@@ -573,6 +705,7 @@
     if (!window.location.href.includes('/studio/planning')) return;
     injectStyles();
     buildPanel();
+    startCreateMenuObserver();
     clearCards();
     _reinjectObs?.disconnect();
     clearInterval(_initPoll);
