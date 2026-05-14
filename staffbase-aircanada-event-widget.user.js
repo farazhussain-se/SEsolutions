@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Staffbase News — Air Canada Event Widget
 // @namespace    https://aircanada.staffbase.com/
-// @version      1.0.3
+// @version      1.0.4
 // @description  Adds an Event widget to the article editor's Add Widget palette + event picker + AC-branded event card in the text area (demo)
 // @author       Faraz Hussein · Staffbase SE Solutions
 // @match        https://app.staffbase.com/admin/plugin/news/*
@@ -465,7 +465,7 @@
     const id = 'ac-ew-' + Math.random().toString(36).slice(2, 12);
     const titleText = customTitle || ev.title;
     const dateText = formatLong(ev);
-    const where = (ev.community || ev.audiences?.[0] || 'Live Broadcast').replace(/\s+—\s+/g, ' • ');
+    const where = 'Live - Townhall';
     const editorUrl = ev.editorUrl || 'https://app.staffbase.com/studio/content/company-event/scheduled';
 
     // The outer .content-widget-wrapper + mceNonEditable matches Staffbase's
