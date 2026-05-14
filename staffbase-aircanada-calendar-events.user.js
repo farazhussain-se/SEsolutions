@@ -79,26 +79,36 @@
       title: 'YVR Above & Beyond — Q1 Crew Recognition',
       date: '2026-05-12', // +3 days
       startHour: 16, startMin: 0, duration: 60,
-      status: 'Scheduled',
+      status: 'Published',
       community: 'YVR Base — All Crew',
       audiences: ['Crew Space', 'YVR Base'],
       notifications: ['Push'],
       createdBy: 'Samantha Yip',
-      stats: { attendance: 0, watchTime: '—', unique: 0, comments: 0, likes: 0 },
-      breakdown: [],
+      stats: { attendance: 68, watchTime: '42 min avg', unique: 54, comments: 0, likes: 0 },
+      breakdown: [
+        { label: 'YVR — Cabin',  pct: 58 },
+        { label: 'YVR — Pilots', pct: 26 },
+        { label: 'YVR — Ground', pct: 16 },
+      ],
     },
     {
       id: 'ac-e5',
       title: 'Aeroplan Refresh — Crew FAQ Town Hall',
       date: '2026-05-14', // +2 days
       startHour: 11, startMin: 0, duration: 75,
-      status: 'Scheduled',
+      status: 'Completed',
       community: 'Air Canada — All Crew',
       audiences: ['Crew Space', 'Loyalty & Customer Experience'],
       notifications: ['Push', 'Email'],
       createdBy: 'Mark Nasr',
-      stats: { attendance: 0, watchTime: '—', unique: 0, comments: 0, likes: 0 },
-      breakdown: [],
+      stats: { attendance: 487, watchTime: '58 min avg', unique: 412, comments: 0, likes: 0 },
+      breakdown: [
+        { label: 'YYZ — Toronto',   pct: 34 },
+        { label: 'YUL — Montréal',  pct: 22 },
+        { label: 'YVR — Vancouver', pct: 19 },
+        { label: 'YYC — Calgary',   pct: 15 },
+        { label: 'Other Stations',  pct: 10 },
+      ],
     },
   ];
 
