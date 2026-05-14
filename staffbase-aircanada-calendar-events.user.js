@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name         Staffbase Planning — Air Canada Crew Events
 // @namespace    https://aircanada.staffbase.rocks/
-// @version      1.1.0
-// @description  Injects Air Canada crew/ops event cards into the Staffbase Editorial Calendar + adds Event option to Create dropdown + kebab menu on event popup (demo)
+// @version      1.2.0
+// @description  AC crew calendar cards + Event creator in Create dropdown + kebab menu + auto-capture of newly created company-events into the planning calendar (demo)
+// @match        https://app.staffbase.com/studio/*
 // @author       Faraz Hussein · Staffbase SE Solutions
 // @match        https://aircanada.staffbase.rocks/studio/planning*
 // @match        https://aircanadademo.staffbase.rocks/studio/planning*
@@ -114,6 +115,15 @@
   function persistRemoved() {
     localStorage.setItem(REMOVED_KEY, JSON.stringify([...removedIds]));
   }
+
+  // User-created events captured from Staffbase company-event flow.
+  const USER_EVENTS_KEY = 'ac_cal_user_events';
+  let userEvents = [];
+  try { userEvents = JSON.parse(localStorage.getItem(USER_EVENTS_KEY) || '[]'); } catch (_) {}
+  function persistUserEvents() {
+    localStorage.setItem(USER_EVENTS_KEY, JSON.stringify(userEvents));
+  }
+  function allEvents() { return AC_EVENTS.concat(userEvents); }
 
   /* ══════════════════════════════════════════════════
      CSS  (detail panel only — cards use FC's own classes)
@@ -408,7 +418,7 @@
             <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
           </button>
           <div class="ac-pnl-kebab-menu" id="ac-pnl-kebab-menu" role="menu">
-            <a class="ac-pnl-kebab-item" href="${EVENT_EDITOR_URL}" target="_blank" rel="noopener" role="menuitem">
+            <a class="ac-pnl-kebab-item" href="${ev.editorUrl || EVENT_EDITOR_URL}" target="_blank" rel="noopener" role="menuitem">
               <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
               <span>Edit event</span>
             </a>
@@ -553,7 +563,7 @@
 
   function calendarReady() {
     // Sentinel: at least one of our event dates must be in the DOM.
-    return AC_EVENTS.some(ev => document.querySelector(`td[data-date="${ev.date}"]`));
+    return allEvents().some(ev => document.querySelector(`td[data-date="${ev.date}"]`));
   }
 
   function injectCards() {
@@ -562,7 +572,7 @@
     const m = measureFC();
     if (!m) return false;
 
-    AC_EVENTS.forEach(ev => {
+    allEvents().forEach(ev => {
       if (removedIds.has(ev.id)) return;
       if (document.querySelector(`[data-ac-id="${ev.id}"]`)) return;
 
@@ -680,6 +690,194 @@
   }
 
   /* ══════════════════════════════════════════════════
+     COMPANY-EVENT CAPTURE
+     Hooks fetch + XHR to intercept the POST/PUT that
+     creates a Staffbase company-event and stores its
+     details into userEvents[] so the planning calendar
+     can render the freshly-created event.
+     Also scrapes the /overview page as a fallback.
+  ══════════════════════════════════════════════════ */
+
+  function looksLikeEventEndpoint(url) {
+    return typeof url === 'string' && /company-event|companyEvent|\/events?(\b|\/)/i.test(url);
+  }
+
+  // Pull useful fields out of varied Staffbase response shapes.
+  function extractEventFields(data) {
+    if (!data || typeof data !== 'object') return null;
+    // Some endpoints wrap in {data: {...}} or {event: {...}}.
+    const candidates = [data, data.data, data.event, data.result].filter(Boolean);
+    for (const c of candidates) {
+      const id = c.id || c._id || c.eventId;
+      const title = c.title || c.name || c.displayName;
+      const start = c.startDate || c.startTime || c.start || c.scheduledStart;
+      if (id && title && start) return {
+        id: String(id),
+        title: String(title),
+        start,
+        end: c.endDate || c.endTime || c.end || c.scheduledEnd,
+        description: c.shortDescription || c.description,
+        moderators: c.moderators,
+        audiences: c.targetAudience || c.userGroups || c.audiences,
+      };
+    }
+    return null;
+  }
+
+  function captureFromApi(raw) {
+    const f = extractEventFields(raw);
+    if (!f) return false;
+
+    const startDate = new Date(f.start);
+    if (isNaN(startDate.getTime())) return false;
+    const endDate = f.end ? new Date(f.end) : new Date(startDate.getTime() + 60 * 60 * 1000);
+    const durationMin = Math.max(30, Math.round((endDate - startDate) / 60000));
+
+    const audienceList = Array.isArray(f.audiences) ? f.audiences.map(a =>
+      typeof a === 'string' ? a : (a.name || a.title || a.displayName || 'Group')
+    ) : ['Company Event'];
+
+    const ev = {
+      id: `user-${f.id}`,
+      title: f.title,
+      date: startDate.toISOString().slice(0, 10),
+      startHour: startDate.getHours(),
+      startMin: startDate.getMinutes(),
+      duration: durationMin,
+      status: 'Scheduled',
+      community: audienceList[0] || 'Company Event',
+      audiences: audienceList.length ? audienceList : ['Live Broadcast'],
+      notifications: ['Push', 'Email'],
+      createdBy: 'You',
+      stats: { attendance: 0, watchTime: '—', unique: 0, comments: 0, likes: 0 },
+      breakdown: [],
+      userCreated: true,
+      editorUrl: `https://app.staffbase.com/studio/content/company-event/${f.id}/overview`,
+    };
+
+    const existing = userEvents.findIndex(e => e.id === ev.id);
+    if (existing >= 0) userEvents[existing] = ev;
+    else userEvents.push(ev);
+    persistUserEvents();
+
+    // If user is on the planning page right now, paint it in.
+    if (location.href.includes('/studio/planning')) setTimeout(injectCards, 100);
+    return true;
+  }
+
+  function hookFetch() {
+    if (window.fetch.__acHooked) return;
+    const orig = window.fetch.bind(window);
+    const wrapped = async function (input, init) {
+      const url = typeof input === 'string' ? input : (input && input.url) || '';
+      const method = ((init && init.method) || (typeof input === 'object' && input.method) || 'GET').toUpperCase();
+      const resp = await orig(input, init);
+      try {
+        if ((method === 'POST' || method === 'PUT' || method === 'PATCH') && looksLikeEventEndpoint(url)) {
+          resp.clone().json().then(captureFromApi).catch(() => {});
+        }
+      } catch (_) {}
+      return resp;
+    };
+    wrapped.__acHooked = true;
+    window.fetch = wrapped;
+  }
+
+  function hookXHR() {
+    if (XMLHttpRequest.prototype.__acHooked) return;
+    const origOpen = XMLHttpRequest.prototype.open;
+    const origSend = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function (method, url) {
+      this.__acMethod = method;
+      this.__acUrl = url;
+      return origOpen.apply(this, arguments);
+    };
+    XMLHttpRequest.prototype.send = function () {
+      this.addEventListener('load', () => {
+        try {
+          const m = (this.__acMethod || '').toUpperCase();
+          if ((m === 'POST' || m === 'PUT' || m === 'PATCH') && looksLikeEventEndpoint(this.__acUrl)) {
+            const data = JSON.parse(this.responseText);
+            captureFromApi(data);
+          }
+        } catch (_) {}
+      });
+      return origSend.apply(this, arguments);
+    };
+    XMLHttpRequest.prototype.__acHooked = true;
+  }
+
+  // Fallback: scrape the overview page when the user lands on a freshly
+  // created event. The URL pattern is /studio/content/company-event/{id}/overview.
+  function maybeScrapeOverview() {
+    const m = location.href.match(/\/studio\/content\/company-event\/([0-9a-f]{16,})\/overview/i);
+    if (!m) return;
+    const id = m[1];
+    const userId = `user-${id}`;
+    if (userEvents.some(e => e.id === userId)) return;
+
+    let tries = 0;
+    const poll = setInterval(() => {
+      tries++;
+      const h1 = document.querySelector('h1, [class*="title"]');
+      const title = h1 && h1.textContent.trim();
+      // Grab a date line like "May 15 at 9:00 AM - May 15 at 10:00 AM".
+      const dateLine = Array.from(document.querySelectorAll('p, span, div'))
+        .map(el => el.textContent.trim())
+        .find(t => /\b\d{1,2}:\d{2}\s*(AM|PM)\b/i.test(t) && /[A-Z][a-z]{2}\s+\d{1,2}/.test(t));
+
+      if (title && dateLine) {
+        clearInterval(poll);
+        const parsed = parseOverviewDateLine(dateLine);
+        if (!parsed) return;
+        const ev = {
+          id: userId,
+          title,
+          date: parsed.date,
+          startHour: parsed.startHour,
+          startMin: parsed.startMin,
+          duration: parsed.duration,
+          status: 'Scheduled',
+          community: 'Company Event',
+          audiences: ['Live Broadcast'],
+          notifications: ['Push', 'Email'],
+          createdBy: 'You',
+          stats: { attendance: 0, watchTime: '—', unique: 0, comments: 0, likes: 0 },
+          breakdown: [],
+          userCreated: true,
+          editorUrl: location.href,
+        };
+        userEvents.push(ev);
+        persistUserEvents();
+      }
+      if (tries > 40) clearInterval(poll); // ~12s cap
+    }, 300);
+  }
+
+  function parseOverviewDateLine(line) {
+    // e.g. "May 15 at 9:00 AM - May 15 at 10:00 AM"
+    const MONTHS = { Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12 };
+    const re = /([A-Z][a-z]{2})\s+(\d{1,2})\s+at\s+(\d{1,2}):(\d{2})\s*(AM|PM)\s*[-–—]\s*([A-Z][a-z]{2})\s+(\d{1,2})\s+at\s+(\d{1,2}):(\d{2})\s*(AM|PM)/i;
+    const m = line.match(re);
+    if (!m) return null;
+    const year = new Date().getFullYear();
+    const toMins = (h, mi, ap) => {
+      let H = parseInt(h, 10) % 12;
+      if (/PM/i.test(ap)) H += 12;
+      return H * 60 + parseInt(mi, 10);
+    };
+    const sm = toMins(m[3], m[4], m[5]);
+    const em = toMins(m[8], m[9], m[10]);
+    const startMon = MONTHS[m[1]], startDay = parseInt(m[2], 10);
+    return {
+      date: `${year}-${String(startMon).padStart(2,'0')}-${String(startDay).padStart(2,'0')}`,
+      startHour: Math.floor(sm / 60),
+      startMin: sm % 60,
+      duration: Math.max(30, em - sm),
+    };
+  }
+
+  /* ══════════════════════════════════════════════════
      INIT + SPA WATCHER
   ══════════════════════════════════════════════════ */
 
@@ -689,7 +887,7 @@
     _reinjectObs?.disconnect();
     _reinjectObs = new MutationObserver(() => {
       if (!calendarReady()) return;
-      const missing = AC_EVENTS.some(ev =>
+      const missing = allEvents().some(ev =>
         !removedIds.has(ev.id) &&
         document.querySelector(`td[data-date="${ev.date}"]`) &&
         !document.querySelector(`[data-ac-id="${ev.id}"]`)
@@ -702,6 +900,12 @@
   let _initPoll = null;
 
   function init() {
+    // These run on ANY /studio/* page so we capture events even when
+    // the user is in the creation flow, not just on planning.
+    hookFetch();
+    hookXHR();
+    maybeScrapeOverview();
+
     if (!window.location.href.includes('/studio/planning')) return;
     injectStyles();
     buildPanel();
@@ -724,14 +928,15 @@
     setTimeout(() => clearInterval(_initPoll), 30000);
   }
 
+  function onStudioNav() {
+    if (window.location.href.includes('/studio/')) setTimeout(init, 500);
+  }
   const _push = history.pushState.bind(history);
   history.pushState = function (...args) {
     _push(...args);
-    if (window.location.href.includes('/studio/planning')) setTimeout(init, 500);
+    onStudioNav();
   };
-  window.addEventListener('popstate', () => {
-    if (window.location.href.includes('/studio/planning')) setTimeout(init, 500);
-  });
+  window.addEventListener('popstate', onStudioNav);
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
