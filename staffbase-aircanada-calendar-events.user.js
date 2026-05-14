@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Staffbase Planning — Air Canada Crew Events
 // @namespace    https://aircanada.staffbase.rocks/
-// @version      1.3.0
+// @version      1.3.1
 // @description  AC crew calendar cards + Event creator in Create dropdown + kebab menu + auto-capture of newly created company-events into the planning calendar (demo)
 // @match        https://app.staffbase.com/studio/*
 // @author       Faraz Hussein · Staffbase SE Solutions
@@ -285,24 +285,6 @@
     .ac-analytics-val { font-size: 14px; font-weight: 600; color: #111827; line-height: 1.2; white-space: nowrap; }
     .ac-analytics-name { font-size: 12px; color: #6b7280; white-space: nowrap; }
 
-    /* ── Watch time + breakdown (published only, above stats strip) ── */
-    .ac-watch {
-      display: flex; align-items: center; gap: 12px;
-      background: #fef2f2; border: 1px solid #fecaca;
-      border-radius: 8px; padding: 11px 14px; margin-bottom: 14px;
-    }
-    .ac-watch-val { font-size: 17px; font-weight: 700; color: #b91c1c; }
-    .ac-watch-lbl { font-size: 11px; color: #6b7280; }
-
-    .ac-br { margin-bottom: 8px; }
-    .ac-br-lrow {
-      display: flex; justify-content: space-between;
-      font-size: 12px; color: #374151; margin-bottom: 3px;
-    }
-    .ac-br-track { height: 6px; border-radius: 999px; background: #f3f4f6; overflow: hidden; }
-    .ac-br-fill  { height: 100%; border-radius: 999px; background: #D82F2F; }
-    .ac-br-sec   { font-size: 11px; font-weight: 700; text-transform: uppercase;
-                   letter-spacing: 0.06em; color: #9ca3af; margin: 12px 0 8px; }
   `;
 
   /* ══════════════════════════════════════════════════
@@ -506,22 +488,6 @@
           </div>
         </div>
 
-        ${showStats && ev.breakdown.length ? `
-          <div class="ac-div"></div>
-          <div class="ac-watch">
-            <div class="ac-analytics-icon" style="margin-right:10px">${ICON_VIEW}</div>
-            <div>
-              <div class="ac-watch-val">${ev.stats.watchTime}</div>
-              <div class="ac-watch-lbl">Average Watch Time</div>
-            </div>
-          </div>
-          <p class="ac-br-sec">Base / Segment Breakdown</p>
-          ${ev.breakdown.map(b => `
-            <div class="ac-br">
-              <div class="ac-br-lrow"><span>${b.label}</span><span>${b.pct}%</span></div>
-              <div class="ac-br-track"><div class="ac-br-fill" style="width:${b.pct}%"></div></div>
-            </div>`).join('')}
-        ` : ''}
       </div>`;
 
     panel.querySelector('#ac-pnl-x').addEventListener('click', closePanel);
