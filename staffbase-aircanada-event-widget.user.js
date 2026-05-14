@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Staffbase News — Air Canada Event Widget
 // @namespace    https://aircanada.staffbase.com/
-// @version      1.0.1
+// @version      1.0.2
 // @description  Adds an Event widget to the article editor's Add Widget palette + event picker + AC-branded event card in the text area (demo)
 // @author       Faraz Hussein · Staffbase SE Solutions
 // @match        https://app.staffbase.com/admin/plugin/news/*
@@ -55,7 +55,8 @@
       font-weight: 500;
     }
 
-    /* Event picker modal — modelled on the User Profile Widget popup */
+    /* Event picker modal — matches Staffbase's native widget config layout
+       (see Static Content Widget for reference). */
     .ac-ew-backdrop {
       position: fixed; inset: 0; z-index: 99999;
       background: rgba(0,0,0,0.45);
@@ -70,88 +71,106 @@
       box-shadow: 0 16px 48px rgba(0,0,0,0.25);
       display: flex; flex-direction: column;
       overflow: hidden;
+      color: #1f2937;
     }
     .ac-ew-modal-head {
-      padding: 22px 28px 16px; text-align: center;
-      border-bottom: 1px solid #eef0f3;
+      padding: 24px 32px 18px; text-align: center;
     }
     .ac-ew-modal-head h2 {
       margin: 0; font-size: 18px; font-weight: 700; color: #111827;
     }
     .ac-ew-modal-body {
-      padding: 22px 28px; overflow-y: auto; flex: 1;
+      padding: 0 32px 8px; overflow-y: auto; flex: 1;
     }
-    .ac-ew-section {
-      margin-bottom: 22px;
-    }
+    .ac-ew-section { margin-bottom: 28px; }
     .ac-ew-section h3 {
-      font-size: 14px; font-weight: 700; color: #111827;
-      margin: 0 0 14px;
+      font-size: 15px; font-weight: 700; color: #111827;
+      margin: 0 0 18px;
     }
-    .ac-ew-field {
-      display: grid;
-      grid-template-columns: 130px 1fr;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 14px;
+
+    /* One label + control row, matching Static Content widget spacing. */
+    .ac-ew-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 18px;
     }
-    .ac-ew-field-label {
-      font-size: 13px; color: #374151;
+    .ac-ew-row:last-child { margin-bottom: 0; }
+    .ac-ew-row-label {
+      flex: 0 0 140px;
+      font-size: 13px; color: #1f2937;
+      padding-top: 8px;
+      display: flex; align-items: center; gap: 6px;
     }
-    .ac-ew-field-help {
-      display: inline-block;
+    .ac-ew-row-control { flex: 1; min-width: 0; }
+
+    .ac-ew-help {
+      display: inline-flex; align-items: center; justify-content: center;
       width: 14px; height: 14px; border-radius: 50%;
-      background: #e5e7eb; color: #6b7280;
-      font-size: 10px; text-align: center; line-height: 14px;
-      margin-left: 4px;
+      border: 1px solid #d1d5db; color: #9ca3af;
+      font-size: 10px; line-height: 1; font-weight: 600;
+      flex-shrink: 0;
     }
+
     .ac-ew-input, .ac-ew-select {
       width: 100%;
-      border: 1px solid #d1d5db; border-radius: 6px;
-      padding: 8px 10px; font-size: 13px; background: #fff;
-      font-family: inherit;
+      border: 1px solid #e5e7eb; border-radius: 6px;
+      padding: 8px 12px; font-size: 13px; background: #f9fafb;
+      font-family: inherit; color: #1f2937;
+      box-sizing: border-box;
     }
     .ac-ew-input:focus, .ac-ew-select:focus {
-      outline: none; border-color: #D82F2F;
-      box-shadow: 0 0 0 3px rgba(216,47,47,.12);
+      outline: none; border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,.18);
+      background: #fff;
     }
-    .ac-ew-device-row {
-      display: flex; gap: 8px;
-    }
+
+    /* Device toggle row — matches Static Content's blue square buttons */
+    .ac-ew-device-row { display: inline-flex; gap: 4px; }
     .ac-ew-device-btn {
-      width: 44px; height: 36px;
-      border: 1px solid #d1d5db; border-radius: 6px;
-      background: #2563eb; color: #fff; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+      width: 38px; height: 32px;
+      border: 0; border-radius: 4px;
+      background: #2089f7; color: #fff; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0;
+      transition: background .15s;
     }
     .ac-ew-device-btn svg { width: 18px; height: 18px; fill: currentColor; }
-    .ac-ew-device-btn.off { background: #fff; color: #6b7280; }
-    .ac-ew-radio-row { display: flex; flex-direction: column; gap: 6px; }
-    .ac-ew-radio-row label {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 13px; color: #374151; cursor: pointer;
+    .ac-ew-device-btn.off { background: #e5e7eb; color: #9ca3af; }
+    .ac-ew-device-btn:hover { filter: brightness(0.96); }
+
+    /* Radios stacked, label inline next to each */
+    .ac-ew-radio {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: #1f2937; cursor: pointer;
+      padding: 4px 0;
+      line-height: 1.4;
     }
-    .ac-ew-radio-row input[type=radio] { accent-color: #D82F2F; }
+    .ac-ew-radio input[type=radio] {
+      margin: 0; accent-color: #2563eb;
+      width: 16px; height: 16px;
+      cursor: pointer;
+    }
 
     .ac-ew-modal-foot {
-      display: flex; gap: 10px; justify-content: space-between;
-      padding: 16px 28px 22px;
-      border-top: 1px solid #eef0f3;
+      display: flex; gap: 12px;
+      padding: 18px 32px 24px;
     }
     .ac-ew-btn {
-      padding: 10px 22px; border-radius: 6px; font-size: 14px;
-      font-weight: 600; cursor: pointer; border: 0; font-family: inherit;
+      flex: 1;
+      padding: 11px 22px; border-radius: 6px; font-size: 14px;
+      font-weight: 600; cursor: pointer; border: 1px solid transparent;
+      font-family: inherit;
       transition: all .15s ease;
-      min-width: 140px;
     }
     .ac-ew-btn-cancel {
-      background: #fff; color: #374151; border: 1px solid #d1d5db;
+      background: #fff; color: #1f2937; border-color: #d1d5db;
     }
     .ac-ew-btn-cancel:hover { background: #f9fafb; }
     .ac-ew-btn-ok {
-      background: #2563eb; color: #fff;
+      background: #2089f7; color: #fff;
     }
-    .ac-ew-btn-ok:hover { background: #1d4ed8; }
+    .ac-ew-btn-ok:hover { background: #1971d3; }
     .ac-ew-btn-ok:disabled { background: #93c5fd; cursor: not-allowed; }
 
     /* Inserted widget card — Air Canada brand */
@@ -338,31 +357,37 @@
         <div class="ac-ew-modal-body">
           <div class="ac-ew-section">
             <h3>General</h3>
-            <div class="ac-ew-field">
-              <span class="ac-ew-field-label">Title:</span>
-              <input class="ac-ew-input" id="ac-ew-title-input" placeholder="">
-            </div>
-            <div class="ac-ew-field">
-              <span class="ac-ew-field-label">Show on: <span class="ac-ew-field-help">?</span></span>
-              <div class="ac-ew-device-row">
-                <button class="ac-ew-device-btn" data-device="desktop" title="Desktop"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h7v2H7v2h10v-2h-3v-2h7a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 13H3V5h18v11z"/></svg></button>
-                <button class="ac-ew-device-btn" data-device="tablet" title="Tablet"><svg viewBox="0 0 24 24"><path d="M19 0H5a3 3 0 0 0-3 3v18a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V3a3 3 0 0 0-3-3zM12 22a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm8-4H4V4h16v14z"/></svg></button>
-                <button class="ac-ew-device-btn" data-device="mobile" title="Mobile"><svg viewBox="0 0 24 24"><path d="M17 1H7a3 3 0 0 0-3 3v16a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V4a3 3 0 0 0-3-3zm-5 21a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6-4H6V4h12v15z"/></svg></button>
+            <div class="ac-ew-row">
+              <div class="ac-ew-row-label">Title:</div>
+              <div class="ac-ew-row-control">
+                <input class="ac-ew-input" id="ac-ew-title-input" placeholder="">
               </div>
             </div>
-            <div class="ac-ew-field">
-              <span class="ac-ew-field-label">Visibility in the App: <span class="ac-ew-field-help">?</span></span>
-              <div class="ac-ew-radio-row">
-                <label><input type="radio" name="ac-ew-vis" value="all" checked> For all users</label>
-                <label><input type="radio" name="ac-ew-vis" value="groups"> For selected groups</label>
+            <div class="ac-ew-row">
+              <div class="ac-ew-row-label">Show on: <span class="ac-ew-help">?</span></div>
+              <div class="ac-ew-row-control">
+                <div class="ac-ew-device-row">
+                  <button class="ac-ew-device-btn" data-device="desktop" title="Desktop"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h7v2H7v2h10v-2h-3v-2h7a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 13H3V5h18v11z"/></svg></button>
+                  <button class="ac-ew-device-btn" data-device="tablet" title="Tablet"><svg viewBox="0 0 24 24"><path d="M19 0H5a3 3 0 0 0-3 3v18a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V3a3 3 0 0 0-3-3zM12 22a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm8-4H4V4h16v14z"/></svg></button>
+                  <button class="ac-ew-device-btn" data-device="mobile" title="Mobile"><svg viewBox="0 0 24 24"><path d="M17 1H7a3 3 0 0 0-3 3v16a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V4a3 3 0 0 0-3-3zm-5 21a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6-4H6V4h12v15z"/></svg></button>
+                </div>
+              </div>
+            </div>
+            <div class="ac-ew-row">
+              <div class="ac-ew-row-label">Visibility in the App: <span class="ac-ew-help">?</span></div>
+              <div class="ac-ew-row-control">
+                <label class="ac-ew-radio"><input type="radio" name="ac-ew-vis" value="all" checked> For all users</label>
+                <label class="ac-ew-radio"><input type="radio" name="ac-ew-vis" value="groups"> For selected groups</label>
               </div>
             </div>
           </div>
           <div class="ac-ew-section">
             <h3>Event Data</h3>
-            <div class="ac-ew-field">
-              <span class="ac-ew-field-label">Event:</span>
-              <select class="ac-ew-select" id="ac-ew-event-select"></select>
+            <div class="ac-ew-row">
+              <div class="ac-ew-row-label">Event:</div>
+              <div class="ac-ew-row-control">
+                <select class="ac-ew-select" id="ac-ew-event-select"></select>
+              </div>
             </div>
           </div>
         </div>
