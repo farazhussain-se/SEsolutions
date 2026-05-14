@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Staffbase Email — Air Canada Event Registration Block
 // @namespace    https://aircanada.staffbase.com/
-// @version      1.3.0
+// @version      1.4.1
 // @description  Drops an AC event card directly into the Staffbase email body and rebrands the Social Links quickblock as an "Event Registration" placeholder (demo)
 // @author       Faraz Hussein · Staffbase SE Solutions
 // @match        https://app.staffbase.com/*
@@ -144,18 +144,19 @@
     .ac-event-rsvp-btn.no:hover,
     .ac-event-rsvp-btn.no.on      { background: #f3f4f6; }
 
-    /* Masking overlay applied to a dragged-in Social Links block */
-    [data-ac-event-mask="1"] > *:not(.ac-event-mask-card):not(.absolute) {
-      visibility: hidden !important;
-    }
+    /* Masking overlay applied to a dragged-in Social Links block.
+       Opaque white cover guarantees the underlying social icons can't
+       leak through, no matter how the social block renders internally. */
     [data-ac-event-mask="1"] {
       position: relative !important;
     }
     .ac-event-mask-card {
       position: absolute;
-      inset: 8px;
-      z-index: 4;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 50;
+      background: #fff;
       display: flex; align-items: center; justify-content: center;
+      padding: 10px;
     }
     .ac-event-mask-card > .ac-event-card {
       width: 100%; max-width: 580px;
@@ -295,24 +296,52 @@
     // we don't have two event cards on screen.
     document.querySelectorAll('[data-ac-event-card="1"]').forEach(el => el.remove());
 
+    // Move the masked block up — sit right after the first block so it
+    // reads as headline content, not a footer.
+    try {
+      const wrapper = blockEl.closest('ul > div[draggable]');
+      const ul = wrapper && wrapper.parentElement;
+      if (ul && wrapper) {
+        const firstBlock = ul.querySelector(':scope > div[draggable]');
+        const targetBefore = firstBlock && firstBlock.nextSibling;
+        if (firstBlock && firstBlock !== wrapper && targetBefore !== wrapper) {
+          ul.insertBefore(wrapper, targetBefore);
+          console.log(LOG_PREFIX, 'moved masked block up');
+        }
+      }
+    } catch (_) {}
+
     console.log(LOG_PREFIX, 'masked dropped block with event widget');
     return true;
   }
 
+  function refreshBlockBaseline() {
+    const ul = emailBodyList();
+    if (!ul) return;
+    getBlockWrappers(ul).forEach(b => { if (b.id) knownBlockIds.add(b.id); });
+  }
+
   function checkDragInjection() {
     if (!dragArmedAt) return;
-    if (Date.now() - dragArmedAt > DRAG_WINDOW_MS) { dragArmedAt = 0; return; }
+    if (Date.now() - dragArmedAt > DRAG_WINDOW_MS) {
+      console.log(LOG_PREFIX, 'drag window expired; no new block found');
+      dragArmedAt = 0;
+      return;
+    }
 
     const ul = emailBodyList();
     if (!ul) return;
 
     const wrappers = getBlockWrappers(ul);
     const fresh = wrappers.filter(w => w.id && !knownBlockIds.has(w.id) && !w.dataset.acEventMask);
-    wrappers.forEach(w => { if (w.id) knownBlockIds.add(w.id); });
 
-    if (!fresh.length) return;
-    const target = fresh[fresh.length - 1];
-    if (applyOverlayToBlock(target)) dragArmedAt = 0;
+    if (fresh.length) {
+      console.log(LOG_PREFIX, 'found', fresh.length, 'fresh block(s) post-drag');
+      const target = fresh[fresh.length - 1];
+      if (applyOverlayToBlock(target)) dragArmedAt = 0;
+      // Update baseline after a successful mask so subsequent drags work too.
+      wrappers.forEach(w => { if (w.id) knownBlockIds.add(w.id); });
+    }
   }
 
   function emailBodyList() {
@@ -336,11 +365,13 @@
     li.setAttribute('contenteditable', 'false');
     li.innerHTML = buildCardHtml();
 
-    // Slot it in just above the final block so it reads as content,
-    // not the footer. If there's only one block, append.
-    const children = Array.from(ul.children);
-    if (children.length >= 2) {
-      ul.insertBefore(li, children[children.length - 1]);
+    // Sit right after the first block so the event card reads as
+    // headline content near the top, not as a footer.
+    const firstBlock = ul.querySelector(':scope > div[draggable]');
+    if (firstBlock && firstBlock.nextSibling) {
+      ul.insertBefore(li, firstBlock.nextSibling);
+    } else if (firstBlock) {
+      firstBlock.after(li);
     } else {
       ul.appendChild(li);
     }
@@ -397,7 +428,13 @@
         }
         return;
       }
-      checkDragInjection();
+      if (dragArmedAt) {
+        checkDragInjection();
+      } else {
+        // Continuously refresh the baseline so when a drag does fire,
+        // the genuinely-new block is the only one not in the set.
+        refreshBlockBaseline();
+      }
 
       // Skip auto-inject if we already masked a drag-driven block.
       const masked = !!document.querySelector('[data-ac-event-mask="1"]');
@@ -415,6 +452,17 @@
   // Snapshot existing block IDs so the very first appearance of a *new* one
   // is what we treat as the drop target.
   snapshotKnownBlocks();
+
+  // Document-level dragstart fallback — catches drags from the rebranded
+  // tile even if the per-element listener didn't attach (e.g. React
+  // re-mounted the tile between rebrand and drag).
+  document.addEventListener('dragstart', (e) => {
+    const tile = e.target && e.target.closest && e.target.closest('[data-ac-event-tile="1"]');
+    if (tile) {
+      dragArmedAt = Date.now();
+      console.log(LOG_PREFIX, 'drag start (document listener) from rebranded tile');
+    }
+  }, true);
 
   // Calm 500 ms poll — fast enough for the recording, slow enough to not churn.
   tick();
