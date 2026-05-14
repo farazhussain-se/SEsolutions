@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Staffbase Email — Air Canada Event Registration Block
 // @namespace    https://aircanada.staffbase.com/
-// @version      1.0.0
+// @version      1.0.1
 // @description  Rebrand Social Links quickblock as "Event Registration" + render the AC event widget over the dropped block in the email composer (demo)
 // @author       Faraz Hussein · Staffbase SE Solutions
 // @match        https://app.staffbase.com/admin/email/*
@@ -212,8 +212,21 @@
     return document.querySelector('ul.sc-iGgWBj') || document.querySelector('[class*="EmailEditor"] ul');
   }
 
+  function getBlockWrappers() {
+    const container = blocksContainer();
+    if (!container) return [];
+    // Each block in the email body is structured as:
+    //   ul > div[draggable] > div[id][draggable]
+    // Target *only* the inner draggable so we ignore deeply-nested CKEditor
+    // mounts and other elements that happen to have ids.
+    return Array.from(container.querySelectorAll(
+      ':scope > div[draggable] > div[id][draggable="true"]'
+    ));
+  }
+
   function applyOverlayToBlock(blockEl) {
-    if (!blockEl || blockEl.dataset.acEventBlock === '1') return;
+    if (!blockEl || !document.contains(blockEl)) return;
+    if (blockEl.dataset.acEventBlock === '1') return;
     blockEl.dataset.acEventBlock = '1';
 
     // The visible content cell — wrap existing children so we can absolutely
@@ -259,25 +272,23 @@
 
   let lastBlockIds = new Set();
   function snapshotBlockIds() {
-    const container = blocksContainer();
-    if (!container) return;
-    Array.from(container.querySelectorAll('[id]:not([id=""])')).forEach(el => lastBlockIds.add(el.id));
+    getBlockWrappers().forEach(el => lastBlockIds.add(el.id));
   }
 
   function handleNewBlocks() {
-    const container = blocksContainer();
-    if (!container) return;
+    const wrappers = getBlockWrappers();
+    if (!wrappers.length) return;
 
-    const idNodes = Array.from(container.querySelectorAll('[id]:not([id=""])'));
-    const fresh = idNodes.filter(n => !lastBlockIds.has(n.id));
-    idNodes.forEach(n => lastBlockIds.add(n.id));
+    const fresh = wrappers.filter(n => !lastBlockIds.has(n.id) && document.contains(n));
+    wrappers.forEach(n => lastBlockIds.add(n.id));
 
     if (!fresh.length) return;
     if (Date.now() - dragArmed > DRAG_WINDOW_MS) return;
 
-    // Apply to the most-recent fresh node and clear arm.
-    const target = fresh[fresh.length - 1];
-    applyOverlayToBlock(target);
+    try {
+      const target = fresh[fresh.length - 1];
+      if (document.contains(target)) applyOverlayToBlock(target);
+    } catch (_) { /* node may have unmounted between detect + apply */ }
     dragArmed = 0;
   }
 
@@ -286,12 +297,21 @@
   ══════════════════════════════════════════════════ */
 
   let _obs = null;
+  let _scheduled = false;
+  function scheduleSweep() {
+    if (_scheduled) return;
+    _scheduled = true;
+    requestAnimationFrame(() => {
+      _scheduled = false;
+      try {
+        rebrandSocialLinksTile(document);
+        handleNewBlocks();
+      } catch (_) { /* swallow — keep observer alive across React churn */ }
+    });
+  }
   function startObserver() {
     if (_obs) return;
-    _obs = new MutationObserver(() => {
-      rebrandSocialLinksTile(document);
-      handleNewBlocks();
-    });
+    _obs = new MutationObserver(scheduleSweep);
     _obs.observe(document.body, { childList: true, subtree: true });
   }
 
