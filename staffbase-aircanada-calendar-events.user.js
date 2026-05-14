@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Staffbase Planning — Air Canada Crew Events
 // @namespace    https://aircanada.staffbase.rocks/
-// @version      1.3.1
+// @version      1.4.0
 // @description  AC crew calendar cards + Event creator in Create dropdown + kebab menu + auto-capture of newly created company-events into the planning calendar (demo)
 // @match        https://app.staffbase.com/studio/*
 // @author       Faraz Hussein · Staffbase SE Solutions
@@ -876,11 +876,47 @@
 
   let _initPoll = null;
 
+  /* ══════════════════════════════════════════════════
+     DEMO RESET HOTKEY (⌘+⇧+0 / Ctrl+Shift+0)
+     Wipes captured + removed event state and reloads.
+     Surfaces a quick toast so the action is visible on camera.
+  ══════════════════════════════════════════════════ */
+
+  function resetDemoState() {
+    localStorage.removeItem(USER_EVENTS_KEY);
+    localStorage.removeItem(REMOVED_KEY);
+
+    const toast = document.createElement('div');
+    toast.textContent = 'Demo state reset — reloading…';
+    toast.style.cssText = `
+      position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+      background: #1a1a1a; color: #fff; padding: 12px 22px;
+      border-radius: 10px; font: 600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25); z-index: 99999;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => location.reload(), 650);
+  }
+
+  function hookResetHotkey() {
+    if (window.__acResetHooked) return;
+    window.__acResetHooked = true;
+    window.addEventListener('keydown', (e) => {
+      // Cmd+Shift+0 on macOS or Ctrl+Shift+0 elsewhere.
+      // Use e.code so Shift+0 (which is ")") still matches.
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.code === 'Digit0') {
+        e.preventDefault();
+        resetDemoState();
+      }
+    }, true);
+  }
+
   function init() {
     // These run on ANY /studio/* page so we capture events even when
     // the user is in the creation flow, not just on planning.
     hookFetch();
     hookXHR();
+    hookResetHotkey();
     maybeScrapeOverview();
 
     if (!window.location.href.includes('/studio/planning')) return;
