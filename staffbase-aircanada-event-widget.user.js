@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Staffbase News — Air Canada Event Widget
 // @namespace    https://aircanada.staffbase.com/
-// @version      1.0.2
+// @version      1.0.3
 // @description  Adds an Event widget to the article editor's Add Widget palette + event picker + AC-branded event card in the text area (demo)
 // @author       Faraz Hussein · Staffbase SE Solutions
 // @match        https://app.staffbase.com/admin/plugin/news/*
@@ -195,13 +195,20 @@
     .ac-ew-card-title {
       font-size: 16px; font-weight: 700; line-height: 1.25;
     }
-    .ac-ew-card-add {
-      font-size: 12px; font-weight: 600; color: #fff;
-      text-decoration: none; white-space: nowrap;
+    .ac-ew-card-add,
+    .ac-ew-card-add:link,
+    .ac-ew-card-add:visited,
+    .ac-ew-card-add:hover,
+    .ac-ew-card-add:active {
+      font-size: 12px; font-weight: 600;
+      color: #fff !important;
+      text-decoration: none !important;
+      white-space: nowrap;
       padding: 4px 10px; border-radius: 12px;
       background: rgba(255,255,255,0.18);
       border: 1px solid rgba(255,255,255,0.3);
     }
+    .ac-ew-card-add:hover { background: rgba(255,255,255,0.28); }
     .ac-ew-card-meta {
       padding: 12px 18px; font-size: 13px; color: #374151;
       background: #fff;
