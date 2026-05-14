@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Staffbase News — Air Canada Event Widget
 // @namespace    https://aircanada.staffbase.com/
-// @version      1.0.0
+// @version      1.0.1
 // @description  Adds an Event widget to the article editor's Add Widget palette + event picker + AC-branded event card in the text area (demo)
 // @author       Faraz Hussein · Staffbase SE Solutions
 // @match        https://app.staffbase.com/admin/plugin/news/*
@@ -219,109 +219,84 @@
 
   /* ══════════════════════════════════════════════════
      ADD WIDGET MODAL — INJECT EVENT TILE
-     Staffbase's Add Widget palette is mounted into the
-     DOM each time it opens. We detect it by looking for
-     a container whose descendants include known tile
-     labels ("Static Content", "User Profile", etc.),
-     then clone an existing tile to keep the styling.
+     Staffbase's palette uses stable class names + the
+     existing tiles carry aria-label="<name>" — we use
+     those directly rather than text-walking the DOM.
+     The new tile is inserted right after "Weather Time".
   ══════════════════════════════════════════════════ */
 
-  // Labels that uniquely identify the Add Widget palette.
-  const PALETTE_LABEL_SIGNATURES = ['Static Content', 'User Profile', 'Infobox', 'Accordion'];
-
-  function findPaletteContainer(root) {
-    // Walk added subtree looking for an element whose textContent contains
-    // at least 3 of the known labels (the palette grid).
-    if (!(root instanceof HTMLElement)) return null;
-    if (root.querySelector('[data-ac-ew-tile]')) return null;  // already injected
-    const txt = root.textContent || '';
-    const hits = PALETTE_LABEL_SIGNATURES.filter(l => txt.includes(l)).length;
-    if (hits < 3) return null;
-    return findGridCommonAncestor(root);
-  }
-
-  function findGridCommonAncestor(root) {
-    // Find each label's element, then find their nearest common ancestor.
-    const labelEls = [];
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
-    let n;
-    while ((n = walker.nextNode())) {
-      const t = (n.nodeValue || '').trim();
-      if (PALETTE_LABEL_SIGNATURES.includes(t)) labelEls.push(n.parentElement);
-      if (labelEls.length >= 3) break;
-    }
-    if (labelEls.length < 2) return null;
-
-    // Walk up from labelEls[0] until the ancestor contains all the others.
-    let anc = labelEls[0];
-    while (anc && !labelEls.every(el => anc.contains(el))) anc = anc.parentElement;
-    if (!anc) return null;
-
-    // The grid is usually the *direct* parent of each tile. labelEls[0]
-    // is the label inside a tile; walk up to the tile, then return its parent.
-    let tile = labelEls[0];
-    while (tile && tile.parentElement && tile.parentElement.contains(labelEls[1])) {
-      // climb until the next step would put a sibling out of the parent
-      const nextUp = tile.parentElement;
-      if (nextUp === anc || nextUp.parentElement === anc) { tile = nextUp; break; }
-      tile = nextUp;
-    }
-    return tile && tile.parentElement ? { grid: tile.parentElement, sampleTile: tile } : null;
-  }
+  const TILE_GRID_CLASS  = 'ui-commons__widget-menu__buttons-container';
+  const TILE_BTN_CLASS   = 'ui-commons__widget-menu__button';
+  const TILE_LABEL_CLASS = 'ui-commons__widget-menu__label';
+  const ANCHOR_LABEL     = 'Weather Time';
 
   // Inline calendar SVG matching the style of other tile icons.
-  const TILE_CALENDAR_SVG = `<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#1a1a1a" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>`;
+  const TILE_CALENDAR_SVG = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#464B50" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><rect x="3" y="5" width="18" height="16" rx="2" class="accent-stroke"/><line x1="3" y1="10" x2="21" y2="10" class="accent-stroke"/><line x1="8" y1="3" x2="8" y2="7" class="accent-stroke"/><line x1="16" y1="3" x2="16" y2="7" class="accent-stroke"/></svg>`;
 
-  function injectEventTile(grid, sampleTile) {
+  function findPaletteParts(root) {
+    if (!(root instanceof HTMLElement)) return null;
+    const grid = root.matches?.(`.${TILE_GRID_CLASS}`)
+      ? root
+      : root.querySelector?.(`.${TILE_GRID_CLASS}`);
+    if (!grid) return null;
+    if (grid.querySelector('[data-ac-ew-tile]')) return null;
+
+    const anchor = grid.querySelector(`[aria-label="${ANCHOR_LABEL}"]`);
+    const tiles  = grid.querySelectorAll(`.${TILE_BTN_CLASS}`);
+    const sample = anchor || tiles[tiles.length - 1] || tiles[0];
+    if (!sample) return null;
+
+    return { grid, sample, anchor };
+  }
+
+  function injectEventTile(parts) {
+    const { grid, sample, anchor } = parts;
     if (grid.querySelector('[data-ac-ew-tile]')) return;
 
-    const tile = sampleTile.cloneNode(true);
+    const tile = sample.cloneNode(true);
     tile.setAttribute('data-ac-ew-tile', '1');
+    tile.setAttribute('aria-label', 'Event');
     tile.classList.add('ac-ew-injected-tile');
 
-    // Replace icon: assume the first svg or image inside the tile is the icon.
-    const icon = tile.querySelector('svg, img');
-    if (icon) {
-      const wrap = document.createElement('span');
-      wrap.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:' +
-        (icon.getAttribute('width') || 32) + 'px;height:' + (icon.getAttribute('height') || 32) + 'px;';
-      wrap.innerHTML = TILE_CALENDAR_SVG;
-      icon.replaceWith(wrap.firstChild);
+    // Wipe all icon nodes from the clone and prepend our calendar SVG.
+    tile.querySelectorAll('svg, img').forEach(n => n.remove());
+    const iconWrap = document.createElement('span');
+    iconWrap.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;';
+    iconWrap.innerHTML = TILE_CALENDAR_SVG;
+    tile.insertBefore(iconWrap, tile.firstChild);
+
+    // Replace the label text inside the cloned label element.
+    const label = tile.querySelector(`.${TILE_LABEL_CLASS}`);
+    if (label) {
+      label.textContent = 'Event';
+      label.setAttribute('data-ac-ew-label', '1');
     }
 
-    // Replace label: find the text node containing the original label.
-    const txtNode = walkFindLabel(tile);
-    if (txtNode) {
-      txtNode.parentElement.setAttribute('data-ac-ew-label', '1');
-      txtNode.nodeValue = 'Event';
-    }
-
-    // Strip any href/links that might trigger the original tile's behaviour.
+    // Strip any anchor hrefs from the clone (e.g. Email tile is an <a>).
     tile.querySelectorAll('a[href]').forEach(a => a.removeAttribute('href'));
 
-    // Click handler: close the palette and open our picker.
     tile.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       closeStaffbasePalette();
       openEventPicker();
     }, true);
+    tile.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        closeStaffbasePalette();
+        openEventPicker();
+      }
+    });
 
-    grid.appendChild(tile);
-  }
-
-  function walkFindLabel(el) {
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-    let n;
-    while ((n = walker.nextNode())) {
-      const t = (n.nodeValue || '').trim();
-      if (t && t.length < 40 && /^[A-Z]/.test(t)) return n;
+    if (anchor && anchor.nextSibling) {
+      grid.insertBefore(tile, anchor.nextSibling);
+    } else {
+      grid.appendChild(tile);
     }
-    return null;
   }
 
   function closeStaffbasePalette() {
-    // The Cancel button in Staffbase's palette closes it.
     const cancel = Array.from(document.querySelectorAll('button')).find(b =>
       (b.textContent || '').trim().toLowerCase() === 'cancel'
     );
@@ -336,15 +311,16 @@
       for (const m of mutations) {
         for (const node of m.addedNodes) {
           if (!(node instanceof HTMLElement)) continue;
-          const found = findPaletteContainer(node);
-          if (found) injectEventTile(found.grid, found.sampleTile);
+          const parts = findPaletteParts(node);
+          if (parts) injectEventTile(parts);
         }
       }
     });
     _paletteObs.observe(document.body, { childList: true, subtree: true });
-    // Also handle a palette that's already open at script load.
-    const found = findPaletteContainer(document.body);
-    if (found) injectEventTile(found.grid, found.sampleTile);
+
+    // Cover the case where the palette is already open at script load.
+    const parts = findPaletteParts(document.body);
+    if (parts) injectEventTile(parts);
   }
 
   /* ══════════════════════════════════════════════════
