@@ -1,13 +1,11 @@
 // ==UserScript==
 // @name         Staffbase Email — Air Canada Event Registration Block
 // @namespace    https://aircanada.staffbase.com/
-// @version      1.1.0
+// @version      1.2.0
 // @description  Drops an AC event card directly into the Staffbase email body and rebrands the Social Links quickblock as an "Event Registration" placeholder (demo)
 // @author       Faraz Hussein · Staffbase SE Solutions
-// @match        https://app.staffbase.com/admin/email/*
-// @match        https://app.staffbase.com/admin/*
-// @match        https://*.staffbase.com/admin/email/*
-// @match        https://*.staffbase.com/admin/*
+// @match        https://app.staffbase.com/*
+// @match        https://*.staffbase.com/*
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
@@ -229,7 +227,13 @@
   }
 
   function emailBodyList() {
-    return document.querySelector('ul.sc-iGgWBj') || document.querySelector('[class*="EmailEditor"] ul');
+    // 1) Structural — any UL whose direct children are draggable email blocks.
+    for (const u of document.querySelectorAll('ul')) {
+      if (u.querySelector(':scope > div[draggable="true"]')) return u;
+    }
+    // 2) Styled-components fallbacks (class hashes may change between builds).
+    return document.querySelector('ul.sc-iGgWBj')
+        || document.querySelector('[class*="EmailEditor"] ul');
   }
 
   function injectEventBlock() {
@@ -282,15 +286,38 @@
   }
   function escapeAttr(s) { return escapeHtml(s); }
 
+  const LOG_PREFIX = '[AC Event Block]';
+  console.log(LOG_PREFIX, 'script loaded on', location.href);
+
+  let tickCount = 0;
+  let lastWaitLog = 0;
   function tick() {
+    tickCount++;
     try {
       injectStyles();
+      const tileBefore = !!document.querySelector('[data-ac-event-tile]');
       rebrandSidebarTile();
+      const tileAfter = !!document.querySelector('[data-ac-event-tile]');
+      if (!tileBefore && tileAfter) console.log(LOG_PREFIX, 'rebranded sidebar tile');
+
+      const ul = emailBodyList();
+      if (!ul) {
+        if (tickCount - lastWaitLog >= 10) {
+          console.log(LOG_PREFIX, 'no email body <ul> yet (tick', tickCount + ')');
+          lastWaitLog = tickCount;
+        }
+        return;
+      }
+      const cardBefore = !!ul.querySelector('[data-ac-event-card="1"]');
       injectEventBlock();
-    } catch (_) { /* keep the polling loop alive */ }
+      const cardAfter = !!ul.querySelector('[data-ac-event-card="1"]');
+      if (!cardBefore && cardAfter) console.log(LOG_PREFIX, 'injected event card into', ul);
+    } catch (e) {
+      console.warn(LOG_PREFIX, 'tick error:', e);
+    }
   }
 
-  // No MutationObserver, no drag detection — just a calm 1-second poll.
+  // Calm 500 ms poll — fast enough for the recording, slow enough to not churn.
   tick();
-  setInterval(tick, 1000);
+  setInterval(tick, 500);
 })();
