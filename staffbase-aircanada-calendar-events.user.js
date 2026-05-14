@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Staffbase Planning — Air Canada Crew Events
 // @namespace    https://aircanada.staffbase.rocks/
-// @version      1.2.0
+// @version      1.3.0
 // @description  AC crew calendar cards + Event creator in Create dropdown + kebab menu + auto-capture of newly created company-events into the planning calendar (demo)
 // @match        https://app.staffbase.com/studio/*
 // @author       Faraz Hussein · Staffbase SE Solutions
@@ -196,6 +196,7 @@
     }
     .ac-badge.pub   { background: #dcfce7; color: #166534; }
     .ac-badge.sched { background: #fef9c3; color: #92400e; }
+    .ac-badge.done  { background: #e5e7eb; color: #374151; }
 
     /* ── Status row + kebab menu ── */
     .ac-pnl-toprow {
@@ -310,6 +311,15 @@
     return `${M[d.getMonth()+1]} ${d.getDate()}, ${d.getFullYear()} · ${fmt12(ev.startHour, ev.startMin)}`;
   }
 
+  // Derive a display status by comparing event end-time to now.
+  // Anything that already finished is "Completed", regardless of its declared status.
+  function computeStatus(ev) {
+    const start = new Date(`${ev.date}T${String(ev.startHour).padStart(2,'0')}:${String(ev.startMin).padStart(2,'0')}:00`);
+    const end = new Date(start.getTime() + ev.duration * 60000);
+    if (end.getTime() < Date.now()) return 'Completed';
+    return ev.status;
+  }
+
   // Calendar SVG icon (distinguishes event posts from article posts)
   const EVENT_SVG = `<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" font-size="16">
     <path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 2 3 2.9 3 4v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H5V8h14v13zm0-15H5V4h14v2zM7 10h4v4H7z" fill-rule="evenodd"/>
@@ -317,6 +327,9 @@
 
   // Air Canada maple-leaf glyph for the modal header
   const MAPLE_SVG = `<svg viewBox="0 0 24 24"><path d="M12 2L13.5 7L18 5.5L16 10L21 11L17 14L19 18L14 17L13 22L12 19L11 22L10 17L5 18L7 14L3 11L8 10L6 5.5L10.5 7L12 2Z"/></svg>`;
+
+  // Audience-group icon (two people silhouette) — used for every audience row in the popup.
+  const ICON_GROUP = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`;
 
   // Staffbase DS analytics icons (exact paths from native post popup)
   const ICON_CAMPAIGNS = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
@@ -403,7 +416,12 @@
   function openPanel(ev) {
     const panel = document.getElementById('ac-detail-panel');
     if (!panel) return;
-    const pub = ev.status === 'Published';
+    const status = computeStatus(ev);
+    const isDone = status === 'Completed';
+    const isPub  = status === 'Published';
+    const badgeCls = isDone ? 'done' : (isPub ? 'pub' : 'sched');
+    // Completed events show their (or filled-in) attendance stats; future events show zeros.
+    const showStats = isDone || isPub;
 
     panel.innerHTML = `
       <div class="ac-pnl-hdr">
@@ -413,7 +431,7 @@
       </div>
       <div class="ac-pnl-body">
         <div class="ac-pnl-toprow">
-          <span class="ac-badge ${pub ? 'pub' : 'sched'}">${ev.status}</span>
+          <span class="ac-badge ${badgeCls}">${status}</span>
           <button class="ac-pnl-kebab" id="ac-pnl-kebab" aria-label="More options" aria-haspopup="menu">
             <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
           </button>
@@ -439,17 +457,14 @@
             <p class="ac-sec">Audience</p>
             ${ev.audiences.map(a => `
               <div class="ac-row">
-                <span class="ac-row-ic">${a.includes('Space') ? '⊞' : '▦'}</span>
+                <span class="ac-row-ic">${ICON_GROUP}</span>
                 <span>${a}</span>
               </div>`).join('')}
           </div>
           <div class="ac-col">
             <p class="ac-sec">Notifications</p>
             ${ev.notifications.map(n => `
-              <div class="ac-row">
-                <span class="ac-row-ic">${n === 'Push' ? '📱' : '✉️'}</span>
-                <span>${n}</span>
-              </div>`).join('')}
+              <div class="ac-row"><span>${n}</span></div>`).join('')}
           </div>
         </div>
 
@@ -460,44 +475,28 @@
             <div class="ac-analytics-item">
               <div class="ac-analytics-icon">${ICON_CAMPAIGNS}</div>
               <div class="ac-analytics-label">
-                <div class="ac-analytics-val">${pub ? ev.stats.attendance : 0}</div>
-                <div class="ac-analytics-name">Attendance</div>
+                <div class="ac-analytics-val">${showStats ? ev.stats.attendance : 0}</div>
+                <div class="ac-analytics-name">Registered</div>
               </div>
             </div>
             <div class="ac-analytics-item">
               <div class="ac-analytics-icon">${ICON_VIEW}</div>
               <div class="ac-analytics-label">
-                <div class="ac-analytics-val">${pub ? ev.stats.unique : 0}</div>
-                <div class="ac-analytics-name">Unique Attendees</div>
+                <div class="ac-analytics-val">${showStats ? ev.stats.unique : 0}</div>
+                <div class="ac-analytics-name">Attended</div>
               </div>
             </div>
             <div class="ac-analytics-item">
               <div class="ac-analytics-icon">${ICON_USER}</div>
               <div class="ac-analytics-label">
-                <div class="ac-analytics-val">${pub ? ev.stats.watchTime : '—'}</div>
-                <div class="ac-analytics-name">Avg Watch Time</div>
-              </div>
-            </div>
-          </div>
-          <div class="ac-analytics-row">
-            <div class="ac-analytics-item">
-              <div class="ac-analytics-icon">${ICON_COMMENT}</div>
-              <div class="ac-analytics-label">
-                <div class="ac-analytics-val">${pub ? ev.stats.comments : 0}</div>
-                <div class="ac-analytics-name">Comments</div>
-              </div>
-            </div>
-            <div class="ac-analytics-item">
-              <div class="ac-analytics-icon">${ICON_LIKE}</div>
-              <div class="ac-analytics-label">
-                <div class="ac-analytics-val">${pub ? ev.stats.likes : 0}</div>
-                <div class="ac-analytics-name">Likes</div>
+                <div class="ac-analytics-val">${showStats ? ev.stats.watchTime : '—'}</div>
+                <div class="ac-analytics-name">Watch Time</div>
               </div>
             </div>
           </div>
         </div>
 
-        ${pub && ev.breakdown.length ? `
+        ${showStats && ev.breakdown.length ? `
           <div class="ac-div"></div>
           <div class="ac-watch">
             <div class="ac-analytics-icon" style="margin-right:10px">${ICON_VIEW}</div>
@@ -594,13 +593,15 @@
         left:2%; right:2%; z-index:10; pointer-events:auto;
       `;
 
-      const isPub = ev.status === 'Published';
-      // Air Canada palette: red for published, amber for scheduled
-      const bgColor     = isPub ? '#fef2f2' : '#fef9c3';
-      const borderColor = isPub ? '#D82F2F' : '#ca8a04';
-      const titleColor  = isPub ? '#7f1d1d' : '#713f12';
-      const metaColor   = isPub ? '#b91c1c' : '#92400e';
-      const iconColor   = isPub ? '#D82F2F' : '#ca8a04';
+      const status = computeStatus(ev);
+      const isPub  = status === 'Published';
+      const isDone = status === 'Completed';
+      // Palette: AC red (published) · amber (scheduled) · gray (completed)
+      const bgColor     = isDone ? '#f3f4f6' : (isPub ? '#fef2f2' : '#fef9c3');
+      const borderColor = isDone ? '#9ca3af' : (isPub ? '#D82F2F' : '#ca8a04');
+      const titleColor  = isDone ? '#374151' : (isPub ? '#7f1d1d' : '#713f12');
+      const metaColor   = isDone ? '#6b7280' : (isPub ? '#b91c1c' : '#92400e');
+      const iconColor   = isDone ? '#9ca3af' : (isPub ? '#D82F2F' : '#ca8a04');
 
       harness.innerHTML = `
         <a class="fc-event fc-event-start fc-event-end fc-timegrid-event fc-v-event"
@@ -618,7 +619,7 @@
                 <span class="event-status-weekly flex w-full justify-between gap-2 overflow-hidden"
                       style="color:${metaColor};">
                   <span class="overflow-hidden text-12 font-medium text-ellipsis whitespace-nowrap capitalize">
-                    ${fmt12(ev.startHour, ev.startMin)}<span class="mx-2">·</span>${ev.status}
+                    ${fmt12(ev.startHour, ev.startMin)}<span class="mx-2">·</span>${status}
                   </span>
                   <span class="shrink-0" style="color:${iconColor};">${EVENT_SVG}</span>
                 </span>
