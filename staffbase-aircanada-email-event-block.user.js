@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Staffbase Email — Air Canada Event Registration Block
 // @namespace    https://aircanada.staffbase.com/
-// @version      1.4.1
+// @version      1.5.0
 // @description  Drops an AC event card directly into the Staffbase email body and rebrands the Social Links quickblock as an "Event Registration" placeholder (demo)
 // @author       Faraz Hussein · Staffbase SE Solutions
 // @match        https://app.staffbase.com/*
@@ -144,19 +144,13 @@
     .ac-event-rsvp-btn.no:hover,
     .ac-event-rsvp-btn.no.on      { background: #f3f4f6; }
 
-    /* Masking overlay applied to a dragged-in Social Links block.
-       Opaque white cover guarantees the underlying social icons can't
-       leak through, no matter how the social block renders internally. */
-    [data-ac-event-mask="1"] {
-      position: relative !important;
-    }
+    /* Masking applied to a dragged-in Social Links block. The original
+       block content is force-hidden via JS (display:none on children),
+       so the overlay sits in normal flow. */
     .ac-event-mask-card {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 50;
-      background: #fff;
-      display: flex; align-items: center; justify-content: center;
       padding: 10px;
+      display: flex; justify-content: center;
+      background: transparent;
     }
     .ac-event-mask-card > .ac-event-card {
       width: 100%; max-width: 580px;
@@ -286,6 +280,18 @@
 
     blockEl.dataset.acEventMask = '1';
 
+    // Hide the original block content via display:none. Keep the
+    // hover-toolbar (`.absolute h-8 w-full`) visible so the user can
+    // still move/delete the masked block from the demo UI.
+    const inner = blockEl.firstElementChild;
+    if (inner) {
+      Array.from(inner.children).forEach(child => {
+        if (!child.classList.contains('absolute')) {
+          child.style.display = 'none';
+        }
+      });
+    }
+
     const overlay = document.createElement('div');
     overlay.className = 'ac-event-mask-card';
     overlay.setAttribute('contenteditable', 'false');
@@ -296,17 +302,18 @@
     // we don't have two event cards on screen.
     document.querySelectorAll('[data-ac-event-card="1"]').forEach(el => el.remove());
 
-    // Move the masked block up — sit right after the first block so it
-    // reads as headline content, not a footer.
+    // Move the masked block to sit after the first news block (block #3),
+    // not after the header. Falls back to the last block if fewer than 3.
     try {
       const wrapper = blockEl.closest('ul > div[draggable]');
       const ul = wrapper && wrapper.parentElement;
       if (ul && wrapper) {
-        const firstBlock = ul.querySelector(':scope > div[draggable]');
-        const targetBefore = firstBlock && firstBlock.nextSibling;
-        if (firstBlock && firstBlock !== wrapper && targetBefore !== wrapper) {
-          ul.insertBefore(wrapper, targetBefore);
-          console.log(LOG_PREFIX, 'moved masked block up');
+        const others = Array.from(ul.querySelectorAll(':scope > div[draggable]'))
+          .filter(b => b !== wrapper);
+        const anchor = others[2] || others[others.length - 1];
+        if (anchor && anchor.nextSibling !== wrapper) {
+          ul.insertBefore(wrapper, anchor.nextSibling);
+          console.log(LOG_PREFIX, 'moved masked block to position after first news block');
         }
       }
     } catch (_) {}
@@ -365,13 +372,15 @@
     li.setAttribute('contenteditable', 'false');
     li.innerHTML = buildCardHtml();
 
-    // Sit right after the first block so the event card reads as
-    // headline content near the top, not as a footer.
-    const firstBlock = ul.querySelector(':scope > div[draggable]');
-    if (firstBlock && firstBlock.nextSibling) {
-      ul.insertBefore(li, firstBlock.nextSibling);
-    } else if (firstBlock) {
-      firstBlock.after(li);
+    // Drop the card right after the first *news* block — typically the
+    // 3rd block (logo, title-header, first article). Falls back to the
+    // last available block if fewer than three exist.
+    const blocks = Array.from(ul.querySelectorAll(':scope > div[draggable]'));
+    const anchor = blocks[2] || blocks[blocks.length - 1];
+    if (anchor && anchor.nextSibling) {
+      ul.insertBefore(li, anchor.nextSibling);
+    } else if (anchor) {
+      anchor.after(li);
     } else {
       ul.appendChild(li);
     }
