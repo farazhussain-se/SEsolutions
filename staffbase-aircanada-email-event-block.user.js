@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Staffbase Email — Air Canada Event Registration Block
 // @namespace    https://aircanada.staffbase.com/
-// @version      1.2.0
+// @version      1.3.0
 // @description  Drops an AC event card directly into the Staffbase email body and rebrands the Social Links quickblock as an "Event Registration" placeholder (demo)
 // @author       Faraz Hussein · Staffbase SE Solutions
 // @match        https://app.staffbase.com/*
@@ -143,6 +143,23 @@
     .ac-event-rsvp-btn.no         { background: #fff; color: #374151; border-color: #d1d5db; }
     .ac-event-rsvp-btn.no:hover,
     .ac-event-rsvp-btn.no.on      { background: #f3f4f6; }
+
+    /* Masking overlay applied to a dragged-in Social Links block */
+    [data-ac-event-mask="1"] > *:not(.ac-event-mask-card):not(.absolute) {
+      visibility: hidden !important;
+    }
+    [data-ac-event-mask="1"] {
+      position: relative !important;
+    }
+    .ac-event-mask-card {
+      position: absolute;
+      inset: 8px;
+      z-index: 4;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ac-event-mask-card > .ac-event-card {
+      width: 100%; max-width: 580px;
+    }
   `;
 
   function injectStyles() {
@@ -187,6 +204,15 @@
       if (host.hasAttribute('aria-description')) {
         host.setAttribute('aria-description', 'Add Event Registration quickblock to canvas');
       }
+
+      // Hook dragstart on the tile + any draggable ancestor so we can pair
+      // the upcoming drop with our event widget.
+      [tile, tile.closest('[draggable="true"]')].filter(Boolean).forEach(node => {
+        node.addEventListener('dragstart', () => {
+          dragArmedAt = Date.now();
+          console.log(LOG_PREFIX, 'drag start from rebranded tile');
+        }, true);
+      });
     } catch (_) { /* leave the tile alone on any DOM hiccup */ }
   }
 
@@ -224,6 +250,69 @@
         </div>
       </div>
     `.trim();
+  }
+
+  /* ══════════════════════════════════════════════════
+     DRAG DETECTION + BLOCK MASKING
+     When the user drags the rebranded tile, watch for
+     a new block-wrapper to appear in the body and
+     overlay our event card on top of it. The
+     auto-injected <li> is removed so only one card
+     remains visible.
+  ══════════════════════════════════════════════════ */
+
+  let dragArmedAt = 0;
+  const DRAG_WINDOW_MS = 6000;
+  const knownBlockIds = new Set();
+
+  function getBlockWrappers(ul) {
+    if (!ul) return [];
+    // The block content wrapper is ul > div[draggable] > div[id][draggable].
+    return Array.from(ul.querySelectorAll(
+      ':scope > div[draggable] > div[id][draggable="true"]'
+    ));
+  }
+
+  function snapshotKnownBlocks() {
+    const ul = emailBodyList();
+    if (!ul) return;
+    getBlockWrappers(ul).forEach(b => knownBlockIds.add(b.id));
+  }
+
+  function applyOverlayToBlock(blockEl) {
+    if (!blockEl || !document.contains(blockEl)) return false;
+    if (blockEl.dataset.acEventMask === '1') return false;
+
+    blockEl.dataset.acEventMask = '1';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'ac-event-mask-card';
+    overlay.setAttribute('contenteditable', 'false');
+    overlay.innerHTML = buildCardHtml();
+    blockEl.appendChild(overlay);
+
+    // We've successfully masked a drag — clear the auto-injected <li> so
+    // we don't have two event cards on screen.
+    document.querySelectorAll('[data-ac-event-card="1"]').forEach(el => el.remove());
+
+    console.log(LOG_PREFIX, 'masked dropped block with event widget');
+    return true;
+  }
+
+  function checkDragInjection() {
+    if (!dragArmedAt) return;
+    if (Date.now() - dragArmedAt > DRAG_WINDOW_MS) { dragArmedAt = 0; return; }
+
+    const ul = emailBodyList();
+    if (!ul) return;
+
+    const wrappers = getBlockWrappers(ul);
+    const fresh = wrappers.filter(w => w.id && !knownBlockIds.has(w.id) && !w.dataset.acEventMask);
+    wrappers.forEach(w => { if (w.id) knownBlockIds.add(w.id); });
+
+    if (!fresh.length) return;
+    const target = fresh[fresh.length - 1];
+    if (applyOverlayToBlock(target)) dragArmedAt = 0;
   }
 
   function emailBodyList() {
@@ -308,6 +397,12 @@
         }
         return;
       }
+      checkDragInjection();
+
+      // Skip auto-inject if we already masked a drag-driven block.
+      const masked = !!document.querySelector('[data-ac-event-mask="1"]');
+      if (masked) return;
+
       const cardBefore = !!ul.querySelector('[data-ac-event-card="1"]');
       injectEventBlock();
       const cardAfter = !!ul.querySelector('[data-ac-event-card="1"]');
@@ -316,6 +411,10 @@
       console.warn(LOG_PREFIX, 'tick error:', e);
     }
   }
+
+  // Snapshot existing block IDs so the very first appearance of a *new* one
+  // is what we treat as the drop target.
+  snapshotKnownBlocks();
 
   // Calm 500 ms poll — fast enough for the recording, slow enough to not churn.
   tick();
