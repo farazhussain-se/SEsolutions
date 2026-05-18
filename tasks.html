@@ -4,39 +4,45 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="widget-name" content="My Tasks">
-<meta name="widget-description" content="Compact task list widget — checkable items with due-date pills (Today / Tomorrow / specific date) and an optional Agent indicator.">
+<meta name="widget-description" content="Crew tasks card — greeting, today + this-week task lists, completion state, due-date pills, and section dividers.">
 <title>My Tasks</title>
 <style>
   :root {
-    --bg: #ffffff;
+    --bg-page: #f3f4f6;
     --surface: #ffffff;
     --row-hover: #fafafa;
-    --row-shade: #f9fafb;
-    --border: #f0f1f3;
-    --text: #1f2937;
+    --border: #eef0f3;
+    --text: #111827;
+    --text-soft: #374151;
     --text-muted: #6b7280;
-    --check: #c9cdd2;
-    --check-active: #2563eb;
-    --today-bg: #fde6cf;     /* peach */
+    --text-faint: #9ca3af;
+    --check: #d1d5db;
+    --check-done-border: #1f7a2a;
+    --check-done-bg: #e7f6ea;
+    --check-done-fg: #1f7a2a;
+    --done-bg: #fdecd2;
+    --done-fg: #8a4f12;
+    --today-bg: #fdecd2;
     --today-fg: #8a4f12;
-    --tomorrow-bg: #d3e7ff;  /* light blue */
-    --tomorrow-fg: #1e448a;
-    --date-bg: #c8efd1;      /* light green */
-    --date-fg: #1f6f37;
-    --agent-dot: #d92d20;
-    --radius: 14px;
-    --shadow: 0 2px 14px rgba(20,20,20,0.05), 0 1px 3px rgba(20,20,20,0.04);
+    --journey-bg: #dbe5fc;
+    --journey-fg: #1e3a8a;
+    --date-bg: #f5efd6;
+    --date-fg: #5f4e1c;
+    --avatar-bg: #d3def5;
+    --avatar-fg: #1e3a8a;
+    --radius: 16px;
+    --shadow: 0 2px 16px rgba(20,20,20,0.06), 0 1px 3px rgba(20,20,20,0.04);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
   body {
-    background: #eef0f3;
+    background: var(--bg-page);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: var(--text);
     display: flex;
     justify-content: center;
-    padding: 24px 12px;
+    padding: 24px 16px;
     min-height: 100vh;
   }
 
@@ -45,38 +51,83 @@
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     width: 100%;
-    max-width: 360px;
+    max-width: 700px;
     overflow: hidden;
-    padding: 4px 0 6px;
   }
 
-  .tasks-header {
-    padding: 18px 20px 14px;
+  /* ── Greeting header ── */
+  .tasks-greeting {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    align-items: center;
+    gap: 16px;
+    padding: 22px 24px 20px;
+  }
+  .tasks-avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 18px;
     font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .greeting-title {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.25;
     color: var(--text);
     letter-spacing: -0.01em;
   }
+  .greeting-sub {
+    margin-top: 4px;
+    font-size: 14px;
+    color: var(--text-muted);
+    letter-spacing: -0.005em;
+  }
 
+  .divider {
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── My Tasks heading ── */
+  .tasks-header {
+    padding: 20px 24px 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.015em;
+  }
+
+  /* ── Section label ── */
+  .section-label {
+    padding: 18px 24px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-faint);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* ── Task rows ── */
   .tasks-list { display: flex; flex-direction: column; }
-
   .task-row {
     display: grid;
     grid-template-columns: 28px 1fr auto;
-    align-items: center;
-    column-gap: 12px;
-    padding: 14px 20px;
+    align-items: start;
+    column-gap: 14px;
+    padding: 14px 24px 16px;
     border-top: 1px solid var(--border);
-    background: var(--surface);
     transition: background .15s ease;
   }
+  .task-row:first-child { border-top: 0; }
   .task-row:hover { background: var(--row-hover); }
-  .task-row.shade { background: var(--row-shade); }
-  .task-row.shade:hover { background: #f5f6f8; }
 
   .task-check {
-    width: 22px;
-    height: 22px;
+    width: 22px; height: 22px;
     border-radius: 50%;
     border: 1.5px solid var(--check);
     background: #fff;
@@ -85,89 +136,153 @@
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
+    margin-top: 2px;
     transition: border-color .15s ease, background .15s ease;
   }
-  .task-check svg { width: 12px; height: 12px; color: var(--check); transition: color .15s ease; }
-  .task-check:hover { border-color: #9ca3af; }
-  .task-check:hover svg { color: #9ca3af; }
-  .task-row.done .task-check { border-color: var(--check-active); background: var(--check-active); }
-  .task-row.done .task-check svg { color: #fff; }
-  .task-row.done .task-title { text-decoration: line-through; color: var(--text-muted); }
+  .task-check svg { width: 12px; height: 12px; color: transparent; transition: color .15s ease; }
+  .task-check:hover { border-color: var(--text-muted); }
+  .task-check:hover svg { color: var(--text-muted); }
 
-  .task-body { display: flex; flex-direction: column; min-width: 0; }
+  /* Square-edged checkbox style for completed tasks (matches reference). */
+  .task-row.done .task-check {
+    border-radius: 5px;
+    border-color: var(--check-done-border);
+    background: var(--check-done-bg);
+  }
+  .task-row.done .task-check svg { color: var(--check-done-fg); }
+  .task-row.done .task-title {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  .task-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding-top: 1px;
+  }
   .task-title {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--text);
-    line-height: 1.35;
+    line-height: 1.4;
     letter-spacing: -0.005em;
   }
-  .task-meta {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 4px;
-    font-size: 11px;
+  .task-sub {
+    margin-top: 6px;
+    font-size: 13px;
     color: var(--text-muted);
-    line-height: 1;
-  }
-  .task-meta .dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--agent-dot);
-    display: inline-block;
+    line-height: 1.3;
   }
 
   .task-pill {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
-    padding: 5px 12px;
+    padding: 6px 14px;
     border-radius: 999px;
     line-height: 1.2;
     white-space: nowrap;
     letter-spacing: 0.01em;
     flex-shrink: 0;
+    margin-top: 2px;
   }
-  .task-pill.today    { background: var(--today-bg);    color: var(--today-fg); }
-  .task-pill.tomorrow { background: var(--tomorrow-bg); color: var(--tomorrow-fg); }
-  .task-pill.date     { background: var(--date-bg);     color: var(--date-fg); }
+  .task-pill.done    { background: var(--done-bg);    color: var(--done-fg); }
+  .task-pill.today   { background: var(--today-bg);   color: var(--today-fg); }
+  .task-pill.journey { background: var(--journey-bg); color: var(--journey-fg); }
+  .task-pill.date    { background: var(--date-bg);    color: var(--date-fg); }
 
-  @media (max-width: 380px) {
-    .tasks-card { border-radius: 12px; }
-    .task-row { padding: 12px 16px; column-gap: 10px; }
-    .tasks-header { padding: 16px 16px 12px; }
+  @media (max-width: 480px) {
+    .tasks-greeting { grid-template-columns: 48px 1fr; gap: 14px; padding: 20px 18px 16px; }
+    .tasks-avatar   { width: 48px; height: 48px; font-size: 16px; }
+    .greeting-title { font-size: 19px; }
+    .tasks-header   { padding: 18px 18px 6px; font-size: 19px; }
+    .section-label  { padding: 16px 18px 8px; }
+    .task-row       { padding: 12px 18px 14px; column-gap: 12px; }
   }
 </style>
 </head>
 <body>
 
 <section class="tasks-card" aria-label="My Tasks">
+
+  <!-- Greeting -->
+  <header class="tasks-greeting">
+    <div class="tasks-avatar" aria-hidden="true">MA</div>
+    <div>
+      <h1 class="greeting-title">How are you today, Maria?</h1>
+      <p class="greeting-sub">YYZ Base · Cabin Crew · Day 30</p>
+    </div>
+  </header>
+
+  <div class="divider"></div>
+
   <h2 class="tasks-header">My Tasks</h2>
-  <div class="tasks-list" id="tasksList"></div>
+
+  <div id="tasksList"></div>
 </section>
 
 <script>
   const TASKS = [
-    { id: 1, title: "Complete Required Safety Training",    pill: { kind: "today",    label: "Today" } },
-    { id: 2, title: "Submit Monthly Expense Report",        pill: { kind: "tomorrow", label: "Tomorrow" } },
-    { id: 3, title: "Schedule Q3 Performance Review",       pill: { kind: "date",     label: "May 25" }, shade: true },
-    { id: 4, title: "Finalize Project Proposal",            pill: { kind: "today",    label: "Today" } },
-    { id: 5, title: "Book Flights for Conference",          pill: { kind: "tomorrow", label: "Tomorrow" } },
-    { id: 6, title: "Update Client Contact Information",    pill: { kind: "date",     label: "Jul 28" }, agent: true },
+    {
+      section: 'Today',
+      items: [
+        {
+          title: 'Complete pre-flight safety briefing review',
+          sub: 'AC 203 · YYZ → YVR',
+          pill: { kind: 'done',    label: 'Done' },
+          done: true,
+        },
+        {
+          title: 'Confirm galley setup — forward cabin',
+          sub: 'AC 203 · Report by 07:45',
+          pill: { kind: 'today',   label: 'Today' },
+        },
+        {
+          title: 'Complete 30-day onboarding survey',
+          sub: 'Cabin Crew Journey · Step 5 of 5',
+          pill: { kind: 'journey', label: 'Journey' },
+        },
+      ],
+    },
+    {
+      section: 'This Week',
+      items: [
+        {
+          title: 'Submit uniform allowance claim',
+          sub: 'HR · Via My HR in app',
+          pill: { kind: 'date', label: 'May 22' },
+        },
+        {
+          title: 'Emergency procedures recertification',
+          sub: 'Required · YYZ Training Hub',
+          pill: { kind: 'date', label: 'May 23' },
+        },
+        {
+          title: 'Watch galley service update — 787 fleet',
+          sub: 'New procedures effective this week',
+          pill: { kind: 'date', label: 'May 25' },
+        },
+      ],
+    },
   ];
 
   const CHECK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 
   function render() {
     const list = document.getElementById('tasksList');
-    list.innerHTML = TASKS.map(t => `
-      <div class="task-row${t.shade ? ' shade' : ''}" data-id="${t.id}">
-        <span class="task-check" role="checkbox" aria-checked="false" aria-label="Mark ${t.title} as complete" tabindex="0">${CHECK_SVG}</span>
-        <div class="task-body">
-          <span class="task-title">${t.title}</span>
-          ${t.agent ? `<span class="task-meta"><span class="dot"></span>Agent</span>` : ''}
-        </div>
-        <span class="task-pill ${t.pill.kind}">${t.pill.label}</span>
+    list.innerHTML = TASKS.map(section => `
+      <div class="section-label">${section.section}</div>
+      <div class="tasks-list">
+        ${section.items.map(t => `
+          <div class="task-row${t.done ? ' done' : ''}">
+            <span class="task-check" role="checkbox" aria-checked="${!!t.done}" aria-label="Mark ${t.title} as complete" tabindex="0">${CHECK_SVG}</span>
+            <div class="task-body">
+              <span class="task-title">${t.title}</span>
+              ${t.sub ? `<span class="task-sub">${t.sub}</span>` : ''}
+            </div>
+            <span class="task-pill ${t.pill.kind}">${t.pill.label}</span>
+          </div>
+        `).join('')}
       </div>
     `).join('');
 
