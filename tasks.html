@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="widget-name" content="My Tasks">
+<meta name="widget-description" content="Compact task list widget — checkable items with due-date pills (Today / Tomorrow / specific date) and an optional Agent indicator.">
+<title>My Tasks</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --row-hover: #fafafa;
+    --row-shade: #f9fafb;
+    --border: #f0f1f3;
+    --text: #1f2937;
+    --text-muted: #6b7280;
+    --check: #c9cdd2;
+    --check-active: #2563eb;
+    --today-bg: #fde6cf;     /* peach */
+    --today-fg: #8a4f12;
+    --tomorrow-bg: #d3e7ff;  /* light blue */
+    --tomorrow-fg: #1e448a;
+    --date-bg: #c8efd1;      /* light green */
+    --date-fg: #1f6f37;
+    --agent-dot: #d92d20;
+    --radius: 14px;
+    --shadow: 0 2px 14px rgba(20,20,20,0.05), 0 1px 3px rgba(20,20,20,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #eef0f3;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 24px 12px;
+    min-height: 100vh;
+  }
+
+  .tasks-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 360px;
+    overflow: hidden;
+    padding: 4px 0 6px;
+  }
+
+  .tasks-header {
+    padding: 18px 20px 14px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .tasks-list { display: flex; flex-direction: column; }
+
+  .task-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    column-gap: 12px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    transition: background .15s ease;
+  }
+  .task-row:hover { background: var(--row-hover); }
+  .task-row.shade { background: var(--row-shade); }
+  .task-row.shade:hover { background: #f5f6f8; }
+
+  .task-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--check);
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .task-check svg { width: 12px; height: 12px; color: var(--check); transition: color .15s ease; }
+  .task-check:hover { border-color: #9ca3af; }
+  .task-check:hover svg { color: #9ca3af; }
+  .task-row.done .task-check { border-color: var(--check-active); background: var(--check-active); }
+  .task-row.done .task-check svg { color: #fff; }
+  .task-row.done .task-title { text-decoration: line-through; color: var(--text-muted); }
+
+  .task-body { display: flex; flex-direction: column; min-width: 0; }
+  .task-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.35;
+    letter-spacing: -0.005em;
+  }
+  .task-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1;
+  }
+  .task-meta .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--agent-dot);
+    display: inline-block;
+  }
+
+  .task-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 999px;
+    line-height: 1.2;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+    flex-shrink: 0;
+  }
+  .task-pill.today    { background: var(--today-bg);    color: var(--today-fg); }
+  .task-pill.tomorrow { background: var(--tomorrow-bg); color: var(--tomorrow-fg); }
+  .task-pill.date     { background: var(--date-bg);     color: var(--date-fg); }
+
+  @media (max-width: 380px) {
+    .tasks-card { border-radius: 12px; }
+    .task-row { padding: 12px 16px; column-gap: 10px; }
+    .tasks-header { padding: 16px 16px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<section class="tasks-card" aria-label="My Tasks">
+  <h2 class="tasks-header">My Tasks</h2>
+  <div class="tasks-list" id="tasksList"></div>
+</section>
+
+<script>
+  const TASKS = [
+    { id: 1, title: "Complete Required Safety Training",    pill: { kind: "today",    label: "Today" } },
+    { id: 2, title: "Submit Monthly Expense Report",        pill: { kind: "tomorrow", label: "Tomorrow" } },
+    { id: 3, title: "Schedule Q3 Performance Review",       pill: { kind: "date",     label: "May 25" }, shade: true },
+    { id: 4, title: "Finalize Project Proposal",            pill: { kind: "today",    label: "Today" } },
+    { id: 5, title: "Book Flights for Conference",          pill: { kind: "tomorrow", label: "Tomorrow" } },
+    { id: 6, title: "Update Client Contact Information",    pill: { kind: "date",     label: "Jul 28" }, agent: true },
+  ];
+
+  const CHECK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+  function render() {
+    const list = document.getElementById('tasksList');
+    list.innerHTML = TASKS.map(t => `
+      <div class="task-row${t.shade ? ' shade' : ''}" data-id="${t.id}">
+        <span class="task-check" role="checkbox" aria-checked="false" aria-label="Mark ${t.title} as complete" tabindex="0">${CHECK_SVG}</span>
+        <div class="task-body">
+          <span class="task-title">${t.title}</span>
+          ${t.agent ? `<span class="task-meta"><span class="dot"></span>Agent</span>` : ''}
+        </div>
+        <span class="task-pill ${t.pill.kind}">${t.pill.label}</span>
+      </div>
+    `).join('');
+
+    list.querySelectorAll('.task-row').forEach(row => {
+      const check = row.querySelector('.task-check');
+      const toggle = () => {
+        const done = row.classList.toggle('done');
+        check.setAttribute('aria-checked', String(done));
+      };
+      check.addEventListener('click', toggle);
+      check.addEventListener('keydown', (e) => {
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); }
+      });
+    });
+  }
+
+  render();
+</script>
+</body>
+</html>
