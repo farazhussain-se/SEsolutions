@@ -44,14 +44,14 @@
 /* ─────────────────────────────────────────
    Staffbase user-name placeholder
    Primary: {{user.profile.firstName}} (resolved server-side by StaticContent)
-   Fallback: "Patrick" — used if the placeholder is unresolved (preview,
+   Fallback: "Maria" — used if the placeholder is unresolved (preview,
    missing profile field, or rendered outside a Staffbase context)
 ───────────────────────────────────────── */
 const RAW_FIRST_NAME = "{{user.profile.firstName}}";
 const FIRST_NAME =
     (RAW_FIRST_NAME && !RAW_FIRST_NAME.includes("{{") && RAW_FIRST_NAME.trim().length > 0)
         ? RAW_FIRST_NAME.trim()
-        : "Patrick";
+        : "Maria";
 
 /* ─────────────────────────────────────────
    AIR CANADA – CREW BADGE DATA
@@ -59,7 +59,7 @@ const FIRST_NAME =
 const EMPLOYEE = {
     id:          "AC-CRW-48217",
     firstName:   FIRST_NAME,
-    lastName:    "Tremblay",
+    lastName:    "Apathangelou",
     title:       "In-Flight Service Director",
     department:  "Cabin Crew · Mainline",
     base:        "YYZ — Toronto Pearson",
