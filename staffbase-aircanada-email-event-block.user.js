@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Staffbase Email — Air Canada Event Registration Block
 // @namespace    https://aircanada.staffbase.com/
-// @version      1.5.0
+// @version      1.6.0
 // @description  Drops an AC event card directly into the Staffbase email body and rebrands the Social Links quickblock as an "Event Registration" placeholder (demo)
 // @author       Faraz Hussein · Staffbase SE Solutions
 // @match        https://app.staffbase.com/*
@@ -17,6 +17,10 @@
      EVENT DATA — captured from localStorage with a
      hard-coded fallback so the card always renders.
   ══════════════════════════════════════════════════ */
+
+  // Flip to true to also auto-inject the card on load (legacy behavior).
+  // Default false: the card only appears after a drag of the rebranded tile.
+  const AUTO_INJECT = false;
 
   const USER_EVENTS_KEY = 'ac_cal_user_events';
   const DEFAULT_EVENT = {
@@ -405,6 +409,66 @@
   }, true);
 
   /* ══════════════════════════════════════════════════
+     DEMO RESET HOTKEY (⌘+⇧+0 / Ctrl+Shift+0)
+     Mirrors the calendar script's reset. Clicks Staffbase's
+     own delete control on every masked block so the dragged-in
+     Social Links quickblock is actually removed from the email
+     before the calendar script triggers a reload.
+  ══════════════════════════════════════════════════ */
+
+  function deleteMaskedBlocks() {
+    const masked = document.querySelectorAll('[data-ac-event-mask="1"]');
+    if (!masked.length) return;
+
+    masked.forEach(blockEl => {
+      // The hover-toolbar lives as a sibling under the same draggable wrapper.
+      const wrapper = blockEl.closest('ul > div[draggable]') || blockEl.parentElement;
+      const scope = wrapper || blockEl;
+
+      // Reveal the hover toolbar — Staffbase only mounts the delete button
+      // when the block is hovered/focused.
+      const ev = (type) => scope.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+      ev('mouseenter'); ev('mouseover'); ev('mousemove');
+
+      const candidates = scope.querySelectorAll(
+        'button[aria-label*="Delete" i], '   +
+        'button[aria-label*="Remove" i], '   +
+        'button[title*="Delete" i], '        +
+        'button[title*="Remove" i], '        +
+        '[data-pendo-feature*="delete" i], ' +
+        '[data-testid*="delete" i], '        +
+        '[data-testid*="remove" i]'
+      );
+      const btn = candidates[0]
+        || Array.from(scope.querySelectorAll('button')).find(b =>
+             /delete|remove|trash/i.test(b.getAttribute('aria-label') || b.textContent || '')
+           );
+
+      if (btn) {
+        btn.click();
+        console.log(LOG_PREFIX, 'clicked Staffbase delete on masked block', blockEl.id || '');
+      } else {
+        // Last-ditch: drop the DOM node so the demo isn't visually broken.
+        // The calendar reset reload will re-fetch server state, so this only
+        // matters for the brief moment before reload.
+        (wrapper || blockEl).remove();
+        console.warn(LOG_PREFIX, 'no delete button found — removed masked block from DOM as fallback');
+      }
+    });
+  }
+
+  function hookResetHotkey() {
+    if (window.__acEmailResetHooked) return;
+    window.__acEmailResetHooked = true;
+    window.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.code === 'Digit0') {
+        // Run in capture phase, before the calendar script's reload fires.
+        deleteMaskedBlocks();
+      }
+    }, true);
+  }
+
+  /* ══════════════════════════════════════════════════
      HELPERS + INIT
   ══════════════════════════════════════════════════ */
 
@@ -445,6 +509,8 @@
         refreshBlockBaseline();
       }
 
+      if (!AUTO_INJECT) return;
+
       // Skip auto-inject if we already masked a drag-driven block.
       const masked = !!document.querySelector('[data-ac-event-mask="1"]');
       if (masked) return;
@@ -461,6 +527,7 @@
   // Snapshot existing block IDs so the very first appearance of a *new* one
   // is what we treat as the drop target.
   snapshotKnownBlocks();
+  hookResetHotkey();
 
   // Document-level dragstart fallback — catches drags from the rebranded
   // tile even if the per-element listener didn't attach (e.g. React
