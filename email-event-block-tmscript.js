@@ -1,0 +1,512 @@
+// ==UserScript==
+// @name         Staffbase Email — Event Registration Block
+// @namespace    https://staffbase.com/
+// @version      1.0.0
+// @description  Drops an event registration card into the Staffbase email body and rebrands the Social Links quickblock as an "Event Registration" placeholder. Brand-neutral version.
+// @author       Staffbase SE Solutions
+// @match        https://app.staffbase.com/*
+// @match        https://*.staffbase.com/*
+// @grant        none
+// @run-at       document-idle
+// ==/UserScript==
+
+(function () {
+  'use strict';
+
+  /* ══════════════════════════════════════════════════
+     CONFIG
+     Flip AUTO_INJECT to true to also auto-add the card
+     on page load. Default false: the card only appears
+     after the user drags the rebranded sidebar tile.
+  ══════════════════════════════════════════════════ */
+
+  const AUTO_INJECT = false;
+
+  const USER_EVENTS_KEY = 'sb_email_event_block';
+  const DEFAULT_EVENT = {
+    title: 'Quarterly All-Hands Meeting',
+    when:  'June 12, 2026 · 10:00 AM',
+    where: 'Live - Townhall',
+    editorUrl: 'https://app.staffbase.com/studio/content/company-event/scheduled',
+  };
+
+  function pickEvent() {
+    try {
+      const ev = JSON.parse(localStorage.getItem(USER_EVENTS_KEY) || 'null');
+      if (ev && typeof ev === 'object') {
+        return {
+          title: ev.title || DEFAULT_EVENT.title,
+          when:  ev.when  || DEFAULT_EVENT.when,
+          where: ev.where || DEFAULT_EVENT.where,
+          editorUrl: ev.editorUrl || DEFAULT_EVENT.editorUrl,
+        };
+      }
+    } catch (_) {}
+    return { ...DEFAULT_EVENT };
+  }
+
+  /* ══════════════════════════════════════════════════
+     CSS — neutral palette (slate header, blue accents)
+  ══════════════════════════════════════════════════ */
+
+  const CSS = `
+    /* Sidebar tile rebrand — purely visual */
+    [data-sb-event-tile] svg.sb-original-icon,
+    [data-sb-event-tile] img.sb-original-icon { display: none !important; }
+    .sb-event-tile-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 20px; color: #171719;
+    }
+    .sb-event-tile-icon svg { width: 18px; height: 18px; stroke: #171719; fill: none; }
+
+    /* Injected event card in the email body */
+    .sb-event-li {
+      list-style: none;
+      display: flex; justify-content: center;
+      padding: 12px 0;
+      background: transparent;
+    }
+    .sb-event-card {
+      width: 580px; max-width: calc(100% - 20px);
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .sb-event-head {
+      background: #1f2937;
+      color: #fff;
+      padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .sb-event-head-left {
+      display: flex; align-items: center; gap: 10px; min-width: 0;
+    }
+    .sb-event-icon {
+      width: 28px; height: 28px; flex-shrink: 0;
+      background: rgba(255,255,255,0.15); border-radius: 6px;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .sb-event-icon svg { width: 16px; height: 16px; fill: #fff; }
+    .sb-event-title {
+      font-size: 16px; font-weight: 700; line-height: 1.3; color: #fff;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .sb-event-add,
+    .sb-event-add:link,
+    .sb-event-add:visited,
+    .sb-event-add:hover,
+    .sb-event-add:active {
+      font-size: 12px; font-weight: 600;
+      color: #fff !important; text-decoration: none !important;
+      padding: 6px 14px; border-radius: 999px;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .sb-event-meta {
+      padding: 14px 18px;
+      font-size: 14px; color: #374151; background: #fff;
+      line-height: 1.55;
+    }
+    .sb-event-meta div { margin-bottom: 4px; }
+    .sb-event-meta div:last-child { margin-bottom: 0; }
+    .sb-event-meta b { color: #111827; font-weight: 600; }
+    .sb-event-rsvp {
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      padding: 12px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .sb-event-rsvp-prompt {
+      font-size: 14px; font-weight: 600; color: #111827;
+    }
+    .sb-event-rsvp-btns { display: flex; gap: 8px; }
+    .sb-event-rsvp-btn {
+      padding: 7px 22px; border-radius: 999px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      font-family: inherit; border: 1px solid transparent;
+    }
+    .sb-event-rsvp-btn.yes        { background: #2563eb; color: #fff; }
+    .sb-event-rsvp-btn.yes:hover,
+    .sb-event-rsvp-btn.yes.on     { background: #1d4ed8; }
+    .sb-event-rsvp-btn.no         { background: #fff; color: #374151; border-color: #d1d5db; }
+    .sb-event-rsvp-btn.no:hover,
+    .sb-event-rsvp-btn.no.on      { background: #f3f4f6; }
+
+    /* Masking applied to a dragged-in Social Links block. The original
+       block content is force-hidden via JS (display:none on children),
+       so the overlay sits in normal flow. */
+    .sb-event-mask-card {
+      padding: 10px;
+      display: flex; justify-content: center;
+      background: transparent;
+    }
+    .sb-event-mask-card > .sb-event-card {
+      width: 100%; max-width: 580px;
+    }
+  `;
+
+  function injectStyles() {
+    if (document.getElementById('sb-event-block-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'sb-event-block-styles';
+    s.textContent = CSS;
+    document.head.appendChild(s);
+  }
+
+  /* ══════════════════════════════════════════════════
+     SIDEBAR TILE — PURE VISUAL REBRAND
+     The tile keeps Staffbase's underlying Social Links
+     drag behaviour, but we relabel + reicon it so it
+     reads "Event Registration" on camera.
+  ══════════════════════════════════════════════════ */
+
+  const TILE_CAL_SVG = `<svg viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>`;
+
+  function rebrandSidebarTile() {
+    const tile = document.querySelector(
+      '[data-pendo-feature="quickblock-social-links"], [aria-description*="Social Links"]'
+    );
+    if (!tile || tile.dataset.sbEventTile === '1') return;
+
+    try {
+      tile.dataset.sbEventTile = '1';
+      tile.querySelectorAll('svg, img').forEach(el => el.classList.add('sb-original-icon'));
+
+      const host = tile.matches('button') ? tile : tile.querySelector('button') || tile;
+      const iconWrap = document.createElement('span');
+      iconWrap.className = 'sb-event-tile-icon';
+      iconWrap.innerHTML = TILE_CAL_SVG;
+      host.insertBefore(iconWrap, host.firstChild);
+
+      const label = Array.from(tile.querySelectorAll('div')).find(d =>
+        (d.textContent || '').trim() === 'Social Links'
+      );
+      if (label) label.textContent = 'Event Registration';
+
+      if (host.hasAttribute('aria-description')) {
+        host.setAttribute('aria-description', 'Add Event Registration quickblock to canvas');
+      }
+
+      [tile, tile.closest('[draggable="true"]')].filter(Boolean).forEach(node => {
+        node.addEventListener('dragstart', () => {
+          dragArmedAt = Date.now();
+          console.log(LOG_PREFIX, 'drag start from rebranded tile');
+        }, true);
+      });
+    } catch (_) { /* leave the tile alone on any DOM hiccup */ }
+  }
+
+  /* ══════════════════════════════════════════════════
+     EVENT CARD HTML
+  ══════════════════════════════════════════════════ */
+
+  const CAL_SVG = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 2 3 2.9 3 4v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H5V8h14v13zm0-15H5V4h14v2zM7 10h4v4H7z"/></svg>`;
+
+  function buildCardHtml() {
+    const ev = pickEvent();
+    return `
+      <div class="sb-event-card">
+        <div class="sb-event-head">
+          <div class="sb-event-head-left">
+            <span class="sb-event-icon">${CAL_SVG}</span>
+            <span class="sb-event-title">${escapeHtml(ev.title)}</span>
+          </div>
+          <a class="sb-event-add" href="${escapeAttr(ev.editorUrl)}" target="_blank" rel="noopener">+ Add to Calendar</a>
+        </div>
+        <div class="sb-event-meta">
+          <div><b>When:</b> ${escapeHtml(ev.when)}</div>
+          <div><b>Where:</b> ${escapeHtml(ev.where)}</div>
+        </div>
+        <div class="sb-event-rsvp">
+          <div class="sb-event-rsvp-prompt">Will you be attending?</div>
+          <div class="sb-event-rsvp-btns">
+            <button class="sb-event-rsvp-btn yes" type="button">Yes</button>
+            <button class="sb-event-rsvp-btn no"  type="button">No</button>
+          </div>
+        </div>
+      </div>
+    `.trim();
+  }
+
+  /* ══════════════════════════════════════════════════
+     DRAG DETECTION + BLOCK MASKING
+  ══════════════════════════════════════════════════ */
+
+  let dragArmedAt = 0;
+  const DRAG_WINDOW_MS = 6000;
+  const knownBlockIds = new Set();
+
+  function getBlockWrappers(ul) {
+    if (!ul) return [];
+    return Array.from(ul.querySelectorAll(
+      ':scope > div[draggable] > div[id][draggable="true"]'
+    ));
+  }
+
+  function snapshotKnownBlocks() {
+    const ul = emailBodyList();
+    if (!ul) return;
+    getBlockWrappers(ul).forEach(b => knownBlockIds.add(b.id));
+  }
+
+  function applyOverlayToBlock(blockEl) {
+    if (!blockEl || !document.contains(blockEl)) return false;
+    if (blockEl.dataset.sbEventMask === '1') return false;
+
+    blockEl.dataset.sbEventMask = '1';
+
+    const inner = blockEl.firstElementChild;
+    if (inner) {
+      Array.from(inner.children).forEach(child => {
+        if (!child.classList.contains('absolute')) {
+          child.style.display = 'none';
+        }
+      });
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'sb-event-mask-card';
+    overlay.setAttribute('contenteditable', 'false');
+    overlay.innerHTML = buildCardHtml();
+    blockEl.appendChild(overlay);
+
+    document.querySelectorAll('[data-sb-event-card="1"]').forEach(el => el.remove());
+
+    // Move the masked block to sit after the first news block (block #3),
+    // not after the header. Falls back to the last block if fewer than 3.
+    try {
+      const wrapper = blockEl.closest('ul > div[draggable]');
+      const ul = wrapper && wrapper.parentElement;
+      if (ul && wrapper) {
+        const others = Array.from(ul.querySelectorAll(':scope > div[draggable]'))
+          .filter(b => b !== wrapper);
+        const anchor = others[2] || others[others.length - 1];
+        if (anchor && anchor.nextSibling !== wrapper) {
+          ul.insertBefore(wrapper, anchor.nextSibling);
+          console.log(LOG_PREFIX, 'moved masked block to position after first news block');
+        }
+      }
+    } catch (_) {}
+
+    console.log(LOG_PREFIX, 'masked dropped block with event widget');
+    return true;
+  }
+
+  function refreshBlockBaseline() {
+    const ul = emailBodyList();
+    if (!ul) return;
+    getBlockWrappers(ul).forEach(b => { if (b.id) knownBlockIds.add(b.id); });
+  }
+
+  function checkDragInjection() {
+    if (!dragArmedAt) return;
+    if (Date.now() - dragArmedAt > DRAG_WINDOW_MS) {
+      console.log(LOG_PREFIX, 'drag window expired; no new block found');
+      dragArmedAt = 0;
+      return;
+    }
+
+    const ul = emailBodyList();
+    if (!ul) return;
+
+    const wrappers = getBlockWrappers(ul);
+    const fresh = wrappers.filter(w => w.id && !knownBlockIds.has(w.id) && !w.dataset.sbEventMask);
+
+    if (fresh.length) {
+      console.log(LOG_PREFIX, 'found', fresh.length, 'fresh block(s) post-drag');
+      const target = fresh[fresh.length - 1];
+      if (applyOverlayToBlock(target)) dragArmedAt = 0;
+      wrappers.forEach(w => { if (w.id) knownBlockIds.add(w.id); });
+    }
+  }
+
+  function emailBodyList() {
+    for (const u of document.querySelectorAll('ul')) {
+      if (u.querySelector(':scope > div[draggable="true"]')) return u;
+    }
+    return document.querySelector('ul.sc-iGgWBj')
+        || document.querySelector('[class*="EmailEditor"] ul');
+  }
+
+  function injectEventBlock() {
+    const ul = emailBodyList();
+    if (!ul) return;
+    if (ul.querySelector('[data-sb-event-card="1"]')) return;
+
+    const li = document.createElement('li');
+    li.className = 'sb-event-li';
+    li.setAttribute('data-sb-event-card', '1');
+    li.setAttribute('contenteditable', 'false');
+    li.innerHTML = buildCardHtml();
+
+    const blocks = Array.from(ul.querySelectorAll(':scope > div[draggable]'));
+    const anchor = blocks[2] || blocks[blocks.length - 1];
+    if (anchor && anchor.nextSibling) {
+      ul.insertBefore(li, anchor.nextSibling);
+    } else if (anchor) {
+      anchor.after(li);
+    } else {
+      ul.appendChild(li);
+    }
+  }
+
+  /* ══════════════════════════════════════════════════
+     RSVP CLICK STATE
+  ══════════════════════════════════════════════════ */
+
+  document.addEventListener('click', (e) => {
+    const yes = e.target.closest('.sb-event-rsvp-btn.yes');
+    const no  = e.target.closest('.sb-event-rsvp-btn.no');
+    if (!yes && !no) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const card = (yes || no).closest('.sb-event-card');
+    if (!card) return;
+    const y = card.querySelector('.sb-event-rsvp-btn.yes');
+    const n = card.querySelector('.sb-event-rsvp-btn.no');
+    if (yes) { y.classList.add('on'); n.classList.remove('on'); }
+    else     { n.classList.add('on'); y.classList.remove('on'); }
+  }, true);
+
+  /* ══════════════════════════════════════════════════
+     DEMO RESET HOTKEY (⌘+⇧+0 / Ctrl+Shift+0)
+     Finds masked blocks, surfaces Staffbase's hover
+     toolbar, and clicks the underlying delete control
+     so the dragged-in Social Links block is removed.
+  ══════════════════════════════════════════════════ */
+
+  function deleteMaskedBlocks() {
+    const masked = document.querySelectorAll('[data-sb-event-mask="1"]');
+    if (!masked.length) return;
+
+    masked.forEach(blockEl => {
+      const wrapper = blockEl.closest('ul > div[draggable]') || blockEl.parentElement;
+      const scope = wrapper || blockEl;
+
+      const ev = (type) => scope.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+      ev('mouseenter'); ev('mouseover'); ev('mousemove');
+
+      const candidates = scope.querySelectorAll(
+        'button[aria-label*="Delete" i], '   +
+        'button[aria-label*="Remove" i], '   +
+        'button[title*="Delete" i], '        +
+        'button[title*="Remove" i], '        +
+        '[data-pendo-feature*="delete" i], ' +
+        '[data-testid*="delete" i], '        +
+        '[data-testid*="remove" i]'
+      );
+      const btn = candidates[0]
+        || Array.from(scope.querySelectorAll('button')).find(b =>
+             /delete|remove|trash/i.test(b.getAttribute('aria-label') || b.textContent || '')
+           );
+
+      if (btn) {
+        btn.click();
+        console.log(LOG_PREFIX, 'clicked Staffbase delete on masked block', blockEl.id || '');
+      } else {
+        (wrapper || blockEl).remove();
+        console.warn(LOG_PREFIX, 'no delete button found — removed masked block from DOM as fallback');
+      }
+    });
+  }
+
+  function resetDemoState() {
+    deleteMaskedBlocks();
+    localStorage.removeItem(USER_EVENTS_KEY);
+
+    const toast = document.createElement('div');
+    toast.textContent = 'Event block reset — reloading…';
+    toast.style.cssText = `
+      position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+      background: #1a1a1a; color: #fff; padding: 12px 22px;
+      border-radius: 10px; font: 600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25); z-index: 99999;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => location.reload(), 650);
+  }
+
+  function hookResetHotkey() {
+    if (window.__sbEmailEventResetHooked) return;
+    window.__sbEmailEventResetHooked = true;
+    window.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.code === 'Digit0') {
+        e.preventDefault();
+        resetDemoState();
+      }
+    }, true);
+  }
+
+  /* ══════════════════════════════════════════════════
+     HELPERS + INIT
+  ══════════════════════════════════════════════════ */
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+  function escapeAttr(s) { return escapeHtml(s); }
+
+  const LOG_PREFIX = '[Event Block]';
+  console.log(LOG_PREFIX, 'script loaded on', location.href);
+
+  let tickCount = 0;
+  let lastWaitLog = 0;
+  function tick() {
+    tickCount++;
+    try {
+      injectStyles();
+      const tileBefore = !!document.querySelector('[data-sb-event-tile]');
+      rebrandSidebarTile();
+      const tileAfter = !!document.querySelector('[data-sb-event-tile]');
+      if (!tileBefore && tileAfter) console.log(LOG_PREFIX, 'rebranded sidebar tile');
+
+      const ul = emailBodyList();
+      if (!ul) {
+        if (tickCount - lastWaitLog >= 10) {
+          console.log(LOG_PREFIX, 'no email body <ul> yet (tick', tickCount + ')');
+          lastWaitLog = tickCount;
+        }
+        return;
+      }
+      if (dragArmedAt) {
+        checkDragInjection();
+      } else {
+        refreshBlockBaseline();
+      }
+
+      if (!AUTO_INJECT) return;
+
+      const masked = !!document.querySelector('[data-sb-event-mask="1"]');
+      if (masked) return;
+
+      const cardBefore = !!ul.querySelector('[data-sb-event-card="1"]');
+      injectEventBlock();
+      const cardAfter = !!ul.querySelector('[data-sb-event-card="1"]');
+      if (!cardBefore && cardAfter) console.log(LOG_PREFIX, 'injected event card into', ul);
+    } catch (e) {
+      console.warn(LOG_PREFIX, 'tick error:', e);
+    }
+  }
+
+  snapshotKnownBlocks();
+  hookResetHotkey();
+
+  document.addEventListener('dragstart', (e) => {
+    const tile = e.target && e.target.closest && e.target.closest('[data-sb-event-tile="1"]');
+    if (tile) {
+      dragArmedAt = Date.now();
+      console.log(LOG_PREFIX, 'drag start (document listener) from rebranded tile');
+    }
+  }, true);
+
+  tick();
+  setInterval(tick, 500);
+})();
