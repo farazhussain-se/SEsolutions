@@ -1,0 +1,75 @@
+{
+  "title_only": [
+    {"original_title": "Home",              "new_title": "Home"},
+    {"original_title": "Town Hall",         "new_title": "Town Hall"},
+    {"original_title": "My Work",           "new_title": "My Work"},
+    {"original_title": "My Location",       "new_title": "My Store"},
+    {"original_title": "My Tasks",          "new_title": "My Tasks"},
+    {"original_title": "My Payslips",       "new_title": "My Pay"},
+    {"original_title": "Health & Safety",   "new_title": "Health & Safety"},
+    {"original_title": "Canteen",           "new_title": "Break Room"},
+    {"original_title": "My Leave Requests", "new_title": "Time Off & PTO"},
+    {"original_title": "Home Social",       "new_title": "Home — Social"},
+    {"original_title": "My HR",             "new_title": "My HR"},
+    {"original_title": "My Tickets",        "new_title": "My Tickets"},
+    {"original_title": "My Services",       "new_title": "My Services"},
+    {"original_title": "My Shift",          "new_title": "My Schedule"},
+    {"original_title": "Crisis Hub",        "new_title": "Crisis Hub"},
+    {"original_title": "Kudos",             "new_title": "Associate Kudos"},
+    {"original_title": "Home Corporate",    "new_title": "Home — Corporate"}
+  ],
+  "full_rewrites": [
+    {"original_title": "Communities",              "new_title": "Ross Community"},
+    {"original_title": "Snapshot: Company Values", "new_title": "Our Ross Values"},
+    {"original_title": "Thank You!",               "new_title": "Associate Kudos Wall"},
+    {"original_title": "Diversity & Inclusion",    "new_title": "Belonging at Ross"},
+    {"original_title": "Marketplace",              "new_title": "Ross Marketplace"},
+    {"original_title": "Travelbase",               "new_title": "Associate Discount & Travel Perks"},
+    {
+      "original_title": "Getting Started",
+      "new_title": "Getting Started at Ross",
+      "replacements": [
+        ["Verwenden Sie die App", "Using the app"],
+        ["Sprache auswählen", "Select your language"],
+        ["Profilbild hinzufügen", "Add a profile photo"],
+        ["News lesen", "Reading news"],
+        ["Liken, Kommentieren &amp; @Mentions", "Likes, comments &amp; @mentions"],
+        ["Personalisieren von Informationen/Abonnieren von Gruppen", "Personalize your feed / subscribe to channels"],
+        ["Verwenden der Social Wall (nicht überall verfügbar)", "Using the Associate Wall (where available)"],
+        ["Konfigurieren von Benachrichtigungen", "Configure notifications"],
+        ["Feedback geben", "Give feedback"],
+        ["Ios", "iOS"],
+        ["iOS und Android", "iOS and Android"]
+      ]
+    },
+    {"original_title": "EX Boosters",          "new_title": "Associate Experience Tips"},
+    {"original_title": "MS vs Google Widgets", "new_title": "Productivity Apps Help"},
+    {"original_title": "Microsoft Widgets",    "new_title": "Microsoft Apps Help"}
+  ],
+  "new_pages": [
+    {
+      "title": "Shift Schedules, Swaps & Time Off",
+      "content": "<h2>Your schedule, swaps, and time-off requests</h2><p>This page walks through how scheduling works at Ross — for store associates and DC associates. If anything here conflicts with what your manager has told you, follow your manager.</p><h3>Where to see your schedule</h3><p>Your schedule is in the Schedule app (linked from Ross Connect, pinned to bottom nav on mobile). Schedules are published <strong>two weeks in advance</strong>. If yours isn't visible 10+ days out, talk to your manager.</p><h3>Requesting a shift swap</h3><p>In the Schedule app, tap the shift and choose <em>Request Swap</em>. Offer it to the team or a specific associate. Manager approval needed — usually within 24 hours.</p><h3>PTO and unpaid time off</h3><p>Submit through the Time Off portal (linked from Ross Connect). Requests <strong>2 weeks in advance</strong> are easier to accommodate. Peak season (Black Friday → New Year's) observes blackout periods.</p><h3>Calling out</h3><p>If you can't make a shift, call your store/DC <strong>at least 2 hours before</strong> your shift starts. Don't rely on text messages.</p>"
+    },
+    {
+      "title": "Inventory, Receiving & Markdowns",
+      "content": "<h2>How inventory moves at Ross</h2><p>Off-price is a flow business. Newness lands every week.</p><h3>Receiving</h3><ol><li>Confirm carton count vs. manifest.</li><li>Stage cartons by department in the backroom.</li><li>Process by department; tag, hang, and floor-ready per SOP.</li><li>Move to floor — don't let it sit.</li></ol><h3>Markdowns</h3><ul><li><strong>First markdown</strong> — light reduction; less-prime spot.</li><li><strong>Second (red)</strong> — moves to clearance.</li><li><strong>Third / clearance (yellow)</strong> — final before transfer/salvage.</li></ul><h3>RTV and salvage</h3><p>Damaged/defective goes into RTV bins. Follow the salvage SOP. Don't put RTV back on the floor.</p>"
+    },
+    {
+      "title": "Loss Prevention & Shrink",
+      "content": "<h2>LP basics at Ross</h2><p>Every associate plays a part. Three categories: external theft, internal theft, process loss.</p><h3>External theft</h3><p>Best deterrent: great customer service. If you see suspicious behavior — <strong>don't confront</strong>. Observe, document, notify your manager/LP partner. Your safety first.</p><h3>Internal theft</h3><p>Rare but devastating. Report concerns confidentially via the Ethics Hotline.</p><h3>Process loss</h3><p>Quiet category — RTV not shipped, salvage paperwork missed. Tight execution closes the gap.</p><h3>EAS / InVue</h3><p>High-value categories get tags/locks. Detachers stay at cash wrap. If a tag won't release, call a manager — don't force it.</p><h3>Incident reporting</h3><p>Every theft incident — caught or escaped — documented in the LP system within 24 hours.</p>"
+    },
+    {
+      "title": "Associate Discount & Benefits",
+      "content": "<h2>Associate Discount</h2><p>All eligible associates receive a <strong>20% in-store discount</strong> at Ross Dress for Less.</p><ul><li>Active associates in good standing.</li><li>Eligibility starts after initial waiting period (typically 30 days; varies).</li><li>Personal use only — not for resale.</li></ul><p>Show your associate ID at checkout. Shop on your own time. Use your own payment method.</p><h2>Benefits</h2><p>Vary by role and hours. Check Benefits portal for what applies to you.</p><ul><li>Medical, dental, vision (eligible associates).</li><li><strong>401(k) with company match.</strong></li><li>EAP — free, confidential counseling.</li><li>Paid time off, accrued by hours.</li><li>Tuition reimbursement (eligible).</li><li>Adoption assistance and parental leave.</li></ul><p>Open enrollment: November. Benefits team hosts Q&A sessions.</p>"
+    },
+    {
+      "title": "Store Opening & Closing Procedures",
+      "content": "<h2>Opening and closing your store</h2><p>Owned by manager on duty. Full SOP in the store binder.</p><h3>Open</h3><ol><li>Manager arrives 30 min before. Confirms alarm disarmed, walks floor.</li><li>Cash room: count tills, verify safe, prepare register starts.</li><li>Floor walk: pick up tags, recover departments.</li><li>Team huddle (5 min): focus, callouts, CS goal.</li><li>Unlock doors at posted time.</li></ol><h3>Close</h3><ol><li>Last-customer announcement at posted closing time. Doors lock 1 min after.</li><li>Recover the floor by department.</li><li>Cash room: pulls, deposit prep, safe drop.</li><li>Final walk, lights down, alarm set.</li><li><strong>Two associates leave together — never alone.</strong></li></ol><h3>Cash room</h3><p>Authorized associates only. Two-person rule for deposits.</p>"
+    },
+    {
+      "title": "Code of Business Conduct (Quick Reference)",
+      "content": "<h2>How we work — Code of Business Conduct (quick reference)</h2><p>The full Code is required reading. This page is a short summary; not a replacement.</p><h3>Our standards</h3><ul><li><strong>Honesty.</strong> Customer interactions, cash handling, performance feedback.</li><li><strong>Respect.</strong> Every associate, customer, vendor, community.</li><li><strong>Compliance.</strong> Laws and regulations everywhere we operate.</li><li><strong>Privacy.</strong> Protect customer/associate/vendor information.</li><li><strong>No retaliation.</strong> Speaking up in good faith is protected.</li></ul><h3>Conflicts of interest</h3><p>Relationships affecting impartiality → disclose. Disclosure is straightforward; non-disclosure is the problem.</p><h3>Gifts and entertainment</h3><p>Modest vendor gifts may be acceptable. Cash/gift cards never. When in doubt, ask.</p><h3>Reporting</h3><p>Manager, HR, Ethics Hotline (anonymous), legal. Retaliation = Code violation.</p>"
+    }
+  ]
+}

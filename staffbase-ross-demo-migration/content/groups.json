@@ -1,0 +1,68 @@
+{
+  "region_rewires": [
+    {
+      "original_name": "Region: Australia (conditional)",
+      "new_name": "Region: West",
+      "tag": "profile:region:west"
+    },
+    {
+      "original_name": "Region: Germany (conditional)",
+      "new_name": "Region: South",
+      "tag": "profile:region:south"
+    },
+    {
+      "original_name": "Region: United Kingdom (conditional)",
+      "new_name": "Region: East",
+      "tag": "profile:region:east"
+    }
+  ],
+  "community_renames": [
+    {
+      "original_name": "__My Communities: Marketplace__",
+      "new_name": "Ross Marketplace"
+    },
+    {
+      "original_name": "__My Communities: Thank you!__",
+      "new_name": "Associate Kudos"
+    },
+    {
+      "original_name": "__My Communities: Travelbase__",
+      "new_name": "Associate Discount & Travel Perks"
+    },
+    {
+      "original_name": "_My Communities: Diversity & Inclusion_",
+      "new_name": "Belonging at Ross"
+    },
+    {
+      "original_name": "_My Communities: Snapshot Company Values_",
+      "new_name": "Our Ross Values"
+    }
+  ],
+  "new_groups": [
+    {
+      "name": "All Store Associates",
+      "type": "conditional",
+      "tag": "profile:costcenter:store"
+    },
+    {
+      "name": "DC Associates",
+      "type": "conditional",
+      "tag": "profile:costcenter:dc"
+    },
+    {
+      "name": "Buying Office",
+      "type": "conditional",
+      "tag": "profile:costcenter:buying"
+    },
+    {
+      "name": "Home Office Associates",
+      "type": "conditional",
+      "tag": "profile:costcenter:hq"
+    },
+    {
+      "name": "New Associates",
+      "type": "enumeration",
+      "tag": null
+    }
+  ]
+}

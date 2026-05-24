@@ -1,0 +1,9 @@
+# Local snapshots / runtime data
+/tmp/
+*.pyc
+__pycache__/
+.DS_Store
+
+# Secrets — never commit
+.env
+*.token

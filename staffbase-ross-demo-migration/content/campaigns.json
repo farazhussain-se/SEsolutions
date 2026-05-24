@@ -1,0 +1,74 @@
+{
+  "campaigns": [
+    {
+      "title": "Off-Price Excellence (Q1)",
+      "goal":  "Highlight the off-price model — opportunistic buying, fast DC flow, treasure-hunt brand promise. Q1 wins from buying floor and DCs.",
+      "startAt": "2026-01-15T00:00:00Z",
+      "endAt":   "2026-05-15T23:59:59Z",
+      "color":   "#003C71"
+    },
+    {
+      "title": "Spring Field Operations",
+      "goal":  "Operational excellence across stores, DCs, field leadership during spring. Receiving, markdowns, new-store openings, district contests.",
+      "startAt": "2026-04-01T00:00:00Z",
+      "endAt":   "2026-05-20T23:59:59Z",
+      "color":   "#2E7D32"
+    },
+    {
+      "title": "Associate Recognition 2026",
+      "goal":  "Celebrate associates and teams across stores, DCs, buying offices, Home Office. Year-round spotlight + community moments.",
+      "startAt": "2026-01-01T00:00:00Z",
+      "endAt":   "2026-12-31T23:59:59Z",
+      "color":   "#6A1B9A"
+    },
+    {
+      "title": "Safety & Crisis Readiness",
+      "goal":  "Keep every Ross associate safe and ready when weather or incidents hit. Health & Safety + Crisis Hub.",
+      "startAt": "2026-01-01T00:00:00Z",
+      "endAt":   "2026-12-31T23:59:59Z",
+      "color":   "#C62828"
+    },
+    {
+      "title": "From Jim's Desk",
+      "goal":  "Direct communications from CEO Jim Conroy (CEO since Feb 2025) to all Ross associates.",
+      "startAt": "2026-01-01T00:00:00Z",
+      "endAt":   "2026-12-31T23:59:59Z",
+      "color":   "#00796B"
+    },
+    {
+      "title": "Demo Week 2026 — Spring Activation",
+      "goal":  "Coordinated communications for the May 26 launch week — peak prep, ESG, customer stories, operational moments.",
+      "startAt": "2026-05-18T00:00:00Z",
+      "endAt":   "2026-05-31T23:59:59Z",
+      "color":   "#EF6C00"
+    }
+  ],
+  "assignments": {
+    "Off-Price Excellence (Q1)": [
+      "off-price model", "back-to-school", "Buying team trip", "Perris DC throughput",
+      "Ross featured in industry", "Meet a buyer"
+    ],
+    "Spring Field Operations": [
+      "Vendor week", "RTV process", "Freight planning", "Tampa flagship lobby",
+      "Grand opening recap", "Customer-service callout", "60-sec town-hall",
+      "Store walk", "DM message: peak prep"
+    ],
+    "Associate Recognition 2026": [
+      "20 years at Ross", "sales associate to Store Manager", "DC team lead spotlight",
+      "Asset protection win", "Birthday shoutout", "Hello from the Atlanta",
+      "Anniversary at the Houston", "Team lunch in Long Beach", "New hire hello"
+    ],
+    "Safety & Crisis Readiness": [
+      "Slip, trip", "Peak-season safety", "Heat illness", "Ladder safety",
+      "Hurricane prep", "All-clear", "Store closure procedure"
+    ],
+    "From Jim's Desk": [
+      "Hello from Jim", "note from the DC floor", "Heading into our second half",
+      "Jim Conroy named CEO"
+    ],
+    "Demo Week 2026 — Spring Activation": [
+      "Sustainability milestone", "BOPIS pilot", "Regional contest", "Receiving tip",
+      "New SOP", "Phishing of the month", "time-off system", "treasure hunt", "Q4"
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Workday",
+    "url": "https://workday.com",
+    "icon": "W"
+  },
+  {
+    "name": "Schedule (Kronos)",
+    "url": "https://kronos.com",
+    "icon": "K"
+  },
+  {
+    "name": "Benefits Portal",
+    "url": "https://benefits.ross.com",
+    "icon": "B"
+  },
+  {
+    "name": "Associate Discount",
+    "url": "https://discounts.ross.com",
+    "icon": "D"
+  },
+  {
+    "name": "IT Service Desk",
+    "url": "https://it.ross.com",
+    "icon": "S"
+  },
+  {
+    "name": "Code of Conduct",
+    "url": "https://ross.com/corporate/code-of-conduct",
+    "icon": "C"
+  },
+  {
+    "name": "Ethics Hotline",
+    "url": "https://secure.ethicspoint.com",
+    "icon": "E"
+  }
+]
