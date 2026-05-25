@@ -146,11 +146,21 @@ The rollback script is not built here — pattern is: walk each entity in the sn
 ## Repo location of source-of-truth files
 
 Within this folder:
-- `README.md` (this file)
+- `README.md` (this file) — the playbook
+- `CHANGELOG.md` — chronological run log of everything done across builds
 - `GOTCHAS.md` — full notes on every undocumented behavior
 - `ROSS_FACTS.md` — Ross corporate facts (CEO, brand, sales, key partnerships, sources)
-- `scripts/` — 10 phase scripts + audit
+- `WIDGET_RENDERING_NOTES.md` — what each Staffbase widget actually looks like rendered (from screenshot review)
+- `KNOWN_PLACEHOLDERS.md` — demo-leftover items still in the instance + how to fix each
+- `scripts/` — 11 phase scripts + audit
 - `content/` — Ross content as JSON for portability
+
+### If you're resuming this work cold
+
+1. Read `CHANGELOG.md` for the timeline and decisions.
+2. Read `GOTCHAS.md` before any API write.
+3. Read `KNOWN_PLACEHOLDERS.md` to see what's left to fix.
+4. Read `WIDGET_RENDERING_NOTES.md` if you need to interpret page HTML structure.
 
 ---
 
