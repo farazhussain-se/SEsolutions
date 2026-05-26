@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Lineage Video</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: transparent; }
+
+.video-area {
+  width: 100%;
+  aspect-ratio: 16 / 9;   /* try 4/3 if still wrong */
+  background: #000;
+  display: block;
+}
+.video-area iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+</style>
+</head>
+<body>
+
+<div class="video-area">
+  <iframe
+    src="https://www.youtube.com/watch?v=qilQmQW8Dqg?rel=0&modestbranding=1&showinfo=0&autoplay=1&mute=1"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    allowfullscreen>
+  </iframe>
+</div>
+
+</body>
+</html>
