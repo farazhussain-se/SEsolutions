@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ross — Store Shift Schedule</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: transparent;
+  width: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+.widget {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0, 30, 80, 0.10);
+}
+
+/* HEADER — Ross navy with red accent */
+.header {
+  background: linear-gradient(135deg, #002677, #003da5);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 3px solid #d62828;
+}
+.header-title { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: 0.2px; }
+.header-sub   { font-size: 11px; color: #bcd0ff; margin-top: 2px; font-weight: 500; }
+.live-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(214, 40, 40, 0.18);
+  border: 1px solid #d62828;
+  border-radius: 14px; padding: 4px 11px;
+  font-size: 10px; font-weight: 800; color: #ffb3b3; letter-spacing: 0.5px;
+}
+.live-dot {
+  width: 8px; height: 8px;
+  background: #ff4d4d; border-radius: 50%;
+  animation: pulse 1.4s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* DC strip */
+.dc-strip {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 18px;
+  background: #f0f4fb;
+  border-bottom: 1px solid #e3e9f3;
+  font-size: 11px;
+}
+.dc-label { color: #57606a; font-weight: 600; }
+.dc-value { color: #002677; font-weight: 800; }
+
+/* SHIFTS */
+.shifts { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+
+.shift-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f6f8fa;
+  border-radius: 10px;
+  padding: 12px 14px;
+  border-left: 5px solid #d0d7de;
+  min-height: 56px;
+  transition: background 0.2s;
+}
+.shift-row.active {
+  border-left-color: #1a9e3f;
+  background: #dafbe1;
+}
+.shift-row.next {
+  border-left-color: #d62828;
+  background: #fde8e8;
+}
+
+.shift-name { font-size: 15px; font-weight: 800; color: #1b1f24; }
+.shift-time { font-size: 12px; color: #57606a; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+.shift-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.shift-super { font-size: 12px; color: #57606a; font-weight: 600; }
+.shift-badge {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.4px;
+  padding: 3px 9px; border-radius: 10px;
+  color: #fff;
+}
+.shift-badge.active-badge { background: #1a9e3f; }
+.shift-badge.next-badge   { background: #d62828; }
+
+/* FOOTER */
+.footer {
+  background: #f6f8fa;
+  border-top: 1px solid #e8ecf0;
+  padding: 8px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-src   { font-size: 10px; color: #8c959f; font-weight: 600; }
+.footer-clock { font-size: 12px; font-weight: 800; color: #002677; font-variant-numeric: tabular-nums; }
+
+/* Mobile tuning */
+@media (max-width: 380px) {
+  .header-title { font-size: 15px; }
+  .shift-name { font-size: 14px; }
+  .shift-super { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+<div class="widget">
+
+  <div class="header">
+    <div>
+      <div class="header-title">Shift Schedule</div>
+      <div class="header-sub" id="header-date">—</div>
+    </div>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  </div>
+
+  <div class="dc-strip">
+    <span class="dc-label">West Region · Store</span>
+    <span class="dc-value">#1421 · Long Beach, CA</span>
+  </div>
+
+  <div class="shifts">
+    <div class="shift-row" id="shift-open">
+      <div>
+        <div class="shift-name">Opening</div>
+        <div class="shift-time">07:00 AM – 03:00 PM</div>
+      </div>
+      <div class="shift-right">
+        <div class="shift-super">Maria Delgado</div>
+      </div>
+    </div>
+    <div class="shift-row" id="shift-mid">
+      <div>
+        <div class="shift-name">Mid-Day</div>
+        <div class="shift-time">11:00 AM – 07:00 PM</div>
+      </div>
+      <div class="shift-right">
+        <div class="shift-super">Andre Pham</div>
+      </div>
+    </div>
+    <div class="shift-row" id="shift-close">
+      <div>
+        <div class="shift-name">Closing</div>
+        <div class="shift-time">02:30 PM – 10:30 PM</div>
+      </div>
+      <div class="shift-right">
+        <div class="shift-super">Jessica Nguyen</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-src">Ross Associates · Store Operations</div>
+    <div class="footer-clock" id="footer-clock"></div>
+  </div>
+
+</div>
+<script>
+// Store hours: 7:00 AM – 10:30 PM. Mid and Closing shifts overlap.
+// Active = the shift whose "primary window" contains the current time.
+const SHIFTS = [
+  { id: 'open',  start:  7.0, end: 11.0 },  // Opening solo
+  { id: 'mid',   start: 11.0, end: 14.5 },  // Mid solo
+  { id: 'close', start: 14.5, end: 22.5 },  // Closing solo (after Mid leaves)
+];
+
+function getActiveShift(now) {
+  const h = now.getHours() + now.getMinutes() / 60;
+  if (h >= 7.0  && h < 11.0) return 'open';
+  if (h >= 11.0 && h < 14.5) return 'mid';
+  if (h >= 14.5 && h < 22.5) return 'close';
+  return null; // store closed overnight
+}
+function getNextShift(active, now) {
+  const order = ['open','mid','close'];
+  if (active === null) return 'open'; // before opening tomorrow
+  return order[(order.indexOf(active) + 1) % 3];
+}
+
+function highlightShifts() {
+  const now    = new Date();
+  const active = getActiveShift(now);
+  const next   = getNextShift(active, now);
+
+  SHIFTS.forEach(({ id }) => {
+    const row = document.getElementById('shift-' + id);
+    row.classList.remove('active', 'next');
+    const old = row.querySelector('.shift-badge');
+    if (old) old.remove();
+  });
+
+  if (active) {
+    const activeRow = document.getElementById('shift-' + active);
+    activeRow.classList.add('active');
+    const ab = document.createElement('div');
+    ab.className = 'shift-badge active-badge';
+    ab.textContent = '● ACTIVE';
+    activeRow.querySelector('.shift-right').appendChild(ab);
+  }
+
+  const nextRow = document.getElementById('shift-' + next);
+  nextRow.classList.add('next');
+  const nb = document.createElement('div');
+  nb.className = 'shift-badge next-badge';
+  nb.textContent = active ? '▶ UP NEXT' : '▶ OPENS NEXT';
+  nextRow.querySelector('.shift-right').appendChild(nb);
+}
+
+function tick() {
+  const now = new Date();
+  document.getElementById('footer-clock').textContent =
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('header-date').textContent =
+    now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+
+highlightShifts();
+tick();
+setInterval(tick, 1000);
+setInterval(highlightShifts, 60 * 1000);
+</script>
+</body>
+</html>
