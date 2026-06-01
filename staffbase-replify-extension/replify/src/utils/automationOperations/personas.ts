@@ -85,7 +85,10 @@ export const fetchPersonaCandidates = async (
   const limit = args.limit ?? 100;
   const url = buildApiUrl(`/api/users?status=activated&limit=${limit}`, apiDomain);
 
-  const res = await fetch(url, { headers: { Authorization: `Basic ${apiToken}` } });
+  const res = await fetch(url, {
+    headers: { Authorization: `Basic ${apiToken}` },
+    credentials: 'omit',
+  });
   if (!res.ok) throw new Error(`Fetch users failed: ${res.status}`);
   const json = (await res.json()) as { data?: unknown[] };
   const raw = Array.isArray(json.data) ? json.data : [];
@@ -214,13 +217,17 @@ const updateUserBasicFields = async (
   const url = buildApiUrl(`/api/users/${user.userId}`, ctx.apiDomain);
   const res = await fetch(url, {
     method: 'POST',
+    credentials: 'omit',
     headers: {
       Authorization: `Basic ${ctx.apiToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ position: user.position, department: user.department }),
   });
-  if (!res.ok) throw new Error(`POST /users/${user.userId} -> ${res.status}`);
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`POST /users/${user.userId} -> ${res.status}${txt ? ` :: ${txt.slice(0, 200)}` : ''}`);
+  }
 };
 
 /**
@@ -235,13 +242,17 @@ const setUserManager = async (
   const url = buildApiUrl(`/api/users/${userId}`, ctx.apiDomain);
   const res = await fetch(url, {
     method: 'PATCH',
+    credentials: 'omit',
     headers: {
       Authorization: `Basic ${ctx.apiToken}`,
       ...V3_PATCH_HEADERS,
     },
     body: JSON.stringify({ profile: { system_manager: managerId } }),
   });
-  if (!res.ok) throw new Error(`PATCH /users/${userId} (manager) -> ${res.status}`);
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`PATCH /users/${userId} (manager) -> ${res.status}${txt ? ` :: ${txt.slice(0, 200)}` : ''}`);
+  }
 };
 
 interface CreatedGroup {
@@ -267,13 +278,17 @@ const createGroup = async (
   };
   const res = await fetch(url, {
     method: 'POST',
+    credentials: 'omit',
     headers: {
       Authorization: `Basic ${ctx.apiToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`POST /groups (${title}) -> ${res.status}`);
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`POST /groups (${title}) -> ${res.status}${txt ? ` :: ${txt.slice(0, 200)}` : ''}`);
+  }
   const json = (await res.json()) as { id?: string };
   if (!json.id) throw new Error(`/groups returned no id for "${title}"`);
   return { id: json.id, title };
@@ -293,13 +308,17 @@ const assignUsersToGroup = async (
   const url = buildApiUrl(`/api/groups/${groupId}/users`, ctx.apiDomain);
   const res = await fetch(url, {
     method: 'POST',
+    credentials: 'omit',
     headers: {
       Authorization: `Basic ${ctx.apiToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(userIds),
   });
-  if (!res.ok) throw new Error(`POST /groups/${groupId}/users -> ${res.status}`);
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`POST /groups/${groupId}/users -> ${res.status}${txt ? ` :: ${txt.slice(0, 200)}` : ''}`);
+  }
 };
 
 /**

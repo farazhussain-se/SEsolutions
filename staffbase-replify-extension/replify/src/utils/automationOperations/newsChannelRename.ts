@@ -102,7 +102,7 @@ export const listAllChannels = async (
     const params = new URLSearchParams({ limit: '100' });
     if (cursor) params.set('cursor', cursor);
     const url = buildApiUrl(`/api/branch/channels?${params.toString()}`, ctx.apiDomain);
-    const res = await fetch(url, { headers: { Authorization: `Basic ${ctx.apiToken}` } });
+    const res = await fetch(url, { headers: { Authorization: `Basic ${ctx.apiToken}` }, credentials: 'omit' });
     if (!res.ok) throw new Error(`GET /branch/channels -> ${res.status}`);
     const json = (await res.json()) as RawChannelListResponse;
     const items = Array.isArray(json.data) ? json.data : [];
@@ -153,7 +153,7 @@ const getChannelDetail = async (
   ctx: OperationContext,
 ): Promise<ChannelDetail> => {
   const url = buildApiUrl(`/api/channels/${channelId}`, ctx.apiDomain);
-  const res = await fetch(url, { headers: { Authorization: `Basic ${ctx.apiToken}` } });
+  const res = await fetch(url, { headers: { Authorization: `Basic ${ctx.apiToken}` }, credentials: 'omit' });
   if (!res.ok) throw new Error(`GET /channels/${channelId} -> ${res.status}`);
   const c = (await res.json()) as RawChannelDetail;
   const loc = c.config?.localization?.en_US ?? c.localization?.en_US;
@@ -327,9 +327,13 @@ const applyChannelRename = async (
     },
   };
 
+  // Match Replify's working journeys.ts pattern: credentials:'omit' strips
+  // session cookies so Staffbase auth resolution doesn't get torn between the
+  // Basic token (admin) and any cookie identity on the active tab.
   ctx.onProgress?.(`→ ${method} ${targetUrl}`);
   const res = await fetch(targetUrl, {
     method,
+    credentials: 'omit',
     headers: {
       Authorization: `Basic ${ctx.apiToken}`,
       'Content-Type': 'application/json',
@@ -338,7 +342,7 @@ const applyChannelRename = async (
   });
   if (!res.ok) {
     const responseText = await res.text().catch(() => '');
-    throw new Error(`${method} ${targetUrl} -> ${res.status}${responseText ? ` :: ${responseText.slice(0, 140)}` : ''}`);
+    throw new Error(`${method} ${targetUrl} -> ${res.status}${responseText ? ` :: ${responseText.slice(0, 200)}` : ''}`);
   }
 };
 
@@ -398,7 +402,7 @@ export const listChannelPosts = async (
 
   while (offset < total && guard < 25) {
     const url = buildApiUrl(`/api/channels/${channelId}/posts?limit=${limit}&offset=${offset}`, ctx.apiDomain);
-    const res = await fetch(url, { headers: { Authorization: `Basic ${ctx.apiToken}` } });
+    const res = await fetch(url, { headers: { Authorization: `Basic ${ctx.apiToken}` }, credentials: 'omit' });
     if (!res.ok) throw new Error(`GET /channels/${channelId}/posts -> ${res.status}`);
     const json = (await res.json()) as RawPostListResponse;
     const items = Array.isArray(json.data) ? json.data : [];
@@ -496,19 +500,26 @@ const updatePostPublishedDate = async (
   // Round-trip contents — PUT without contents wipes the body. The Flask tool
   // GETs first, then PUTs both fields together.
   const getUrl = buildApiUrl(`/api/posts/${postId}`, ctx.apiDomain);
-  const getRes = await fetch(getUrl, { headers: { Authorization: `Basic ${ctx.apiToken}` } });
+  const getRes = await fetch(getUrl, {
+    headers: { Authorization: `Basic ${ctx.apiToken}` },
+    credentials: 'omit',
+  });
   if (!getRes.ok) throw new Error(`GET /posts/${postId} -> ${getRes.status}`);
   const post = (await getRes.json()) as { contents?: Record<string, unknown> };
 
   const putRes = await fetch(getUrl, {
     method: 'PUT',
+    credentials: 'omit',
     headers: {
       Authorization: `Basic ${ctx.apiToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ published: newIso, contents: post.contents ?? {} }),
   });
-  if (!putRes.ok) throw new Error(`PUT /posts/${postId} -> ${putRes.status}`);
+  if (!putRes.ok) {
+    const txt = await putRes.text().catch(() => '');
+    throw new Error(`PUT /posts/${postId} -> ${putRes.status}${txt ? ` :: ${txt.slice(0, 200)}` : ''}`);
+  }
 };
 
 /**
