@@ -1,0 +1,841 @@
+{
+    "title": "From Product with Love",
+    "imgSrcs": [
+        "https://storage.googleapis.com/staffbase-email-images/From%20Product%20with%20Love/fromProductWithLove-1.png",
+        "https://storage.googleapis.com/staffbase-email-images/From%20Product%20with%20Love/fromProductWithLove-2.gif",
+        "https://storage.googleapis.com/staffbase-email-images/From%20Product%20with%20Love/fromProductWithLove-3.gif",
+        "https://storage.googleapis.com/staffbase-email-images/From%20Product%20with%20Love/fromProductWithLove-4.gif"
+    ],
+    "content": {
+        "blocks": [
+            {
+                "content": {
+                    "backgroundColor": "#202d41",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "fd45fe4c2268587143a4a67accfb3973",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "alt": "",
+                                        "aspectRatio": 2.4758453,
+                                        "href": "https://connect.staffbase.com",
+                                        "mediumId": "67682c11b801a50dffa62289",
+                                        "mimetype": "",
+                                        "paddingBottom": 0,
+                                        "paddingLeft": 0,
+                                        "paddingRight": 0,
+                                        "paddingTop": 0,
+                                        "src": "replace me"
+                                    },
+                                    "elmIdx": "c5041520d9f5f68d8f0062da9fc880ea9639",
+                                    "type": "IMAGE"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#202d41"
+                },
+                "index": "ed1285e63e875cdcc7c34cd9",
+                "title": "e5izfLMwEejP",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#cae0ff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "94269d0bcb1ed2621db824a2dff83628",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "align": "center",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "22px",
+                                        "lineHeight": "26.4px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:22px;line-height:26px;text-align:center;\"\u003e\u003cspan style=\"font-weight:bold;\"\u003eJune 26, 2025\u003c/span\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "101ab4d5aff4a62e6243162383993a06a845",
+                                    "type": "PARAGRAPH"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#202d41"
+                },
+                "index": "c2cfbd919072545da3ed9ae0",
+                "title": "Headline text",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#cae0ff",
+                    "columnNum": 3,
+                    "columns": [
+                        {
+                            "columnIdx": "ece362a1aa08796d9ae2e98314152c11",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#cae0ff",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "bd14688be5504e01605ce76c6e01a0fb4e1a",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.25
+                        },
+                        {
+                            "columnIdx": "9524961317fec1438f915609419a2cb7",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#202d41",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "6af55965bd1e6b8ac3716fd32d81a6df419e",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.5
+                        },
+                        {
+                            "columnIdx": "7395eff5824262be97c9c4b5d2f6a035",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#cae0ff",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "c0ce149a3b9204e4dae233b1d92f78d61aa7",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.25
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#202d41"
+                },
+                "index": "ffc498fa69e9e3a422d06929",
+                "title": "xbmttjFECAgZ",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#cae0ff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "edd4be306a863a63afcef82082aac8dd",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 5,
+                                        "paddingLeft": 5,
+                                        "paddingRight": 5,
+                                        "paddingTop": 5,
+                                        "textMarkupValue": "\u003ch3 style=\"font-family:Arial;font-size:18px;font-weight:bold;line-height:21px;text-align:left;\" ck-header=\"defaultCK\"\u003eImportant Links\u003c/h3\u003e\u003ch3 style=\"font-family:Arial;font-size:18px;font-weight:bold;line-height:21px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/h3\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u003cins\u003eCustomer facing\u003c/ins\u003e: \u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://support.staffbase.com/hc/en-us\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eSupport Portal\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e | \u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://support.staffbase.com/hc/en-us/articles/360032722411-Latest-Staffbase-Updates\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eChangelog\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e | \u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://developers.staffbase.com/\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eDev Portal\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e | \u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://status.staffbase.com/\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eStatus Page\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u003cins\u003eInternal\u003c/ins\u003e: \u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://status.staffbase.com/\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eKnowledge Base\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e | \u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://status.staffbase.com/\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eIntranet Post\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e | \u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://status.staffbase.com/\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eSlack\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e (#topic-product-announcements)\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/p\u003e\u003ch3 style=\"font-family:Arial;font-size:18px;font-weight:bold;line-height:21px;text-align:left;\" ck-header=\"defaultCK\"\u003eTL;DR\u003c/h3\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003eHej\u0026nbsp;\u003cspan class=\"personalization\"\u003e{{firstName}}\u003c/span\u003e\u0026nbsp;👋\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003eThis week, we worked on delivering a lot of new features that are now available in production and open beta. We explored new design concepts for our App/intranet projects.\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003eFind our latest achievements below! Remember to reach out to the relevant teams via Slack if you have feedback 🖖 or feature requests 💡, and promote our new features to your customers 💙\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "ba6b3b6c672fd635e0b591b8c4c0791c079e",
+                                    "type": "PARAGRAPH"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#202d41"
+                },
+                "index": "ba7452c150c760b62fe91b9e",
+                "title": "WgVdgrbxjD3S",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#cae0ff",
+                    "columnNum": 3,
+                    "columns": [
+                        {
+                            "columnIdx": "899bc479cae715613156142614e52a5f",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#cae0ff",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "afdd519b58139e1f9aab9772e4a49b6ba2d2",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.25
+                        },
+                        {
+                            "columnIdx": "3a767c1b4a620b691575afdd9549cc5d",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#202d41",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "81796434366300819ba6e64b5fa15a3bf46f",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.5
+                        },
+                        {
+                            "columnIdx": "0a10fe2f0e16137bc0e3b33aae60708c",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#cae0ff",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "0992c65ba59b97ee20e39d56feb3ce7f98d2",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.25
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#202d41"
+                },
+                "index": "7a174df56c0df8d066b5d007",
+                "title": "xbmttjFECAgZ",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#cae0ff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "a174688ce2b8b5c943270c883723f7b7",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 5,
+                                        "paddingLeft": 5,
+                                        "paddingRight": 5,
+                                        "paddingTop": 5,
+                                        "textMarkupValue": "\u003ch3 style=\"font-family:Arial;font-size:18px;font-weight:bold;line-height:21px;text-align:left;\" ck-header=\"defaultCK\"\u003eMicrosoft Stream Videos\u003c/h3\u003e\u003ch3 style=\"font-family:Arial;font-size:18px;font-weight:bold;line-height:21px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/h3\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://support.staffbase.com/hc/en-us\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eTeam MINT\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e | \u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://support.staffbase.com/hc/en-us\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eDemo\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e\u003cspan style=\"color:#01579B;\"\u003e \u003cins\u003e|\u003c/ins\u003e\u003c/span\u003e \u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://support.staffbase.com/hc/en-us\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eSlack\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e (questions, feedback, requests, troubleshooting)\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003eYou can use MS Stream videos in Posts and Pages. Simply get the URL of the video from your MS Stream Library and use the video embedding link. The video is not uploaded to Connect but simply embedded! Video editors can consolidate subtitles, transcripts, metadata in one place (MS Stream) and when a video is updated, it is directly updated in Connect. Users/viewers need a MS License.\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "1b221dd0d3d5d4be74a39ccb5de27db9c975",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "alt": "",
+                                        "aspectRatio": 1.984686,
+                                        "href": "",
+                                        "mediumId": "6768329ce6e8e476abdde864",
+                                        "mimetype": "",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "src": "replace me"
+                                    },
+                                    "elmIdx": "9c6d84710857155d2494da2e8bc5a06668f0",
+                                    "type": "IMAGE"
+                                },
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\"\u003e\u003ci\u003eKeywords: MS Stream, videos, pages and posts\u003c/i\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "9557cec2702254b10e3ff111a27b28fb2af5",
+                                    "type": "PARAGRAPH"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#202d41"
+                },
+                "index": "86b4bcbe81f174a572e17892",
+                "title": "WgVdgrbxjD3S",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#cae0ff",
+                    "columnNum": 3,
+                    "columns": [
+                        {
+                            "columnIdx": "ad31ce96d29e6fc20d830d10b0923679",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#cae0ff",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "4add52a06b73c247ead388d2e291c68cf969",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.25
+                        },
+                        {
+                            "columnIdx": "b2f6a147d31d2d3d9a1a1fa534ce7168",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#202d41",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "d998e29b5fdab6fcbf42ab706d90ba95dae4",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.5
+                        },
+                        {
+                            "columnIdx": "64468138c0a423d39c19a0084bca7386",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#cae0ff",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "f91b7b3b1d9743008091f6b25951e6a68aeb",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.25
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#202d41"
+                },
+                "index": "8066e78412a04f5b252051d9",
+                "title": "xbmttjFECAgZ",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#cae0ff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "f201184e3aa7f294effb37200513efe8",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 5,
+                                        "paddingLeft": 5,
+                                        "paddingRight": 5,
+                                        "paddingTop": 5,
+                                        "textMarkupValue": "\u003ch3 style=\"font-family:Arial;font-size:18px;font-weight:bold;line-height:21px;text-align:left;\" ck-header=\"defaultCK\"\u003eDrafts Posts in Editorial Calendar\u003c/h3\u003e\u003ch3 style=\"font-family:Arial;font-size:18px;font-weight:bold;line-height:21px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/h3\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://support.staffbase.com/hc/en-us\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eTeam TES\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e | \u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://support.staffbase.com/hc/en-us\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eDemo\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e\u003cspan style=\"color:#01579B;\"\u003e \u003cins\u003e|\u003c/ins\u003e\u003c/span\u003e \u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://support.staffbase.com/hc/en-us\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eSlack\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e (questions, feedback, requests, troubleshooting)\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eThe Editorial Calendar's improved Weekly View now includes an option to plan draft posts and remove planned posts from the sidebar. This improvement also applies to the Weekly View in the Advanced Editorial Calendar.\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "61b2f22d914de28d62faf9c13d1a510448d0",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "alt": "",
+                                        "aspectRatio": 1.7717792,
+                                        "href": "",
+                                        "mediumId": "6768359423c5103d03daa2f2",
+                                        "mimetype": "",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "src": "replace me"
+                                    },
+                                    "elmIdx": "56c0556ab1eae2b1044343a09524bd33648d",
+                                    "type": "IMAGE"
+                                },
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\"\u003e\u003ci\u003eKeywords: Editorial Calendar, Drafts, Posts, Scheduling, Planning\u003c/i\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "f5a195e6ad68b03faa8d8d00826a08610f7c",
+                                    "type": "PARAGRAPH"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#202d41"
+                },
+                "index": "a6e1ea1c87cc4e350780fbb1",
+                "title": "WgVdgrbxjD3S",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#cae0ff",
+                    "columnNum": 3,
+                    "columns": [
+                        {
+                            "columnIdx": "592106dc3c54c37b67a6bb06143f6ebf",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#cae0ff",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "b34c270e3cb246d5ee23cdd2ed6ae9dcc4b4",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.25
+                        },
+                        {
+                            "columnIdx": "34e5b2a9a718ade2be0232b2704e86fd",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#202d41",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "ea903b8f1b7b472a23c9efef4558c5b07a5d",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.5
+                        },
+                        {
+                            "columnIdx": "4bbb16ae8af39e963889f4b7f6d80e58",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#cae0ff",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "2a605219cfd5aad3da64e2f6e02e3b52684c",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.25
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#202d41"
+                },
+                "index": "3e1eeeb3a535b720363db117",
+                "title": "xbmttjFECAgZ",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#cae0ff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "d0d209eb58fd1fa87d1c0b5fccaa354f",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 5,
+                                        "paddingLeft": 5,
+                                        "paddingRight": 5,
+                                        "paddingTop": 5,
+                                        "textMarkupValue": "\u003ch3 style=\"font-family:Arial;font-size:18px;font-weight:bold;line-height:21px;text-align:left;\" ck-header=\"defaultCK\"\u003eExternal Content \u0026amp; Files\u003c/h3\u003e\u003ch3 style=\"font-family:Arial;font-size:18px;font-weight:bold;line-height:21px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/h3\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://support.staffbase.com/hc/en-us\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eTeam WORMS\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e | \u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://support.staffbase.com/hc/en-us\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eDemo\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e\u003cspan style=\"color:#01579B;\"\u003e \u003cins\u003e|\u003c/ins\u003e\u003c/span\u003e \u003ca target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://support.staffbase.com/hc/en-us\"\u003e\u003cspan style=\"color:#01579B;\"\u003e\u003cins\u003eSlack\u003c/ins\u003e\u003c/span\u003e\u003c/a\u003e (questions, feedback, requests, troubleshooting)\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eIn External Content, you can now add PDF files, videos, and up to 20 images to your LinkedIn posts.\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;font-weight:normal;line-height:24px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u0026nbsp;\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "e3e19c6757f0dcc6f49109e66f7c10981c2f",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "alt": "",
+                                        "aspectRatio": 1.7766871,
+                                        "href": "",
+                                        "mediumId": "6768369e20688e48b5acf3d6",
+                                        "mimetype": "",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "src": "replace me"
+                                    },
+                                    "elmIdx": "51c10930b861e0ef91b9ca602e7c22322e93",
+                                    "type": "IMAGE"
+                                },
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\"\u003e\u003ci\u003eKeywords: External Content, LinkedIn Posts, Files\u003c/i\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "70e84a7200d4bcb2ba89912b42bc5959312d",
+                                    "type": "PARAGRAPH"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#202d41"
+                },
+                "index": "4c09303992841d8614edc76a",
+                "title": "WgVdgrbxjD3S",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#cae0ff",
+                    "columnNum": 3,
+                    "columns": [
+                        {
+                            "columnIdx": "94bac84aebb68e87e4c80838bdcd6c79",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#cae0ff",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "102ff41e84f9d13e56098993c451db277cf8",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.25
+                        },
+                        {
+                            "columnIdx": "152008e0dfb056f027a5f7cf2855dfaf",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#202d41",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "562119c3c7d1bb3e7570983e8946bda9e866",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.5
+                        },
+                        {
+                            "columnIdx": "f90fc7c7d21f7627af9ed73808d06bdc",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#cae0ff",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "521a546e3f652c27b794ae0e87896dd82da4",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.25
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#202d41"
+                },
+                "index": "b1f4cd780e991c650e00ee01",
+                "title": "xbmttjFECAgZ",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#cae0ff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "599480f68fde1b1f1c3d730b3385568d",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "align": "center",
+                                        "iconSize": 28,
+                                        "iconVersionColor": false,
+                                        "icons": [
+                                            {
+                                                "active": true,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-instagram--alrg01W.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-instagram-CILfxEv9.png"
+                                                },
+                                                "title": "instagram"
+                                            },
+                                            {
+                                                "active": true,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-X-CT3bK6lN.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-X-BTTRxdP5.png"
+                                                },
+                                                "title": "X"
+                                            },
+                                            {
+                                                "active": true,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-youtube-BlAiovTO.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-youtube-C0svahPr.png"
+                                                },
+                                                "title": "youtube"
+                                            },
+                                            {
+                                                "active": true,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-facebook-CL8H2fYN.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-facebook-BAK0F8ZF.png"
+                                                },
+                                                "title": "facebook"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-email-BD3a09Rt.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-email-M87IgDKt.png"
+                                                },
+                                                "title": "email"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-flickr-BRHKwb6s.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-flickr-l7wtsqDX.png"
+                                                },
+                                                "title": "flickr"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-glassdoor-DtnoqTBu.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-glassdoor-uIa6uQPK.png"
+                                                },
+                                                "title": "glassdoor"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-linkedin-DwdZtm_K.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-linkedin-CNuPldgD.png"
+                                                },
+                                                "title": "linkedin"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-pinterest-CtxpEfjk.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-pinterest-DUgcy8uo.png"
+                                                },
+                                                "title": "pinterest"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-slack-o_LMugVx.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-slack-0zF0WAnE.png"
+                                                },
+                                                "title": "slack"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-vimeo-C9t04BiF.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-vimeo-B95zZ-V1.png"
+                                                },
+                                                "title": "vimeo"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-website-BMnJy7iO.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-website-DDcna3Ia.png"
+                                                },
+                                                "title": "website"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-wechat-C7n-8zqX.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-wechat-pzMWDRAw.png"
+                                                },
+                                                "title": "wechat"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-weibo-DFAHWupe.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-weibo-ufhvyOAe.png"
+                                                },
+                                                "title": "weibo"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-workplace-CNtjHFPV.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-workplace-Cf-ynGPO.png"
+                                                },
+                                                "title": "workplace"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-yammer-CSrrlnBj.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-yammer-2eZV1N2Z.png"
+                                                },
+                                                "title": "yammer"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://de1.staffbasestatic.com/studio/assets/icon-social-microsoft-teams-Dhn7zx1t.png",
+                                                    "color": "https://de1.staffbasestatic.com/studio/assets/icon-social-color-microsoft-teams-CpjqFxAr.png"
+                                                },
+                                                "title": "microsoft-teams"
+                                            }
+                                        ],
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10
+                                    },
+                                    "elmIdx": "84ea6761dd2d9c9e6c2bfd7b4fc79ed1f540",
+                                    "type": "SOCIAL"
+                                },
+                                {
+                                    "content": {
+                                        "align": "center",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "12px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 5,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:12px;line-height:24px;text-align:center;\"\u003e\u003cspan style=\"color:#727273;\"\u003e\u003ci\u003eThis is an internal email and not intended for external distribution. Please do not forward.\u003c/i\u003e\u003c/span\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "06797828fef8582522b9ddbb157422bdc745",
+                                    "type": "PARAGRAPH"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 30,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#202d41"
+                },
+                "index": "a92a5f7ea298f0d3140be01b",
+                "title": "Social links",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#202d41",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "20602a3571d95a3718797f0d028ccdea",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#202d41",
+                                        "height": 10
+                                    },
+                                    "elmIdx": "eeab2794ded548c9664e0a88dbb6899894bc",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 50,
+                    "paddingTop": 50,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#202d41"
+                },
+                "index": "cf70969e727df00862352f36",
+                "title": "6ao6ouWqs80w",
+                "type": "CUSTOMIZED_BLOCK"
+            }
+        ]
+    }
+}

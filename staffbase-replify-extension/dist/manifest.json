@@ -1,0 +1,90 @@
+{
+  "name": "Replify for Staffbase",
+  "description": "Tool for generating news articles, add branding, and showcase analytics in Staffbase demos among other features",
+  "version": "2.4.5",
+  "manifest_version": 3,
+  "permissions": [
+    "scripting",
+    "activeTab",
+    "sidePanel",
+    "webRequest",
+    "storage",
+    "contextMenus",
+    "windows"
+  ],
+  "host_permissions": [
+    "https://app.staffbase.com/*",
+    "https://*.staffbase.com/*",
+    "https://*.staffbase.rocks/*",
+    "https://*.staffbase.dev/*",
+    "https://sb-news-generator.uc.r.appspot.com/*",
+    "https://pluginsurveys-us1.staffbase.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://app.staffbase.com/*",
+        "https://*.staffbase.com/*",
+        "https://*.staffbase.rocks/*",
+        "https://*.staffbase.dev/*"
+      ],
+      "js": [
+        "content/mobilePreviewPage.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://app.staffbase.com/*",
+        "https://*.staffbase.com/*",
+        "https://*.staffbase.rocks/*",
+        "https://*.staffbase.dev/*"
+      ],
+      "js": [
+        "content/mobilePreview.js",
+        "content/analytics.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "content/mobilePreviewPage.js",
+        "content/analytics/*.js"
+      ],
+      "matches": [
+        "https://app.staffbase.com/*",
+        "https://*.staffbase.com/*",
+        "https://*.staffbase.rocks/*",
+        "https://*.staffbase.dev/*"
+      ]
+    }
+  ],
+  "action": {
+    "default_title": "Replify for Staffbase"
+  },
+  "side_panel": {
+    "default_path": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "scrape-blog": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Scrape blog articles from current page"
+    },
+    "scrape-linkedin": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+L",
+        "mac": "Command+Shift+L"
+      },
+      "description": "Scrape LinkedIn posts from current page"
+    }
+  }
+}

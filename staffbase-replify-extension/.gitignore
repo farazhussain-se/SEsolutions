@@ -1,0 +1,6 @@
+.DS_Store
+node_modules/
+
+# NOTE: dist/main.js, dist/vendor.js, dist/rolldown-runtime.js are intentionally
+# committed here so the extension is loadable from this repo without a build
+# step. The upstream replify repo ignores them; this fork does not.

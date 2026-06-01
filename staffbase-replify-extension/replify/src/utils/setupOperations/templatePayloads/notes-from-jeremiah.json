@@ -1,0 +1,267 @@
+{
+    "title": "Notes from Jeremiah",
+    "imgSrcs": [
+        "https://storage.googleapis.com/staffbase-email-images/Notes%20from%20Jeremiah/notes-from-jeremiah-0.png",
+        "https://storage.googleapis.com/staffbase-email-images/Notes%20from%20Jeremiah/notes-from-jeremiah-1.png"
+    ],
+    "content": {
+        "blocks": [
+            {
+                "content": {
+                    "backgroundColor": "#ffffff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "5d127e3d424a5f287e465263ac3be046",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "alt": "",
+                                        "aspectRatio": 2.718045,
+                                        "href": "",
+                                        "mediumId": "6762b79aaa7d02600305ef34",
+                                        "mimetype": "",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "src": "replace me"
+                                    },
+                                    "elmIdx": "ee03f230c83ca1aa93464a345b7115b25737",
+                                    "type": "IMAGE"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#ffffff"
+                },
+                "index": "6e96aba0515367f01a65b06c",
+                "title": "yxq2ZJYx3cxl",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#ffffff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "8b2e17df0e773cb61fffb7f5146c8d1f",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "align": "center",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "36px",
+                                        "lineHeight": "54px",
+                                        "paddingBottom": 0,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 0,
+                                        "textMarkupValue": "\u003ch2 style=\"font-family:Arial;font-size:36px;line-height:54px;text-align:center;\"\u003e\u003cspan style=\"font-family:Courier New;\"\u003eNotes from Jeremiah\u003c/span\u003e\u003c/h2\u003e"
+                                    },
+                                    "elmIdx": "d19124ab78798d6544287c32f8c5ec26493a",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "align": "center",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 5,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;text-align:center;\"\u003e\u003cspan style=\"font-family:Courier New;\"\u003eProduct, Product and Human stuff\u003c/span\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "183d88484eeb56350c3f64543f511e2cc34b",
+                                    "type": "PARAGRAPH"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#ffffff"
+                },
+                "index": "34f3a7579ce294eb1e8e16ee",
+                "title": "Headline text",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#ffffff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "b10eef8b1b94bfafcccc8de6f5e9717d",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "34px",
+                                        "paddingBottom": 0,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 0,
+                                        "textMarkupValue": "\u003ch1 style=\"font-family:Arial;font-size:16px;line-height:34px;text-align:left;\"\u003e“\u003c/h1\u003e"
+                                    },
+                                    "elmIdx": "db76e484ae1b70288d1a5c4e83ff989a2c33",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "14px",
+                                        "lineHeight": "18.2px",
+                                        "paddingBottom": 0,
+                                        "paddingLeft": 35,
+                                        "paddingRight": 32,
+                                        "paddingTop": 0,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:14px;line-height:18px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-family:Book Antiqua;\"\u003e\u003ci\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eThere are almost 7 billion smartphones in the world and we have yet to see a truly unexplainable phenomenon caught on video\u003c/span\u003e\u003c/i\u003e\u003c/span\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "8fe0e075c3973861d0d950454341405d6d36",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "align": "right",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "36px",
+                                        "paddingBottom": 0,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 0,
+                                        "textMarkupValue": "\u003ch1 style=\"font-family:Arial;font-size:16px;line-height:37px;text-align:right;\"\u003e”\u003c/h1\u003e"
+                                    },
+                                    "elmIdx": "06fe8a4f2ce5917810e32ac258327a1d12eb",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "align": "right",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "14px",
+                                        "lineHeight": "21px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:14px;line-height:21px;text-align:right;\"\u003e\u003cspan style=\"font-family:Courier New;\"\u003eShower thought of the month\u003c/span\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "bbda4246c31f95490989bd57a33cd23de87e",
+                                    "type": "PARAGRAPH"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#ffffff"
+                },
+                "index": "0190db5a76367cb611353731",
+                "title": "Quote",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#ffffff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "19c31b35331f9bf0f51c7bf42e2508f8",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-family:Courier New;\"\u003eAs the year draws to a close, I find myself reflecting on the incredible journey we've shared together. It's been a year of milestones, a year of challenges, and most importantly, a year of growth.\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-family:Courier New;\"\u003eI am immensely proud of the dedication, passion, and resilience you've all demonstrated. Your commitment to excellence has been the driving force behind our success, and I am truly honored to be part of such an extraordinary team.\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-family:Courier New;\"\u003eRemember those late nights brainstorming, the countless hours spent perfecting every detail, and the sheer joy of seeing our products come to life? These moments, big and small, have shaped us, and they are a testament to the power of collaboration and shared vision.\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-family:Courier New;\"\u003eAs we celebrate the end of this chapter, let's take a moment to appreciate the impact we've made. Our products have touched the lives of countless people, connecting them in ways we never thought possible. And that, my friends, is something truly special.\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-family:Courier New;\"\u003eI am filled with gratitude for each and every one of you. Your contributions have been invaluable, and I am excited to see what the future holds for our team.\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-family:Courier New;\"\u003eSo, let's raise a glass to the end of an amazing year! May the holiday season bring you joy, laughter, and cherished moments with loved ones.\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-family:Courier New;\"\u003eHere's to a bright and promising New Year!\u003c/span\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "918efea81eb6fcbd2020bb2b2038d4999fd0",
+                                    "type": "PARAGRAPH"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#ffffff"
+                },
+                "index": "29a671b8ca0c97ce2d2014b8",
+                "title": "FkP5f0k1H6cP",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#ffffff",
+                    "columnNum": 2,
+                    "columns": [
+                        {
+                            "columnIdx": "4972377189a3d45e63e5f1cde93372e0",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#ffffff",
+                                        "height": 10
+                                    },
+                                    "elmIdx": "44c4773206b2c453fa3b43b47b59ad93e403",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.6666667
+                        },
+                        {
+                            "columnIdx": "ef3b5fbb042b36ed4f604f2b07efca8f",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "alt": "",
+                                        "aspectRatio": 3.4632354,
+                                        "href": "",
+                                        "mediumId": "67641347d1905b7a634831f7",
+                                        "mimetype": "",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "src": "replace me"
+                                    },
+                                    "elmIdx": "905adcf8f1b6458c9d3bb518440fcd9e448d",
+                                    "type": "IMAGE"
+                                }
+                            ],
+                            "size": 0.33333334
+                        }
+                    ],
+                    "paddingBottom": 20,
+                    "paddingTop": 0,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#ffffff"
+                },
+                "index": "edd77e6adf8d27401f054d31",
+                "title": "mBJFPWOoJj4d",
+                "type": "CUSTOMIZED_BLOCK"
+            }
+        ]
+    }
+}

@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: replify
+  description: Internal Chrome extension that helps Staffbase Solutions teams brand and set up demo environments.
+  annotations:
+    github.com/project-slug: Staffbase/replify
+spec:
+  type: website
+  lifecycle: production
+  owner: group:staffbase-demo-engineers

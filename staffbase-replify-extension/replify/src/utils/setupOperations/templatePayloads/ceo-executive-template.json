@@ -1,0 +1,300 @@
+{
+    "title": "CEO/Executive Template",
+    "imgSrcs": [
+        "https://storage.googleapis.com/staffbase-email-images/CEO-Executive%20Template/ceo-executive-template-0.png",
+        "https://storage.googleapis.com/staffbase-email-images/CEO-Executive%20Template/ceo-executive-template-1.png",
+        "https://storage.googleapis.com/staffbase-email-images/CEO-Executive%20Template/ceo-executive-template-2.png",
+        "https://storage.googleapis.com/staffbase-email-images/CEO-Executive%20Template/ceo-executive-template-3.png"
+    ],
+    "thumbnailUrl": "https://storage.googleapis.com/staffbase-email-images/CEO-Executive%20Template/ceo-executive-template-4.jpg",
+    "content": {
+        "blocks": [
+            {
+                "content": {
+                    "backgroundColor": "#ffffff",
+                    "columnNum": 3,
+                    "columns": [
+                        {
+                            "columnIdx": "a7206d4133592345c722ac884a7e6dad",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#ffffff",
+                                        "height": 5
+                                    },
+                                    "elmIdx": "0485daff0e4840246d9631f55ff8d06cef16",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.4
+                        },
+                        {
+                            "columnIdx": "7658fdbdf487748c06f61ab4c1b23e29",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "alt": "",
+                                        "aspectRatio": 1,
+                                        "href": "",
+                                        "mediumId": "67640ef8deb69540da0288a9",
+                                        "mimetype": "",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 40,
+                                        "paddingRight": 40,
+                                        "paddingTop": 10,
+                                        "src": "replace me"
+                                    },
+                                    "elmIdx": "09372ebf7ac0e557d72431128a88165aa472",
+                                    "type": "IMAGE"
+                                }
+                            ],
+                            "size": 0.2
+                        },
+                        {
+                            "columnIdx": "60b5cdf4dd8ffa6718becdf6ae8bb90b",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#ffffff",
+                                        "height": 5
+                                    },
+                                    "elmIdx": "66bd7707319860a7ca594451827ef9418482",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.4
+                        }
+                    ],
+                    "paddingBottom": 5,
+                    "paddingTop": 5,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#1e5897"
+                },
+                "index": "2b4db12293ae39e284539618",
+                "title": "X+1hDgObm8+m",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#ffffff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "c31077020b72a3b065e785436b54baa6",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "alt": "",
+                                        "aspectRatio": 4,
+                                        "href": "",
+                                        "mediumId": "676406fb973b6d3220e4b5d0",
+                                        "mimetype": "",
+                                        "paddingBottom": 0,
+                                        "paddingLeft": 0,
+                                        "paddingRight": 0,
+                                        "paddingTop": 0,
+                                        "src": "replace me"
+                                    },
+                                    "elmIdx": "5f6a3d0453b777ce88759b525d8e8ff2f34b",
+                                    "type": "IMAGE"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 0,
+                    "paddingTop": 0,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#1e5897"
+                },
+                "index": "72a674f12cd95edd085a4543",
+                "title": "mBV6OCwiHZis",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#ffffff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "e0acfcb681db59f35e6bf0b257b376a2",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 20,
+                                        "paddingRight": 20,
+                                        "paddingTop": 10,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eDear Team,\u0026nbsp;\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eAs we close another chapter in our company’s journey, I want to take a moment to share some thoughts and updates with you. It’s easy to get caught up in the day-to-day demands of our work, but taking a step back to reflect on what we’ve achieved together and where we’re headed is just as important.\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eOver the past few months, we’ve reached new heights. One of our biggest accomplishments was the successful launch of \u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;font-weight:bold;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eStreamline Analytics\u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003e, a groundbreaking service already adopted by over 15 key clients. This project was a massive undertaking that required seamless coordination across teams, and the results speak for themselves. A special thank you goes out to \u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;font-weight:bold;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eAyesha Patel\u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003e and \u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;font-weight:bold;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eMarcus Yates\u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003e, who led the charge in development and marketing, respectively.\u0026nbsp;\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "def220d1d61a3e4849a9af8587657862a247",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 20,
+                                        "paddingRight": 20,
+                                        "paddingTop": 10,
+                                        "textMarkupValue": "\u003ch3 style=\"font-family:Arial;font-size:18px;font-weight:bold;line-height:23px;text-align:left;\" ck-header=\"defaultCK\"\u003e\u003cspan style=\"font-size:20px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eCompany Highlights\u003c/span\u003e\u003c/span\u003e\u003c/h3\u003e"
+                                    },
+                                    "elmIdx": "a736cbd02386e472aadc4f116727bb6bdb3e",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 20,
+                                        "paddingRight": 20,
+                                        "paddingTop": 10,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eThe past few months have been nothing short of remarkable. Here are just a few highlights worth celebrating:\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\u003cul\u003e\u003cli style=\"color:#000;font-family:Arial;font-size:14px;line-height:21px;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-size:14px;font-weight:bold;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eRecord-breaking performance: \u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eOur sales team exceeded targets this quarter, achieving a 25% increase in revenue compared to the same period last year. This is a testament to the commitment and ingenuity of our entire organization.\u003c/span\u003e\u003c/span\u003e\u003c/li\u003e\u003c/ul\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u0026nbsp;\u003c/p\u003e\u003cul\u003e\u003cli style=\"color:#000;font-family:Arial;font-size:14px;line-height:21px;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-size:14px;font-weight:bold;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eCommunity impact: \u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eThrough our \u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;font-weight:bold;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003e\"Helping Hands\"\u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003e initiative, we partnered with \u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;font-weight:bold;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eCommunity Cares Foundation\u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003e to support local education programs. Together, we’ve contributed over \u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;font-weight:bold;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003e$50,000 in donations\u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003e and volunteered more than \u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;font-weight:bold;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003e500 hours\u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003e to make a meaningful difference.\u003c/span\u003e\u003c/span\u003e\u003c/li\u003e\u003c/ul\u003e"
+                                    },
+                                    "elmIdx": "9190c1bbcc41d2958c36137e7f9c9886769a",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 20,
+                                        "paddingRight": 20,
+                                        "paddingTop": 10,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eLooking ahead, we have exciting opportunities to build on this momentum. Our R\u0026amp;D team is developing innovative advancements for 2025, and we’re rolling out \u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;font-weight:bold;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eElevate\u003c/span\u003e\u003c/span\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003e, a new professional development program designed to help you grow your skills and advance your career. At the same time, we will continue to nurture the culture that makes this company so unique—built on respect, collaboration, and a shared commitment to excellence.\u0026nbsp;\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eAs we face new challenges, I encourage you to remember what we’ve already accomplished together. It’s through your hard work, creativity, and dedication that we continue to achieve great things.\u0026nbsp;\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u0026nbsp;\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eThank you for everything you bring to our mission every day. Together, let’s make the next chapter even brighter.\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "90c983a0135a9a14ebfabd2863043b5420f8",
+                                    "type": "PARAGRAPH"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 10,
+                    "paddingTop": 10,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#1e5897"
+                },
+                "index": "9e73ceb85dccfaab7eb9439e",
+                "title": "lRbpCDkQkYQ9",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#ffffff",
+                    "columnNum": 2,
+                    "columns": [
+                        {
+                            "columnIdx": "a6a84b39d1d109568f6bbde13a9cd82a",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "alt": "",
+                                        "aspectRatio": 3.4632354,
+                                        "href": "",
+                                        "mediumId": "67641347d1905b7a634831f7",
+                                        "mimetype": "",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "src": "replace me"
+                                    },
+                                    "elmIdx": "dc1e73d7502924112128dc2326d9e6ba84de",
+                                    "type": "IMAGE"
+                                },
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 20,
+                                        "paddingRight": 20,
+                                        "paddingTop": 10,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:16px;line-height:19px;margin-bottom:0px;margin-top:0px;text-align:left;\"\u003e\u003cspan style=\"font-size:14px;font-weight:bold;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eRichard Fayer\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:19px;margin-bottom:0px;margin-top:0px;text-align:left;\"\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003ePresident and CEO\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e\u003cp style=\"font-family:Arial;font-size:16px;line-height:19px;margin-bottom:0px;margin-top:0px;text-align:left;\"\u003e\u003cspan style=\"font-size:14px;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eConnect\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "5806d8479d375dc592fed8757023b65b0421",
+                                    "type": "PARAGRAPH"
+                                }
+                            ],
+                            "size": 0.4
+                        },
+                        {
+                            "columnIdx": "9a8184c2f1173c1bb0892866cb88bdce",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#ffffff",
+                                        "height": 10
+                                    },
+                                    "elmIdx": "14c8f9b9ce3ab44c1384c1708183e85b617b",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.6
+                        }
+                    ],
+                    "paddingBottom": 0,
+                    "paddingTop": 0,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#1e5897"
+                },
+                "index": "023b7f534f285a811876bbbe",
+                "title": "GmzRUt4xodG1",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#ffffff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "7d2b55e758e6b719e858d8a4031d362c",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "alt": "",
+                                        "aspectRatio": 6.325911,
+                                        "href": "",
+                                        "mediumId": "676415584f1e60321c92c9e1",
+                                        "mimetype": "",
+                                        "paddingBottom": 0,
+                                        "paddingLeft": 0,
+                                        "paddingRight": 0,
+                                        "paddingTop": 0,
+                                        "src": "replace me"
+                                    },
+                                    "elmIdx": "410daa7b57af6a36bc32d37b800432a1c6f0",
+                                    "type": "IMAGE"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 0,
+                    "paddingTop": 0,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#1e5897"
+                },
+                "index": "03a51f0a4c4a78f6eaa973ba",
+                "title": "+MKdmKDf2Vlo",
+                "type": "CUSTOMIZED_BLOCK"
+            }
+        ]
+    }
+}

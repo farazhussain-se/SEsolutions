@@ -1,0 +1,474 @@
+{
+    "title": "Important Company Update",
+    "imgSrcs": [
+        "https://storage.googleapis.com/staffbase-email-images/Important%20Company%20Update/impComUpdate-0.png",
+        "https://storage.googleapis.com/staffbase-email-images/Important%20Company%20Update/impComUpdate-1.png"
+    ],
+    "thumbnailUrl": "https://storage.googleapis.com/staffbase-email-images/Important%20Company%20Update/impComUpdate-2.jpg",
+    "content": {
+        "blocks": [
+            {
+                "content": {
+                    "backgroundColor": "#b2382e",
+                    "columnNum": 2,
+                    "columns": [
+                        {
+                            "columnIdx": "da9be14d571f601771925d7d0b596428",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "alt": "",
+                                        "aspectRatio": 2.939394,
+                                        "href": "",
+                                        "mediumId": "682e41e218df6a467666529e",
+                                        "mimetype": "",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "src": "replace me"
+                                    },
+                                    "elmIdx": "7564cceaea0c50fcfd6d3f75e2c8b7c8a621",
+                                    "type": "IMAGE"
+                                }
+                            ],
+                            "size": 0.33333334
+                        },
+                        {
+                            "columnIdx": "311e42ba47f04aa2251330d3d12ced99",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#b2382e",
+                                        "height": 10
+                                    },
+                                    "elmIdx": "6ef5ee9899fd722c3b57e8c8dd5a1ca04707",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.6666667
+                        }
+                    ],
+                    "paddingBottom": 30,
+                    "paddingTop": 30,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#b2382e"
+                },
+                "index": "670820f246b7b950753510c5",
+                "title": "gDIQ0IC3J6dx",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#ffffff",
+                    "columnNum": 3,
+                    "columns": [
+                        {
+                            "columnIdx": "767608e6b3b19c1f6e31f91c2f339d5f",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#ffffff",
+                                        "height": 10
+                                    },
+                                    "elmIdx": "c5576737846130c32a495db30b70e15cce53",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.33333334
+                        },
+                        {
+                            "columnIdx": "5aebdf8ebcd469ff541339fe771592f7",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "alt": "",
+                                        "aspectRatio": 1.1278195,
+                                        "href": "",
+                                        "mediumId": "682e4528f2e6441121a136ff",
+                                        "mimetype": "",
+                                        "paddingBottom": 20,
+                                        "paddingLeft": 40,
+                                        "paddingRight": 40,
+                                        "paddingTop": 40,
+                                        "src": "replace me"
+                                    },
+                                    "elmIdx": "9530c119c42edacef0bc99998b2203ab3c44",
+                                    "type": "IMAGE"
+                                }
+                            ],
+                            "size": 0.33333334
+                        },
+                        {
+                            "columnIdx": "c7d1b2c294012648a880986ee3f9a643",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#ffffff",
+                                        "height": 10
+                                    },
+                                    "elmIdx": "37d80fdc94568fece0593ea577e923ddc029",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 0.33333334
+                        }
+                    ],
+                    "paddingBottom": 0,
+                    "paddingTop": 0,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#b2382e"
+                },
+                "index": "55157032d2a2347806937cd6",
+                "title": "RxthtlU9b/9R",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#ffffff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "1c8ea6e50808038b686efa8d3cfb6afa",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 5,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:center;\"\u003e\u003cspan style=\"background-color:rgb(255,255,255);color:rgb(85,81,96);\"\u003eFriday, April 25, 2025\u003c/span\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "d0fab9854acc851d45511e1eab3240261cf8",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 5,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:16px;line-height:30px;margin-bottom:0px;margin-top:0px;text-align:center;\"\u003e\u003cspan style=\"color:rgb(25,19,57);font-size:20px;font-weight:bold;\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eImportant Company Update\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "e2150847e985d82472fb7e2a0518677ab9d6",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "align": "left",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 40,
+                                        "paddingRight": 40,
+                                        "paddingTop": 5,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:16px;line-height:24px;margin-bottom:0px;margin-top:0px;text-align:left;\" lang=\"en\" dir=\"ltr\"\u003e\u003cspan style=\"color:rgb(85,81,96);\"\u003e\u003cspan lang=\"en\" dir=\"ltr\"\u003eUse this template to let employee know about an urgent issue that requires their attention. Try not to use this template too frequently with the same audience or it may lose some of the urgency it gains by standing out from other emails.\u003c/span\u003e\u003c/span\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "e6dc91baf273bbf62d03cd74a3dff5d5fa5a",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "align": "center",
+                                        "backgroundColor": "#b2382e",
+                                        "borderRadius": 8,
+                                        "color": "#ffffff",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "16px",
+                                        "fontStyle": "normal",
+                                        "fontWeight": "bold",
+                                        "href": "",
+                                        "innerHorizontalPadding": 50,
+                                        "innerVerticalPadding": 12,
+                                        "lineHeight": "16px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10,
+                                        "text": "Read more",
+                                        "textDecoration": "none"
+                                    },
+                                    "elmIdx": "02be931349341a6a945d3b85b4fb024cbcdc",
+                                    "type": "BUTTON"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 0,
+                    "paddingTop": 10,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#b2382e"
+                },
+                "index": "3c9e5651353cf1296941bc1c",
+                "title": "naaUxrn8dqtR",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#ffffff",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "c004ed1ea5871d17402d6684fd0c023c",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#CCCCCC",
+                                        "height": 3
+                                    },
+                                    "elmIdx": "cb86326dc9dccaa82f73637665d682dd57f1",
+                                    "type": "SPACER"
+                                },
+                                {
+                                    "content": {
+                                        "align": "center",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "18px",
+                                        "lineHeight": "26px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 30,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:18px;line-height:25px;text-align:center;\"\u003e\u003cspan style=\"font-weight:bold;\"\u003e#yourcompanyhashtag\u003c/span\u003e\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "227681ab2d3742a27998cb6808b50a00b5c1",
+                                    "type": "PARAGRAPH"
+                                },
+                                {
+                                    "content": {
+                                        "align": "center",
+                                        "iconSize": 28,
+                                        "iconVersionColor": true,
+                                        "icons": [
+                                            {
+                                                "active": true,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-instagram--alrg01W.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-instagram-CILfxEv9.png"
+                                                },
+                                                "title": "instagram"
+                                            },
+                                            {
+                                                "active": true,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-X-CT3bK6lN.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-X-BTTRxdP5.png"
+                                                },
+                                                "title": "X"
+                                            },
+                                            {
+                                                "active": true,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-youtube-BlAiovTO.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-youtube-C0svahPr.png"
+                                                },
+                                                "title": "youtube"
+                                            },
+                                            {
+                                                "active": true,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-facebook-CL8H2fYN.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-facebook-BAK0F8ZF.png"
+                                                },
+                                                "title": "facebook"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-email-BD3a09Rt.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-email-M87IgDKt.png"
+                                                },
+                                                "title": "email"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-flickr-BRHKwb6s.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-flickr-l7wtsqDX.png"
+                                                },
+                                                "title": "flickr"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-glassdoor-DtnoqTBu.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-glassdoor-uIa6uQPK.png"
+                                                },
+                                                "title": "glassdoor"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-linkedin-DwdZtm_K.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-linkedin-CNuPldgD.png"
+                                                },
+                                                "title": "linkedin"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-pinterest-CtxpEfjk.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-pinterest-DUgcy8uo.png"
+                                                },
+                                                "title": "pinterest"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-slack-o_LMugVx.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-slack-0zF0WAnE.png"
+                                                },
+                                                "title": "slack"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-vimeo-C9t04BiF.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-vimeo-B95zZ-V1.png"
+                                                },
+                                                "title": "vimeo"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-website-BMnJy7iO.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-website-DDcna3Ia.png"
+                                                },
+                                                "title": "website"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-wechat-C7n-8zqX.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-wechat-pzMWDRAw.png"
+                                                },
+                                                "title": "wechat"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-weibo-DFAHWupe.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-weibo-ufhvyOAe.png"
+                                                },
+                                                "title": "weibo"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-workplace-CNtjHFPV.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-workplace-Cf-ynGPO.png"
+                                                },
+                                                "title": "workplace"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-yammer-CSrrlnBj.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-yammer-2eZV1N2Z.png"
+                                                },
+                                                "title": "yammer"
+                                            },
+                                            {
+                                                "active": false,
+                                                "href": "",
+                                                "src": {
+                                                    "bw": "https://us1.staffbasestatic.com/studio/assets/icon-social-microsoft-teams-Dhn7zx1t.png",
+                                                    "color": "https://us1.staffbasestatic.com/studio/assets/icon-social-color-microsoft-teams-CpjqFxAr.png"
+                                                },
+                                                "title": "microsoft-teams"
+                                            }
+                                        ],
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 10
+                                    },
+                                    "elmIdx": "cf0c2c4283ce1382afc3bdde3f259ed2d6ba",
+                                    "type": "SOCIAL"
+                                },
+                                {
+                                    "content": {
+                                        "align": "center",
+                                        "fontFamily": "Arial",
+                                        "fontSize": "12px",
+                                        "lineHeight": "24px",
+                                        "paddingBottom": 10,
+                                        "paddingLeft": 10,
+                                        "paddingRight": 10,
+                                        "paddingTop": 5,
+                                        "textMarkupValue": "\u003cp style=\"font-family:Arial;font-size:12px;line-height:24px;text-align:center;\"\u003eThis is an internal email and not intended for external distribution. Please do not forward.\u003c/p\u003e"
+                                    },
+                                    "elmIdx": "74f59f7269efe8fec59d848145bde4901ebc",
+                                    "type": "PARAGRAPH"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 30,
+                    "paddingTop": 20,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#b2382e"
+                },
+                "index": "2497b1cd0a7332610a4b1a47",
+                "title": "Social links",
+                "type": "CUSTOMIZED_BLOCK"
+            },
+            {
+                "content": {
+                    "backgroundColor": "#b2382e",
+                    "columnNum": 1,
+                    "columns": [
+                        {
+                            "columnIdx": "68455abf8c77730a1d817cf1fee7a16d",
+                            "columnItems": [
+                                {
+                                    "content": {
+                                        "containerBackgroundColor": "#b2382e",
+                                        "height": 10
+                                    },
+                                    "elmIdx": "bfeb80ff2cbf614103e30e5ad539f77a7f41",
+                                    "type": "SPACER"
+                                }
+                            ],
+                            "size": 1
+                        }
+                    ],
+                    "paddingBottom": 30,
+                    "paddingTop": 30,
+                    "structureLocked": false,
+                    "wrapperBackgroundColor": "#b2382e"
+                },
+                "index": "7d4886b12507a1a1a4d76188",
+                "title": "RaEhvTVvkvx7",
+                "type": "CUSTOMIZED_BLOCK"
+            }
+        ]
+    }
+}
