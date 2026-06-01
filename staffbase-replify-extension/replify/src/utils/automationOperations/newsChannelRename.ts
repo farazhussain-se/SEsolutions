@@ -129,17 +129,29 @@ export const listAllChannels = async (
 
 interface RawChannelDetail {
   id?: string;
-  config?: { localization?: { en_US?: { title?: string; description?: string } } };
+  /**
+   * The full `config` object — Staffbase will 403 if we POST back a truncated
+   * copy, so we round-trip the whole thing. Treated as opaque except for the
+   * localization keys we mutate.
+   */
+  config?: Record<string, unknown> & {
+    localization?: { en_US?: { title?: string; description?: string } };
+  };
   localization?: { en_US?: { title?: string; description?: string } };
   links?: { update?: { method?: string; href?: string } };
   title?: string;
   description?: string;
 }
 
+/** Like ChannelSummary but with the full config object so we can round-trip. */
+interface ChannelDetail extends ChannelSummary {
+  fullConfig: Record<string, unknown>;
+}
+
 const getChannelDetail = async (
   channelId: string,
   ctx: OperationContext,
-): Promise<ChannelSummary> => {
+): Promise<ChannelDetail> => {
   const url = buildApiUrl(`/api/channels/${channelId}`, ctx.apiDomain);
   const res = await fetch(url, { headers: { Authorization: `Basic ${ctx.apiToken}` } });
   if (!res.ok) throw new Error(`GET /channels/${channelId} -> ${res.status}`);
@@ -151,6 +163,7 @@ const getChannelDetail = async (
     description: loc?.description || c.description || '',
     updateMethod: c.links?.update?.method,
     updateHref: c.links?.update?.href,
+    fullConfig: (c.config as Record<string, unknown>) ?? {},
   };
 };
 
@@ -219,37 +232,68 @@ export const planChannelRenames = async (
 
 /* ── A4: apply renames ────────────────────────────────────────────────────── */
 
+/**
+ * Resolve the channel update URL.
+ *
+ * `links.update.href` may come back as:
+ *   - absolute              "https://tenant.../api/installations/{id}"
+ *   - api-rooted             "/api/installations/{id}"
+ *   - api-relative (Flask)  "/installations/{id}"   ← from sb_get(base+/api, …)
+ *
+ * The last case is the one that bit us: buildApiUrl drops the request through
+ * without the `/api` prefix, the call lands on a public endpoint that doesn't
+ * accept updates, and Staffbase 403s. Always prepend `/api` if missing.
+ */
+const resolveUpdateUrl = (
+  channelId: string,
+  detail: ChannelDetail,
+  domain: string,
+): string => {
+  const href = detail.updateHref;
+  if (!href) return buildApiUrl(`/api/installations/${channelId}`, domain);
+  if (href.startsWith('http')) return href;
+  const path = href.startsWith('/api/') ? href : `/api${href.startsWith('/') ? '' : '/'}${href}`;
+  return buildApiUrl(path, domain);
+};
+
 const applyChannelRename = async (
   plan: ChannelRenamePlan,
   ctx: OperationContext,
 ): Promise<void> => {
   // News API exposes channel updates via the installation's `links.update`.
-  // Fetch the channel detail to discover the method + href Staffbase wants.
+  // We GET the channel first so we can both discover the URL *and* round-trip
+  // the entire `config` object — Staffbase rejects (403) updates that drop
+  // sibling fields like accessorIDs or contentType.
   const detail = await getChannelDetail(plan.channelId, ctx);
   const method = (detail.updateMethod || 'POST').toUpperCase();
-  const targetUrl = detail.updateHref
-    ? // href may be absolute or path-relative
-      detail.updateHref.startsWith('http')
-      ? detail.updateHref
-      : buildApiUrl(detail.updateHref, ctx.apiDomain)
-    : buildApiUrl(`/api/installations/${plan.channelId}`, ctx.apiDomain);
+  const targetUrl = resolveUpdateUrl(plan.channelId, detail, ctx.apiDomain);
 
-  const body = {
-    config: {
-      localization: {
-        en_US: { title: plan.newTitle, description: plan.newDescription },
-      },
+  // Mutate ONLY the localization keys; preserve everything else verbatim.
+  const cfg: Record<string, unknown> = { ...(detail.fullConfig ?? {}) };
+  const localization = (cfg.localization as Record<string, Record<string, unknown>> | undefined) ?? {};
+  const enUs = (localization.en_US as Record<string, unknown> | undefined) ?? {};
+  cfg.localization = {
+    ...localization,
+    en_US: {
+      ...enUs,
+      title: plan.newTitle,
+      description: plan.newDescription || (enUs.description as string | undefined) || '',
     },
   };
+
+  ctx.onProgress?.(`→ ${method} ${targetUrl}`);
   const res = await fetch(targetUrl, {
     method,
     headers: {
       Authorization: `Basic ${ctx.apiToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ config: cfg }),
   });
-  if (!res.ok) throw new Error(`${method} ${targetUrl} -> ${res.status}`);
+  if (!res.ok) {
+    const responseText = await res.text().catch(() => '');
+    throw new Error(`${method} ${targetUrl} -> ${res.status}${responseText ? ` :: ${responseText.slice(0, 140)}` : ''}`);
+  }
 };
 
 /**
