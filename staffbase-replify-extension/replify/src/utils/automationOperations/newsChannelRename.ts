@@ -169,14 +169,55 @@ const getChannelDetail = async (
 
 /* ── A3: Gemini mapping ───────────────────────────────────────────────────── */
 
+/**
+ * Build the Gemini prompt for channel rename planning.
+ *
+ * Two modes:
+ *   - industryKey === 'auto': Gemini infers from prospectName + prospectNews
+ *     and produces fully bespoke channel names (no template constraints).
+ *   - otherwise: prompt is anchored to the matching NEWS_INDUSTRIES template
+ *     so the rename stays on-brand for that vertical. Prospect context, if
+ *     provided, sharpens the choices (e.g. "Patient Safety & Quality" might
+ *     become "Patient Safety @ Stryker").
+ */
 const buildRenamePrompt = (
   industryKey: string,
   channels: ChannelSummary[],
+  prospect?: { name?: string; news?: string },
 ): string => {
+  const prospectBlock = prospect?.name
+    ? [
+        `Prospect context — use this to flavor the new channel names:`,
+        `  Prospect: ${prospect.name}`,
+        prospect.news ? `  Recent news / industry context:\n${prospect.news.slice(0, 1200)}` : '',
+        '',
+      ].join('\n')
+    : '';
+
+  if (industryKey === 'auto') {
+    return [
+      `You are renaming a Staffbase customer's existing news channels to fit a demo for the prospect below. Pick channel names that read like the prospect's own internal newsroom — they should sound native to that company's industry and brand voice.`,
+      ``,
+      prospectBlock,
+      `Existing channels:`,
+      JSON.stringify(channels.map((c) => ({ channelId: c.id, currentTitle: c.title, currentDescription: c.description })), null, 2),
+      ``,
+      `Rules:`,
+      `- Propose ONE new title + description per channel listed above.`,
+      `- Titles are 2-5 words, no "channel" / "feed" suffix.`,
+      `- Descriptions are 1 sentence describing the channel's purpose for this prospect.`,
+      `- Skip the channel (omit it) only if no rename would be appropriate.`,
+      ``,
+      `Respond with ONLY a JSON array, no prose:`,
+      `[{"channelId":"...","newTitle":"...","newDescription":"..."}]`,
+    ].join('\n');
+  }
+
   const industry = NEWS_INDUSTRIES[industryKey] ?? NEWS_INDUSTRIES.generic;
   return [
-    `You are renaming a Staffbase customer's existing news channels to fit the "${industry.label}" industry demo.`,
+    `You are renaming a Staffbase customer's existing news channels to fit the "${industry.label}" industry demo${prospect?.name ? ` for the prospect "${prospect.name}"` : ''}.`,
     ``,
+    prospectBlock,
     `Available industry-appropriate channel templates (pick one per existing channel; do not invent new ones):`,
     industry.channels.map(([t, d], i) => `  ${i + 1}. ${t} — ${d}`).join('\n'),
     ``,
@@ -187,7 +228,7 @@ const buildRenamePrompt = (
     `- Each existing channel maps to ONE template name from the list above.`,
     `- Prefer semantic similarity (e.g. an existing "Updates from Plant Floor" → "Production Updates").`,
     `- Each template may be used at most ONCE. If a channel has no good match, omit it (do not duplicate templates).`,
-    `- Copy the template's description verbatim into newDescription.`,
+    `- Copy the template's description verbatim into newDescription unless prospect context suggests a small tweak.`,
     ``,
     `Respond with ONLY a JSON array, no prose:`,
     `[{"channelId":"...","newTitle":"...","newDescription":"..."}]`,
@@ -201,16 +242,21 @@ interface GeminiResponse {
 /**
  * Single Gemini call returning the rename plan. The user can edit the plan in
  * the UI before applying.
+ *
+ * Optional `prospect.{name,news}` is the Replify intelligence already pulled
+ * from `fetchProspectIntelligence` — passing it makes the rename feel native
+ * to the company being demoed rather than just generically industry-bucketed.
  */
 export const planChannelRenames = async (
-  args: { industryKey: string; channels: ChannelSummary[] },
+  args: { industryKey: string; channels: ChannelSummary[]; prospect?: { name?: string; news?: string } },
   ctx: OperationContext,
 ): Promise<ChannelRenamePlan[]> => {
   const { apiToken, apiDomain, onProgress } = ctx;
   if (args.channels.length === 0) return [];
 
-  onProgress?.(`🤖 Gemini matching ${args.channels.length} channel(s) → "${args.industryKey}" templates…`);
-  const prompt = buildRenamePrompt(args.industryKey, args.channels);
+  const label = args.industryKey === 'auto' ? 'auto-infer from prospect' : `"${args.industryKey}" templates`;
+  onProgress?.(`🤖 Gemini matching ${args.channels.length} channel(s) → ${label}…`);
+  const prompt = buildRenamePrompt(args.industryKey, args.channels, args.prospect);
   const response = await callGeminiProxy<GeminiResponse>(
     {
       contents: [{ role: 'user', parts: [{ text: prompt }] }],

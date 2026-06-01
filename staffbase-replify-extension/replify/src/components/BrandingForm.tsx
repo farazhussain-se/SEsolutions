@@ -15,6 +15,8 @@ import {
   labelStyle,
 } from "../styles";
 import { colors } from "../styles/colors";
+// 📰 Bolt-in: industry templates for the news-channel-rename sub-option.
+import { newsIndustryKeys } from "../utils/automationOperations/industryTemplates";
 import SavedProspects, { type Prospect } from "./SavedProspects";
 import MultiBranding, { type GroupBranding } from "./MultiBranding";
 
@@ -172,6 +174,11 @@ interface BrandingFormProps {
   aiNewChannelName: string;
   setAiNewChannelName: (v: string) => void;
   includeBlogScrape: boolean;
+  // 📰 Bolt-in: rename news channels as part of the Create Branding flow
+  includeChannelRename: boolean;
+  setIncludeChannelRename: (v: boolean) => void;
+  channelRenameIndustry: string;
+  setChannelRenameIndustry: (v: string) => void;
   setIncludeBlogScrape: (v: boolean) => void;
   blogUrl: string;
   setBlogUrl: (v: string) => void;
@@ -287,6 +294,10 @@ export default function BrandingForm({
   aiNewChannelName,
   setAiNewChannelName,
   includeBlogScrape,
+  includeChannelRename,
+  setIncludeChannelRename,
+  channelRenameIndustry,
+  setChannelRenameIndustry,
   setIncludeBlogScrape,
   blogUrl,
   setBlogUrl,
@@ -1298,6 +1309,41 @@ export default function BrandingForm({
                 )}
                 <p style={{ margin: 0, fontSize: 11, color: colors.textMuted, lineHeight: 1.4 }}>
                   Runs last. Replify will open the blog tab and show instructions in the side panel.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* 📰 Rename news channels — bolt-in port of staffbase-news-tool. Uses
+              the prospect intelligence Gemini already pulls to contextualize
+              the new channel names. Asks for confirmation before writing. */}
+          <div>
+            <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                style={checkboxStyle}
+                checked={includeChannelRename}
+                onChange={(e) => setIncludeChannelRename(e.target.checked)}
+              />
+              Rename news channels
+            </label>
+            {includeChannelRename && (
+              <div style={{ marginTop: 6 }}>
+                <label style={{ ...labelStyle, fontSize: 11 }}>Industry style</label>
+                <select
+                  style={{ ...inputStyle, padding: "4px 6px", marginBottom: 6, width: "100%" }}
+                  value={channelRenameIndustry}
+                  onChange={(e) => setChannelRenameIndustry(e.target.value)}
+                >
+                  <option value="auto">Auto (infer from prospect)</option>
+                  {newsIndustryKeys().map((i) => (
+                    <option key={i.key} value={i.key}>{i.label}</option>
+                  ))}
+                </select>
+                <p style={{ margin: 0, fontSize: 11, color: colors.textMuted, lineHeight: 1.4 }}>
+                  Gemini will propose new titles using the prospect's name and
+                  the news it pulled. You'll get a confirmation preview before
+                  any channel is renamed.
                 </p>
               </div>
             )}

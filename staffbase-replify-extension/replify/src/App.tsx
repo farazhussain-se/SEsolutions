@@ -79,6 +79,11 @@ import AutomationForm from "./components/AutomationForm";
 // newsChannelRename}.ts for the ops + Staffbase API quirks.
 import PersonasForm from "./components/PersonasForm";
 import NewsChannelRenameForm from "./components/NewsChannelRenameForm";
+import {
+  listAllChannels as renameListChannels,
+  planChannelRenames as renamePlanChannels,
+  renameChannels as renameApplyChannels,
+} from "./utils/automationOperations/newsChannelRename";
 import type { AutomationUser, AutomationRunOptions, AutomationProgressData } from "./components/AutomationForm";
 import AskGeminiOverlay from "./components/AskGeminiOverlay";
 import CopierForm from "./components/CopierForm";
@@ -326,6 +331,9 @@ function App() {
   const [aiNewChannelName, setAiNewChannelName] = useState(DEFAULT_NEW_CHANNEL_NAME);
   // Blog scraping sub-option
   const [includeBlogScrape, setIncludeBlogScrape] = useState(false);
+  // 📰 Bolt-in: rename news channels as part of Create Branding
+  const [includeChannelRename, setIncludeChannelRename] = useState(false);
+  const [channelRenameIndustry, setChannelRenameIndustry] = useState<string>("auto");
   const [blogUrl, setBlogUrl] = useState("");
   const [blogArticleCount, setBlogArticleCount] = useState(3);
   const [blogChannelId, setBlogChannelId] = useState(CREATE_NEW_CHANNEL_VALUE);
@@ -2232,6 +2240,54 @@ function App() {
         setResponse(successMessage);
       }
 
+      /* ---------- 1️⃣b 📰 Rename news channels (bolt-in, prospect-aware) ---
+         Runs between CSS and articles. Uses the prospect intelligence
+         (prospectName + prospectNews) Gemini already pulled to flavor the
+         new channel names. Pops a window.confirm() preview before writing,
+         matching the existing approval pattern used for blog/LinkedIn. */
+
+      if (includeChannelRename) {
+        setResponse((p) => p + "\nListing channels for rename…");
+        const renameCtx = {
+          apiToken: apiToken.trim(),
+          apiDomain,
+          onProgress: (msg: string) => setResponse((p) => p + `\n${msg}`),
+        };
+        const allChannels = await renameListChannels(renameCtx);
+        if (allChannels.length === 0) {
+          setResponse((p) => p + "\n⚠️ No channels found to rename — skipping.");
+        } else {
+          const plan = await renamePlanChannels(
+            {
+              industryKey: channelRenameIndustry,
+              channels: allChannels,
+              prospect: { name: prospectName, news: prospectNews },
+            },
+            renameCtx,
+          );
+          if (plan.length === 0) {
+            setResponse((p) => p + "\n⚠️ Gemini returned no rename suggestions — skipping.");
+          } else {
+            const previewLines = plan.slice(0, 5).map((p) => `  ${p.oldTitle} → ${p.newTitle}`).join("\n");
+            const overflow = plan.length > 5 ? `\n…and ${plan.length - 5} more` : "";
+            const ok = window.confirm(
+              `Replify will rename ${plan.length} news channel(s) on this tenant.\n\n` +
+              `Preview (first 5):\n${previewLines}${overflow}\n\n` +
+              `Originals are NOT backed up. Continue?`,
+            );
+            if (!ok) {
+              setResponse((p) => p + "\n⏭️  Channel rename skipped by user.");
+            } else {
+              const renameReport = await renameApplyChannels({ plan }, renameCtx);
+              setResponse((p) =>
+                p + `\n✅ Renamed ${renameReport.channelsRenamed} channel(s)` +
+                (renameReport.channelsFailed > 0 ? ` (${renameReport.channelsFailed} failed)` : "")
+              );
+            }
+          }
+        }
+      }
+
       /* ---------- 2️⃣ AI-generated articles (runs first — same tab context) */
 
       if (includeAiArticles) {
@@ -3853,6 +3909,10 @@ function App() {
       aiNewChannelName={aiNewChannelName}
       setAiNewChannelName={setAiNewChannelName}
       includeBlogScrape={includeBlogScrape}
+      includeChannelRename={includeChannelRename}
+      setIncludeChannelRename={setIncludeChannelRename}
+      channelRenameIndustry={channelRenameIndustry}
+      setChannelRenameIndustry={setChannelRenameIndustry}
       setIncludeBlogScrape={setIncludeBlogScrape}
       blogUrl={blogUrl}
       setBlogUrl={setBlogUrl}
