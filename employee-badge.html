@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Employee Badge</title>
+    <title>Viking Group — Employee Badge</title>
 
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -35,27 +35,28 @@
    CONFIGURE EMPLOYEE DATA HERE
 ───────────────────────────────────────── */
 const EMPLOYEE = {
-    id:          "EMP-00001",
-    firstName:   "Alex",
-    lastName:    "Morgan",
-    title:       "Senior Technician",
-    department:  "Operations",
-    site:        "Main Campus",
-    shift:       "08:00 – 17:00",
+    company:     "Viking Group Inc.",
+    id:          "VGI-04821",
+    firstName:   "Tyler",
+    lastName:    "DeVries",
+    title:       "Shop Floor Associate",
+    department:  "Sprinkler Assembly",
+    site:        "Grand Rapids, MI",
+    shift:       "06:00 – 14:30",
     expires:     "2027-12-31",
     ppeStatus:   "Compliant",
     safetyHours: 1240,
     certifications: [
-        { label: "OSHA 10",        status: "active"   },
-        { label: "First Aid / CPR", status: "active"   },
-        { label: "Forklift Op.",   status: "active"   },
-        { label: "Fire Safety",    status: "expiring" },
+        { label: "OSHA 10",          status: "active"   },
+        { label: "Forklift Op.",     status: "active"   },
+        { label: "Lockout / Tagout", status: "active"   },
+        { label: "Hot Work Permit",  status: "expiring" },
     ],
     zones: [
-        { name: "Main Floor",      granted: true  },
-        { name: "Server Room",     granted: true  },
-        { name: "Restricted Lab",  granted: false },
-        { name: "Loading Dock",    granted: true  },
+        { name: "Sprinkler Assembly", granted: true  },
+        { name: "Valve Machining",    granted: true  },
+        { name: "SFFF Foam Lab",      granted: false },
+        { name: "Loading Dock",       granted: true  },
     ]
 };
 
@@ -98,7 +99,7 @@ const Badge = () => {
         if (qrRef.current && !qrDone) {
             qrRef.current.innerHTML = "";
             new QRCode(qrRef.current, {
-                text: `BADGE|ID:${EMPLOYEE.id}|${EMPLOYEE.firstName}+${EMPLOYEE.lastName}|SITE:${EMPLOYEE.site}`,
+                text: `VGI|ID:${EMPLOYEE.id}|${EMPLOYEE.firstName}+${EMPLOYEE.lastName}|SITE:${EMPLOYEE.site}`,
                 width: 116, height: 116,
                 colorDark: C.dark, colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
@@ -159,7 +160,7 @@ const Badge = () => {
                             letterSpacing: "0.06em",
                             marginBottom: 7
                         }}>
-                            EMPLOYEE BADGE
+                            {EMPLOYEE.company}
                         </div>
 
                         <p style={{ fontSize: 18, fontWeight: 800, color: C.text, lineHeight: 1.1, marginBottom: 3 }}>
