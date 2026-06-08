@@ -23,6 +23,7 @@
  */
 
 import React, { useEffect, useState } from "react";
+import { HiSparkles } from "react-icons/hi";
 import {
   brandingButtonStyle,
   inputStyle,
@@ -42,6 +43,14 @@ import type {
   PageEditDiff,
   ApplyReport,
 } from "../utils/automationOperations/pageTextEditor";
+// Reuse the same intelligence fetch that BrandingForm's sparkle uses, so
+// "Research now" in EditPagesForm produces the same news shape we accept
+// from the Branding-seed path.
+import { fetchProspectIntelligence } from "../utils/aiUtils";
+// Saved prospects only store BRANDING fields (colors / logo / padding) —
+// not news. Picking a saved prospect populates the name but leaves news
+// empty; user can click Research to enrich.
+import type { Prospect } from "./SavedProspects";
 
 type Tone = "professional" | "friendly" | "executive";
 
@@ -52,6 +61,8 @@ interface EditPagesFormProps {
   /** Seeded from App.tsx's prospect state if user already worked the Branding flow. */
   prospectNameSeed?: string;
   prospectNewsSeed?: string;
+  /** Saved prospects from chrome.storage / localStorage (via useSavedProspects). */
+  savedProspects?: Prospect[];
 }
 
 const selectStyle: React.CSSProperties = { ...inputStyle, width: "100%", padding: "8px" };
@@ -68,9 +79,26 @@ export default function EditPagesForm({
   onLog,
   prospectNameSeed,
   prospectNewsSeed,
+  savedProspects = [],
 }: EditPagesFormProps) {
   /* ── State ─────────────────────────────────────────────────────────── */
   const [prospect, setProspect] = useState<string>(prospectNameSeed ?? "");
+  /**
+   * Active prospect news that flows into the Gemini rewrite prompt. Three
+   * paths populate this:
+   *   - Branding seed: copied from prospectNewsSeed on mount or via the
+   *     "Use Branding prospect" button.
+   *   - Saved prospect: stays empty (saved prospects don't store news),
+   *     but the prospect name still drives the Gemini prompt — Gemini
+   *     just gets less context.
+   *   - Research with Gemini: this form calls fetchProspectIntelligence
+   *     directly and fills news + sets the input.
+   */
+  const [prospectNews, setProspectNews] = useState<string>(prospectNewsSeed ?? "");
+  const [prospectSource, setProspectSource] = useState<"branding" | "saved" | "research" | "manual">(
+    prospectNewsSeed ? "branding" : prospectNameSeed ? "branding" : "manual",
+  );
+  const [researchBusy, setResearchBusy] = useState(false);
   const [tone, setTone] = useState<Tone>("professional");
   const [pages, setPages] = useState<CommonPage[]>([]);
   const [discoverBusy, setDiscoverBusy] = useState(false);
@@ -124,6 +152,66 @@ export default function EditPagesForm({
     });
   };
 
+  /** Pull the Branding-flow prospect + cached news into local state. */
+  const handleUseBranding = () => {
+    if (!prospectNameSeed) {
+      onLog("⚠️ No prospect set in the Branding flow yet.");
+      return;
+    }
+    setProspect(prospectNameSeed);
+    setProspectNews(prospectNewsSeed ?? "");
+    setProspectSource("branding");
+    onLog(
+      prospectNewsSeed
+        ? `📥 Using "${prospectNameSeed}" from Branding (news loaded, ${prospectNewsSeed.length} chars).`
+        : `📥 Using "${prospectNameSeed}" from Branding (no news cached — click Research to enrich).`,
+    );
+  };
+
+  /** Pick a saved prospect — fills name only, news must be fetched separately. */
+  const handlePickSaved = (prospectId: string) => {
+    if (!prospectId) return;
+    const found = savedProspects.find((p) => p.id === prospectId);
+    if (!found?.prospectName) {
+      onLog(`⚠️ Couldn't find saved prospect "${prospectId}".`);
+      return;
+    }
+    setProspect(found.prospectName);
+    setProspectNews("");
+    setProspectSource("saved");
+    onLog(`📥 Loaded saved prospect "${found.prospectName}". Click Research to add news context.`);
+  };
+
+  /**
+   * Call fetchProspectIntelligence with whatever's currently in the
+   * prospect input. Mirrors BrandingForm's sparkle button. News is loaded
+   * into local state and flows into the Gemini rewrite prompt.
+   */
+  const handleResearchProspect = async () => {
+    const trimmed = prospect.trim();
+    if (trimmed.length < 2) {
+      onLog("⚠️ Enter a prospect name first (>= 2 chars).");
+      return;
+    }
+    setResearchBusy(true);
+    try {
+      onLog(`🔎 Researching "${trimmed}" with Gemini…`);
+      const intel = await fetchProspectIntelligence(trimmed, { apiToken, apiDomain });
+      const news = (intel.news || "").trim();
+      setProspectNews(news);
+      setProspectSource("research");
+      onLog(
+        news
+          ? `✨ Research complete — ${news.length} chars of context loaded.`
+          : `⚠️ Research returned no news for "${trimmed}". Proceeding with name only.`,
+      );
+    } catch (err) {
+      onLog(`❌ Research failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setResearchBusy(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (selectedPageIds.size === 0) {
       onLog("⚠️ Pick at least one page first.");
@@ -138,7 +226,11 @@ export default function EditPagesForm({
       const result = await buildEditDiffsForPages(
         {
           pageIds: Array.from(selectedPageIds),
-          prospect: prospect ? { name: prospect, news: prospectNewsSeed } : undefined,
+          // Use the LOCAL prospectNews (populated by branding-seed copy /
+          // saved-prospect pick / research), not the seed prop directly.
+          // The seed is just the starting value; the user may have refreshed
+          // research or switched to a different prospect since.
+          prospect: prospect ? { name: prospect, news: prospectNews || undefined } : undefined,
           tone,
         },
         ctx,
@@ -194,24 +286,159 @@ export default function EditPagesForm({
         prospect. Layout, images, widgets, and template variables stay untouched.
       </p>
 
-      {/* Prospect + tone */}
+      {/* Prospect + tone — three fill mechanisms:
+            1. Use the prospect currently being worked on in Branding (has news)
+            2. Pick from saved prospects (name only — saved prospects don't cache news)
+            3. Research the typed name with Gemini (calls fetchProspectIntelligence)
+          The news context flows into the Gemini rewrite prompt. Without news,
+          rewrites are less tailored but still work using the name alone. */}
       <div style={panelStyle}>
         <label style={labelStyle}>Prospect (company name)</label>
-        <input
-          type="text"
-          style={{ ...inputStyle, width: "100%" }}
-          value={prospect}
-          onChange={(e) => setProspect(e.target.value)}
-          placeholder="e.g. Stryker, Sun Life, Cummins"
-          disabled={generateBusy || applyBusy}
-        />
+        <div style={{ display: "flex", gap: 6, alignItems: "stretch" }}>
+          <input
+            type="text"
+            style={{ ...inputStyle, flex: 1 }}
+            value={prospect}
+            onChange={(e) => {
+              setProspect(e.target.value);
+              setProspectSource("manual");
+            }}
+            placeholder="e.g. Stryker, Sun Life, Cummins"
+            disabled={generateBusy || applyBusy || researchBusy}
+          />
+          <button
+            type="button"
+            onClick={handleResearchProspect}
+            disabled={generateBusy || applyBusy || researchBusy || prospect.trim().length < 2}
+            title="Call fetchProspectIntelligence to load news context"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              padding: "0 12px",
+              borderRadius: 4,
+              border: "none",
+              background: prospect.trim().length < 2 || researchBusy ? colors.uiGray : colors.primary,
+              color: colors.textOnPrimary,
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: prospect.trim().length < 2 || researchBusy ? "not-allowed" : "pointer",
+            }}
+          >
+            <HiSparkles /> {researchBusy ? "…" : "Research"}
+          </button>
+        </div>
+
+        {/* Quick-fill row: Branding seed + saved-prospects picker */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8, alignItems: "center" }}>
+          <button
+            type="button"
+            onClick={handleUseBranding}
+            disabled={!prospectNameSeed || generateBusy || applyBusy || researchBusy}
+            title={
+              prospectNameSeed
+                ? `Use "${prospectNameSeed}" from the Branding flow`
+                : "No Branding prospect set yet"
+            }
+            style={{
+              fontSize: 11,
+              padding: "4px 10px",
+              borderRadius: 4,
+              border: `1px solid ${prospectNameSeed ? colors.primary : colors.border}`,
+              background: prospectSource === "branding" ? colors.primaryOverlay20 : "transparent",
+              color: prospectNameSeed ? colors.primary : colors.textMuted,
+              cursor: prospectNameSeed ? "pointer" : "not-allowed",
+              fontWeight: prospectSource === "branding" ? 600 : 400,
+            }}
+          >
+            From Branding{prospectNameSeed ? `: ${prospectNameSeed}` : ""}
+          </button>
+
+          {savedProspects.length > 0 && (
+            <select
+              onChange={(e) => {
+                handlePickSaved(e.target.value);
+                e.target.value = ""; // reset so the same one can be re-picked
+              }}
+              disabled={generateBusy || applyBusy || researchBusy}
+              defaultValue=""
+              style={{
+                fontSize: 11,
+                padding: "4px 8px",
+                borderRadius: 4,
+                border: `1px solid ${colors.border}`,
+                background: "transparent",
+                cursor: "pointer",
+                minHeight: 28,
+              }}
+            >
+              <option value="">Saved prospects ({savedProspects.length}) ▼</option>
+              {savedProspects.map((p) => (
+                <option key={p.id ?? p.prospectName} value={p.id ?? ""}>
+                  {p.prospectName}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {/* News status indicator */}
+        <div style={{ marginTop: 8, fontSize: 11 }}>
+          {prospectNews ? (
+            <div style={{ color: colors.successText, display: "flex", alignItems: "center", gap: 6 }}>
+              <span>✓</span>
+              <span>
+                News loaded ({prospectNews.length} chars
+                {prospectSource === "branding" ? " · from Branding" : prospectSource === "research" ? " · from Research" : ""})
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setProspectNews("");
+                  setProspectSource("manual");
+                }}
+                style={{
+                  fontSize: 10,
+                  padding: "1px 6px",
+                  background: "transparent",
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: 3,
+                  cursor: "pointer",
+                  marginLeft: "auto",
+                  color: colors.textMuted,
+                }}
+              >
+                Clear
+              </button>
+            </div>
+          ) : prospect.trim() ? (
+            <div style={{ color: colors.warningText }}>
+              ⚠ No news context loaded — Gemini will use the name alone. Click Research to enrich.
+            </div>
+          ) : (
+            <div style={{ color: colors.textMuted }}>
+              Enter a prospect or pick one above; news context is optional but improves rewrites.
+            </div>
+          )}
+        </div>
+
+        {prospectNews && (
+          <details style={{ marginTop: 6 }}>
+            <summary style={{ cursor: "pointer", fontSize: 11, color: colors.textMuted }}>
+              See what Gemini has on file
+            </summary>
+            <pre style={{ fontSize: 10, whiteSpace: "pre-wrap", color: colors.textBody, marginTop: 4, maxHeight: 160, overflowY: "auto" }}>
+              {prospectNews}
+            </pre>
+          </details>
+        )}
 
         <label style={{ ...labelStyle, marginTop: 12 }}>Tone</label>
         <select
           style={selectStyle}
           value={tone}
           onChange={(e) => setTone(e.target.value as Tone)}
-          disabled={generateBusy || applyBusy}
+          disabled={generateBusy || applyBusy || researchBusy}
         >
           {toneOptions.map((opt) => (
             <option key={opt.key} value={opt.key}>

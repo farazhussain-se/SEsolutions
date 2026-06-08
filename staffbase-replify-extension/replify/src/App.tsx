@@ -3957,6 +3957,7 @@ function App() {
       onLog={appendResponseLine}
       prospectNameSeed={prospectName}
       prospectNewsSeed={prospectNews}
+      savedProspects={savedProspects}
     />
   )}
   {/* ─────────── BRAND EXISTING ENV ─────────── */}
