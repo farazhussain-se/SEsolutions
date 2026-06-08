@@ -79,6 +79,10 @@ import AutomationForm from "./components/AutomationForm";
 // tab was removed for redundancy). The rename ops are still imported here
 // because handleCreateDemo orchestrates them in the Branding pipeline.
 import PersonasForm from "./components/PersonasForm";
+// 📝 Edit Pages — top-level sub-view alongside Set Up / Brand / Manage Users.
+// Gemini rewrites text on existing pages, preserving layout + widgets.
+// See utils/automationOperations/pageTextEditor.ts for the parsing strategy.
+import EditPagesForm from "./components/EditPagesForm";
 import {
   listAllChannels as renameListChannels,
   planChannelRenames as renamePlanChannels,
@@ -2145,6 +2149,8 @@ function App() {
           }
         } else if (mode === "monorepo") {
           // No prep needed — the panel's tabs fetch their own data.
+        } else if (mode === "pages") {
+          // No prep needed — EditPagesForm runs discoverCommonPages on mount.
         }
 
         setResponse(
@@ -2162,6 +2168,8 @@ function App() {
             ? "Choose what you'd like to set up."
             : mode === "monorepo"
             ? "Browse widget embed URLs or inject Global JS snippets from the solutions-monorepo."
+            : mode === "pages"
+            ? "Pick pages to rewrite — Gemini tailors text, layout stays untouched."
             : "Using saved environment – ready to set up!"
         );
       } catch (err) {
@@ -3935,6 +3943,20 @@ function App() {
       apiDomain={apiDomain}
       isOnContentPage={isContentPageUrl(tabUrl)}
       onPreviewInPage={handlePreviewInPage}
+    />
+  )}
+  {/* ─────────── EDIT PAGES ─────────── */}
+  {/* New top-level surface for tailoring page TEXT (not layout, widgets,
+       or images) to a prospect. Seeds prospect name + news from the
+       Branding flow if the user already worked through that. See
+       EditPagesForm + utils/automationOperations/pageTextEditor.ts. */}
+  {isAuthenticated && useOption?.type === "pages" && (
+    <EditPagesForm
+      apiToken={apiToken}
+      apiDomain={apiDomain}
+      onLog={appendResponseLine}
+      prospectNameSeed={prospectName}
+      prospectNewsSeed={prospectNews}
     />
   )}
   {/* ─────────── BRAND EXISTING ENV ─────────── */}

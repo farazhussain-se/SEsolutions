@@ -133,6 +133,17 @@ import {
   previewDistributedArticlesPlan as distrPreviewPlan,
 } from './distributedArticles';
 
+// Edit Pages — Gemini rewrites the visible TEXT on existing pages while
+// preserving layout, images, widget configs, and Studio template variables.
+// HTML parsing happens in the browser via DOMParser; we walk only TEXT nodes
+// and skip widget containers / scripts / template vars. PUT /api/pages/{id}
+// is full-replace, so the apply step round-trips the full contents object.
+import {
+  discoverCommonPages as pagesDiscoverCommon,
+  buildEditDiffsForPages as pagesBuildEditDiffs,
+  applyApprovedPageEdits as pagesApplyEdits,
+} from './pageTextEditor';
+
 // Re-export everything for direct imports
 export {
   buildApiUrl,
@@ -224,6 +235,11 @@ export const rebrandHomePageLinkTiles  = pageRebrandHomeLinkTiles;
 export const planArticleDistribution        = distrPlanArticles;
 export const generateDistributedDemoArticles = distrGenerateArticles;
 export const previewDistributedArticlesPlan  = distrPreviewPlan;
+
+// Edit Pages
+export const discoverCommonPages    = pagesDiscoverCommon;
+export const buildEditDiffsForPages = pagesBuildEditDiffs;
+export const applyApprovedPageEdits = pagesApplyEdits;
 
 /**
  * Operation Registry
@@ -321,6 +337,11 @@ export const OPERATION_REGISTRY = {
   planArticleDistribution:        distrPlanArticles,
   generateDistributedDemoArticles: distrGenerateArticles,
   previewDistributedArticlesPlan:  distrPreviewPlan,
+
+  // Edit Pages
+  discoverCommonPages:    pagesDiscoverCommon,
+  buildEditDiffsForPages: pagesBuildEditDiffs,
+  applyApprovedPageEdits: pagesApplyEdits,
 };
 
 /**
@@ -415,4 +436,9 @@ export const getOperationDescriptions = () => ({
   planArticleDistribution:        'Use Gemini to allocate N articles across the supplied channels based on prospect context + channel themes (read-only planning step)',
   generateDistributedDemoArticles: 'Full flow: plan distribution, generate + create articles per channel, then redistribute published timestamps across all selected channels around a demo date',
   previewDistributedArticlesPlan:  'Dry-run: returns the planned distribution + existing post counts per channel without writing anything',
+
+  // Edit Pages
+  discoverCommonPages:    'List pages with titles matching the common-page heuristic (Home / HR / IT / FAQ / etc.) + count of editable text blocks per page',
+  buildEditDiffsForPages: 'For each page: GET, extract editable text nodes (skip widgets/scripts/template vars), Gemini rewrites text in the requested tone, returns per-page before/after diffs WITHOUT writing',
+  applyApprovedPageEdits: 'PUT each approved diff back via /api/pages/{id}, round-tripping the full contents object so other locales stay untouched',
 });

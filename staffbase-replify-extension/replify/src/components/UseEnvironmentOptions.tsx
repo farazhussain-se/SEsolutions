@@ -178,6 +178,26 @@ export default function UseEnvironmentOptions({
               Run automation, update profiles, or log in as a user.
             </p>
           </div>
+          {/* 📝 Edit Pages — Gemini rewrites the visible TEXT on existing
+              pages to fit the prospect, preserving layout, images, widgets,
+              and Studio template variables. See EditPagesForm. */}
+          <div style={buttonContainerStyle}>
+            <button
+              style={{
+                ...brandingButtonStyle,
+                backgroundColor:
+                  hoveredButton === "pages" ? colors.primaryLight : colors.primary,
+              }}
+              onClick={() => onChoose("pages")}
+              onMouseEnter={() => setHoveredButton("pages")}
+              onMouseLeave={() => setHoveredButton(null)}
+            >
+              Edit Pages
+            </button>
+            <p style={subDescriptionStyle}>
+              Rewrite text on common pages (HR, IT, FAQ&hellip;) to match the prospect &mdash; layout, images, and widgets stay untouched.
+            </p>
+          </div>
           {isGitHubAuthenticated && (
             <div style={{ ...buttonContainerStyle, marginBottom: 0 }}>
               <button
