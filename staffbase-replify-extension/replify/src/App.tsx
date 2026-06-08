@@ -84,6 +84,11 @@ import {
   planChannelRenames as renamePlanChannels,
   renameChannels as renameApplyChannels,
 } from "./utils/automationOperations/newsChannelRename";
+// 🪧 Home-page Link Tiles widget rebranding — auto-runs immediately after
+// CSS branding applies, using the same primary/text colors. See
+// utils/automationOperations/pageWidgetBranding.ts for the page-discovery
+// heuristic and the regex that targets only QuickLinks blocks.
+import { rebrandHomePageLinkTiles } from "./utils/automationOperations/pageWidgetBranding";
 import type { AutomationUser, AutomationRunOptions, AutomationProgressData } from "./components/AutomationForm";
 import AskGeminiOverlay from "./components/AskGeminiOverlay";
 import CopierForm from "./components/CopierForm";
@@ -2234,6 +2239,33 @@ function App() {
           ? "✅ Demo CSS and theme colors updated!"
           : "✅ Demo CSS updated!";
         setResponse(successMessage);
+
+        /* ---------- 1️⃣a 🪧 Rebrand the Link Tiles widget on the home page ----
+           Runs automatically whenever branding is applied (no opt-in). Uses
+           the same primaryColor + textColor as the rest of the branding
+           pipeline. Pages API PUT is full-replace; the op rounds-trips every
+           locale's title + content so nothing else gets wiped. Failures are
+           non-fatal — branding has already succeeded, so we just log. */
+        try {
+          const tilesReport = await rebrandHomePageLinkTiles(
+            { primary: primaryColor, text: textColor },
+            {
+              apiToken: apiToken.trim(),
+              apiDomain,
+              onProgress: (msg: string) => setResponse((p) => p + `\n${msg}`),
+            },
+          );
+          if (tilesReport.widgetsBranded > 0) {
+            setResponse((p) =>
+              p +
+              `\n✅ Rebranded ${tilesReport.widgetsBranded} Link Tiles widget(s) on home page "${tilesReport.pageTitle}".`,
+            );
+          }
+        } catch (tilesErr) {
+          // Non-fatal — log only. Branding already succeeded above.
+          console.warn("[Replify] Link Tiles rebrand skipped:", tilesErr);
+          setResponse((p) => p + `\n⚠️ Link Tiles rebrand skipped: ${tilesErr instanceof Error ? tilesErr.message : String(tilesErr)}`);
+        }
       }
 
       /* ---------- 1️⃣b 📰 Rename news channels (bolt-in, prospect-aware) ---

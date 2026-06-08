@@ -112,6 +112,17 @@ import {
   redistributePostDates as newsRedistributeDates,
 } from './newsChannelRename';
 
+// Home-page Link Tiles widget rebranding — finds the tenant's home page,
+// rewrites `data-widget-conf-tile-bg-color` / `text-color` attrs on every
+// `data-widget-type="QuickLinks"` div, PUTs the page back via Pages API
+// (full-replace, so we round-trip every locale's title + content).
+// See ./pageWidgetBranding.ts for the regex scoping.
+import {
+  findHomePageWithLinkTiles as pageFindHomeLinkTiles,
+  previewLinkTilesPlan as pagePreviewLinkTilesPlan,
+  rebrandHomePageLinkTiles as pageRebrandHomeLinkTiles,
+} from './pageWidgetBranding';
+
 // Re-export everything for direct imports
 export {
   buildApiUrl,
@@ -193,6 +204,11 @@ export const listAllChannels        = newsListChannels;
 export const planChannelRenames     = newsPlanRenames;
 export const renameChannels         = newsRenameChannels;
 export const redistributePostDates  = newsRedistributeDates;
+
+// Page-widget branding (home page Link Tiles)
+export const findHomePageWithLinkTiles = pageFindHomeLinkTiles;
+export const previewLinkTilesPlan      = pagePreviewLinkTilesPlan;
+export const rebrandHomePageLinkTiles  = pageRebrandHomeLinkTiles;
 
 /**
  * Operation Registry
@@ -280,6 +296,11 @@ export const OPERATION_REGISTRY = {
   planChannelRenames:     newsPlanRenames,
   renameChannels:         newsRenameChannels,
   redistributePostDates:  newsRedistributeDates,
+
+  // Page-widget branding (home-page Link Tiles)
+  findHomePageWithLinkTiles: pageFindHomeLinkTiles,
+  previewLinkTilesPlan:      pagePreviewLinkTilesPlan,
+  rebrandHomePageLinkTiles:  pageRebrandHomeLinkTiles,
 };
 
 /**
@@ -364,4 +385,9 @@ export const getOperationDescriptions = () => ({
   planChannelRenames:     'Use Gemini to map existing channels to industry channel templates (preview-only, no writes)',
   renameChannels:         'Apply a rename plan via each channel\'s links.update endpoint',
   redistributePostDates:  'Spread post `published` timestamps around a demo date with weighted recency (60% in last 14 days)',
+
+  // Page-widget branding (home-page Link Tiles)
+  findHomePageWithLinkTiles: 'Find the tenant\'s home page (title contains home/welcome AND contains a QuickLinks widget)',
+  previewLinkTilesPlan:      'Inspect-only summary of what rebrandHomePageLinkTiles would change (no writes)',
+  rebrandHomePageLinkTiles:  'Rewrite tile bg/text colors on every QuickLinks widget on the home page; PUTs the page back via Pages API (full-replace round-trip)',
 });
