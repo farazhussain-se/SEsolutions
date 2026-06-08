@@ -144,6 +144,17 @@ import {
   applyApprovedPageEdits as pagesApplyEdits,
 } from './pageTextEditor';
 
+// Tailor Emails — Gemini rewrites text inside email-designer templates
+// (the "pikasso" content tree). Reuses the page text-walker for each
+// textMarkupValue fragment. PUTs back via
+// /api/email-service/templates/{id}/contents/pikasso (undocumented but
+// empirically verified via Replify's setupOperations/emailTemplates.ts).
+import {
+  discoverEmailTemplates as emailDiscoverTemplates,
+  buildEmailTemplateDiffs as emailBuildDiffs,
+  applyApprovedEmailTemplateEdits as emailApplyEdits,
+} from './emailTemplateTailor';
+
 // Re-export everything for direct imports
 export {
   buildApiUrl,
@@ -240,6 +251,11 @@ export const previewDistributedArticlesPlan  = distrPreviewPlan;
 export const discoverCommonPages    = pagesDiscoverCommon;
 export const buildEditDiffsForPages = pagesBuildEditDiffs;
 export const applyApprovedPageEdits = pagesApplyEdits;
+
+// Tailor Emails
+export const discoverEmailTemplates           = emailDiscoverTemplates;
+export const buildEmailTemplateDiffs          = emailBuildDiffs;
+export const applyApprovedEmailTemplateEdits  = emailApplyEdits;
 
 /**
  * Operation Registry
@@ -342,6 +358,11 @@ export const OPERATION_REGISTRY = {
   discoverCommonPages:    pagesDiscoverCommon,
   buildEditDiffsForPages: pagesBuildEditDiffs,
   applyApprovedPageEdits: pagesApplyEdits,
+
+  // Tailor Emails
+  discoverEmailTemplates:          emailDiscoverTemplates,
+  buildEmailTemplateDiffs:         emailBuildDiffs,
+  applyApprovedEmailTemplateEdits: emailApplyEdits,
 };
 
 /**
@@ -441,4 +462,9 @@ export const getOperationDescriptions = () => ({
   discoverCommonPages:    'List pages with titles matching the common-page heuristic (Home / HR / IT / FAQ / etc.) + count of editable text blocks per page',
   buildEditDiffsForPages: 'For each page: GET, extract editable text nodes (skip widgets/scripts/template vars), Gemini rewrites text in the requested tone, returns per-page before/after diffs WITHOUT writing',
   applyApprovedPageEdits: 'PUT each approved diff back via /api/pages/{id}, round-tripping the full contents object so other locales stay untouched',
+
+  // Tailor Emails
+  discoverEmailTemplates:          'List every email designer template across all galleries via /api/email-service, with per-template editable-text-fragment counts',
+  buildEmailTemplateDiffs:         'For each selected template: GET its pikasso content tree, walk every textMarkupValue HTML fragment, batch text nodes to Gemini for prospect-tailored rewrites, return per-template before/after diffs WITHOUT writing',
+  applyApprovedEmailTemplateEdits: 'PUT each approved template back via /api/email-service/templates/{id}/contents/pikasso — only the content changes; name, gallery, thumbnail are untouched',
 });

@@ -83,6 +83,10 @@ import PersonasForm from "./components/PersonasForm";
 // Gemini rewrites text on existing pages, preserving layout + widgets.
 // See utils/automationOperations/pageTextEditor.ts for the parsing strategy.
 import EditPagesForm from "./components/EditPagesForm";
+// 📨 Tailor Emails — top-level sub-view alongside Edit Pages. Gemini
+// rewrites text inside email designer templates while preserving the
+// pikasso layout tree. See utils/automationOperations/emailTemplateTailor.ts.
+import TailorEmailsForm from "./components/TailorEmailsForm";
 import {
   listAllChannels as renameListChannels,
   planChannelRenames as renamePlanChannels,
@@ -2151,6 +2155,8 @@ function App() {
           // No prep needed — the panel's tabs fetch their own data.
         } else if (mode === "pages") {
           // No prep needed — EditPagesForm runs discoverCommonPages on mount.
+        } else if (mode === "emails") {
+          // No prep needed — TailorEmailsForm runs discoverEmailTemplates on mount.
         }
 
         setResponse(
@@ -2170,6 +2176,8 @@ function App() {
             ? "Browse widget embed URLs or inject Global JS snippets from the solutions-monorepo."
             : mode === "pages"
             ? "Pick pages to rewrite — Gemini tailors text, layout stays untouched."
+            : mode === "emails"
+            ? "Pick email templates to tailor — Gemini rewrites text, designs stay intact."
             : "Using saved environment – ready to set up!"
         );
       } catch (err) {
@@ -3952,6 +3960,21 @@ function App() {
        EditPagesForm + utils/automationOperations/pageTextEditor.ts. */}
   {isAuthenticated && useOption?.type === "pages" && (
     <EditPagesForm
+      apiToken={apiToken}
+      apiDomain={apiDomain}
+      onLog={appendResponseLine}
+      prospectNameSeed={prospectName}
+      prospectNewsSeed={prospectNews}
+      savedProspects={savedProspects}
+    />
+  )}
+  {/* ─────────── TAILOR EMAILS ─────────── */}
+  {/* New top-level surface for tailoring TEXT inside email designer
+       templates. Same prospect-picker UX as EditPagesForm (three
+       sources: Branding seed / Saved / Research). See TailorEmailsForm
+       + utils/automationOperations/emailTemplateTailor.ts. */}
+  {isAuthenticated && useOption?.type === "emails" && (
+    <TailorEmailsForm
       apiToken={apiToken}
       apiDomain={apiDomain}
       onLog={appendResponseLine}

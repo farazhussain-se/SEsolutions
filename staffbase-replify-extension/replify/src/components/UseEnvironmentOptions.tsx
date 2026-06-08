@@ -198,6 +198,26 @@ export default function UseEnvironmentOptions({
               Rewrite text on common pages (HR, IT, FAQ&hellip;) to match the prospect &mdash; layout, images, and widgets stay untouched.
             </p>
           </div>
+          {/* 📨 Tailor Emails — Gemini rewrites text inside existing email
+              designer templates (the pikasso content tree). Layout, images,
+              colors, social-icon configs all preserved. See TailorEmailsForm. */}
+          <div style={buttonContainerStyle}>
+            <button
+              style={{
+                ...brandingButtonStyle,
+                backgroundColor:
+                  hoveredButton === "emails" ? colors.primaryLight : colors.primary,
+              }}
+              onClick={() => onChoose("emails")}
+              onMouseEnter={() => setHoveredButton("emails")}
+              onMouseLeave={() => setHoveredButton(null)}
+            >
+              Tailor Emails
+            </button>
+            <p style={subDescriptionStyle}>
+              Tailor the text inside email templates to your prospect &mdash; designs and images stay untouched.
+            </p>
+          </div>
           {isGitHubAuthenticated && (
             <div style={{ ...buttonContainerStyle, marginBottom: 0 }}>
               <button
