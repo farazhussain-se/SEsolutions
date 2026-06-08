@@ -173,6 +173,8 @@ interface SavedDemo {
   backgroundColor?: string;
   floatingNavBgColor?: string;
   floatingNavTextColor?: string;
+  tileBgColor?: string;
+  tileTextColor?: string;
   logoPadWidth?: number;
   logoPadHeight?: number;
   bgVertical?: number;
@@ -258,6 +260,12 @@ function App() {
   const [backgroundColor, setBackgroundColor] = useState(DEFAULT_BRANDING.backgroundColor);
   const [floatingNavBgColor, setFloatingNavBgColor] = useState(DEFAULT_BRANDING.floatingNavBgColor);
   const [floatingNavTextColor, setFloatingNavTextColor] = useState(DEFAULT_BRANDING.floatingNavTextColor);
+  // 🪧 Link Tiles widget colors — independent from primary/text because tile
+  // color is its own design decision. Drives both the CSS preview override
+  // (.quick-links-widget__item) and the Pages-API persistence path
+  // (rebrandHomePageLinkTiles).
+  const [tileBgColor, setTileBgColor] = useState(DEFAULT_BRANDING.tileBgColor);
+  const [tileTextColor, setTileTextColor] = useState(DEFAULT_BRANDING.tileTextColor);
   const [logoUrl, setLogoUrl] = useState("");
   const [bgUrl, setBgURL] = useState("");
   const [logoPadWidth, setLogoPadWidth] = useState(0);
@@ -2205,6 +2213,8 @@ function App() {
           background: backgroundColor,
           floatingNavBg: floatingNavBgColor,
           floatingNavText: floatingNavTextColor,
+          tileBg: tileBgColor,
+          tileText: tileTextColor,
           bg: bgUrl,
           logo: logoUrl,
           padW: logoPadWidth,
@@ -2242,13 +2252,14 @@ function App() {
 
         /* ---------- 1️⃣a 🪧 Rebrand the Link Tiles widget on the home page ----
            Runs automatically whenever branding is applied (no opt-in). Uses
-           the same primaryColor + textColor as the rest of the branding
-           pipeline. Pages API PUT is full-replace; the op rounds-trips every
+           the DEDICATED tileBgColor / tileTextColor (NOT primary/text) so the
+           tiles can be styled independently — e.g. white primary + navy
+           tiles. Pages API PUT is full-replace; the op rounds-trips every
            locale's title + content so nothing else gets wiped. Failures are
            non-fatal — branding has already succeeded, so we just log. */
         try {
           const tilesReport = await rebrandHomePageLinkTiles(
-            { primary: primaryColor, text: textColor },
+            { primary: tileBgColor, text: tileTextColor },
             {
               apiToken: apiToken.trim(),
               apiDomain,
@@ -2458,6 +2469,7 @@ function App() {
           logoUrl, bgUrl,
           primaryColor, textColor, backgroundColor,
           floatingNavBgColor, floatingNavTextColor,
+          tileBgColor, tileTextColor,
           logoPadWidth, logoPadHeight, bgVertical, changeLogoSize,
           logoHeight, logoMarginTop, headerTransparency,
           vertical: demoVertical,
@@ -2516,6 +2528,8 @@ function App() {
         background: backgroundColor,
         floatingNavBg: floatingNavBgColor,
         floatingNavText: floatingNavTextColor,
+        tileBg: tileBgColor,
+        tileText: tileTextColor,
         bg: bgUrl,
         logo: logoUrl,
         padW: logoPadWidth,
@@ -2524,7 +2538,7 @@ function App() {
         headerTransparency,
         changeLogoSize,
         logoHeight,
-        logoMarginTop,        
+        logoMarginTop,
       },
       multiBrandings,
       customCss
@@ -2578,6 +2592,8 @@ function App() {
           background: backgroundColor,
           floatingNavBg: floatingNavBgColor,
           floatingNavText: floatingNavTextColor,
+          tileBg: tileBgColor,
+          tileText: tileTextColor,
           bg: bgUrl,
           logo: logoUrl,
           padW: logoPadWidth,
@@ -3150,6 +3166,8 @@ function App() {
         background: demo.backgroundColor ?? '',
         floatingNavBg: demo.floatingNavBgColor ?? '',
         floatingNavText: demo.floatingNavTextColor ?? '',
+        tileBg: demo.tileBgColor ?? DEFAULT_BRANDING.tileBgColor,
+        tileText: demo.tileTextColor ?? DEFAULT_BRANDING.tileTextColor,
         bg: demo.bgUrl || "",
         logo: demo.logoUrl || "",
         padW: demo.logoPadWidth ?? 0,
@@ -3864,6 +3882,10 @@ function App() {
       setFloatingNavBgColor={setFloatingNavBgColor}
       floatingNavTextColor={floatingNavTextColor}
       setFloatingNavTextColor={setFloatingNavTextColor}
+      tileBgColor={tileBgColor}
+      setTileBgColor={setTileBgColor}
+      tileTextColor={tileTextColor}
+      setTileTextColor={setTileTextColor}
       logoPadWidth={logoPadWidth}
       setLogoPadWidth={setLogoPadWidth}
       logoPadHeight={logoPadHeight}

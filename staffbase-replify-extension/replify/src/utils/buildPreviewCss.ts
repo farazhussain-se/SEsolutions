@@ -5,6 +5,11 @@ interface BrandOptions {
   background: string;
   floatingNavBg?: string;
   floatingNavText?: string;
+  /** Link Tiles widget background — drives the CSS preview override on
+   *  `.quick-links-widget__item`. Optional: when omitted, primary is used. */
+  tileBg?: string;
+  /** Link Tiles widget text color — same convention as tileBg. */
+  tileText?: string;
   bg?: string;
   logo?: string;
   padW?: number;
@@ -609,6 +614,21 @@ export default function buildPreviewCss(o: BrandOptions, multiBrandings: MultiBr
       
       .css-t24td4-IconButtonStyled-IconStyled-IconButtonStyled-Icon-withComponent-IconStyled-HeaderButton-PrimaryHeaderButton {
         color: ${text} !important;
+      }
+
+      /* ================= Link Tiles widget (preview override) =================
+         The Staffbase Link Tiles widget (data-widget-type="QuickLinks", rendered
+         as .quick-links-widget) stores colors as INLINE styles on each <li>.
+         Inline styles beat stylesheet selectors, so we need !important + a
+         specific selector to take over for the live preview. The persistent
+         change happens via the Pages API in handleCreateDemo. */
+      .quick-links-widget__item {
+        background-color: ${options.tileBg || primary} !important;
+        color: ${options.tileText || text} !important;
+      }
+      .quick-links-widget__item a,
+      .quick-links-widget__item .clickable {
+        color: ${options.tileText || text} !important;
       }
     `;
   };

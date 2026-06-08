@@ -214,6 +214,13 @@ interface BrandingFormProps {
   setFloatingNavBgColor: (v: string) => void;
   floatingNavTextColor: string;
   setFloatingNavTextColor: (v: string) => void;
+  // 🪧 Link Tiles widget colors — independent from primary/text so demos
+  // can have a navy tile while primary is white, etc. Drives both Preview
+  // (CSS override on .quick-links-widget__item) and Apply (Pages API PUT).
+  tileBgColor: string;
+  setTileBgColor: (v: string) => void;
+  tileTextColor: string;
+  setTileTextColor: (v: string) => void;
   logoPadWidth: number;
   setLogoPadWidth: (v: number) => void;
   logoPadHeight: number;
@@ -333,6 +340,10 @@ export default function BrandingForm({
   setFloatingNavBgColor,
   floatingNavTextColor,
   setFloatingNavTextColor,
+  tileBgColor,
+  setTileBgColor,
+  tileTextColor,
+  setTileTextColor,
   logoPadWidth,
   setLogoPadWidth,
   logoPadHeight,
@@ -432,6 +443,8 @@ export default function BrandingForm({
     backgroundColor: getHexValidationMessage(backgroundColor),
     floatingNavBgColor: getHexValidationMessage(floatingNavBgColor),
     floatingNavTextColor: getHexValidationMessage(floatingNavTextColor),
+    tileBgColor: getHexValidationMessage(tileBgColor),
+    tileTextColor: getHexValidationMessage(tileTextColor),
   };
   const hasHexValidationErrors = Object.values(colorValidation).some(Boolean);
 
@@ -787,6 +800,67 @@ export default function BrandingForm({
               {colorValidation.floatingNavTextColor && (
                 <p style={{ margin: "6px 0 0", color: colors.danger, fontSize: 12 }}>
                   {colorValidation.floatingNavTextColor}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* 🪧 Link Tiles widget colors — paired exactly like Floating Nav.
+              Lives independent of primary/text because a tile's color is its
+              own design choice (e.g. white primary + navy tiles). Bound to
+              tileBgColor / tileTextColor state in App.tsx. */}
+          <div style={{ ...formGroupStyle, display: "flex", alignItems: "flex-end", gap: "16px" }}>
+            <div>
+              <label style={labelStyle}>Link Tile BG:</label>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  type="color"
+                  style={{ ...inputStyle, padding: 0, width: 50, height: 50, border: "none" }}
+                  value={tileBgColor}
+                  onChange={(e) => withPreview(setTileBgColor)(e.target.value)}
+                />
+                <input
+                  type="text"
+                  style={{
+                    ...inputStyle,
+                    width: 100,
+                    borderColor: colorValidation.tileBgColor ? colors.danger : inputStyle.borderColor,
+                  }}
+                  value={tileBgColor}
+                  onChange={(e) => withPreview(setTileBgColor)(e.target.value)}
+                  placeholder="#164194"
+                />
+              </div>
+              {colorValidation.tileBgColor && (
+                <p style={{ margin: "6px 0 0", color: colors.danger, fontSize: 12 }}>
+                  {colorValidation.tileBgColor}
+                </p>
+              )}
+            </div>
+            <div>
+              <label style={labelStyle}>Link Tile Text:</label>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  type="color"
+                  style={{ ...inputStyle, padding: 0, width: 50, height: 50, border: "none" }}
+                  value={tileTextColor}
+                  onChange={(e) => withPreview(setTileTextColor)(e.target.value)}
+                />
+                <input
+                  type="text"
+                  style={{
+                    ...inputStyle,
+                    width: 100,
+                    borderColor: colorValidation.tileTextColor ? colors.danger : inputStyle.borderColor,
+                  }}
+                  value={tileTextColor}
+                  onChange={(e) => withPreview(setTileTextColor)(e.target.value)}
+                  placeholder="#FFFFFF"
+                />
+              </div>
+              {colorValidation.tileTextColor && (
+                <p style={{ margin: "6px 0 0", color: colors.danger, fontSize: 12 }}>
+                  {colorValidation.tileTextColor}
                 </p>
               )}
             </div>

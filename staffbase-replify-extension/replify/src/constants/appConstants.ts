@@ -25,6 +25,11 @@ export interface BrandingDefaults {
   backgroundColor: string;
   floatingNavBgColor: string;
   floatingNavTextColor: string;
+  /** Background color for the home-page Link Tiles widget. Separate from
+   *  primary because tile color is its own design decision per demo. */
+  tileBgColor: string;
+  /** Text/icon color for the home-page Link Tiles widget. */
+  tileTextColor: string;
   logoHeight: number;
   headerTransparency: number;
 }
@@ -35,6 +40,8 @@ export const DEFAULT_BRANDING: BrandingDefaults = {
   backgroundColor: "#F3F3F3",
   floatingNavBgColor: "#FFFFFF",
   floatingNavTextColor: "#000000",
+  tileBgColor: "#164194",
+  tileTextColor: "#FFFFFF",
   logoHeight: 100,
   headerTransparency: 70,
 };
