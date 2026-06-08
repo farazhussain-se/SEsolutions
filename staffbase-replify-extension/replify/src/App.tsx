@@ -93,7 +93,11 @@ import { rebrandHomePageLinkTiles } from "./utils/automationOperations/pageWidge
 // Gemini decides per-channel article allocations + topics; existing single-
 // channel generateAndCreateArticles is still called per-channel inside.
 // See utils/automationOperations/distributedArticles.ts for the orchestrator.
-import { generateDistributedDemoArticles } from "./utils/automationOperations/distributedArticles";
+import {
+  generateDistributedDemoArticles,
+  previewDistributedArticlesPlan,
+} from "./utils/automationOperations/distributedArticles";
+import type { DistributionEntry } from "./utils/automationOperations/distributedArticles";
 import type { AutomationUser, AutomationRunOptions, AutomationProgressData } from "./components/AutomationForm";
 import AskGeminiOverlay from "./components/AskGeminiOverlay";
 import CopierForm from "./components/CopierForm";
@@ -357,6 +361,14 @@ function App() {
   const [aiAdvancedDemoDate, setAiAdvancedDemoDate] = useState<string>(
     () => new Date().toISOString().slice(0, 10),
   );
+  // 📰 Advanced AI articles — dry-run preview state. Populated by
+  // handlePreviewAiAdvanced (calls previewDistributedArticlesPlan), cleared
+  // when channel selection or count changes. Read-only: no API writes.
+  const [aiAdvancedPreviewData, setAiAdvancedPreviewData] = useState<{
+    distribution: DistributionEntry[];
+    existingPostCounts: Record<string, number>;
+  } | null>(null);
+  const [aiAdvancedPreviewBusy, setAiAdvancedPreviewBusy] = useState(false);
   // Blog scraping sub-option
   const [includeBlogScrape, setIncludeBlogScrape] = useState(false);
   // 📰 Bolt-in: rename news channels as part of Create Branding
@@ -2190,6 +2202,53 @@ function App() {
    * 2. Trigger sb-news LinkedIn scraper (optional).
    */
 
+  /**
+   * 📰 Advanced AI articles — dry-run preview. Calls
+   * previewDistributedArticlesPlan with the current advanced settings and
+   * prospect context, stores the result so BrandingForm can render a panel
+   * showing the proposed distribution + existing post counts BEFORE the
+   * user commits. No writes happen here — only one Gemini planning call +
+   * lightweight `GET /channels/{id}/posts?limit=1` per channel to read the
+   * `total` field for the existing-post count.
+   */
+  const handlePreviewAiAdvanced = async () => {
+    if (aiAdvancedChannelIds.length === 0) {
+      appendResponseLine("⚠️ Pick at least one channel before previewing.");
+      return;
+    }
+    if (!aiArticleCount || aiArticleCount < 1) {
+      appendResponseLine("⚠️ Set a total article count first.");
+      return;
+    }
+    const selectedChannels = linkedinChannels.filter((c) => aiAdvancedChannelIds.includes(c.id));
+    setAiAdvancedPreviewBusy(true);
+    setAiAdvancedPreviewData(null);
+    try {
+      const userHints = aiArticleTopics
+        ? aiArticleTopics.split(",").map((t) => t.trim()).filter(Boolean)
+        : undefined;
+      const result = await previewDistributedArticlesPlan(
+        {
+          channels: selectedChannels.map((c) => ({ id: c.id, title: c.title })),
+          totalCount: aiArticleCount,
+          prospect: prospectName ? { name: prospectName, news: prospectNews } : undefined,
+          topicHints: userHints,
+        },
+        {
+          apiToken: apiToken.trim(),
+          apiDomain,
+          onProgress: (msg) => appendResponseLine(msg),
+        },
+      );
+      setAiAdvancedPreviewData(result);
+      appendResponseLine(`✅ Preview ready — ${result.distribution.length} channel(s) allocated.`);
+    } catch (err) {
+      appendResponseLine(`❌ Preview failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setAiAdvancedPreviewBusy(false);
+    }
+  };
+
   async function handleCreateDemo() {
     setIsLoading(true);
     const collectedArticleIds: string[] = [];
@@ -4000,9 +4059,16 @@ function App() {
       aiAdvancedMode={aiAdvancedMode}
       setAiAdvancedMode={setAiAdvancedMode}
       aiAdvancedChannelIds={aiAdvancedChannelIds}
-      setAiAdvancedChannelIds={setAiAdvancedChannelIds}
+      setAiAdvancedChannelIds={(ids) => {
+        // Selection change invalidates a previously-rendered preview.
+        setAiAdvancedPreviewData(null);
+        setAiAdvancedChannelIds(ids);
+      }}
       aiAdvancedDemoDate={aiAdvancedDemoDate}
       setAiAdvancedDemoDate={setAiAdvancedDemoDate}
+      aiAdvancedPreviewData={aiAdvancedPreviewData}
+      aiAdvancedPreviewBusy={aiAdvancedPreviewBusy}
+      onPreviewAiAdvanced={handlePreviewAiAdvanced}
       includeBlogScrape={includeBlogScrape}
       includeChannelRename={includeChannelRename}
       setIncludeChannelRename={setIncludeChannelRename}

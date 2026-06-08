@@ -184,6 +184,15 @@ interface BrandingFormProps {
   setAiAdvancedChannelIds: (v: string[]) => void;
   aiAdvancedDemoDate: string;
   setAiAdvancedDemoDate: (v: string) => void;
+  /* 📰 Dry-run preview state — set by onPreviewAiAdvanced (calls
+   *    previewDistributedArticlesPlan in App.tsx). Null until the user
+   *    clicks Preview, cleared when channel/count inputs change. */
+  aiAdvancedPreviewData: {
+    distribution: Array<{ channelId: string; channelTitle: string; count: number; topics: string[] }>;
+    existingPostCounts: Record<string, number>;
+  } | null;
+  aiAdvancedPreviewBusy: boolean;
+  onPreviewAiAdvanced: () => Promise<void>;
   includeBlogScrape: boolean;
   // 📰 Bolt-in: rename news channels as part of the Create Branding flow
   includeChannelRename: boolean;
@@ -317,6 +326,9 @@ export default function BrandingForm({
   setAiAdvancedChannelIds,
   aiAdvancedDemoDate,
   setAiAdvancedDemoDate,
+  aiAdvancedPreviewData,
+  aiAdvancedPreviewBusy,
+  onPreviewAiAdvanced,
   includeBlogScrape,
   includeChannelRename,
   setIncludeChannelRename,
@@ -1310,9 +1322,80 @@ export default function BrandingForm({
                         value={aiAdvancedDemoDate}
                         onChange={(e) => setAiAdvancedDemoDate(e.target.value)}
                       />
-                      <p style={{ margin: 0, fontSize: 11, color: colors.textMuted, lineHeight: 1.4 }}>
+                      <p style={{ margin: "0 0 8px", fontSize: 11, color: colors.textMuted, lineHeight: 1.4 }}>
                         60% of posts land in the last 14 days before this date; the rest spread exponentially older.
                       </p>
+
+                      {/* 📰 Dry-run preview — calls previewDistributedArticlesPlan
+                          which makes ONE Gemini call to allocate counts/topics
+                          per channel + one /posts?limit=1 per channel to read
+                          existing post count via the `total` field. No writes,
+                          no article gen yet. User can refine before committing
+                          via Create Branding. */}
+                      <button
+                        type="button"
+                        onClick={() => { void onPreviewAiAdvanced(); }}
+                        disabled={aiAdvancedPreviewBusy || aiAdvancedChannelIds.length === 0}
+                        style={{
+                          padding: "6px 12px",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          borderRadius: 4,
+                          border: `1px solid ${colors.primary}`,
+                          background: aiAdvancedPreviewBusy || aiAdvancedChannelIds.length === 0 ? colors.uiGray : "transparent",
+                          color: aiAdvancedPreviewBusy || aiAdvancedChannelIds.length === 0 ? colors.textMuted : colors.primary,
+                          cursor: aiAdvancedPreviewBusy || aiAdvancedChannelIds.length === 0 ? "not-allowed" : "pointer",
+                          marginBottom: 8,
+                        }}
+                      >
+                        {aiAdvancedPreviewBusy ? "Asking Gemini…" : "Preview distribution"}
+                      </button>
+
+                      {aiAdvancedPreviewData && (
+                        <div style={{
+                          marginTop: 4,
+                          padding: 8,
+                          borderRadius: 4,
+                          border: `1px solid ${colors.borderMedium}`,
+                          background: colors.backgroundLight,
+                        }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 6 }}>
+                            Proposed distribution ({aiAdvancedPreviewData.distribution.reduce((acc, e) => acc + e.count, 0)} article(s) across {aiAdvancedPreviewData.distribution.length} channel(s))
+                          </div>
+                          <div style={{ maxHeight: 220, overflowY: "auto", fontSize: 11 }}>
+                            {aiAdvancedPreviewData.distribution.map((entry) => {
+                              const existing = aiAdvancedPreviewData.existingPostCounts[entry.channelId];
+                              return (
+                                <div
+                                  key={entry.channelId}
+                                  style={{
+                                    borderBottom: `1px solid ${colors.borderLight}`,
+                                    padding: "6px 0",
+                                  }}
+                                >
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                                    <strong>{entry.channelTitle}</strong>
+                                    <span style={{ color: colors.textMuted }}>
+                                      +{entry.count} new
+                                      {typeof existing === "number" && existing >= 0
+                                        ? ` · ${existing} existing → all redistributed`
+                                        : ""}
+                                    </span>
+                                  </div>
+                                  <ul style={{ margin: "4px 0 0 16px", padding: 0, color: colors.textMedium }}>
+                                    {entry.topics.map((t, i) => (
+                                      <li key={i} style={{ marginBottom: 2 }}>{t}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <p style={{ margin: "8px 0 0", fontSize: 10, color: colors.textMuted, lineHeight: 1.4 }}>
+                            Nothing written yet. Click <strong>Create Branding</strong> to apply this plan + redistribute all post dates.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
