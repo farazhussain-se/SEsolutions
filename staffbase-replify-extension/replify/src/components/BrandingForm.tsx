@@ -173,6 +173,17 @@ interface BrandingFormProps {
   setAiChannelId: (v: string) => void;
   aiNewChannelName: string;
   setAiNewChannelName: (v: string) => void;
+  /* 📰 Advanced AI articles mode — when ON, the simple "single channel +
+   *    manual topics" inputs become hints to Gemini; channel selection
+   *    switches to a multi-checkbox; and a demo-date input appears so the
+   *    pipeline can redistribute publish timestamps. Drives
+   *    generateDistributedDemoArticles at execution time. */
+  aiAdvancedMode: boolean;
+  setAiAdvancedMode: (v: boolean) => void;
+  aiAdvancedChannelIds: string[];
+  setAiAdvancedChannelIds: (v: string[]) => void;
+  aiAdvancedDemoDate: string;
+  setAiAdvancedDemoDate: (v: string) => void;
   includeBlogScrape: boolean;
   // 📰 Bolt-in: rename news channels as part of the Create Branding flow
   includeChannelRename: boolean;
@@ -300,6 +311,12 @@ export default function BrandingForm({
   setAiChannelId,
   aiNewChannelName,
   setAiNewChannelName,
+  aiAdvancedMode,
+  setAiAdvancedMode,
+  aiAdvancedChannelIds,
+  setAiAdvancedChannelIds,
+  aiAdvancedDemoDate,
+  setAiAdvancedDemoDate,
   includeBlogScrape,
   includeChannelRename,
   setIncludeChannelRename,
@@ -1220,6 +1237,85 @@ export default function BrandingForm({
                   onChange={(e) => setAiArticleTopics(e.target.value)}
                   placeholder="e.g. benefits, safety, company culture"
                 />
+
+                {/* 📰 Advanced mode toggle — when ON, single-channel + manual
+                    topics become hints to Gemini; multi-channel selector +
+                    demo date appear. Branched at execution time in
+                    handleCreateDemo → generateDistributedDemoArticles. */}
+                <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${colors.borderLight}` }}>
+                  <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12 }}>
+                    <input
+                      type="checkbox"
+                      style={checkboxStyle}
+                      checked={aiAdvancedMode}
+                      onChange={(e) => setAiAdvancedMode(e.target.checked)}
+                    />
+                    Advanced: distribute across channels + schedule around demo date
+                  </label>
+                  {aiAdvancedMode && (
+                    <div style={{ marginTop: 8, marginLeft: 16, paddingLeft: 8, borderLeft: `2px solid ${colors.border}` }}>
+                      <p style={{ margin: "0 0 8px", fontSize: 11, color: colors.textMuted, lineHeight: 1.4 }}>
+                        Gemini picks per-channel article counts + topics from your prospect news.
+                        Total count above drives volume; topic field above is a hint. All posts
+                        (new + existing) in selected channels get realistic publish dates.
+                      </p>
+
+                      <label style={{ ...labelStyle, fontSize: 11 }}>
+                        Channels to populate ({aiAdvancedChannelIds.length} of {linkedinChannels.length} selected)
+                      </label>
+                      <div style={{ maxHeight: 160, overflowY: "auto", border: `1px solid ${colors.borderMedium}`, borderRadius: 4, padding: 6, marginBottom: 8 }}>
+                        {linkedinChannels.length === 0 ? (
+                          <p style={{ margin: 0, fontSize: 11, color: colors.textMuted }}>Loading channels…</p>
+                        ) : (
+                          linkedinChannels.map((c) => (
+                            <label key={c.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, padding: "2px 0", cursor: "pointer" }}>
+                              <input
+                                type="checkbox"
+                                checked={aiAdvancedChannelIds.includes(c.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setAiAdvancedChannelIds([...aiAdvancedChannelIds, c.id]);
+                                  } else {
+                                    setAiAdvancedChannelIds(aiAdvancedChannelIds.filter((id) => id !== c.id));
+                                  }
+                                }}
+                              />
+                              <span>{c.title}</span>
+                              <span style={{ color: colors.textMuted, marginLeft: "auto" }}>({c.id.slice(-6)})</span>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                      <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                        <button
+                          type="button"
+                          onClick={() => setAiAdvancedChannelIds(linkedinChannels.map((c) => c.id))}
+                          style={{ fontSize: 11, padding: "2px 8px", borderRadius: 4, border: `1px solid ${colors.border}`, background: "transparent", cursor: "pointer" }}
+                        >
+                          All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAiAdvancedChannelIds([])}
+                          style={{ fontSize: 11, padding: "2px 8px", borderRadius: 4, border: `1px solid ${colors.border}`, background: "transparent", cursor: "pointer" }}
+                        >
+                          None
+                        </button>
+                      </div>
+
+                      <label style={{ ...labelStyle, fontSize: 11 }}>Demo date (posts cluster around this)</label>
+                      <input
+                        type="date"
+                        style={{ ...inputStyle, padding: "4px 6px", marginBottom: 4, fontSize: 12 }}
+                        value={aiAdvancedDemoDate}
+                        onChange={(e) => setAiAdvancedDemoDate(e.target.value)}
+                      />
+                      <p style={{ margin: 0, fontSize: 11, color: colors.textMuted, lineHeight: 1.4 }}>
+                        60% of posts land in the last 14 days before this date; the rest spread exponentially older.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

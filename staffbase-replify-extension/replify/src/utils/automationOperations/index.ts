@@ -123,6 +123,16 @@ import {
   rebrandHomePageLinkTiles as pageRebrandHomeLinkTiles,
 } from './pageWidgetBranding';
 
+// Distributed demo articles — Gemini-driven multi-channel AI article gen
+// with realistic date scheduling around a demo date. Composes
+// generateAndCreateArticles + redistributePostDates with a planning Gemini
+// call on top. See ./distributedArticles.ts for the prompt + orchestration.
+import {
+  planArticleDistribution as distrPlanArticles,
+  generateDistributedDemoArticles as distrGenerateArticles,
+  previewDistributedArticlesPlan as distrPreviewPlan,
+} from './distributedArticles';
+
 // Re-export everything for direct imports
 export {
   buildApiUrl,
@@ -209,6 +219,11 @@ export const redistributePostDates  = newsRedistributeDates;
 export const findHomePageWithLinkTiles = pageFindHomeLinkTiles;
 export const previewLinkTilesPlan      = pagePreviewLinkTilesPlan;
 export const rebrandHomePageLinkTiles  = pageRebrandHomeLinkTiles;
+
+// Distributed demo articles
+export const planArticleDistribution        = distrPlanArticles;
+export const generateDistributedDemoArticles = distrGenerateArticles;
+export const previewDistributedArticlesPlan  = distrPreviewPlan;
 
 /**
  * Operation Registry
@@ -301,6 +316,11 @@ export const OPERATION_REGISTRY = {
   findHomePageWithLinkTiles: pageFindHomeLinkTiles,
   previewLinkTilesPlan:      pagePreviewLinkTilesPlan,
   rebrandHomePageLinkTiles:  pageRebrandHomeLinkTiles,
+
+  // Distributed demo articles
+  planArticleDistribution:        distrPlanArticles,
+  generateDistributedDemoArticles: distrGenerateArticles,
+  previewDistributedArticlesPlan:  distrPreviewPlan,
 };
 
 /**
@@ -390,4 +410,9 @@ export const getOperationDescriptions = () => ({
   findHomePageWithLinkTiles: 'Find the tenant\'s home page (title contains home/welcome AND contains a QuickLinks widget)',
   previewLinkTilesPlan:      'Inspect-only summary of what rebrandHomePageLinkTiles would change (no writes)',
   rebrandHomePageLinkTiles:  'Rewrite tile bg/text colors on every QuickLinks widget on the home page; PUTs the page back via Pages API (full-replace round-trip)',
+
+  // Distributed demo articles
+  planArticleDistribution:        'Use Gemini to allocate N articles across the supplied channels based on prospect context + channel themes (read-only planning step)',
+  generateDistributedDemoArticles: 'Full flow: plan distribution, generate + create articles per channel, then redistribute published timestamps across all selected channels around a demo date',
+  previewDistributedArticlesPlan:  'Dry-run: returns the planned distribution + existing post counts per channel without writing anything',
 });

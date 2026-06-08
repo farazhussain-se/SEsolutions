@@ -89,6 +89,11 @@ import {
 // utils/automationOperations/pageWidgetBranding.ts for the page-discovery
 // heuristic and the regex that targets only QuickLinks blocks.
 import { rebrandHomePageLinkTiles } from "./utils/automationOperations/pageWidgetBranding";
+// Distributed demo articles — the new "Advanced" path under AI articles.
+// Gemini decides per-channel article allocations + topics; existing single-
+// channel generateAndCreateArticles is still called per-channel inside.
+// See utils/automationOperations/distributedArticles.ts for the orchestrator.
+import { generateDistributedDemoArticles } from "./utils/automationOperations/distributedArticles";
 import type { AutomationUser, AutomationRunOptions, AutomationProgressData } from "./components/AutomationForm";
 import AskGeminiOverlay from "./components/AskGeminiOverlay";
 import CopierForm from "./components/CopierForm";
@@ -342,6 +347,16 @@ function App() {
   const [scrapePrompt, setScrapePrompt] = useState<ScrapePrompt | null>(null);
   const [aiChannelId, setAiChannelId] = useState(CREATE_NEW_CHANNEL_VALUE);
   const [aiNewChannelName, setAiNewChannelName] = useState(DEFAULT_NEW_CHANNEL_NAME);
+  /* 📰 Advanced AI articles — when ON, generateAndCreateArticles is replaced
+   *    with generateDistributedDemoArticles (Gemini distributes across many
+   *    channels). aiAdvancedChannelIds defaults to "all" when channels load
+   *    (auto-populated by an effect below). aiAdvancedDemoDate seeds the
+   *    redistribute step. */
+  const [aiAdvancedMode, setAiAdvancedMode] = useState(false);
+  const [aiAdvancedChannelIds, setAiAdvancedChannelIds] = useState<string[]>([]);
+  const [aiAdvancedDemoDate, setAiAdvancedDemoDate] = useState<string>(
+    () => new Date().toISOString().slice(0, 10),
+  );
   // Blog scraping sub-option
   const [includeBlogScrape, setIncludeBlogScrape] = useState(false);
   // 📰 Bolt-in: rename news channels as part of Create Branding
@@ -1287,6 +1302,12 @@ function App() {
           new Map(channels.map((c) => [c.id, c])).values()
         );
         setLinkedinChannels(dedupedChannels);
+
+        // 📰 Advanced AI articles: default-select ALL channels the first
+        // time the list arrives. After that, leave the user's edits alone
+        // (they may have unchecked some). Only re-syncs if the selection
+        // is currently empty (e.g. on first load).
+        setAiAdvancedChannelIds((prev) => (prev.length === 0 ? dedupedChannels.map((c) => c.id) : prev));
 
         const topNews = dedupedChannels.find((c) => c.title.toLowerCase().includes("top news"));
         const validChannelIds = new Set(dedupedChannels.map((c) => c.id));
@@ -2327,32 +2348,77 @@ function App() {
         }
       }
 
-      /* ---------- 2️⃣ AI-generated articles (runs first — same tab context) */
-
+      /* ---------- 2️⃣ AI-generated articles (runs first — same tab context)
+       *
+       * Two paths:
+       *   - Simple (default): single channel, manual count + topics. The
+       *     original generateAndCreateArticles call stays untouched.
+       *   - Advanced (aiAdvancedMode): generateDistributedDemoArticles —
+       *     Gemini decides per-channel allocations + topics across the
+       *     user's selected channels, generates articles channel-by-
+       *     channel, then redistributes ALL posts (new + existing) in
+       *     those channels around aiAdvancedDemoDate.
+       */
       if (includeAiArticles) {
-        setResponse((p) => p + "\nGenerating AI articles…");
-        const topics = aiArticleTopics
-          ? aiArticleTopics.split(",").map((t) => t.trim()).filter(Boolean)
-          : [prospectName || "company news"];
-        const aiRequestedChannelName = (aiNewChannelName || DEFAULT_NEW_CHANNEL_NAME).trim() || DEFAULT_NEW_CHANNEL_NAME;
-        const aiResult = await generateAndCreateArticles(
-          {
-            topics,
-            count: aiArticleCount,
-            channelName: aiRequestedChannelName,
-            channelId: aiChannelId !== CREATE_NEW_CHANNEL_VALUE ? aiChannelId : undefined,
-            prospectName,
-            locales: aiLocales
-          },
-          {
-            apiToken: apiToken.trim(),
-            apiDomain,
-            branchId,
-            onProgress: (msg) => setResponse((p) => p + `\n${msg}`),
+        const articleCtx = {
+          apiToken: apiToken.trim(),
+          apiDomain,
+          branchId,
+          onProgress: (msg: string) => setResponse((p) => p + `\n${msg}`),
+        };
+
+        if (aiAdvancedMode) {
+          // ── Advanced path ─────────────────────────────────────────────
+          const selectedChannels = linkedinChannels.filter((c) =>
+            aiAdvancedChannelIds.includes(c.id),
+          );
+          if (selectedChannels.length === 0) {
+            setResponse((p) => p + "\n⚠️ Advanced AI articles: no channels selected — skipping.");
+          } else {
+            setResponse((p) => p + `\n🤖 Advanced AI articles: ${aiArticleCount} across ${selectedChannels.length} channel(s)…`);
+            const userHints = aiArticleTopics
+              ? aiArticleTopics.split(",").map((t) => t.trim()).filter(Boolean)
+              : undefined;
+            const distResult = await generateDistributedDemoArticles(
+              {
+                channels: selectedChannels.map((c) => ({ id: c.id, title: c.title })),
+                totalCount: aiArticleCount,
+                demoDateIso: `${aiAdvancedDemoDate}T12:00:00.000Z`,
+                prospect: prospectName ? { name: prospectName, news: prospectNews } : undefined,
+                topicHints: userHints,
+                locales: aiLocales,
+              },
+              articleCtx,
+            );
+            if (distResult.articleIds.length) collectedArticleIds.push(...distResult.articleIds);
+            setResponse((p) =>
+              p +
+              `\n✅ Created ${distResult.articleIds.length} article(s) across ${distResult.channelsTouched} channel(s); ` +
+              `redistributed ${distResult.postsRedistributed} post(s) around ${aiAdvancedDemoDate}.` +
+              (distResult.errors.length ? `\n⚠️ ${distResult.errors.length} error(s) — first: ${distResult.errors[0]}` : ""),
+            );
           }
-        );
-        if (aiResult?.articleIds) collectedArticleIds.push(...aiResult.articleIds);
-        setResponse((p) => p + "\n✅ AI articles created.");
+        } else {
+          // ── Simple path (unchanged) ───────────────────────────────────
+          setResponse((p) => p + "\nGenerating AI articles…");
+          const topics = aiArticleTopics
+            ? aiArticleTopics.split(",").map((t) => t.trim()).filter(Boolean)
+            : [prospectName || "company news"];
+          const aiRequestedChannelName = (aiNewChannelName || DEFAULT_NEW_CHANNEL_NAME).trim() || DEFAULT_NEW_CHANNEL_NAME;
+          const aiResult = await generateAndCreateArticles(
+            {
+              topics,
+              count: aiArticleCount,
+              channelName: aiRequestedChannelName,
+              channelId: aiChannelId !== CREATE_NEW_CHANNEL_VALUE ? aiChannelId : undefined,
+              prospectName,
+              locales: aiLocales,
+            },
+            articleCtx,
+          );
+          if (aiResult?.articleIds) collectedArticleIds.push(...aiResult.articleIds);
+          setResponse((p) => p + "\n✅ AI articles created.");
+        }
       }
 
       /* ---------- 3️⃣ LinkedIn articles (synchronous, in-extension scrape) - */
@@ -3931,6 +3997,12 @@ function App() {
       setAiChannelId={setAiChannelId}
       aiNewChannelName={aiNewChannelName}
       setAiNewChannelName={setAiNewChannelName}
+      aiAdvancedMode={aiAdvancedMode}
+      setAiAdvancedMode={setAiAdvancedMode}
+      aiAdvancedChannelIds={aiAdvancedChannelIds}
+      setAiAdvancedChannelIds={setAiAdvancedChannelIds}
+      aiAdvancedDemoDate={aiAdvancedDemoDate}
+      setAiAdvancedDemoDate={setAiAdvancedDemoDate}
       includeBlogScrape={includeBlogScrape}
       includeChannelRename={includeChannelRename}
       setIncludeChannelRename={setIncludeChannelRename}
