@@ -74,11 +74,11 @@ import UpdateUserForm from "./components/UpdateUserForm";
 import type { UpdateUserFormUser } from "./components/UpdateUserForm";
 import AutomationForm from "./components/AutomationForm";
 // 🎭 Personas & 📰 News-Rename: bolt-in ports of Faraz's standalone Flask
-// tools (staffbase-demo-group-tool + staffbase-news-tool). See each
-// component's header docstring and ../utils/automationOperations/{personas,
-// newsChannelRename}.ts for the ops + Staffbase API quirks.
+// tools. PersonasForm is a sub-view under Manage Users. News-rename has been
+// folded into the BrandingForm "Generate articles" section (its standalone
+// tab was removed for redundancy). The rename ops are still imported here
+// because handleCreateDemo orchestrates them in the Branding pipeline.
 import PersonasForm from "./components/PersonasForm";
-import NewsChannelRenameForm from "./components/NewsChannelRenameForm";
 import {
   listAllChannels as renameListChannels,
   planChannelRenames as renamePlanChannels,
@@ -394,10 +394,6 @@ function App() {
   const [adminUserId, setAdminUserId] = useState<string | null>(null);
   const [userManagementView, setUserManagementView] = useState("selection");
   const [setupView, setSetupView] = useState("selection");
-  // 🪧 Bolt-in: which sub-view of the "existing" (branding) mode is showing.
-  // "branding" = the normal BrandingForm; "news-rename" = the channel-rename
-  // wizard. Doesn't affect any other useOption.type.
-  const [existingView, setExistingView] = useState<"branding" | "news-rename">("branding");
   const [tabValidation, setTabValidation] = useState<TabValidationState>({ status: 'idle', message: '' });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageType, setImageType] = useState<"none" | "avatar" | "profileHeaderImage">("none");
@@ -3720,12 +3716,17 @@ function App() {
               availableLocales={availableLocales}
             />
           )}
-          {/* 🎭 Personas & Groups (industry-driven user+group rewrite) */}
+          {/* 🎭 Personas & Groups (industry-driven OR prospect-research-driven
+              rewrite). Seeds prospectName + prospectNews from App-level state
+              so if the SE already worked the Branding flow with a prospect,
+              Personas can pick up where it left off. */}
           {userManagementView === "personas" && (
             <PersonasForm
               apiToken={apiToken}
               apiDomain={apiDomain}
               onLog={appendResponseLine}
+              prospectNameSeed={prospectName}
+              prospectNewsSeed={prospectNews}
             />
           )}
           {userManagementView === "profile" && (
@@ -3762,41 +3763,9 @@ function App() {
     />
   )}
   {/* ─────────── BRAND EXISTING ENV ─────────── */}
-  {/* 🪧 Bolt-in: an existingView tab strip toggles between the original
-       BrandingForm and the NewsChannelRenameForm (ported from
-       staffbase-news-tool). Both share apiToken/apiDomain. */}
+  {/* The standalone "Rename News Channels" tab was removed; news-channel
+       renaming is now a sub-option under BrandingForm > Generate articles. */}
   {isAuthenticated && useOption?.type === "existing" && (
-    <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-      <button
-        style={{
-          ...brandingButtonStyle,
-          flex: 1,
-          background: existingView === "branding" ? colors.primary : colors.uiGray,
-        }}
-        onClick={() => setExistingView("branding")}
-      >
-        Branding
-      </button>
-      <button
-        style={{
-          ...brandingButtonStyle,
-          flex: 1,
-          background: existingView === "news-rename" ? colors.primary : colors.uiGray,
-        }}
-        onClick={() => setExistingView("news-rename")}
-      >
-        Rename News Channels
-      </button>
-    </div>
-  )}
-  {isAuthenticated && useOption?.type === "existing" && existingView === "news-rename" && (
-    <NewsChannelRenameForm
-      apiToken={apiToken}
-      apiDomain={apiDomain}
-      onLog={appendResponseLine}
-    />
-  )}
-  {isAuthenticated && useOption?.type === "existing" && existingView === "branding" && (
     <BrandingForm
       /* Prospect saving */
       savedProspects={savedProspects}

@@ -96,6 +96,7 @@ import {
 // quirk and the raw-array group-membership body.
 import {
   fetchPersonaCandidates as personaFetchCandidates,
+  researchProspectForPersonas as personaResearchProspect,
   matchUsersToIndustry as personaMatchUsers,
   applyPersonas as personaApply,
   runPersonasPipeline as personaRunPipeline,
@@ -181,10 +182,11 @@ export const setupEmailTemplates = installSetupEmailTemplates;
 export const scrapeAndCreateArticlesFromBlog = blogScrapeAndCreateArticlesFromBlog;
 
 // Personas & Groups exports
-export const fetchPersonaCandidates = personaFetchCandidates;
-export const matchUsersToIndustry   = personaMatchUsers;
-export const applyPersonas          = personaApply;
-export const runPersonasPipeline    = personaRunPipeline;
+export const fetchPersonaCandidates    = personaFetchCandidates;
+export const researchProspectForPersonas = personaResearchProspect;
+export const matchUsersToIndustry      = personaMatchUsers;
+export const applyPersonas             = personaApply;
+export const runPersonasPipeline       = personaRunPipeline;
 
 // News channel rename exports
 export const listAllChannels        = newsListChannels;
@@ -266,11 +268,12 @@ export const OPERATION_REGISTRY = {
   // Blog scraping
   scrapeAndCreateArticlesFromBlog: blogScrapeAndCreateArticlesFromBlog,
 
-  // Personas & Groups (industry-driven user+group rewrite)
-  fetchPersonaCandidates: personaFetchCandidates,
-  matchUsersToIndustry:   personaMatchUsers,
-  applyPersonas:          personaApply,
-  runPersonasPipeline:    personaRunPipeline,
+  // Personas & Groups (industry-driven or prospect-research-driven rewrite)
+  fetchPersonaCandidates:    personaFetchCandidates,
+  researchProspectForPersonas: personaResearchProspect,
+  matchUsersToIndustry:      personaMatchUsers,
+  applyPersonas:             personaApply,
+  runPersonasPipeline:       personaRunPipeline,
 
   // News channel rename + post-date redistribution
   listAllChannels:        newsListChannels,
@@ -350,10 +353,11 @@ export const getOperationDescriptions = () => ({
   scrapeAndCreateArticlesFromBlog: 'Scrape articles from a public blog URL and create them in a news channel with original images',
 
   // Personas & Groups
-  fetchPersonaCandidates: 'Fetch activated non-admin users for industry persona classification',
-  matchUsersToIndustry:   'Use Gemini to classify users into comms/corporate/frontline roles and suggest position/department per industry',
-  applyPersonas:          'Apply a persona plan: POST /users/{id} basic fields, PATCH /users/{id} with v3 accessors for system_manager, create the 8 industry groups, assign members',
-  runPersonasPipeline:    'One-shot: fetch candidates -> Gemini match -> apply (writes users + creates groups)',
+  fetchPersonaCandidates:      'Fetch activated non-admin users for industry persona classification',
+  researchProspectForPersonas: 'Gemini researches a prospect (news, industry, LinkedIn context) and returns an inferred industry key + 8 prospect-themed groups for the persona pipeline',
+  matchUsersToIndustry:        'Use Gemini to classify users into comms/corporate/frontline roles and suggest position/department per industry (optionally prospect-flavored)',
+  applyPersonas:               'Apply a persona plan: POST /users/{id} basic fields, PATCH /users/{id} with v3 accessors for system_manager, create 8 groups (industry-templated OR custom from Gemini), assign members',
+  runPersonasPipeline:         'One-shot: fetch candidates -> Gemini match -> apply (writes users + creates groups)',
 
   // News channel rename + post date redistribution
   listAllChannels:        'List every news channel in the tenant (paginated via /api/branch/channels)',

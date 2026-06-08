@@ -28,6 +28,7 @@
 
 import { buildApiUrl, stripJsonFences } from '../helpers';
 import callGeminiProxy from '../geminiProxy';
+import { fetchProspectIntelligence } from '../aiUtils';
 import { PERSONA_INDUSTRIES } from './industryTemplates';
 import type { OperationContext } from './types';
 
@@ -69,6 +70,30 @@ export interface ApplyPersonasReport {
   groupsCreated: number;
   groupsAssigned: number;
   errors: string[];
+}
+
+/**
+ * Output of researchProspectForPersonas — what Gemini learned about the
+ * company and how that maps onto Replify's persona pipeline.
+ *
+ * - inferredIndustryKey: best match from PERSONA_INDUSTRIES (e.g. "healthcare")
+ *   so the user can sanity-check, or override.
+ * - customGroups: 8 prospect-themed group [name, description] pairs. Replaces
+ *   the static PERSONA_INDUSTRIES[industry].groups list when supplied to
+ *   applyPersonas — gives the demo a "this company's intranet" feel.
+ * - prospectNews: the raw news summary fetchProspectIntelligence returned,
+ *   surfaced so the form can also display it and so the match-users prompt
+ *   gets the same context.
+ * - websiteUrl: returned by fetchProspectIntelligence (e.g. "stryker.com").
+ *   Currently informational; future ops could use it for LinkedIn discovery.
+ */
+export interface ProspectResearchResult {
+  prospectName: string;
+  inferredIndustryKey: string;
+  inferredIndustryLabel: string;
+  customGroups: Array<[string, string]>;
+  prospectNews: string;
+  websiteUrl: string;
 }
 
 /* ── Step 1: fetch activated users ─────────────────────────────────────────── */
@@ -131,21 +156,141 @@ export const fetchPersonaCandidates = async (
   return filtered;
 };
 
+/* ── Step 1b: Gemini prospect research ──────────────────────────────────────
+ *
+ * Two-stage Gemini chain that takes the prospect's name and produces an
+ * industry classification + a custom set of 8 group themes for that company.
+ *
+ * Stage A — reuse Replify's existing `fetchProspectIntelligence` (the same
+ * Gemini call the BrandingForm sparkle button triggers). It gives us:
+ *   - news (company developments, leadership, products, partnerships)
+ *   - websiteUrl
+ *   - branding colors (ignored here)
+ *
+ * Stage B — pass that news + the list of PERSONA_INDUSTRIES keys into a
+ * second Gemini call asking it to:
+ *   1. pick the best industry bucket
+ *   2. propose 8 prospect-flavored group names that read like *this* company
+ *      would use them (e.g. for Stryker: "MAKO Surgical Bulletin", "Kalamazoo
+ *      Plant Updates" instead of generic "Production Updates")
+ *
+ * The user can still override the industry in the form before applying. The
+ * research output flows into `matchUsersToIndustry` (via the prospect arg)
+ * and `applyPersonas` (via the customGroups arg).
+ */
+export const researchProspectForPersonas = async (
+  args: { prospectName: string },
+  ctx: OperationContext,
+): Promise<ProspectResearchResult> => {
+  const { apiToken, apiDomain, onProgress } = ctx;
+  if (!args.prospectName || args.prospectName.trim().length < 2) {
+    throw new Error('prospectName is required (>= 2 chars).');
+  }
+
+  // Stage A — reuse the same intelligence fetch the BrandingForm sparkle uses.
+  onProgress?.(`🔎 Researching "${args.prospectName}" with Gemini…`);
+  const intel = await fetchProspectIntelligence(args.prospectName, { apiToken, apiDomain });
+  const prospectNews = (intel.news || '').trim();
+  const websiteUrl = (intel.websiteUrl || '').trim();
+
+  // Stage B — second Gemini call to map prospect → industry key + groups.
+  const industryList = Object.entries(PERSONA_INDUSTRIES)
+    .map(([key, value]) => `  ${key}: ${value.label} — sample groups: ${value.groups.slice(0, 3).map(([t]) => t).join(', ')}…`)
+    .join('\n');
+
+  const prompt = [
+    `You are configuring a Staffbase demo for the prospect below. The user wants `,
+    `8 internal-newsroom group themes that read like this company's *own* intranet.`,
+    ``,
+    `Prospect: ${args.prospectName}`,
+    websiteUrl ? `Website: ${websiteUrl}` : '',
+    prospectNews ? `Recent news / context:\n${prospectNews.slice(0, 1600)}` : '',
+    ``,
+    `Available industry buckets:`,
+    industryList,
+    ``,
+    `Tasks:`,
+    `1. Pick the SINGLE best inferredIndustryKey from the list above (lowercase, exactly as written).`,
+    `2. Propose exactly 8 prospect-themed group names + descriptions for that company. Names should sound native to the prospect's industry AND mention the company / its products / its sites where natural. Descriptions are 1 sentence each.`,
+    ``,
+    `Respond with ONLY a JSON object — no prose, no markdown:`,
+    `{"inferredIndustryKey":"...","groups":[["title","description"], ... ×8]}`,
+  ].filter(Boolean).join('\n');
+
+  interface ResearchResponse {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  }
+  const response = await callGeminiProxy<ResearchResponse>(
+    {
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.3, responseMimeType: 'application/json' },
+    },
+    'gemini-2.5-flash',
+    { apiToken, apiDomain },
+  );
+  const text = response?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  const parsed = JSON.parse(stripJsonFences(text)) as {
+    inferredIndustryKey?: string;
+    groups?: Array<[string, string]>;
+  };
+
+  // Validate / default — fall back to "other" if Gemini hallucinates a key.
+  let inferredIndustryKey = parsed.inferredIndustryKey ?? '';
+  if (!PERSONA_INDUSTRIES[inferredIndustryKey]) inferredIndustryKey = 'other';
+  const customGroups: Array<[string, string]> = Array.isArray(parsed.groups)
+    ? parsed.groups
+        .filter((g): g is [string, string] => Array.isArray(g) && g.length === 2 && typeof g[0] === 'string')
+        .slice(0, 8)
+    : [];
+
+  onProgress?.(
+    `🎯 Inferred industry: ${PERSONA_INDUSTRIES[inferredIndustryKey].label} · ${customGroups.length} group(s) proposed.`,
+  );
+
+  return {
+    prospectName: args.prospectName,
+    inferredIndustryKey,
+    inferredIndustryLabel: PERSONA_INDUSTRIES[inferredIndustryKey].label,
+    customGroups,
+    prospectNews,
+    websiteUrl,
+  };
+};
+
 /* ── Step 2: Gemini matching ──────────────────────────────────────────────── */
 
+/**
+ * Build the Gemini classification prompt.
+ *
+ * When `prospect` is supplied (from researchProspectForPersonas), the prompt
+ * includes the company name + news so positions become specific to that
+ * company (e.g. "MAKO Robotic-Arm Surgical Specialist" instead of generic
+ * "Surgical Specialist"). Without it, falls back to industry templates only.
+ */
 const buildMatchPrompt = (
   industryKey: string,
   candidates: PersonaCandidate[],
+  prospect?: { name?: string; news?: string },
 ): string => {
   const industry = PERSONA_INDUSTRIES[industryKey] ?? PERSONA_INDUSTRIES.other;
+  const prospectBlock = prospect?.name
+    ? [
+        ``,
+        `Prospect context — use this to flavor positions and departments:`,
+        `  Prospect: ${prospect.name}`,
+        prospect.news ? `  Recent news / industry context:\n${prospect.news.slice(0, 1200)}` : '',
+      ].filter(Boolean).join('\n')
+    : '';
+
   return [
-    `You are populating a Staffbase demo for the "${industry.label}" industry.`,
+    `You are populating a Staffbase demo for the "${industry.label}" industry${prospect?.name ? ` (prospect: ${prospect.name})` : ''}.`,
     `Three role buckets:`,
     `- comms     : ${industry.commsTitle} (signals: ${industry.commsSearch.join(', ')})`,
     `- corporate : ${industry.corporateTitle} (signals: ${industry.corporateSearch.join(', ')})`,
     `- frontline : ${industry.frontlineTitle} (signals: ${industry.frontlineSearch.join(', ')})`,
+    prospectBlock,
     ``,
-    `For each user below, pick the SINGLE best-fit roleType, then suggest a realistic position + department that matches the bucket and industry. Preserve the user's existing seniority cues when possible (a CEO stays leadership, an "engineer" stays technical).`,
+    `For each user below, pick the SINGLE best-fit roleType, then suggest a realistic position + department that matches the bucket and industry. Preserve the user's existing seniority cues when possible (a CEO stays leadership, an "engineer" stays technical). When prospect context is supplied, prefer titles/departments that sound native to that company.`,
     ``,
     `Also infer a simple manager hierarchy: any user whose suggested position starts with "Chief", "VP", "Head of", "Director" is a head; others should report to one of the heads in the same roleType. Put the manager's userId in "managerOfUserId" (omit for heads).`,
     ``,
@@ -175,17 +320,23 @@ interface GeminiResponse {
 /**
  * Single Gemini call returning per-user role assignments. Reuses Replify's
  * existing geminiProxy so no API key leaks.
+ *
+ * Optional `prospect.{name,news}` is the output of researchProspectForPersonas
+ * (or equivalent). Passing it makes Gemini produce prospect-specific titles
+ * (e.g. "MAKO Robotic Specialist" vs generic "Specialist").
  */
 export const matchUsersToIndustry = async (
-  args: { industryKey: string; candidates: PersonaCandidate[] },
+  args: { industryKey: string; candidates: PersonaCandidate[]; prospect?: { name?: string; news?: string } },
   ctx: OperationContext,
 ): Promise<PersonaAssignment[]> => {
   const { apiToken, apiDomain, onProgress } = ctx;
   if (args.candidates.length === 0) return [];
 
-  onProgress?.(`🤖 Gemini classifying ${args.candidates.length} user(s) for "${args.industryKey}"…`);
+  onProgress?.(
+    `🤖 Gemini classifying ${args.candidates.length} user(s) for "${args.industryKey}"${args.prospect?.name ? ` (prospect: ${args.prospect.name})` : ''}…`,
+  );
 
-  const prompt = buildMatchPrompt(args.industryKey, args.candidates);
+  const prompt = buildMatchPrompt(args.industryKey, args.candidates, args.prospect);
   const response = await callGeminiProxy<GeminiResponse>(
     {
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
@@ -322,17 +473,29 @@ const assignUsersToGroup = async (
 };
 
 /**
- * Full apply step: write fields back to users, set managers, then create the
- * 8 industry-themed groups and round-robin-assign users into them by role.
+ * Full apply step: write fields back to users, set managers, then create
+ * either the 8 industry-themed groups OR a Gemini-proposed `customGroups`
+ * list (from researchProspectForPersonas), and round-robin-assign users by
+ * role.
  *
  * Returns an aggregate report for the UI to display.
+ *
+ * @param args.customGroups Optional override list of [title, description]
+ *   pairs. When supplied, replaces PERSONA_INDUSTRIES[industryKey].groups —
+ *   this is how the prospect-research path injects bespoke names.
  */
 export const applyPersonas = async (
-  args: { industryKey: string; assignments: PersonaAssignment[] },
+  args: { industryKey: string; assignments: PersonaAssignment[]; customGroups?: Array<[string, string]> },
   ctx: OperationContext,
 ): Promise<ApplyPersonasReport> => {
   const { onProgress } = ctx;
   const industry = PERSONA_INDUSTRIES[args.industryKey] ?? PERSONA_INDUSTRIES.other;
+  // Use Gemini-proposed groups if supplied AND non-empty; otherwise fall back
+  // to the static industry templates. Keep at most 8 either way to match the
+  // round-robin distribution logic below (corporate slice uses first half).
+  const groupsToCreate: Array<[string, string]> = (args.customGroups && args.customGroups.length > 0)
+    ? args.customGroups.slice(0, 8)
+    : industry.groups;
   const report: ApplyPersonasReport = {
     usersUpdated: 0,
     usersFailed: 0,
@@ -365,9 +528,9 @@ export const applyPersonas = async (
     }
   }
 
-  /* 3️⃣  Create the 8 industry groups */
+  /* 3️⃣  Create the 8 groups (industry template OR custom-from-Gemini) */
   const createdGroups: CreatedGroup[] = [];
-  for (const [title, description] of industry.groups) {
+  for (const [title, description] of groupsToCreate) {
     try {
       const group = await createGroup(title, description, ctx);
       createdGroups.push(group);

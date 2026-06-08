@@ -1007,6 +1007,43 @@ export default function BrandingForm({
       {includeArticles && (
         <div style={{ marginLeft: 16, marginBottom: 12, borderLeft: `2px solid ${colors.border}`, paddingLeft: 12 }}>
 
+          {/* 📰 Rename news channels — moved to the TOP of the Generate articles
+              section per UX request. Bolt-in port of staffbase-news-tool: uses
+              the prospect intelligence Gemini already pulls (via the sparkle
+              button on the prospect-name input) to contextualize the new
+              channel titles. Confirms via window.confirm() before writing. */}
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                style={checkboxStyle}
+                checked={includeChannelRename}
+                onChange={(e) => setIncludeChannelRename(e.target.checked)}
+              />
+              Rename news channels
+            </label>
+            {includeChannelRename && (
+              <div style={{ marginTop: 6 }}>
+                <label style={{ ...labelStyle, fontSize: 11 }}>Industry style</label>
+                <select
+                  style={{ ...inputStyle, padding: "4px 6px", marginBottom: 6, width: "100%" }}
+                  value={channelRenameIndustry}
+                  onChange={(e) => setChannelRenameIndustry(e.target.value)}
+                >
+                  <option value="auto">Auto (infer from prospect)</option>
+                  {newsIndustryKeys().map((i) => (
+                    <option key={i.key} value={i.key}>{i.label}</option>
+                  ))}
+                </select>
+                <p style={{ margin: 0, fontSize: 11, color: colors.textMuted, lineHeight: 1.4 }}>
+                  Gemini will propose new titles using the prospect's name and
+                  the news it pulled. You'll get a confirmation preview before
+                  any channel is renamed.
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* AI Articles */}
           <div style={{ marginBottom: 8 }}>
             <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
@@ -1314,40 +1351,6 @@ export default function BrandingForm({
             )}
           </div>
 
-          {/* 📰 Rename news channels — bolt-in port of staffbase-news-tool. Uses
-              the prospect intelligence Gemini already pulls to contextualize
-              the new channel names. Asks for confirmation before writing. */}
-          <div>
-            <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-              <input
-                type="checkbox"
-                style={checkboxStyle}
-                checked={includeChannelRename}
-                onChange={(e) => setIncludeChannelRename(e.target.checked)}
-              />
-              Rename news channels
-            </label>
-            {includeChannelRename && (
-              <div style={{ marginTop: 6 }}>
-                <label style={{ ...labelStyle, fontSize: 11 }}>Industry style</label>
-                <select
-                  style={{ ...inputStyle, padding: "4px 6px", marginBottom: 6, width: "100%" }}
-                  value={channelRenameIndustry}
-                  onChange={(e) => setChannelRenameIndustry(e.target.value)}
-                >
-                  <option value="auto">Auto (infer from prospect)</option>
-                  {newsIndustryKeys().map((i) => (
-                    <option key={i.key} value={i.key}>{i.label}</option>
-                  ))}
-                </select>
-                <p style={{ margin: 0, fontSize: 11, color: colors.textMuted, lineHeight: 1.4 }}>
-                  Gemini will propose new titles using the prospect's name and
-                  the news it pulled. You'll get a confirmation preview before
-                  any channel is renamed.
-                </p>
-              </div>
-            )}
-          </div>
         </div>
       )}
 
