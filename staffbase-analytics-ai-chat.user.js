@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Staffbase Analytics – Analyze with AI
+// @name         Staffbase Analytics – Compass AI
 // @namespace    staffbase-se-solutions
-// @version      1.1.0
-// @description  Adds an "Analyze with AI" chatbot panel to Staffbase Studio analytics pages
+// @version      2.0.0
+// @description  Gemini-powered "Compass AI" for Staffbase Studio analytics — reads the live analytics API and answers in natural language (LLM via the Replify proxy)
 // @author       Faraz Hussain
 // @match        *://strykerdemo.staffbase.com/studio/analytics*
 // @match        *://*.staffbase.com/studio/analytics*
@@ -16,256 +16,180 @@
   const BTN_ID     = 'sb-ai-btn';
   const STYLES_ID  = 'sb-ai-styles';
 
-  /* ─── Hardcoded analytics data ─────────────────────────────── */
-  const QA = [
-    /* NEWS */
-    {
-      page: 'news',
-      keywords: ['summarize','summary','overview','how did','performed','performance','last week','this week','past 7','news posts'],
-      response: {
-        text: 'Here\'s how your news content performed over the past 7 days (May 2–8, 2026):',
-        bullets: [
-          '69 new posts published — up 475% vs. prior period',
-          '58,800 total visits across all news articles',
-          '10,185 unique visitors reading news content',
-          '5,796 likes and 1,932 comments generated',
-          'Interaction rate of 0.0055% — up 500% vs. prior period',
-        ],
-        followUps: ['Which channel had the most visits?', 'How do likes compare to comments?']
-      }
-    },
-    {
-      page: 'news',
-      keywords: ['channel','top channel','channel engagement','most visits','best channel','marketplace','germany news','healthcare','safety first'],
-      response: {
-        text: 'The top news channels by visits this week:',
-        bullets: [
-          '1. Marketplace — 7,312 visits',
-          '2. Germany News — 7,181 visits',
-          '3. Healthcare — 7,116 visits',
-          '4. Safety First — 6,914 visits',
-          '5. Industry News — ~6,500 visits',
-        ],
-        followUps: ['What drove Marketplace to the top?', 'Which channel has the most comments?']
-      }
-    },
-    {
-      page: 'news',
-      keywords: ['interaction rate','engagement rate','how engaged','engagement'],
-      response: {
-        text: 'Your news interaction rate for the past 7 days is 0.0055% — up 500% vs. the prior period.',
-        bullets: [
-          'Interaction rate = (likes + comments + shares) / total visits',
-          '58,800 visits generated ~8,500 total engagement actions',
-          'The 500% increase reflects a surge in content engagement relative to traffic',
-          'Increasing comments and shares will further improve this rate',
-        ],
-        followUps: ['How many total likes were there?', 'Summarize all engagement metrics']
-      }
-    },
-    {
-      page: 'news',
-      keywords: ['likes','comments','shares','reactions','engagement actions'],
-      response: {
-        text: 'Engagement actions breakdown for the past 7 days:',
-        bullets: [
-          'Likes: 5,796 — stable vs. prior period',
-          'Comments: 1,932 — stable vs. prior period',
-          'Shares: 772 — stable vs. prior period',
-          'Likes-to-comments ratio is ~3:1 — healthy for a large organisation',
-          'Active commenting signals readers are discussing, not just passively reading',
-        ],
-        followUps: ['Which posts got the most comments?', 'How does this compare to last month?']
-      }
-    },
-    {
-      page: 'news',
-      keywords: ['visits','visitors','traffic','how many people','readership','how many views'],
-      response: {
-        text: 'News traffic for the past 7 days:',
-        bullets: [
-          '58,800 total visits — stable vs. prior period (0% change)',
-          '10,185 unique visitors reading news content',
-          'Average ~5.8 visits per unique visitor — strong repeat engagement',
-          'Stable traffic indicates a reliable daily readership base',
-        ],
-        followUps: ['Which platforms did visitors use?', 'Which channel drove the most visitors?']
-      }
-    },
-    {
-      page: 'news',
-      keywords: ['new posts','how many posts','content published','articles published','posts published','content volume','spike'],
-      response: {
-        text: '69 new posts were published in the past 7 days — a 475% increase vs. the prior period.',
-        bullets: [
-          'All 69 posts were unique (no duplicates)',
-          'Average publishing cadence: ~10 posts per day',
-          'The content surge likely contributed to the 500% interaction rate increase',
-          'Consistent publishing keeps employees returning to News daily',
-        ],
-        followUps: ['Which channels published the most?', 'How did this affect visit numbers?']
-      }
-    },
+  /* ─── Gemini proxy (shared with the Replify extension) ─────── */
+  // No Gemini key lives here — calls route through Replify's Supabase
+  // edge function, which authenticates with a Staffbase Basic token.
+  const GEMINI_PROXY_URL = 'https://lhxtgvzdzumwjlnpieog.supabase.co/functions/v1/gemini-proxy';
+  const GEMINI_MODEL     = 'gemini-2.5-flash';
 
-    /* PAGES */
-    {
-      page: 'pages',
-      keywords: ['summarize','summary','overview','how did','performed','performance','page views'],
-      response: {
-        text: 'Here\'s how your pages performed over the past 7 days (May 2–8, 2026):',
-        bullets: [
-          '141,790 total page views — up 64% vs. prior period',
-          '10,363 unique visitors viewed pages',
-          '37 active pages — 0 pages without any visits',
-          'Average of ~13.7 page views per unique visitor',
-        ],
-        followUps: ['Which page had the most traffic?', 'Are there any pages with 0 visits?']
+  // Replify saves per-tenant Basic tokens in localStorage.staffbaseTokens
+  // as [{slug, token, domain, ...}]. The proxy uses one to auth + identify.
+  function getStaffbaseAuth() {
+    const apiDomain = location.host;
+    try {
+      const raw = localStorage.getItem('staffbaseTokens');
+      if (raw) {
+        const tokens = JSON.parse(raw);
+        if (Array.isArray(tokens)) {
+          const valid = t => t && t.token && t.token !== '[invalid token]';
+          const match = tokens.find(t => valid(t) && (t.domain === apiDomain || (t.slug && apiDomain.startsWith(t.slug))))
+                     || tokens.find(valid);
+          if (match) return { apiToken: match.token, apiDomain: match.domain || apiDomain };
+        }
       }
-    },
-    {
-      page: 'pages',
-      keywords: ['most visited','top pages','highest traffic','best performing','popular pages','homepage','calculate views'],
-      response: {
-        text: 'All 37 active pages received visits this period. To see individual rankings:',
-        bullets: [
-          'Scroll to the "All Pages" table below the chart',
-          'Sort by the "Views" column to identify top performers',
-          'The Homepage typically ranks as the most-visited page',
-          'Benefits, Company News, and HR Policies pages usually rank in the top 5',
-        ],
-        followUps: ['What\'s the average bounce rate?', 'How many pages have over 1,000 views?']
-      }
-    },
-    {
-      page: 'pages',
-      keywords: ['views','total views','how many views','view count','64'],
-      response: {
-        text: 'Pages generated 141,790 total views in the past 7 days — a 64% increase vs. prior period.',
-        bullets: [
-          '10,363 unique visitors contributed to these views',
-          'Average ~13.7 pages viewed per visitor — strong depth of engagement',
-          'Both views and visitors grew equally (+64%), indicating new audience reach',
-          'The 64% increase suggests a successful content or campaign push this week',
-        ],
-        followUps: ['What drove the 64% increase?', 'Which spaces had the most page views?']
-      }
-    },
-    {
-      page: 'pages',
-      keywords: ['pages without views','unused pages','no traffic','zero views','unvisited','0 pages'],
-      response: {
-        text: 'Great news — all 37 published pages received at least one visit this week.',
-        bullets: [
-          '0 pages without views — 100% content utilisation',
-          'Every piece of page content is actively reaching employees',
-          'Running a quarterly content audit helps maintain healthy page engagement',
-          'Consider archiving pages that consistently receive under 10 views per month',
-        ],
-        followUps: ['Which pages have the lowest views?', 'How often should I audit page content?']
-      }
-    },
-    {
-      page: 'pages',
-      keywords: ['visitors','unique visitors','who is visiting','user groups','37 pages'],
-      response: {
-        text: '10,363 unique visitors viewed pages in the past 7 days — up 64% vs. prior period.',
-        bullets: [
-          'Each visitor viewed an average of 13.7 pages per session',
-          'Visitor growth (+64%) matches total view growth, confirming new audience reach',
-          'Use the "User Group" filter to see which employee groups are most active',
-          'The "Space" filter shows which content areas attract the most distinct visitors',
-        ],
-        followUps: ['Which user groups visit most?', 'Are mobile visitors increasing?']
-      }
-    },
+    } catch (_) {}
+    return { apiDomain };
+  }
 
-    /* USERS */
-    {
-      page: 'users',
-      keywords: ['summarize','summary','overview','user stats','how many users','user overview','user activity'],
-      response: {
-        text: 'Here\'s your user overview for the past 7 days (May 2–8, 2026):',
-        bullets: [
-          'Total Users: 3,947 — up 13% vs. prior period',
-          'Registered Users: 3,868 — up 13%',
-          'Active Users: 2,542 — down 12%',
-          'Engaged Users: 1,989 — up 51%',
-        ],
-        followUps: ['Why did active users drop?', 'What\'s the user engagement funnel?']
-      }
-    },
-    {
-      page: 'users',
-      keywords: ['active users','activity','who is active','how active','login','logged in','2542','2,542'],
-      response: {
-        text: '2,542 users were active in the past 7 days — a 12% decrease vs. the prior period.',
-        bullets: [
-          'Active users = users who logged in at least once',
-          'The 12% dip may reflect a holiday, weekend, or seasonal pattern',
-          'However, engaged users grew +51% — those who are active interact far more',
-          'Active users represent 66% of all registered users (2,542 / 3,868)',
-        ],
-        followUps: ['What\'s the engaged user rate?', 'When did activity peak this week?']
-      }
-    },
-    {
-      page: 'users',
-      keywords: ['engaged users','engagement','most engaged','who engages','interacting','1989','1,989'],
-      response: {
-        text: 'Engaged users reached 1,989 this week — up 51% vs. the prior period.',
-        bullets: [
-          'Engaged = users who liked, commented, or shared at least one piece of content',
-          '78% of active users were engaged (1,989 / 2,542) — a very strong ratio',
-          'Engagement peaked around May 6–7 based on the trend chart',
-          'The +51% growth indicates recent content resonated strongly with employees',
-        ],
-        followUps: ['Which content drove the most engagement?', 'How can we increase engaged users further?']
-      }
-    },
-    {
-      page: 'users',
-      keywords: ['registered users','registration','sign up','onboarding','new users','provisioned','3868','3,868'],
-      response: {
-        text: '3,868 of your 3,947 total users are registered — a 98% registration rate.',
-        bullets: [
-          'Registered users grew 13% — consistent with total user growth',
-          '79 users are provisioned but have not yet completed registration (2% of total)',
-          'A 98% registration rate is excellent for an enterprise intranet',
-          'A targeted nudge campaign could convert the remaining 79 unregistered accounts',
-        ],
-        followUps: ['How do I send a registration reminder?', 'Which departments have unregistered users?']
-      }
-    },
-    {
-      page: 'users',
-      keywords: ['funnel','user funnel','conversion','drop off','journey','steps','breakdown'],
-      response: {
-        text: 'Your user engagement funnel for the past 7 days:',
-        bullets: [
-          'Total Users: 3,947 — all provisioned accounts',
-          'Registered: 3,868 (98% of total) — completed sign-up',
-          'Active: 2,542 (66% of registered) — logged in at least once',
-          'Engaged: 1,989 (78% of active) — liked, commented, or shared',
-        ],
-        followUps: ['How do I improve Active → Engaged conversion?', 'What\'s a good benchmark for engagement rates?']
-      }
-    },
+  /* ─── Live analytics API ────────────────────────────────────── */
+  // Default window = last 7 days (the analytics UI keeps its own range in
+  // component state, not the URL, so we pick a sane default to report on).
+  function dateRange(days) {
+    const until = new Date();
+    const since = new Date(until.getTime() - (days || 7) * 864e5);
+    return { since: since.toISOString(), until: until.toISOString(), label: 'past ' + (days || 7) + ' days' };
+  }
 
-    /* GENERIC */
-    {
-      page: 'any',
-      keywords: ['help','what can you do','capabilities','what can i ask'],
-      response: {
-        text: 'I can help you analyse your Staffbase analytics. Here\'s what you can ask:',
-        bullets: [
-          'News: "Summarise news performance" or "Which channel had the most visits?"',
-          'Pages: "How many total views did we get?" or "Are there pages with no traffic?"',
-          'Users: "What\'s the user engagement funnel?" or "How many users are engaged?"',
-        ],
-        followUps: ['Summarise this week\'s performance', 'What should I focus on improving?']
-      }
-    },
-  ];
+  // Same-origin fetch on the logged-in session. If Replify's analytics
+  // demo-mocker is active, these endpoints return its scaled numbers —
+  // which is exactly what you want the chatbot to narrate in a demo.
+  async function apiGet(path) {
+    const res = await fetch(path, { credentials: 'include', headers: { Accept: 'application/json' } });
+    if (!res.ok) throw new Error(path.split('?')[0] + ' → ' + res.status);
+    return res.json();
+  }
+
+  const settled = r => (r && r.status === 'fulfilled') ? r.value : null;
+
+  function mapTopPosts(r) {
+    if (!r || !Array.isArray(r.ranking)) return [];
+    const posts = (r.entities && r.entities.posts) || {};
+    return r.ranking.slice(0, 10).map(item => {
+      const id = item && item.group && item.group.postId;
+      return {
+        title:    (id && posts[id] && posts[id].title) || 'Untitled',
+        visits:   item.registeredVisits,
+        visitors: item.registeredVisitors,
+        likes:    item.likes,
+        comments: item.comments,
+        shares:   item.shares,
+      };
+    });
+  }
+
+  async function fetchAnalytics(page) {
+    const range = dateRange(7);
+    const qs = 'since=' + encodeURIComponent(range.since) + '&until=' + encodeURIComponent(range.until);
+
+    if (page === 'news') {
+      const [agg, ts, rank] = await Promise.allSettled([
+        apiGet('/api/branch/analytics/posts/stats/aggregated?' + qs),
+        apiGet('/api/branch/analytics/posts/timeseries?' + qs + '&groupBy=day'),
+        apiGet('/api/branch/analytics/posts/rankings?' + qs + '&limit=10'),
+      ]);
+      const tsv = settled(ts);
+      return {
+        page, range,
+        aggregated: settled(agg),
+        timeseries: (tsv && Array.isArray(tsv.timeseries) ? tsv.timeseries : []).slice(-14),
+        topPosts: mapTopPosts(settled(rank)),
+      };
+    }
+
+    if (page === 'pages') {
+      const [stats, rank, ts] = await Promise.allSettled([
+        apiGet('/api/branch/analytics/pages/stats?' + qs),
+        apiGet('/api/branch/analytics/pages/ranking?' + qs + '&limit=10'),
+        apiGet('/api/branch/analytics/pages/timeseries?' + qs),
+      ]);
+      const rk = settled(rank), tsv = settled(ts);
+      return {
+        page, range,
+        stats: settled(stats),
+        topPages: ((rk && rk.data) || []).slice(0, 10).map(p => ({
+          title: p.title || p.name || p.id, views: p.views, viewers: p.viewers, bounceRate: p.bounceRate,
+        })),
+        timeseries: ((tsv && tsv.data) || []).slice(-14),
+      };
+    }
+
+    if (page === 'users') {
+      const u = await apiGet('/api/branch/analytics/v2/users/timeseries?' + qs + '&groupBy=day').catch(() => null);
+      return { page, range, total: u && u.total, timeseries: ((u && u.timeseries) || []).slice(-14) };
+    }
+
+    if (page === 'email') {
+      const o = await apiGet('/api/email-analytics/overview?' + qs).catch(() => null);
+      return { page, range, overview: o };
+    }
+
+    // Fallback: try the news aggregate so the assistant still has something real.
+    try {
+      return { page, range, aggregated: await apiGet('/api/branch/analytics/posts/stats/aggregated?' + qs) };
+    } catch (_) {
+      return { page, range, note: 'No analytics endpoint is mapped for this tab yet.' };
+    }
+  }
+
+  /* ─── Gemini call ───────────────────────────────────────────── */
+  async function callGemini(question, page, data, history) {
+    const auth = getStaffbaseAuth();
+    const NL = String.fromCharCode(10);
+    const transcript = (history || [])
+      .filter(m => m.role)
+      .slice(-6)
+      .map(m => (m.role === 'user' ? 'User' : 'Compass') + ': ' + m.text)
+      .join(NL);
+
+    const dataJson = JSON.stringify(data, null, 2).slice(0, 12000);
+    const prompt = [
+      'You are "Compass AI", an analytics assistant embedded in Staffbase Studio.',
+      'You are viewing the **' + page + '** analytics tab for the ' + (data && data.range ? data.range.label : 'selected period') + '.',
+      'Answer the user using ONLY the live analytics JSON below. Be concise and specific, quote the real numbers, and add brief interpretation where it helps. Do not invent metrics that are not present; if the data does not contain the answer, say so briefly.',
+      '',
+      'LIVE ANALYTICS DATA (JSON):',
+      dataJson,
+      '',
+      transcript ? ('Conversation so far:' + NL + transcript + NL) : '',
+      'User question: "' + question + '"',
+      '',
+      'Respond with ONLY a JSON object (no markdown fences) of this exact shape:',
+      '{"text": "1-2 sentence direct answer", "bullets": ["3-5 short supporting points, each quoting a real number from the data"], "followUps": ["2 natural follow-up questions the user might ask next"]}',
+    ].join(NL);
+
+    const res = await fetch(GEMINI_PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiToken: auth.apiToken,
+        apiDomain: auth.apiDomain,
+        model: GEMINI_MODEL,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.3, responseMimeType: 'application/json' },
+      }),
+    });
+
+    if (!res.ok) {
+      let detail = res.status;
+      try { const e = await res.json(); detail = (e.error && (e.error.message || e.error)) || detail; } catch (_) {}
+      throw new Error('Gemini proxy error: ' + detail);
+    }
+
+    const json = await res.json();
+    const text = (((json.candidates || [])[0] || {}).content || {}).parts;
+    const raw  = (text && text[0] && text[0].text) || '';
+    const cleaned = raw.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    let parsed;
+    try { parsed = JSON.parse(cleaned); }
+    catch (_) { parsed = { text: cleaned || 'I could not parse a response.', bullets: [], followUps: [] }; }
+
+    return {
+      text:      parsed.text || 'No answer returned.',
+      bullets:   Array.isArray(parsed.bullets) ? parsed.bullets : [],
+      followUps: Array.isArray(parsed.followUps) ? parsed.followUps : [],
+    };
+  }
 
   /* ─── Suggested prompts per page ───────────────────────────── */
   const PROMPTS = {
@@ -296,23 +220,6 @@
       .replace(/"/g, '&quot;');
   }
 
-  function getResponse(input) {
-    const page = getCurrentPage();
-    const text = input.toLowerCase();
-    let best = null, score = 0;
-    for (const qa of QA) {
-      if (qa.page !== page && qa.page !== 'any') continue;
-      let s = 0;
-      for (const kw of qa.keywords) if (text.includes(kw)) s += kw.split(' ').length;
-      if (s > score) { score = s; best = qa; }
-    }
-    if (best && score > 0) return best.response;
-    return {
-      text: 'I don\'t have specific data for that query. Try asking:',
-      bullets: ['Overall performance summary for this page', 'Top channels or pages by traffic', 'User engagement metrics', 'Comparison of likes, comments, and shares'],
-      followUps: ['Summarise this page\'s analytics', 'What are the key metrics?']
-    };
-  }
 
   /* ─── State ─────────────────────────────────────────────────── */
   let messages = [];
@@ -392,8 +299,8 @@
     convEl.innerHTML = `
       <div class="sbai-intro">
         <div class="sbai-intro-icon">✦</div>
-        <h2>Analyze with AI</h2>
-        <p>Here are a few things I can do, or ask me anything!</p>
+        <h2>Compass AI</h2>
+        <p>I read this tab's live analytics and answer in plain language. Pick a prompt or ask me anything.</p>
         <div class="sbai-chips">
           ${prompts.map(p => `<button class="sbai-chip" data-p="${esc(p)}">${esc(p)}</button>`).join('')}
         </div>
@@ -449,20 +356,33 @@
   }
 
   /* ─── Send ──────────────────────────────────────────────────── */
-  function send(text) {
+  async function send(text) {
     if (!text?.trim()) return;
     text = text.trim();
     messages.push({ role: 'user', text });
     renderMsgs();
-    if (inputEl) inputEl.value = '';
+    if (inputEl) { inputEl.value = ''; inputEl.style.height = 'auto'; }
     showTyping();
     convEl.scrollTop = convEl.scrollHeight;
-    setTimeout(() => {
+
+    const page = getCurrentPage();
+    try {
+      // 1. Pull the live analytics for this tab, 2. let Gemini narrate it.
+      const data = await fetchAnalytics(page);
+      const r = await callGemini(text, page, data, messages);
       hideTyping();
-      const r = getResponse(text);
       messages.push({ role: 'ai', text: r.text, bullets: r.bullets, followUps: r.followUps });
       renderMsgs();
-    }, 700 + Math.random() * 500);
+    } catch (err) {
+      hideTyping();
+      const msg = String((err && err.message) || err);
+      const isLLM = /Gemini|proxy/i.test(msg);
+      const hint = isLLM
+        ? 'I couldn\'t reach the AI service. Make sure the Replify extension has a saved token for this tenant — it supplies the Gemini credentials.'
+        : 'I couldn\'t load analytics for this tab. Make sure you\'re on a Studio analytics page and signed in.';
+      messages.push({ role: 'ai', text: hint, bullets: [msg], followUps: [] });
+      renderMsgs();
+    }
   }
 
   /* ─── Panel open / close / new ──────────────────────────────── */
@@ -495,7 +415,7 @@
     panel.innerHTML = `
       <div class="sbai-hd">
         <div class="sbai-hd-title">
-          <span class="spark">✦</span> Analyze with AI
+          <span class="spark">✦</span> Compass AI
         </div>
         <div class="sbai-hd-btns">
           <button class="sbai-ic" id="sbai-hist" title="History">
@@ -559,7 +479,7 @@
 
     const btn = document.createElement('button');
     btn.id = BTN_ID;
-    btn.innerHTML = `<span class="sbai-spark">✦</span> Analyze with AI`;
+    btn.innerHTML = `<span class="sbai-spark">✦</span> Compass AI`;
     btn.addEventListener('click', e => {
       e.stopPropagation();
       isOpen ? closePanel() : openPanel();
