@@ -8,6 +8,8 @@
 // @match        *://*.staffbase.rocks/studio/analytics*
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest
+// @grant        GM_getValue
+// @grant        GM_setValue
 // @connect      generativelanguage.googleapis.com
 // ==/UserScript==
 
@@ -22,15 +24,33 @@
   // Replify's Supabase proxy is origin-locked (no CORS for staffbase.*),
   // so a page-context fetch can't reach it. We instead call Google's
   // Gemini API directly through GM_xmlhttpRequest, which isn't bound by
-  // the page's CORS policy. The key is read from localStorage so it never
-  // lives in source control — set it once in the browser console:
-  //   localStorage.setItem('compassGeminiKey', 'AIza…')
+  // the page's CORS policy. The key is stored locally (never in source
+  // control). On first use the panel prompts for it; you can also preset it
+  // with GM_setValue or, as a fallback, localStorage.setItem('compassGeminiKey', 'AIza…').
   const GEMINI_MODEL    = 'gemini-2.5-flash';
   const GEMINI_KEY_LS   = 'compassGeminiKey';
   const GEMINI_ENDPOINT = m => 'https://generativelanguage.googleapis.com/v1beta/models/' + m + ':generateContent';
 
+  // Read order: Tampermonkey storage (sandbox-proof) → page localStorage.
+  // Under @grant, the sandboxed script's localStorage isn't always the same
+  // object the page console writes to, so GM storage is the reliable home.
   function getGeminiKey() {
-    try { return (localStorage.getItem(GEMINI_KEY_LS) || '').trim(); } catch (_) { return ''; }
+    try { if (typeof GM_getValue === 'function') { const v = GM_getValue(GEMINI_KEY_LS, ''); if (v) return String(v).trim(); } } catch (_) {}
+    try { const v = localStorage.getItem(GEMINI_KEY_LS); if (v) return v.trim(); } catch (_) {}
+    return '';
+  }
+  function setGeminiKey(k) {
+    try { if (typeof GM_setValue === 'function') GM_setValue(GEMINI_KEY_LS, k); } catch (_) {}
+    try { localStorage.setItem(GEMINI_KEY_LS, k); } catch (_) {}
+  }
+  // Return the key, prompting once if we don't have one yet.
+  function ensureGeminiKey() {
+    let k = getGeminiKey();
+    if (!k && typeof prompt === 'function') {
+      const entered = prompt('Compass AI — paste your Google Gemini API key (starts with "AIza"). Stored locally on this browser only.');
+      if (entered && entered.trim()) { k = entered.trim(); setGeminiKey(k); }
+    }
+    return k;
   }
 
   // Cross-origin POST that bypasses the page CORS policy (Tampermonkey /
@@ -157,9 +177,9 @@
 
   /* ─── Gemini call ───────────────────────────────────────────── */
   async function callGemini(question, page, data, history) {
-    const key = getGeminiKey();
+    const key = ensureGeminiKey();
     if (!key) {
-      throw new Error('No Gemini API key set. In the browser console run: localStorage.setItem(\'compassGeminiKey\',\'AIza…\') then retry.');
+      throw new Error('No Gemini API key provided. Re-open Compass AI and paste your key (AIza…) when prompted.');
     }
     const NL = String.fromCharCode(10);
     const transcript = (history || [])
@@ -391,7 +411,7 @@
       const msg = String((err && err.message) || err);
       const isLLM = /Gemini|GM_xmlhttpRequest|API key/i.test(msg);
       const hint = isLLM
-        ? 'I couldn\'t reach the AI service. Set a Gemini API key once in the console — localStorage.setItem(\'compassGeminiKey\',\'AIza…\') — then retry.'
+        ? 'I couldn\'t reach the AI service. When prompted, paste a valid Google Gemini API key (AIza…) from aistudio.google.com/apikey, then retry.'
         : 'I couldn\'t load analytics for this tab. Make sure you\'re on a Studio analytics page and signed in.';
       messages.push({ role: 'ai', text: hint, bullets: [msg], followUps: [] });
       renderMsgs();
