@@ -153,6 +153,10 @@ import {
   discoverEmailTemplates as emailDiscoverTemplates,
   buildEmailTemplateDiffs as emailBuildDiffs,
   applyApprovedEmailTemplateEdits as emailApplyEdits,
+  // V2: clone-and-translate templates to a new locale, and create
+  // ready-to-preview email drafts from templates.
+  cloneTranslatedTemplates as emailCloneTranslated,
+  createDraftsFromTemplates as emailCreateDrafts,
 } from './emailTemplateTailor';
 
 // Re-export everything for direct imports
@@ -256,6 +260,8 @@ export const applyApprovedPageEdits = pagesApplyEdits;
 export const discoverEmailTemplates           = emailDiscoverTemplates;
 export const buildEmailTemplateDiffs          = emailBuildDiffs;
 export const applyApprovedEmailTemplateEdits  = emailApplyEdits;
+export const cloneTranslatedTemplates         = emailCloneTranslated;
+export const createDraftsFromTemplates        = emailCreateDrafts;
 
 /**
  * Operation Registry
@@ -363,6 +369,8 @@ export const OPERATION_REGISTRY = {
   discoverEmailTemplates:          emailDiscoverTemplates,
   buildEmailTemplateDiffs:         emailBuildDiffs,
   applyApprovedEmailTemplateEdits: emailApplyEdits,
+  cloneTranslatedTemplates:        emailCloneTranslated,
+  createDraftsFromTemplates:       emailCreateDrafts,
 };
 
 /**
@@ -467,4 +475,6 @@ export const getOperationDescriptions = () => ({
   discoverEmailTemplates:          'List every email designer template across all galleries via /api/email-service, with per-template editable-text-fragment counts',
   buildEmailTemplateDiffs:         'For each selected template: GET its pikasso content tree, walk every textMarkupValue HTML fragment, batch text nodes to Gemini for prospect-tailored rewrites, return per-template before/after diffs WITHOUT writing',
   applyApprovedEmailTemplateEdits: 'PUT each approved template back via /api/email-service/templates/{id}/contents/pikasso — only the content changes; name, gallery, thumbnail are untouched',
+  cloneTranslatedTemplates:        'For each source template: POST a NEW template in the same gallery with name suffix "— <Locale>", then walk + Gemini-translate every textMarkupValue to the target locale, then PUT translated content. Original template stays untouched.',
+  createDraftsFromTemplates:       'For each source template: discover/create a draft folder, POST a new email draft using the template name + prospect-flavored subject, then Gemini-rewrite + PUT pikasso content with the locale-keyed body shape emails require.',
 });

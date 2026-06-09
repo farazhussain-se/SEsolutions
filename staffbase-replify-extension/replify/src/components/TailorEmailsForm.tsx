@@ -46,11 +46,17 @@ import {
   discoverEmailTemplates,
   buildEmailTemplateDiffs,
   applyApprovedEmailTemplateEdits,
+  // V2 actions: translate templates to a new locale (new template), or
+  // spin up email drafts from templates.
+  cloneTranslatedTemplates,
+  createDraftsFromTemplates,
 } from "../utils/automationOperations/emailTemplateTailor";
 import type {
   EmailTemplateSummary,
   EmailTemplateDiff,
   EmailApplyReport,
+  TranslatedTemplateReport,
+  CreatedDraftReport,
 } from "../utils/automationOperations/emailTemplateTailor";
 import { fetchProspectIntelligence, buildProspectBrief } from "../utils/aiUtils";
 import type { ProspectBrief } from "../utils/aiUtils";
@@ -65,7 +71,14 @@ interface TailorEmailsFormProps {
   prospectNameSeed?: string;
   prospectNewsSeed?: string;
   savedProspects?: Prospect[];
+  /** Locales the tenant has configured (from /api/branch). Drives the
+   *  translation target dropdown. If absent, falls back to a built-in
+   *  short list so demos still work. */
+  availableLocales?: string[];
 }
+
+/** Three actions Tailor Emails can perform on the selected templates. */
+type EmailAction = "edit" | "translate" | "draft";
 
 const selectStyle: React.CSSProperties = { ...inputStyle, width: "100%", padding: "8px" };
 
@@ -82,6 +95,7 @@ export default function TailorEmailsForm({
   prospectNameSeed,
   prospectNewsSeed,
   savedProspects = [],
+  availableLocales,
 }: TailorEmailsFormProps) {
   /* ── State ─────────────────────────────────────────────────────────── */
   const [prospect, setProspect] = useState<string>(prospectNameSeed ?? "");
@@ -110,6 +124,27 @@ export default function TailorEmailsForm({
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [applyBusy, setApplyBusy] = useState(false);
   const [report, setReport] = useState<EmailApplyReport | null>(null);
+  /* ── V2 action state ────────────────────────────────────────────────── */
+  // Which output mode the user wants. "edit" keeps the V1 behavior
+  // (rewrite in place). "translate" clones to a new template with
+  // translated content. "draft" creates an email draft in a folder.
+  const [action, setAction] = useState<EmailAction>("edit");
+  // Target locale for the "translate" action. Default to fr_FR because
+  // French is the most common multi-locale demo ask; user can switch.
+  const [targetLocale, setTargetLocale] = useState<string>("fr_FR");
+  // Folder name for the "draft" action. Created if it doesn't exist.
+  const [draftFolder, setDraftFolder] = useState<string>("Replify Drafts");
+  // Per-action reports — kept separate so switching modes doesn't
+  // clobber a result you might still want to see.
+  const [translateReport, setTranslateReport] = useState<TranslatedTemplateReport[] | null>(null);
+  const [draftReport, setDraftReport] = useState<CreatedDraftReport[] | null>(null);
+
+  // Locales to offer in the translation dropdown. Prefer the tenant's
+  // configured availableLocales (from /api/branch); fall back to a
+  // built-in short list so the form still works on tenants where
+  // branch fetch failed.
+  const FALLBACK_LOCALES = ["en_US", "de_DE", "fr_FR", "es_ES", "it_IT", "pt_BR", "nl_NL", "ja_JP", "zh_CN"];
+  const locales = (availableLocales && availableLocales.length > 0) ? availableLocales : FALLBACK_LOCALES;
 
   const ctx = { apiToken, apiDomain, onProgress: (m: string) => onLog(m) };
 
@@ -256,10 +291,58 @@ export default function TailorEmailsForm({
         }
       }
 
+      // Three action branches:
+      //   - "edit": V1 behavior — produce diffs, user approves, applyApprovedEmailTemplateEdits PUTs back.
+      //   - "translate": one-shot — for each source, POST a new template + Gemini-translates + PUT. No approval step (creates NEW resources, original templates are untouched).
+      //   - "draft": one-shot — for each source, POST a new email draft in a folder + Gemini-rewrites + PUT. Same logic: creates NEW resources, additive only.
+      const prospectArg = prospect ? { name: prospect, news: prospectNews || undefined } : undefined;
+      setTranslateReport(null);
+      setDraftReport(null);
+
+      if (action === "translate") {
+        onLog(`🌐 Translating ${selected.length} template(s) → ${targetLocale}…`);
+        const result = await cloneTranslatedTemplates(
+          {
+            sources: selected,
+            targetLocale,
+            prospect: prospectArg,
+            brief: effectiveBrief ?? undefined,
+          },
+          ctx,
+        );
+        setTranslateReport(result);
+        const ok = result.filter((r) => r.newTemplateId).length;
+        onLog(`✅ Translation complete — ${ok}/${result.length} new template(s) created in ${targetLocale}.`);
+        return;
+      }
+
+      if (action === "draft") {
+        onLog(`📨 Creating ${selected.length} email draft(s) in folder "${draftFolder}"…`);
+        const result = await createDraftsFromTemplates(
+          {
+            sources: selected,
+            folderName: draftFolder,
+            // V1 of drafts: en_US locale only. Multi-locale drafts are a
+            // follow-up — would need to translate per-locale and write
+            // each into the contents map.
+            locale: "en_US",
+            prospect: prospectArg,
+            brief: effectiveBrief ?? undefined,
+            tone,
+          },
+          ctx,
+        );
+        setDraftReport(result);
+        const ok = result.filter((r) => r.newDraftId).length;
+        onLog(`✅ Drafts complete — ${ok}/${result.length} email draft(s) created in "${draftFolder}".`);
+        return;
+      }
+
+      // action === "edit" — V1 in-place edit flow with approve step.
       const result = await buildEmailTemplateDiffs(
         {
           templates: selected,
-          prospect: prospect ? { name: prospect, news: prospectNews || undefined } : undefined,
+          prospect: prospectArg,
           brief: effectiveBrief ?? undefined,
           tone,
         },
@@ -480,6 +563,67 @@ export default function TailorEmailsForm({
             </option>
           ))}
         </select>
+
+        {/* 🎬 Action selector — picks which output flow runs when the
+            user clicks Generate. Reveals additional inputs per action. */}
+        <label style={{ ...labelStyle, marginTop: 12 }}>Action</label>
+        <select
+          style={selectStyle}
+          value={action}
+          onChange={(e) => {
+            setAction(e.target.value as EmailAction);
+            // Switching action invalidates any in-flight diffs/reports
+            setDiffs([]);
+            setReport(null);
+            setTranslateReport(null);
+            setDraftReport(null);
+          }}
+          disabled={generateBusy || applyBusy || researchBusy}
+        >
+          <option value="edit">Edit in place — rewrite the selected templates</option>
+          <option value="translate">Translate to new templates — clone + translate to another locale</option>
+          <option value="draft">Create email drafts — make ready-to-send draft emails from templates</option>
+        </select>
+
+        {action === "translate" && (
+          <div style={{ marginTop: 8 }}>
+            <label style={{ ...labelStyle, fontSize: 11 }}>Target locale</label>
+            <select
+              style={selectStyle}
+              value={targetLocale}
+              onChange={(e) => setTargetLocale(e.target.value)}
+              disabled={generateBusy || applyBusy || researchBusy}
+            >
+              {locales.filter((l) => l !== "en_US").map((l) => (
+                <option key={l} value={l}>{l}</option>
+              ))}
+            </select>
+            <p style={{ margin: "4px 0 0", fontSize: 11, color: colors.textMuted, lineHeight: 1.4 }}>
+              Each selected template gets a NEW twin named "…—{" "}
+              {locales.includes(targetLocale) ? targetLocale : targetLocale}" in the same gallery.
+              Originals stay untouched.
+            </p>
+          </div>
+        )}
+
+        {action === "draft" && (
+          <div style={{ marginTop: 8 }}>
+            <label style={{ ...labelStyle, fontSize: 11 }}>Folder for new drafts</label>
+            <input
+              type="text"
+              style={{ ...inputStyle, width: "100%" }}
+              value={draftFolder}
+              onChange={(e) => setDraftFolder(e.target.value)}
+              placeholder="Replify Drafts"
+              disabled={generateBusy || applyBusy || researchBusy}
+            />
+            <p style={{ margin: "4px 0 0", fontSize: 11, color: colors.textMuted, lineHeight: 1.4 }}>
+              Folder will be created if it doesn't exist. Each draft uses
+              the source template as its layout + Gemini-tailored text.
+              Subject defaults to "&lt;template name&gt; — &lt;prospect&gt;".
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Template selector */}
@@ -532,12 +676,63 @@ export default function TailorEmailsForm({
         disabled={generateBusy || applyBusy || selectedTemplateIds.size === 0}
       >
         {generateBusy
-          ? "Asking Gemini…"
+          ? action === "translate"
+            ? "Translating with Gemini…"
+            : action === "draft"
+            ? "Creating drafts…"
+            : "Asking Gemini…"
+          : action === "translate"
+          ? `Translate to ${targetLocale} (${selectedTemplateIds.size} template${selectedTemplateIds.size === 1 ? "" : "s"})`
+          : action === "draft"
+          ? `Create ${selectedTemplateIds.size} draft${selectedTemplateIds.size === 1 ? "" : "s"} in "${draftFolder}"`
           : `Generate tailored content (${selectedTemplateIds.size} template${selectedTemplateIds.size === 1 ? "" : "s"})`}
       </button>
 
-      {/* Diffs */}
-      {diffs.length > 0 && (
+      {/* Translate result panel — appears after a translate run completes */}
+      {translateReport && (
+        <div style={{ ...subtlePanelStyle, marginTop: 14 }}>
+          <strong>Translated templates</strong>
+          <div style={{ fontSize: 13, marginBottom: 6 }}>
+            {translateReport.filter((r) => r.newTemplateId).length}/{translateReport.length} created ·{" "}
+            {translateReport.reduce((acc, r) => acc + r.changeCount, 0)} blocks translated
+          </div>
+          {translateReport.map((r) => (
+            <div key={r.sourceTemplateId} style={{ fontSize: 11, padding: "4px 0", borderBottom: `1px solid ${colors.borderLight}` }}>
+              <div>
+                {r.newTemplateId ? "✅" : "❌"} <strong>{r.newTemplateName}</strong>
+                {r.changeCount > 0 && <span style={{ color: colors.textMuted, marginLeft: 6 }}>· {r.changeCount} blocks</span>}
+              </div>
+              {r.error && <div style={{ color: colors.danger, fontSize: 10 }}>{r.error}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Drafts result panel — appears after a draft run completes */}
+      {draftReport && (
+        <div style={{ ...subtlePanelStyle, marginTop: 14 }}>
+          <strong>Email drafts</strong>
+          <div style={{ fontSize: 13, marginBottom: 6 }}>
+            {draftReport.filter((r) => r.newDraftId).length}/{draftReport.length} created ·{" "}
+            {draftReport.reduce((acc, r) => acc + r.changeCount, 0)} blocks tailored
+          </div>
+          {draftReport.map((r) => (
+            <div key={r.sourceTemplateId} style={{ fontSize: 11, padding: "4px 0", borderBottom: `1px solid ${colors.borderLight}` }}>
+              <div>
+                {r.newDraftId ? "✅" : "❌"} <strong>{r.newDraftTitle}</strong>
+                {r.changeCount > 0 && <span style={{ color: colors.textMuted, marginLeft: 6 }}>· {r.changeCount} blocks</span>}
+              </div>
+              {r.error && <div style={{ color: colors.danger, fontSize: 10 }}>{r.error}</div>}
+            </div>
+          ))}
+          <p style={{ margin: "8px 0 0", fontSize: 10, color: colors.textMuted, lineHeight: 1.4 }}>
+            Drafts are visible in Staffbase Studio → Email → Drafts. Preview, edit, or send from there.
+          </p>
+        </div>
+      )}
+
+      {/* Diffs (only for action === "edit" — the other actions don't go through approve) */}
+      {action === "edit" && diffs.length > 0 && (
         <div style={{ marginTop: 14 }}>
           <h3 style={{ margin: "0 0 8px", fontSize: 14 }}>
             Proposed changes ({approvedCount} of {diffs.length} approved · {totalChangeCount} block

@@ -3981,6 +3981,7 @@ function App() {
       prospectNameSeed={prospectName}
       prospectNewsSeed={prospectNews}
       savedProspects={savedProspects}
+      availableLocales={availableLocales}
     />
   )}
   {/* ─────────── BRAND EXISTING ENV ─────────── */}

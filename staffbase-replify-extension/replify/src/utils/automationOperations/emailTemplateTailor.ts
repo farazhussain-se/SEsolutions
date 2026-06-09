@@ -533,3 +533,557 @@ export const applyApprovedEmailTemplateEdits = async (
 
   return report;
 };
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * V2 ACTIONS
+ * ──────────────────────────────────────────────────────────────────────────
+ * The flows below extend the in-place edit path with two new actions:
+ *
+ *   - cloneTranslatedTemplates: for each source template, create a NEW
+ *     template in the target locale with Gemini-translated text.
+ *     Original templates stay untouched. Result: side-by-side English +
+ *     French (or other) versions in the same gallery.
+ *
+ *   - createDraftsFromTemplates: for each source template, create a
+ *     ready-to-preview email DRAFT (in a folder) with prospect-tailored
+ *     content. The draft uses the email-service's email surface, which
+ *     has a slightly different body shape than templates — `contents`
+ *     (plural, locale-keyed) instead of `content` (singular).
+ *
+ * Both reuse the existing pikasso walker (findTextMarkupFragments,
+ * extractEditableTextNodes, applyTextRewrites) + the Gemini text-rewrite
+ * step. The new things are: (a) creating the destination resource via
+ * POST, (b) translation-aware prompt variant, and (c) the email-side
+ * body shape.
+ * ══════════════════════════════════════════════════════════════════════════
+ */
+
+/* ── Helper: translation-aware Gemini prompt ──────────────────────────────── */
+
+/**
+ * Same shape as rewriteTemplateTextViaGemini but translates each text
+ * block to `targetLocale`. The brief is still passed so the translation
+ * doesn't read as textbook — it sounds native to the prospect's voice
+ * in the target language (e.g. "nos conseillers" for an insurer in
+ * French, not "our advisors").
+ *
+ * `targetLocale` is the standard Staffbase locale code: en_US, de_DE,
+ * fr_FR, es_ES, etc. Gemini's instruction names the human language
+ * (French, German, etc.) — the locale code is just a routing key.
+ */
+const translateTemplateTextViaGemini = async (
+  args: {
+    templateName: string;
+    nodes: FlatTextNode[];
+    targetLocale: string;
+    prospect?: { name?: string; news?: string };
+    brief?: ProspectBrief;
+  },
+  ctx: OperationContext,
+): Promise<Map<number, string>> => {
+  const { apiToken, apiDomain, onProgress } = ctx;
+  if (args.nodes.length === 0) return new Map();
+
+  // Map locale code → human-readable language for the prompt.
+  // Falls back to the code itself so unknown locales still work.
+  const languageNames: Record<string, string> = {
+    en_US: 'American English', en_GB: 'British English',
+    de_DE: 'German', fr_FR: 'French', fr_CA: 'Canadian French',
+    es_ES: 'Spanish (Spain)', es_MX: 'Mexican Spanish',
+    it_IT: 'Italian', pt_BR: 'Brazilian Portuguese', pt_PT: 'Portuguese',
+    nl_NL: 'Dutch', sv_SE: 'Swedish', da_DK: 'Danish', no_NO: 'Norwegian',
+    fi_FI: 'Finnish', pl_PL: 'Polish', cs_CZ: 'Czech',
+    ja_JP: 'Japanese', zh_CN: 'Simplified Chinese', zh_TW: 'Traditional Chinese',
+  };
+  const targetLanguage = languageNames[args.targetLocale] || args.targetLocale;
+
+  onProgress?.(
+    `🌐 Gemini translating ${args.nodes.length} text block(s) in "${args.templateName}" → ${targetLanguage}…`,
+  );
+
+  const briefBlock = args.brief
+    ? [
+        `About ${args.prospect?.name ?? 'the company'} — use these to make the translation sound NATIVE, not literal:`,
+        `  Industry:    ${args.brief.industry}`,
+        `  Audience:    ${args.brief.audience}`,
+        `  Voice:       ${args.brief.voice}`,
+        `  Products:    ${args.brief.products.join(', ') || '(none)'}`,
+        `  Leadership:  ${args.brief.leadership.join(' · ') || '(none)'}`,
+        ``,
+        `  Summary: ${args.brief.oneLiner}`,
+        ``,
+      ].join('\n')
+    : '';
+
+  const prompt = [
+    `You are translating an internal employee email template into ${targetLanguage}.`,
+    `The translation must sound like it was written natively by ${args.prospect?.name ?? 'the company'}'s comms team for their ${targetLanguage}-speaking employees — not like a machine translation.`,
+    ``,
+    briefBlock,
+    `Rules:`,
+    `1. Translate to ${targetLanguage}. Idiomatic, not literal.`,
+    `2. Use ${targetLanguage} terminology the audience actually uses (insurance: "polices" / "conseillers" in French; manufacturing: "atelier" / "équipe"; etc.). Match the industry and audience in the brief above.`,
+    `3. Keep length reasonably close to the original so the layout still fits. Headings stay short. CTAs stay short.`,
+    `4. Don't add HTML, markdown, or quote characters — plain text only.`,
+    `5. Preserve product / integration / proper-noun names that don't translate (e.g. "MyChoice", "Workday", real leadership names).`,
+    `6. If a block looks like a placeholder ({{...}}) you would not see it — they're pre-filtered.`,
+    ``,
+    `Text blocks to translate (JSON):`,
+    JSON.stringify(args.nodes.map((n) => ({ id: n.id, context: n.context, text: n.text }))),
+    ``,
+    `Respond with ONLY a JSON object — no prose, no fences:`,
+    `{"rewrites":[{"id":0,"newText":"..."},{"id":1,"newText":"..."}, ...]}`,
+  ].join('\n');
+
+  const response = await callGeminiProxy<GeminiResponse>(
+    {
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.4, responseMimeType: 'application/json' },
+    },
+    'gemini-2.5-flash',
+    { apiToken, apiDomain },
+  );
+  const text = response?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  const parsed = JSON.parse(stripJsonFences(text)) as { rewrites?: Array<{ id?: number; newText?: string }> };
+  const rewrites = Array.isArray(parsed.rewrites) ? parsed.rewrites : [];
+
+  const map = new Map<number, string>();
+  for (const r of rewrites) {
+    if (typeof r.id === 'number' && typeof r.newText === 'string' && r.newText.trim().length > 0) {
+      map.set(r.id, r.newText);
+    }
+  }
+  return map;
+};
+
+/* ── Shared helper: walk template tree → rewrite text → return new tree ──── */
+
+/**
+ * Generic "rewrite the text in this pikasso tree" loop, shared by both
+ * the translate and draft flows. Returns the new tree + the diff entries
+ * (for UI display) + skips templates that have nothing to rewrite.
+ */
+const walkAndRewriteTree = async (
+  originalContent: Record<string, unknown>,
+  rewriter: (nodes: FlatTextNode[]) => Promise<Map<number, string>>,
+): Promise<{ rewrittenContent: Record<string, unknown>; entries: EmailEditEntry[] }> => {
+  const workingTree = JSON.parse(JSON.stringify(originalContent)) as Record<string, unknown>;
+  const fragments = findTextMarkupFragments(workingTree);
+  if (fragments.length === 0) return { rewrittenContent: workingTree, entries: [] };
+
+  const flatNodes: FlatTextNode[] = [];
+  let globalId = 0;
+  for (let fIdx = 0; fIdx < fragments.length; fIdx += 1) {
+    const { nodes } = extractEditableTextNodes(fragments[fIdx].html);
+    for (const n of nodes) {
+      flatNodes.push({ id: globalId, fragmentIndex: fIdx, nodeId: n.id, text: n.text, context: n.context });
+      globalId += 1;
+    }
+  }
+  if (flatNodes.length === 0) return { rewrittenContent: workingTree, entries: [] };
+
+  const rewrites = await rewriter(flatNodes);
+  const entries: EmailEditEntry[] = [];
+
+  for (let fIdx = 0; fIdx < fragments.length; fIdx += 1) {
+    const fragmentRewrites = new Map<number, string>();
+    for (const node of flatNodes) {
+      if (node.fragmentIndex !== fIdx) continue;
+      const newText = rewrites.get(node.id);
+      if (newText !== undefined) fragmentRewrites.set(node.nodeId, newText);
+    }
+    const { rewrittenHtml, entries: fragmentEntries } = applyTextRewrites(
+      fragments[fIdx].html,
+      fragmentRewrites,
+    );
+    for (const e of fragmentEntries) {
+      const globalNode = flatNodes.find((n) => n.fragmentIndex === fIdx && n.nodeId === e.id);
+      entries.push({
+        id: globalNode?.id ?? -1,
+        fragmentIndex: fIdx,
+        nodeId: e.id,
+        oldText: e.oldText,
+        newText: e.newText,
+        context: e.context,
+      });
+    }
+    setAtPath(workingTree, fragments[fIdx].path, rewrittenHtml);
+  }
+
+  return { rewrittenContent: workingTree, entries };
+};
+
+/* ── Action B: clone-and-translate templates ──────────────────────────────── */
+
+export interface TranslatedTemplateReport {
+  sourceTemplateId: string;
+  sourceTemplateName: string;
+  newTemplateId: string | null;
+  newTemplateName: string;
+  targetLocale: string;
+  changeCount: number;
+  error: string | null;
+}
+
+/**
+ * For each source template: create a NEW template in the same gallery
+ * with the suffix " — <Locale>", translate every textMarkupValue
+ * fragment, then PUT the translated tree.
+ *
+ * Original template is left untouched — this is purely additive. The
+ * naming convention (suffix " — French") makes the translated set
+ * discoverable in Studio's gallery list.
+ */
+export const cloneTranslatedTemplates = async (
+  args: {
+    sources: EmailTemplateSummary[];
+    targetLocale: string;
+    prospect?: { name?: string; news?: string };
+    brief?: ProspectBrief;
+  },
+  ctx: OperationContext,
+): Promise<TranslatedTemplateReport[]> => {
+  const { apiToken, apiDomain, onProgress } = ctx;
+  const reports: TranslatedTemplateReport[] = [];
+
+  // Human-friendly suffix for the new template name. Falls back to the
+  // raw locale code if we don't have a friendly name for it.
+  const localeSuffixes: Record<string, string> = {
+    en_US: 'English', en_GB: 'English (UK)',
+    de_DE: 'German', fr_FR: 'French', fr_CA: 'French (Canada)',
+    es_ES: 'Spanish', es_MX: 'Spanish (Mexico)',
+    it_IT: 'Italian', pt_BR: 'Portuguese (Brazil)', pt_PT: 'Portuguese',
+    nl_NL: 'Dutch', sv_SE: 'Swedish', da_DK: 'Danish', no_NO: 'Norwegian',
+    pl_PL: 'Polish', ja_JP: 'Japanese', zh_CN: '简体中文', zh_TW: '繁體中文',
+  };
+  const suffix = localeSuffixes[args.targetLocale] || args.targetLocale;
+
+  for (const src of args.sources) {
+    const report: TranslatedTemplateReport = {
+      sourceTemplateId: src.id,
+      sourceTemplateName: src.name,
+      newTemplateId: null,
+      newTemplateName: `${src.name} — ${suffix}`,
+      targetLocale: args.targetLocale,
+      changeCount: 0,
+      error: null,
+    };
+
+    try {
+      // 1. GET the original template's content
+      onProgress?.(`📨 Loading "${src.name}"…`);
+      const contentUrl = buildApiUrl(`/api/email-service/templates/${src.id}/contents/pikasso`, apiDomain);
+      const contentRes = await fetch(contentUrl, {
+        headers: { Authorization: `Basic ${apiToken}` },
+        credentials: 'omit',
+      });
+      if (!contentRes.ok) throw new Error(`GET source content -> ${contentRes.status}`);
+      const wrapper = (await contentRes.json()) as { content?: Record<string, unknown> } & Record<string, unknown>;
+      const originalContent: Record<string, unknown> =
+        wrapper.content && typeof wrapper.content === 'object'
+          ? (wrapper.content as Record<string, unknown>)
+          : wrapper;
+
+      // 2. POST a new empty template in the same gallery
+      const createRes = await fetch(buildApiUrl('/api/email-service/templates', apiDomain), {
+        method: 'POST',
+        credentials: 'omit',
+        headers: { Authorization: `Basic ${apiToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          galleryId: src.galleryId,
+          name: report.newTemplateName,
+          renderingMode: 'designer',
+        }),
+      });
+      if (!createRes.ok) {
+        const txt = await createRes.text().catch(() => '');
+        throw new Error(`POST /templates -> ${createRes.status}${txt ? ` :: ${txt.slice(0, 200)}` : ''}`);
+      }
+      const newTemplate = (await createRes.json()) as { id: string };
+      report.newTemplateId = newTemplate.id;
+      onProgress?.(`➕ Created "${report.newTemplateName}" (${newTemplate.id})`);
+
+      // 3. Walk + translate the pikasso tree
+      const { rewrittenContent, entries } = await walkAndRewriteTree(originalContent, (nodes) =>
+        translateTemplateTextViaGemini(
+          {
+            templateName: src.name,
+            nodes,
+            targetLocale: args.targetLocale,
+            prospect: args.prospect,
+            brief: args.brief,
+          },
+          ctx,
+        ),
+      );
+      report.changeCount = entries.length;
+
+      // 4. PUT the translated tree to the new template
+      const putUrl = buildApiUrl(`/api/email-service/templates/${newTemplate.id}/contents/pikasso`, apiDomain);
+      const putRes = await fetch(putUrl, {
+        method: 'PUT',
+        credentials: 'omit',
+        headers: { Authorization: `Basic ${apiToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: rewrittenContent }),
+      });
+      if (!putRes.ok) {
+        const txt = await putRes.text().catch(() => '');
+        throw new Error(`PUT new content -> ${putRes.status}${txt ? ` :: ${txt.slice(0, 200)}` : ''}`);
+      }
+      onProgress?.(`✅ Translated "${src.name}" → "${report.newTemplateName}" (${entries.length} blocks).`);
+    } catch (err) {
+      report.error = err instanceof Error ? err.message : String(err);
+      onProgress?.(`❌ ${src.name}: ${report.error}`);
+    }
+
+    reports.push(report);
+  }
+
+  return reports;
+};
+
+/* ── Action C: create-drafts-from-templates ──────────────────────────────── */
+
+export interface CreatedDraftReport {
+  sourceTemplateId: string;
+  sourceTemplateName: string;
+  newDraftId: string | null;
+  newDraftTitle: string;
+  folderId: string | null;
+  changeCount: number;
+  error: string | null;
+}
+
+/**
+ * Discover (or create) a folder where Replify-generated email drafts live.
+ *
+ * Folders aren't enumerable directly — Staffbase's email-service exposes
+ * a /folders/{id} GET but no /folders list endpoint. CopierForm.tsx
+ * works around this by scanning draft emails for distinct folderIds and
+ * fetching each to see its title. We use the same approach.
+ *
+ * If no matching folder exists, we POST a new one — needs spaceId +
+ * adminUserId for sender configuration (same shape CopierForm uses).
+ */
+const discoverOrCreateDraftFolder = async (
+  args: { folderName: string },
+  ctx: OperationContext,
+): Promise<string> => {
+  const { apiToken, apiDomain, onProgress } = ctx;
+  const headers = { Authorization: `Basic ${apiToken}` };
+
+  // 1. Walk existing drafts to find an existing folder with this title.
+  let cursor: string | null = null;
+  let guard = 0;
+  const seenFolderIds = new Set<string>();
+  while (guard < 10) {
+    const searchRes = await fetch(buildApiUrl('/api/email-service/emails/search', apiDomain), {
+      method: 'POST',
+      credentials: 'omit',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'draft', limit: 100, ...(cursor ? { next: cursor } : {}) }),
+    });
+    if (!searchRes.ok) break;
+    const data = (await searchRes.json()) as { data?: Array<{ folderId?: string }>; next?: string };
+    for (const email of data.data || []) {
+      if (!email.folderId || seenFolderIds.has(email.folderId)) continue;
+      seenFolderIds.add(email.folderId);
+      const fRes = await fetch(buildApiUrl(`/api/email-service/folders/${email.folderId}`, apiDomain), {
+        credentials: 'omit',
+        headers,
+      });
+      if (!fRes.ok) continue;
+      const folder = (await fRes.json()) as { id: string; title?: string };
+      if (folder.title === args.folderName) {
+        onProgress?.(`📁 Using existing folder "${args.folderName}" (${folder.id}).`);
+        return folder.id;
+      }
+    }
+    cursor = data.next ?? null;
+    if (!cursor) break;
+    guard += 1;
+  }
+
+  // 2. Create a new folder. Need a spaceId + admin user for sender config.
+  const spacesRes = await fetch(buildApiUrl('/api/spaces', apiDomain), { credentials: 'omit', headers });
+  if (!spacesRes.ok) throw new Error(`GET /spaces -> ${spacesRes.status}`);
+  const spaces = (await spacesRes.json()) as { data?: Array<{ id: string }> };
+  const spaceId = spaces.data?.[0]?.id;
+  if (!spaceId) throw new Error('No space found to anchor the folder to.');
+
+  const usersRes = await fetch(buildApiUrl('/api/users?limit=200', apiDomain), { credentials: 'omit', headers });
+  if (!usersRes.ok) throw new Error(`GET /users -> ${usersRes.status}`);
+  const users = (await usersRes.json()) as { data?: Array<{ id: string; branchRole?: string }> };
+  const admin = users.data?.find((u) => u.branchRole === 'WeBranchAdminRole');
+  if (!admin?.id) throw new Error('No admin user found for sender configuration.');
+
+  const createRes = await fetch(buildApiUrl('/api/email-service/folders', apiDomain), {
+    method: 'POST',
+    credentials: 'omit',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      spaceId,
+      title: args.folderName,
+      restrictSending: false,
+      senderAddresses: [spaceId],
+      senderNames: [admin.id],
+      audience: { branchId: spaceId, type: 'branchAudience' },
+      enableUnsubscriptionCategories: false,
+    }),
+  });
+  if (!createRes.ok) {
+    const txt = await createRes.text().catch(() => '');
+    throw new Error(`POST /folders -> ${createRes.status}${txt ? ` :: ${txt.slice(0, 200)}` : ''}`);
+  }
+  const created = (await createRes.json()) as { id: string };
+  onProgress?.(`📁 Created folder "${args.folderName}" (${created.id}).`);
+  return created.id;
+};
+
+/**
+ * For each source template, create a ready-to-preview email DRAFT in the
+ * given folder with prospect-tailored content. Uses the rewrite prompt
+ * (same as in-place edit) — the difference is the destination resource
+ * is a new email, not the source template.
+ *
+ * Email content body shape differs from templates:
+ *   Templates: { content: <tree> }
+ *   Emails:    { contents: { en_US: <tree> }, localesToDelete: [],
+ *                personalizationFallbacks: {} }
+ *
+ * The `contents` field is locale-keyed (see CopierForm.tsx for the
+ * empirical confirmation). V1 of this action writes only the en_US
+ * locale; multi-locale drafts would need the same pattern across
+ * languages.
+ */
+export const createDraftsFromTemplates = async (
+  args: {
+    sources: EmailTemplateSummary[];
+    folderName?: string;
+    locale?: string;
+    prospect?: { name?: string; news?: string };
+    brief?: ProspectBrief;
+    tone?: Tone;
+  },
+  ctx: OperationContext,
+): Promise<CreatedDraftReport[]> => {
+  const { apiToken, apiDomain, onProgress } = ctx;
+  const folderName = args.folderName?.trim() || 'Replify Drafts';
+  const locale = args.locale || 'en_US';
+  const reports: CreatedDraftReport[] = [];
+
+  // Resolve folder once for all drafts in this batch.
+  let folderId: string;
+  try {
+    folderId = await discoverOrCreateDraftFolder({ folderName }, ctx);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    onProgress?.(`❌ Folder setup failed: ${msg}`);
+    // Return one error report per source so the UI still renders something useful.
+    return args.sources.map((src) => ({
+      sourceTemplateId: src.id,
+      sourceTemplateName: src.name,
+      newDraftId: null,
+      newDraftTitle: `${src.name} (Draft)`,
+      folderId: null,
+      changeCount: 0,
+      error: `folder: ${msg}`,
+    }));
+  }
+
+  for (const src of args.sources) {
+    const report: CreatedDraftReport = {
+      sourceTemplateId: src.id,
+      sourceTemplateName: src.name,
+      newDraftId: null,
+      newDraftTitle: `${src.name}${args.prospect?.name ? ` — ${args.prospect.name}` : ''}`,
+      folderId,
+      changeCount: 0,
+      error: null,
+    };
+
+    try {
+      // 1. GET source template content
+      const contentUrl = buildApiUrl(`/api/email-service/templates/${src.id}/contents/pikasso`, apiDomain);
+      const contentRes = await fetch(contentUrl, {
+        headers: { Authorization: `Basic ${apiToken}` },
+        credentials: 'omit',
+      });
+      if (!contentRes.ok) throw new Error(`GET source content -> ${contentRes.status}`);
+      const wrapper = (await contentRes.json()) as { content?: Record<string, unknown> } & Record<string, unknown>;
+      const originalContent: Record<string, unknown> =
+        wrapper.content && typeof wrapper.content === 'object'
+          ? (wrapper.content as Record<string, unknown>)
+          : wrapper;
+
+      // 2. Rewrite text via Gemini (using the same aggressive prompt as
+      //    in-place edit — drafts are real comms, not translations).
+      const { rewrittenContent, entries } = await walkAndRewriteTree(originalContent, (nodes) =>
+        rewriteTemplateTextViaGemini(
+          {
+            templateName: src.name,
+            nodes,
+            prospect: args.prospect,
+            brief: args.brief,
+            tone: args.tone,
+          },
+          ctx,
+        ),
+      );
+      report.changeCount = entries.length;
+
+      // 3. POST a new draft email. The settings.subject becomes the
+      //    email's subject line — we set a prospect-flavored default
+      //    that the user can refine in Studio.
+      const draftSubject = args.prospect?.name
+        ? `${src.name} — ${args.prospect.name}`
+        : src.name;
+      const createRes = await fetch(buildApiUrl('/api/email-service/emails', apiDomain), {
+        method: 'POST',
+        credentials: 'omit',
+        headers: { Authorization: `Basic ${apiToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: report.newDraftTitle,
+          folderId,
+          renderingMode: 'designer',
+          settings: { subject: draftSubject },
+        }),
+      });
+      if (!createRes.ok) {
+        const txt = await createRes.text().catch(() => '');
+        throw new Error(`POST /emails -> ${createRes.status}${txt ? ` :: ${txt.slice(0, 200)}` : ''}`);
+      }
+      const draft = (await createRes.json()) as { id: string };
+      report.newDraftId = draft.id;
+      onProgress?.(`➕ Created draft "${report.newDraftTitle}" (${draft.id}).`);
+
+      // 4. PUT pikasso content. Email contents are locale-keyed (plural
+      //    `contents`); we set the chosen locale only. localesToDelete
+      //    is empty since this is a brand-new draft.
+      const putUrl = buildApiUrl(`/api/email-service/emails/${draft.id}/contents/pikasso`, apiDomain);
+      const putRes = await fetch(putUrl, {
+        method: 'PUT',
+        credentials: 'omit',
+        headers: { Authorization: `Basic ${apiToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: { [locale]: rewrittenContent },
+          localesToDelete: [],
+          personalizationFallbacks: {},
+        }),
+      });
+      if (!putRes.ok && putRes.status !== 204) {
+        const txt = await putRes.text().catch(() => '');
+        throw new Error(`PUT draft content -> ${putRes.status}${txt ? ` :: ${txt.slice(0, 200)}` : ''}`);
+      }
+      onProgress?.(`✅ Draft "${report.newDraftTitle}" ready in folder "${folderName}" — ${entries.length} block(s) tailored.`);
+    } catch (err) {
+      report.error = err instanceof Error ? err.message : String(err);
+      onProgress?.(`❌ ${src.name}: ${report.error}`);
+    }
+
+    reports.push(report);
+  }
+
+  return reports;
+};
+
