@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Staffbase Analytics – Compass AI
 // @namespace    staffbase-se-solutions
-// @version      2.0.0
-// @description  Gemini-powered "Compass AI" for Staffbase Studio analytics — reads the live analytics API and answers in natural language (LLM via the Replify proxy)
+// @version      2.1.0
+// @description  Gemini-powered "Compass AI" for Staffbase Studio analytics — reads the live analytics API and answers in natural language (LLM via the Gemini API)
 // @author       Faraz Hussain
-// @match        *://strykerdemo.staffbase.com/studio/analytics*
 // @match        *://*.staffbase.com/studio/analytics*
-// @grant        none
+// @match        *://*.staffbase.rocks/studio/analytics*
+// @grant        GM_xmlhttpRequest
+// @grant        GM.xmlHttpRequest
+// @connect      generativelanguage.googleapis.com
 // ==/UserScript==
 
 (function () {
@@ -16,29 +18,51 @@
   const BTN_ID     = 'sb-ai-btn';
   const STYLES_ID  = 'sb-ai-styles';
 
-  /* ─── Gemini proxy (shared with the Replify extension) ─────── */
-  // No Gemini key lives here — calls route through Replify's Supabase
-  // edge function, which authenticates with a Staffbase Basic token.
-  const GEMINI_PROXY_URL = 'https://lhxtgvzdzumwjlnpieog.supabase.co/functions/v1/gemini-proxy';
-  const GEMINI_MODEL     = 'gemini-2.5-flash';
+  /* ─── Gemini (direct API via GM_xmlhttpRequest) ────────────── */
+  // Replify's Supabase proxy is origin-locked (no CORS for staffbase.*),
+  // so a page-context fetch can't reach it. We instead call Google's
+  // Gemini API directly through GM_xmlhttpRequest, which isn't bound by
+  // the page's CORS policy. The key is read from localStorage so it never
+  // lives in source control — set it once in the browser console:
+  //   localStorage.setItem('compassGeminiKey', 'AIza…')
+  const GEMINI_MODEL    = 'gemini-2.5-flash';
+  const GEMINI_KEY_LS   = 'compassGeminiKey';
+  const GEMINI_ENDPOINT = m => 'https://generativelanguage.googleapis.com/v1beta/models/' + m + ':generateContent';
 
-  // Replify saves per-tenant Basic tokens in localStorage.staffbaseTokens
-  // as [{slug, token, domain, ...}]. The proxy uses one to auth + identify.
-  function getStaffbaseAuth() {
-    const apiDomain = location.host;
-    try {
-      const raw = localStorage.getItem('staffbaseTokens');
-      if (raw) {
-        const tokens = JSON.parse(raw);
-        if (Array.isArray(tokens)) {
-          const valid = t => t && t.token && t.token !== '[invalid token]';
-          const match = tokens.find(t => valid(t) && (t.domain === apiDomain || (t.slug && apiDomain.startsWith(t.slug))))
-                     || tokens.find(valid);
-          if (match) return { apiToken: match.token, apiDomain: match.domain || apiDomain };
-        }
-      }
-    } catch (_) {}
-    return { apiDomain };
+  function getGeminiKey() {
+    try { return (localStorage.getItem(GEMINI_KEY_LS) || '').trim(); } catch (_) { return ''; }
+  }
+
+  // Cross-origin POST that bypasses the page CORS policy (Tampermonkey /
+  // Greasemonkey). Resolves with the parsed JSON body.
+  function gmPost(url, payload) {
+    const gmx = (typeof GM_xmlhttpRequest !== 'undefined') ? GM_xmlhttpRequest
+              : (typeof GM !== 'undefined' && GM.xmlHttpRequest) ? GM.xmlHttpRequest
+              : null;
+    if (!gmx) {
+      return Promise.reject(new Error('GM_xmlhttpRequest unavailable — run this in Tampermonkey with @grant GM_xmlhttpRequest.'));
+    }
+    return new Promise((resolve, reject) => {
+      gmx({
+        method: 'POST',
+        url,
+        headers: { 'Content-Type': 'application/json' },
+        data: JSON.stringify(payload),
+        timeout: 45000,
+        onload: r => {
+          if (r.status >= 200 && r.status < 300) {
+            try { resolve(JSON.parse(r.responseText)); }
+            catch (_) { reject(new Error('Gemini returned malformed JSON.')); }
+          } else {
+            let detail = r.status;
+            try { const e = JSON.parse(r.responseText); detail = (e.error && (e.error.message || e.error)) || detail; } catch (_) {}
+            reject(new Error('Gemini API ' + detail));
+          }
+        },
+        onerror:   () => reject(new Error('Gemini request failed (network).')),
+        ontimeout: () => reject(new Error('Gemini request timed out.')),
+      });
+    });
   }
 
   /* ─── Live analytics API ────────────────────────────────────── */
@@ -133,7 +157,10 @@
 
   /* ─── Gemini call ───────────────────────────────────────────── */
   async function callGemini(question, page, data, history) {
-    const auth = getStaffbaseAuth();
+    const key = getGeminiKey();
+    if (!key) {
+      throw new Error('No Gemini API key set. In the browser console run: localStorage.setItem(\'compassGeminiKey\',\'AIza…\') then retry.');
+    }
     const NL = String.fromCharCode(10);
     const transcript = (history || [])
       .filter(m => m.role)
@@ -157,25 +184,11 @@
       '{"text": "1-2 sentence direct answer", "bullets": ["3-5 short supporting points, each quoting a real number from the data"], "followUps": ["2 natural follow-up questions the user might ask next"]}',
     ].join(NL);
 
-    const res = await fetch(GEMINI_PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        apiToken: auth.apiToken,
-        apiDomain: auth.apiDomain,
-        model: GEMINI_MODEL,
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.3, responseMimeType: 'application/json' },
-      }),
+    const json = await gmPost(GEMINI_ENDPOINT(GEMINI_MODEL) + '?key=' + encodeURIComponent(key), {
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.3, responseMimeType: 'application/json' },
     });
 
-    if (!res.ok) {
-      let detail = res.status;
-      try { const e = await res.json(); detail = (e.error && (e.error.message || e.error)) || detail; } catch (_) {}
-      throw new Error('Gemini proxy error: ' + detail);
-    }
-
-    const json = await res.json();
     const text = (((json.candidates || [])[0] || {}).content || {}).parts;
     const raw  = (text && text[0] && text[0].text) || '';
     const cleaned = raw.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -376,9 +389,9 @@
     } catch (err) {
       hideTyping();
       const msg = String((err && err.message) || err);
-      const isLLM = /Gemini|proxy/i.test(msg);
+      const isLLM = /Gemini|GM_xmlhttpRequest|API key/i.test(msg);
       const hint = isLLM
-        ? 'I couldn\'t reach the AI service. Make sure the Replify extension has a saved token for this tenant — it supplies the Gemini credentials.'
+        ? 'I couldn\'t reach the AI service. Set a Gemini API key once in the console — localStorage.setItem(\'compassGeminiKey\',\'AIza…\') — then retry.'
         : 'I couldn\'t load analytics for this tab. Make sure you\'re on a Studio analytics page and signed in.';
       messages.push({ role: 'ai', text: hint, bullets: [msg], followUps: [] });
       renderMsgs();
