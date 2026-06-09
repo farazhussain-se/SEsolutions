@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Staffbase Analytics – Compass AI
 // @namespace    staffbase-se-solutions
-// @version      2.2.0
+// @version      2.3.0
 // @description  Gemini-powered "Compass AI" for Staffbase Studio analytics — reads the live analytics API and answers in natural language (LLM via the Gemini API)
 // @author       Faraz Hussain
 // @match        *://*.staffbase.com/studio/analytics*
@@ -11,6 +11,8 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @connect      generativelanguage.googleapis.com
+// @updateURL    https://raw.githubusercontent.com/farazhussain-se/SEsolutions/main/staffbase-analytics-ai-chat.user.js
+// @downloadURL  https://raw.githubusercontent.com/farazhussain-se/SEsolutions/main/staffbase-analytics-ai-chat.user.js
 // ==/UserScript==
 
 (function () {
