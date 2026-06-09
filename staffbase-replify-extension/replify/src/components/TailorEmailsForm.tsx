@@ -58,6 +58,15 @@ import type {
   TranslatedTemplateReport,
   CreatedDraftReport,
 } from "../utils/automationOperations/emailTemplateTailor";
+// V2.2: image-slot swap (logo.dev suggestions + per-slot user override).
+import {
+  buildImageSwapPlans,
+  applyImageSwapsToAllTemplates,
+} from "../utils/automationOperations/imageSlotSwap";
+import type {
+  TemplateImagePlan,
+  ImageSwapReport,
+} from "../utils/automationOperations/imageSlotSwap";
 import { fetchProspectIntelligence, buildProspectBrief } from "../utils/aiUtils";
 import type { ProspectBrief } from "../utils/aiUtils";
 import type { Prospect } from "./SavedProspects";
@@ -77,8 +86,14 @@ interface TailorEmailsFormProps {
   availableLocales?: string[];
 }
 
-/** Three actions Tailor Emails can perform on the selected templates. */
-type EmailAction = "edit" | "translate" | "draft";
+/**
+ * Four actions Tailor Emails can perform on the selected templates.
+ *   - edit:      V1 in-place text rewrite (with approve step)
+ *   - translate: clone to a new template in target locale
+ *   - draft:     create a real email draft in a folder
+ *   - images:    swap images for prospect-branded ones (per-slot approve)
+ */
+type EmailAction = "edit" | "translate" | "draft" | "images";
 
 const selectStyle: React.CSSProperties = { ...inputStyle, width: "100%", padding: "8px" };
 
@@ -138,6 +153,12 @@ export default function TailorEmailsForm({
   // clobber a result you might still want to see.
   const [translateReport, setTranslateReport] = useState<TranslatedTemplateReport[] | null>(null);
   const [draftReport, setDraftReport] = useState<CreatedDraftReport[] | null>(null);
+  /* Image-swap state — built when action="images" and Generate runs.
+   * The plans drive a per-slot approval UI; the user edits them in
+   * place (toggle approved, paste an override URL) before clicking
+   * Apply. After apply, imageReport replaces the plans for display. */
+  const [imagePlans, setImagePlans] = useState<TemplateImagePlan[] | null>(null);
+  const [imageReport, setImageReport] = useState<ImageSwapReport[] | null>(null);
 
   // Locales to offer in the translation dropdown. Prefer the tenant's
   // configured availableLocales (from /api/branch); fall back to a
@@ -298,6 +319,26 @@ export default function TailorEmailsForm({
       const prospectArg = prospect ? { name: prospect, news: prospectNews || undefined } : undefined;
       setTranslateReport(null);
       setDraftReport(null);
+      setImagePlans(null);
+      setImageReport(null);
+
+      if (action === "images") {
+        onLog(`🖼  Scanning ${selected.length} template(s) for image slots…`);
+        const plans = await buildImageSwapPlans(
+          {
+            templates: selected.map((t) => ({ id: t.id, name: t.name, galleryName: t.galleryName })),
+            prospectName: prospect || undefined,
+            // Pass the brief's websiteUrl if we have one — short-circuits
+            // the Brandfetch lookup inside resolveProspectDomain.
+            prospectWebsiteUrl: effectiveBrief?.products?.length ? undefined : undefined, // brief currently doesn't expose websiteUrl; leave undefined to fall through
+          },
+          ctx,
+        );
+        setImagePlans(plans);
+        const totalSlots = plans.reduce((acc, p) => acc + p.slots.length, 0);
+        onLog(`✅ ${totalSlots} image slot(s) across ${plans.length} template(s). Review + edit below before applying.`);
+        return;
+      }
 
       if (action === "translate") {
         onLog(`🌐 Translating ${selected.length} template(s) → ${targetLocale}…`);
@@ -357,6 +398,47 @@ export default function TailorEmailsForm({
       onLog(`❌ Generate failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setGenerateBusy(false);
+    }
+  };
+
+  /**
+   * Apply approved image swaps across all in-flight image plans. The
+   * `imagePlans` state is mutated in place by the per-slot UI (toggle
+   * approved / paste override) so by the time the user clicks Apply,
+   * the plan list IS the source of truth.
+   */
+  const handleApplyImageSwaps = async () => {
+    if (!imagePlans || imagePlans.length === 0) {
+      onLog("⚠️ No image plans to apply.");
+      return;
+    }
+    const totalApproved = imagePlans.reduce(
+      (acc, p) => acc + p.swaps.filter((s) => s.approved && (s.overrideUrl.trim() || s.suggestedUrl)).length,
+      0,
+    );
+    if (totalApproved === 0) {
+      onLog("⚠️ No image slots approved.");
+      return;
+    }
+    if (
+      !window.confirm(
+        `Apply ${totalApproved} image swap(s) across ${imagePlans.length} template(s)? Approved images will be uploaded to /api/media (if possible), and template content will be updated.`,
+      )
+    )
+      return;
+
+    setApplyBusy(true);
+    try {
+      const result = await applyImageSwapsToAllTemplates({ plans: imagePlans }, ctx);
+      setImageReport(result);
+      // Clear plans once committed so the UI shows the report cleanly.
+      setImagePlans(null);
+      const totalApplied = result.reduce((a, r) => a + r.slotsApplied, 0);
+      onLog(`🖼  Image swaps complete — ${totalApplied} slot(s) updated across ${result.length} template(s).`);
+    } catch (err) {
+      onLog(`❌ Apply image swaps failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setApplyBusy(false);
     }
   };
 
@@ -577,12 +659,15 @@ export default function TailorEmailsForm({
             setReport(null);
             setTranslateReport(null);
             setDraftReport(null);
+            setImagePlans(null);
+            setImageReport(null);
           }}
           disabled={generateBusy || applyBusy || researchBusy}
         >
           <option value="edit">Edit in place — rewrite the selected templates</option>
           <option value="translate">Translate to new templates — clone + translate to another locale</option>
           <option value="draft">Create email drafts — make ready-to-send draft emails from templates</option>
+          <option value="images">Swap images — replace template images with prospect-branded ones</option>
         </select>
 
         {action === "translate" && (
@@ -680,11 +765,15 @@ export default function TailorEmailsForm({
             ? "Translating with Gemini…"
             : action === "draft"
             ? "Creating drafts…"
+            : action === "images"
+            ? "Scanning for image slots…"
             : "Asking Gemini…"
           : action === "translate"
           ? `Translate to ${targetLocale} (${selectedTemplateIds.size} template${selectedTemplateIds.size === 1 ? "" : "s"})`
           : action === "draft"
           ? `Create ${selectedTemplateIds.size} draft${selectedTemplateIds.size === 1 ? "" : "s"} in "${draftFolder}"`
+          : action === "images"
+          ? `Scan ${selectedTemplateIds.size} template${selectedTemplateIds.size === 1 ? "" : "s"} for image slots`
           : `Generate tailored content (${selectedTemplateIds.size} template${selectedTemplateIds.size === 1 ? "" : "s"})`}
       </button>
 
@@ -728,6 +817,202 @@ export default function TailorEmailsForm({
           <p style={{ margin: "8px 0 0", fontSize: 10, color: colors.textMuted, lineHeight: 1.4 }}>
             Drafts are visible in Staffbase Studio → Email → Drafts. Preview, edit, or send from there.
           </p>
+        </div>
+      )}
+
+      {/* 🖼  Image-swap per-slot approval UI. Renders one card per
+           template with one row per image slot showing: current image
+           thumbnail, suggested replacement thumbnail (or empty if no
+           domain), Approve checkbox, paste-override input. Toggles +
+           paste updates mutate the imagePlans state in place. */}
+      {action === "images" && imagePlans && imagePlans.length > 0 && (
+        <div style={{ marginTop: 14 }}>
+          <h3 style={{ margin: "0 0 8px", fontSize: 14 }}>
+            Image swap plan ({imagePlans.reduce((acc, p) => acc + p.slots.length, 0)} slot
+            {imagePlans.reduce((acc, p) => acc + p.slots.length, 0) === 1 ? "" : "s"} across {imagePlans.length} template{imagePlans.length === 1 ? "" : "s"})
+          </h3>
+          <p style={{ fontSize: 11, color: colors.textMuted, marginTop: 0, marginBottom: 10, lineHeight: 1.4 }}>
+            Each slot shows the current template image vs the prospect-branded suggestion (from logo.dev).
+            Toggle <strong>Approve</strong> to include, or paste your own URL to override the suggestion.
+            Approved images upload to <code>/api/media</code> when possible; falls back to external URL if upload fails.
+          </p>
+          {imagePlans.map((plan, planIdx) => (
+            <div key={plan.templateId} style={{ ...subtlePanelStyle, padding: 10 }}>
+              <strong style={{ fontSize: 12 }}>{plan.templateName}</strong>
+              <span style={{ fontSize: 10, color: colors.textMuted, marginLeft: 8 }}>
+                {plan.galleryName} · {plan.slots.length} slot{plan.slots.length === 1 ? "" : "s"}
+              </span>
+              <div style={{ marginTop: 8 }}>
+                {plan.slots.map((slot) => {
+                  const swap = plan.swaps.find((s) => s.slotIndex === slot.slotIndex)!;
+                  const effectiveUrl = swap.overrideUrl.trim() || swap.suggestedUrl || "";
+                  return (
+                    <div
+                      key={slot.slotIndex}
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 8,
+                        borderBottom: `1px solid ${colors.borderLight}`,
+                        padding: "8px 0",
+                        fontSize: 11,
+                      }}
+                    >
+                      {/* Approve checkbox */}
+                      <input
+                        type="checkbox"
+                        checked={swap.approved && !!effectiveUrl}
+                        disabled={!effectiveUrl || applyBusy}
+                        onChange={(e) => {
+                          const next = imagePlans.map((p, i) =>
+                            i === planIdx
+                              ? {
+                                  ...p,
+                                  swaps: p.swaps.map((s) =>
+                                    s.slotIndex === slot.slotIndex ? { ...s, approved: e.target.checked } : s,
+                                  ),
+                                }
+                              : p,
+                          );
+                          setImagePlans(next);
+                        }}
+                        style={{ marginTop: 24 }}
+                      />
+
+                      {/* Current image thumbnail */}
+                      <div style={{ textAlign: "center", flex: "0 0 88px" }}>
+                        <div style={{ fontSize: 10, color: colors.textMuted, marginBottom: 2 }}>
+                          Current · slot {slot.slotIndex}
+                        </div>
+                        <div
+                          style={{
+                            width: 80,
+                            height: 56,
+                            border: `1px solid ${colors.border}`,
+                            borderRadius: 3,
+                            background: colors.backgroundLight,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {/* Thumbnails use <img> directly — CORS is more lenient than fetch */}
+                          {slot.currentSrc ? (
+                            <img
+                              src={slot.currentSrc}
+                              alt={slot.alt || ""}
+                              style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                              onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0.2"; }}
+                            />
+                          ) : (
+                            <span style={{ fontSize: 9, color: colors.textMuted }}>(empty)</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: 24, fontSize: 14, color: colors.textMuted }}>→</div>
+
+                      {/* Suggested + override */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 10, color: colors.textMuted, marginBottom: 2 }}>
+                          Suggested {swap.overrideUrl.trim() ? "(overridden ↓)" : swap.suggestedUrl ? "(logo.dev)" : "(none — paste a URL)"}
+                        </div>
+                        <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+                          <div
+                            style={{
+                              width: 80,
+                              height: 56,
+                              border: `1px solid ${colors.border}`,
+                              borderRadius: 3,
+                              background: colors.backgroundLight,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              overflow: "hidden",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {effectiveUrl ? (
+                              <img
+                                src={effectiveUrl}
+                                alt="suggested"
+                                style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                                onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0.2"; }}
+                              />
+                            ) : (
+                              <span style={{ fontSize: 9, color: colors.textMuted }}>(none)</span>
+                            )}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <input
+                              type="text"
+                              placeholder="Paste URL to override suggestion"
+                              value={swap.overrideUrl}
+                              disabled={applyBusy}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                const next = imagePlans.map((p, i) =>
+                                  i === planIdx
+                                    ? {
+                                        ...p,
+                                        swaps: p.swaps.map((s) =>
+                                          s.slotIndex === slot.slotIndex ? { ...s, overrideUrl: v, approved: !!(v.trim() || s.suggestedUrl) } : s,
+                                        ),
+                                      }
+                                    : p,
+                                );
+                                setImagePlans(next);
+                              }}
+                              style={{ ...inputStyle, width: "100%", fontSize: 11, padding: "4px 6px" }}
+                            />
+                            <div style={{ fontSize: 10, color: colors.textMuted, marginTop: 2, wordBreak: "break-all" }}>
+                              {effectiveUrl || "—"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+          <button
+            style={{ ...brandingButtonStyle, width: "100%", marginTop: 8 }}
+            onClick={handleApplyImageSwaps}
+            disabled={applyBusy}
+          >
+            {applyBusy
+              ? "Applying image swaps…"
+              : `Apply ${imagePlans.reduce(
+                  (acc, p) => acc + p.swaps.filter((s) => s.approved && (s.overrideUrl.trim() || s.suggestedUrl)).length,
+                  0,
+                )} image swap(s)`}
+          </button>
+        </div>
+      )}
+
+      {/* Image-swap result panel — appears after Apply runs */}
+      {imageReport && (
+        <div style={{ ...subtlePanelStyle, marginTop: 14 }}>
+          <strong>Image swap result</strong>
+          <div style={{ fontSize: 13, marginBottom: 6 }}>
+            {imageReport.reduce((a, r) => a + r.slotsApplied, 0)} slot(s) updated · {imageReport.reduce((a, r) => a + r.uploadedToMedia, 0)} uploaded to media · {imageReport.reduce((a, r) => a + r.externalUrlsUsed, 0)} used external URL
+          </div>
+          {imageReport.map((r) => (
+            <div key={r.templateId} style={{ fontSize: 11, padding: "4px 0", borderBottom: `1px solid ${colors.borderLight}` }}>
+              <div>
+                {r.errors.length === 0 ? "✅" : "⚠️"} <strong>{r.templateName}</strong>
+                <span style={{ color: colors.textMuted, marginLeft: 6 }}>
+                  · {r.slotsApplied} applied · {r.slotsSkipped} skipped
+                </span>
+              </div>
+              {r.errors.length > 0 && (
+                <div style={{ color: colors.danger, fontSize: 10 }}>{r.errors[0]}</div>
+              )}
+            </div>
+          ))}
         </div>
       )}
 

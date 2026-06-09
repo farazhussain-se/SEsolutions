@@ -159,6 +159,15 @@ import {
   createDraftsFromTemplates as emailCreateDrafts,
 } from './emailTemplateTailor';
 
+// V2.2: swap brand-tailored images into template slots (with logo.dev
+// suggestions + per-slot user override + upload-to-media when possible).
+import {
+  buildImageSwapPlans as imageBuildPlans,
+  applyImageSwapsToTemplate as imageApplyOne,
+  applyImageSwapsToAllTemplates as imageApplyAll,
+  resolveProspectDomain as imageResolveDomain,
+} from './imageSlotSwap';
+
 // Re-export everything for direct imports
 export {
   buildApiUrl,
@@ -262,6 +271,10 @@ export const buildEmailTemplateDiffs          = emailBuildDiffs;
 export const applyApprovedEmailTemplateEdits  = emailApplyEdits;
 export const cloneTranslatedTemplates         = emailCloneTranslated;
 export const createDraftsFromTemplates        = emailCreateDrafts;
+export const buildImageSwapPlans              = imageBuildPlans;
+export const applyImageSwapsToTemplate        = imageApplyOne;
+export const applyImageSwapsToAllTemplates    = imageApplyAll;
+export const resolveProspectDomain            = imageResolveDomain;
 
 /**
  * Operation Registry
@@ -371,6 +384,10 @@ export const OPERATION_REGISTRY = {
   applyApprovedEmailTemplateEdits: emailApplyEdits,
   cloneTranslatedTemplates:        emailCloneTranslated,
   createDraftsFromTemplates:       emailCreateDrafts,
+  buildImageSwapPlans:             imageBuildPlans,
+  applyImageSwapsToTemplate:       imageApplyOne,
+  applyImageSwapsToAllTemplates:   imageApplyAll,
+  resolveProspectDomain:           imageResolveDomain,
 };
 
 /**
@@ -477,4 +494,8 @@ export const getOperationDescriptions = () => ({
   applyApprovedEmailTemplateEdits: 'PUT each approved template back via /api/email-service/templates/{id}/contents/pikasso — only the content changes; name, gallery, thumbnail are untouched',
   cloneTranslatedTemplates:        'For each source template: POST a NEW template in the same gallery with name suffix "— <Locale>", then walk + Gemini-translate every textMarkupValue to the target locale, then PUT translated content. Original template stays untouched.',
   createDraftsFromTemplates:       'For each source template: discover/create a draft folder, POST a new email draft using the template name + prospect-flavored subject, then Gemini-rewrite + PUT pikasso content with the locale-keyed body shape emails require.',
+  buildImageSwapPlans:             'Walk every selected template\'s pikasso tree, find image slots (anything with a src field, excluding social-icon containers), and seed default logo.dev suggestions per slot keyed on the prospect\'s domain. Returns per-template per-slot plans for UI approval.',
+  applyImageSwapsToTemplate:       'For a single template plan: upload approved image URLs to /api/media (fall back to direct external URL when CORS/upload fails), splice new src + mediumId into the tree at each approved slot, PUT modified template back.',
+  applyImageSwapsToAllTemplates:   'Bulk apply image swaps across many template plans (sequential).',
+  resolveProspectDomain:           'Given a prospect name + optional websiteUrl, return the canonical domain via Brandfetch /v2/search fallback. Used to seed logo.dev URLs for image-slot suggestions.',
 });
