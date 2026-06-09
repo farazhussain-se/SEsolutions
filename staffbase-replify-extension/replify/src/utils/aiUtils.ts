@@ -66,6 +66,33 @@ interface ProspectIntelligenceResult {
   [key: string]: unknown;
 }
 
+/**
+ * Structured brief consumed by content-rewrite flows (TailorEmails,
+ * EditPages, future): gives Gemini grounded, prospect-specific signals
+ * to draw on instead of a raw news blob.
+ *
+ * The fields are deliberately concrete:
+ *   - audience: WHO inside the company is the comms aimed at (employees,
+ *     advisors, store associates, plant workers, etc.)
+ *   - voice: how that company's internal comms typically reads
+ *   - themes / products / initiatives / leadership: real things the
+ *     rewriter can name-drop instead of staying generic
+ *
+ * Populated by `buildProspectBrief` below; consumed by the email +
+ * page rewrite ops.
+ */
+export interface ProspectBrief {
+  industry: string;
+  audience: string;
+  voice: string;
+  themes: string[];
+  products: string[];
+  recentInitiatives: string[];
+  leadership: string[];
+  /** A 1-2 sentence summary the rewrite prompt can paste at the top. */
+  oneLiner: string;
+}
+
 const parseGeminiJsonPayload = <T>(raw: string, fallback: T): T => {
   const cleaned = raw.replace(/```json/g, "").replace(/```/g, "").trim();
   try {
@@ -231,6 +258,82 @@ const FORD_HARDCODE = {
   logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Ford_logo_flat.svg/1920px-Ford_logo_flat.svg.png?_=20230831145925",
 };
 const FORD_ALIASES = ["ford", "ford motor company", "ford motor"];
+
+/**
+ * Take a prospect name + (optional) news + (optional) website and ask
+ * Gemini to distill it into a STRUCTURED brief that downstream content
+ * rewrites can ground themselves in.
+ *
+ * Why this exists: TailorEmails (and EditPages) were getting timid
+ * rewrites when given only a raw news blob. The LLM didn't have crisp
+ * signals about who the comms target is, what real products/initiatives
+ * exist, etc — so it defaulted to safe edits. The brief gives it a
+ * concrete `{products, initiatives, leadership, audience, voice}` to
+ * draw on, so "the new Q3 update" can become "the MyChoice 2026
+ * renewals briefing for Sun Life advisors" instead of staying generic.
+ *
+ * Cheap to call (one Gemini turn, ~600 tokens). Callers should cache
+ * the result for the duration of a session and re-invoke when prospect
+ * changes.
+ */
+export const buildProspectBrief = async (
+  args: { prospectName: string; prospectNews?: string; websiteUrl?: string },
+  auth: AuthContext = {},
+): Promise<ProspectBrief> => {
+  const { apiToken, apiDomain } = auth;
+
+  const prompt = `You are summarising a real-world company so an AI rewriter can produce internal-comms content that sounds genuinely like it was written FROM that company TO its employees.
+
+Company: ${args.prospectName}
+${args.websiteUrl ? `Website: ${args.websiteUrl}` : ""}
+${args.prospectNews ? `Recent news & context:\n${args.prospectNews.slice(0, 2000)}` : ""}
+
+Return a JSON object with these fields. Be SPECIFIC — name real products, real leaders, real initiatives. If you don't know a field with confidence, give the most reasonable inference from the company's industry and footprint; do not return empty arrays.
+
+{
+  "industry": "1-3 word industry/sector tag (e.g. 'Insurance & Wealth Management', 'Automotive Manufacturing', 'Acute-care Hospital System')",
+  "audience": "WHO inside the company would receive this internal communication — be concrete about roles (e.g. 'Sun Life advisors, claims processors, and head-office staff', 'Ford plant workers, line supervisors, and engineers')",
+  "voice": "1 sentence describing the company's internal-comms tone (e.g. 'Professional and employee-first, with emphasis on wellbeing and career growth' or 'Operational and direct, focused on safety and shift performance')",
+  "themes": ["3-5 themes that show up in their internal comms — e.g. wellbeing benefits, DEI, retirement readiness, product roadmap, safety, quality"],
+  "products": ["3-6 actual products, programs, or platforms the company sells or runs — real names if you know them"],
+  "recentInitiatives": ["3-5 specific recent initiatives, acquisitions, leadership changes, or strategic moves you can name — drawn from the news context if provided"],
+  "leadership": ["3-5 actual senior leaders by Name (Role), drawn from the news context if provided or from publicly-known org chart"],
+  "oneLiner": "One 1-2 sentence summary of who this company is + who its employees are, written as a hand-off to the rewriter."
+}
+
+Respond with ONLY the JSON object. No prose, no markdown fences.`;
+
+  const response = await fetch(GEMINI_PROXY_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      apiToken,
+      apiDomain,
+      model: "gemini-2.5-flash",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.4, responseMimeType: "application/json" },
+    }),
+  });
+  if (!response.ok) {
+    const err = (await response.json().catch(() => ({}))) as GeminiErrorResponse;
+    throw new Error(err.error?.message || `Gemini proxy error: ${response.status}`);
+  }
+  const data = (await response.json()) as GeminiRawResponse;
+  const text = extractCandidateText(data, "");
+  const parsed = parseGeminiJsonPayload<Partial<ProspectBrief>>(text, {});
+
+  // Defensive defaults — every field gets a value even if Gemini omits one.
+  return {
+    industry: parsed.industry || "",
+    audience: parsed.audience || "company employees",
+    voice: parsed.voice || "Professional and employee-first.",
+    themes: Array.isArray(parsed.themes) ? parsed.themes : [],
+    products: Array.isArray(parsed.products) ? parsed.products : [],
+    recentInitiatives: Array.isArray(parsed.recentInitiatives) ? parsed.recentInitiatives : [],
+    leadership: Array.isArray(parsed.leadership) ? parsed.leadership : [],
+    oneLiner: parsed.oneLiner || `${args.prospectName} — internal communications.`,
+  };
+};
 
 export const fetchDemoPlan = async (
   prospectName: string,

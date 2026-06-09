@@ -31,6 +31,7 @@
 import { buildApiUrl, stripJsonFences } from '../helpers';
 import callGeminiProxy from '../geminiProxy';
 import type { OperationContext } from './types';
+import type { ProspectBrief } from '../aiUtils';
 
 /* ── Shapes ───────────────────────────────────────────────────────────────── */
 
@@ -193,22 +194,27 @@ interface GeminiResponse {
 }
 
 /**
- * Single Gemini call that rewrites all eligible text nodes at once.
+ * Single Gemini call that REPLACES generic page text with content that
+ * sounds like it was written FOR the prospect's employees.
  *
- * Prompt design:
- *   - Each node gets a stable integer id Gemini must echo back, so we
- *     can splice rewrites into the right DOM positions even if Gemini
- *     reorders the response.
- *   - Length / tone constraints are stated explicitly — "stay roughly
- *     the same length", "preserve intent", "match the requested tone".
- *   - For tags like "h1" the prompt tells Gemini it's a heading; for
- *     "li" it knows it's a list item; etc. Helps it pick verb-form +
- *     punctuation appropriately.
+ * Prompt design (V2 — aggressive rewrite):
+ *   - The structured `brief` (from buildProspectBrief) takes precedence
+ *     over the raw news blob. Gemini gets crisp signals — real product
+ *     names, real leaders, real initiatives — rather than having to
+ *     forage a news summary.
+ *   - The previous "if generic enough, return unchanged" rule produced
+ *     timid edits. Removed entirely — generic blocks are exactly what
+ *     should change. Every block should come back prospect-specific.
+ *   - Length is a soft constraint. Headings stay short, CTAs stay
+ *     short, body paragraphs can flex ±40%.
+ *   - Each node still gets a stable integer id Gemini must echo back,
+ *     so order drift doesn't break splicing.
  */
 export const rewriteTextNodesViaGemini = async (
   args: {
     nodes: TextNode[];
     prospect?: { name?: string; news?: string };
+    brief?: ProspectBrief;
     tone?: 'professional' | 'friendly' | 'executive';
   },
   ctx: OperationContext,
@@ -219,33 +225,49 @@ export const rewriteTextNodesViaGemini = async (
   const tone = args.tone ?? 'professional';
   onProgress?.(`🤖 Gemini rewriting ${args.nodes.length} text block(s) in ${tone} tone…`);
 
-  const prospectBlock = args.prospect?.name
+  // Prefer the structured brief when present. Fall back to raw news.
+  const briefBlock = args.brief
+    ? [
+        `About ${args.prospect?.name ?? 'the company'} — use these as raw material; name-drop real things:`,
+        `  Industry:     ${args.brief.industry}`,
+        `  Audience:     ${args.brief.audience}`,
+        `  Voice:        ${args.brief.voice}`,
+        `  Themes:       ${args.brief.themes.join(', ') || '(none)'}`,
+        `  Products:     ${args.brief.products.join(', ') || '(none)'}`,
+        `  Initiatives:  ${args.brief.recentInitiatives.join(' · ') || '(none)'}`,
+        `  Leadership:   ${args.brief.leadership.join(' · ') || '(none)'}`,
+        ``,
+        `  Summary: ${args.brief.oneLiner}`,
+        ``,
+      ].join('\n')
+    : args.prospect?.name
     ? [
         `Prospect: ${args.prospect.name}`,
         args.prospect.news ? `Recent news / context:\n${args.prospect.news.slice(0, 1600)}` : '',
-        '',
+        ``,
       ].filter(Boolean).join('\n')
     : '';
 
   const prompt = [
-    `You are tailoring the text on a Staffbase demo page for the prospect below.`,
-    `Rewrite each text block so it sounds native to the prospect's brand and industry,`,
-    `but DO NOT change the meaning, intent, or structural role.`,
+    `You are tailoring the visible text on an internal employee page for ${args.prospect?.name ?? 'the company'}.`,
+    `REPLACE each generic text block so the page reads like real internal comms — written by this company's communications team, for this company's employees.`,
     ``,
-    prospectBlock,
+    briefBlock,
     `Tone: ${tone}.`,
     ``,
-    `Rules:`,
-    `1. Each rewrite must be in the SAME language as the original.`,
-    `2. Keep rewrites roughly the same character length (within ~30%). Headings stay headings; one-liners stay one-liners.`,
-    `3. Preserve any product names, integration names, or proper nouns that exist in the original (e.g. "Paycom", "Workday").`,
-    `4. Don't add markdown, HTML tags, or quotation marks. Plain text only.`,
-    `5. If a text block is already prospect-specific or generic enough, you may return it unchanged.`,
+    `Rules for every rewrite:`,
+    `1. Name real things from the brief above wherever natural — products, programs, initiatives, leaders. Don't stay generic.`,
+    `2. Use language that matches the audience and industry (insurance: "policyholders" / "advisors"; manufacturing: "plant" / "shift" / "line"; healthcare: "clinicians" / "patients"; tech: "engineers" / "shipping").`,
+    `3. Keep each rewrite reasonably close to the original length so it fits the layout — but flex when it helps. Headings stay short (under ~10 words). CTAs stay short. Body paragraphs can grow or shrink up to ~40%.`,
+    `4. Same language as the original (English in, English out — don't translate).`,
+    `5. Plain text only — no HTML, markdown, or quote characters. The surrounding HTML keeps the formatting.`,
+    `6. Do NOT leave a block "unchanged because it's already generic" — generic is exactly what we're replacing.`,
+    `7. Preserve any integration / product / proper-noun names that ALREADY appear in the original ("Paycom", "Workday", "MyChoice") — they're real references, not placeholders.`,
     ``,
-    `Text blocks (JSON):`,
+    `Text blocks (JSON — context is the surrounding HTML tag):`,
     JSON.stringify(args.nodes.map((n) => ({ id: n.id, context: n.context, text: n.text }))),
     ``,
-    `Respond with ONLY a JSON object — no prose, no markdown:`,
+    `Respond with ONLY a JSON object — no prose, no markdown fences:`,
     `{"rewrites":[{"id":0,"newText":"..."},{"id":1,"newText":"..."}, ...]}`,
   ].join('\n');
 
@@ -336,6 +358,9 @@ export const buildEditDiffsForPages = async (
   args: {
     pageIds: string[];
     prospect?: { name?: string; news?: string };
+    /** Structured brief from buildProspectBrief — when supplied, makes
+     *  Gemini ground rewrites in real product/initiative/leadership names. */
+    brief?: ProspectBrief;
     tone?: 'professional' | 'friendly' | 'executive';
   },
   ctx: OperationContext,
@@ -371,7 +396,7 @@ export const buildEditDiffsForPages = async (
       }
 
       const rewrites = await rewriteTextNodesViaGemini(
-        { nodes, prospect: args.prospect, tone: args.tone },
+        { nodes, prospect: args.prospect, brief: args.brief, tone: args.tone },
         ctx,
       );
       const { rewrittenHtml, entries } = applyTextRewrites(enHtml, rewrites);

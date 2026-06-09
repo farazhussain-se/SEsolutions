@@ -46,7 +46,8 @@ import type {
 // Reuse the same intelligence fetch that BrandingForm's sparkle uses, so
 // "Research now" in EditPagesForm produces the same news shape we accept
 // from the Branding-seed path.
-import { fetchProspectIntelligence } from "../utils/aiUtils";
+import { fetchProspectIntelligence, buildProspectBrief } from "../utils/aiUtils";
+import type { ProspectBrief } from "../utils/aiUtils";
 // Saved prospects only store BRANDING fields (colors / logo / padding) —
 // not news. Picking a saved prospect populates the name but leaves news
 // empty; user can click Research to enrich.
@@ -99,6 +100,8 @@ export default function EditPagesForm({
     prospectNewsSeed ? "branding" : prospectNameSeed ? "branding" : "manual",
   );
   const [researchBusy, setResearchBusy] = useState(false);
+  /** Structured brief — see TailorEmailsForm header for the same comment. */
+  const [brief, setBrief] = useState<ProspectBrief | null>(null);
   const [tone, setTone] = useState<Tone>("professional");
   const [pages, setPages] = useState<CommonPage[]>([]);
   const [discoverBusy, setDiscoverBusy] = useState(false);
@@ -198,6 +201,7 @@ export default function EditPagesForm({
       onLog(`🔎 Researching "${trimmed}" with Gemini…`);
       const intel = await fetchProspectIntelligence(trimmed, { apiToken, apiDomain });
       const news = (intel.news || "").trim();
+      const websiteUrl = (intel.websiteUrl || "").trim();
       setProspectNews(news);
       setProspectSource("research");
       onLog(
@@ -205,6 +209,21 @@ export default function EditPagesForm({
           ? `✨ Research complete — ${news.length} chars of context loaded.`
           : `⚠️ Research returned no news for "${trimmed}". Proceeding with name only.`,
       );
+
+      // Distill structured brief so the rewrite prompt has crisp signals.
+      if (news) {
+        onLog("🧠 Distilling structured brief for the rewrite prompt…");
+        const b = await buildProspectBrief(
+          { prospectName: trimmed, prospectNews: news, websiteUrl },
+          { apiToken, apiDomain },
+        );
+        setBrief(b);
+        onLog(
+          `📋 Brief: ${b.industry} · audience "${b.audience.slice(0, 60)}" · ${b.products.length} product(s) · ${b.recentInitiatives.length} initiative(s).`,
+        );
+      } else {
+        setBrief(null);
+      }
     } catch (err) {
       onLog(`❌ Research failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
@@ -223,6 +242,23 @@ export default function EditPagesForm({
     setExpanded({});
     setReport(null);
     try {
+      // Lazy-build the brief if we have news but no brief yet (e.g.
+      // user came in via "Use Branding" which has news but no brief).
+      let effectiveBrief = brief;
+      if (!effectiveBrief && prospect && prospectNews) {
+        onLog("🧠 Building prospect brief (one-time) for the rewrite prompt…");
+        try {
+          effectiveBrief = await buildProspectBrief(
+            { prospectName: prospect, prospectNews },
+            { apiToken, apiDomain },
+          );
+          setBrief(effectiveBrief);
+          onLog(`📋 Brief: ${effectiveBrief.industry} · ${effectiveBrief.products.length} product(s).`);
+        } catch (briefErr) {
+          onLog(`⚠️ Brief build failed (falling back to raw news): ${briefErr instanceof Error ? briefErr.message : String(briefErr)}`);
+        }
+      }
+
       const result = await buildEditDiffsForPages(
         {
           pageIds: Array.from(selectedPageIds),
@@ -231,6 +267,7 @@ export default function EditPagesForm({
           // The seed is just the starting value; the user may have refreshed
           // research or switched to a different prospect since.
           prospect: prospect ? { name: prospect, news: prospectNews || undefined } : undefined,
+          brief: effectiveBrief ?? undefined,
           tone,
         },
         ctx,
@@ -421,6 +458,30 @@ export default function EditPagesForm({
             </div>
           )}
         </div>
+
+        {/* 📋 Structured brief — what Gemini extracted from the prospect news,
+            shown as a collapsible panel so the SE can verify the signals
+            driving the rewrite before clicking Generate. */}
+        {brief && (
+          <details style={{ marginTop: 8 }}>
+            <summary style={{ cursor: "pointer", fontSize: 11, color: colors.textMuted }}>
+              📋 Prospect brief ({brief.industry} · {brief.products.length} product(s) · {brief.recentInitiatives.length} initiative(s))
+            </summary>
+            <div style={{ fontSize: 11, padding: "8px 0", lineHeight: 1.5 }}>
+              <div><strong>Audience:</strong> {brief.audience}</div>
+              <div><strong>Voice:</strong> {brief.voice}</div>
+              {brief.themes.length > 0 && <div><strong>Themes:</strong> {brief.themes.join(", ")}</div>}
+              {brief.products.length > 0 && <div><strong>Products:</strong> {brief.products.join(", ")}</div>}
+              {brief.recentInitiatives.length > 0 && (
+                <div><strong>Initiatives:</strong> {brief.recentInitiatives.join(" · ")}</div>
+              )}
+              {brief.leadership.length > 0 && <div><strong>Leadership:</strong> {brief.leadership.join(" · ")}</div>}
+              <div style={{ marginTop: 4, fontStyle: "italic", color: colors.textMedium }}>
+                {brief.oneLiner}
+              </div>
+            </div>
+          </details>
+        )}
 
         {prospectNews && (
           <details style={{ marginTop: 6 }}>

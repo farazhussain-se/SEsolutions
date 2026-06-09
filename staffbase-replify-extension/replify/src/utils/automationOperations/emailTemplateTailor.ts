@@ -56,6 +56,7 @@ import { buildApiUrl, stripJsonFences } from '../helpers';
 import callGeminiProxy from '../geminiProxy';
 import { extractEditableTextNodes, applyTextRewrites } from './pageTextEditor';
 import type { OperationContext } from './types';
+import type { ProspectBrief } from '../aiUtils';
 
 /* ── Shapes ───────────────────────────────────────────────────────────────── */
 
@@ -250,16 +251,30 @@ interface GeminiResponse {
 }
 
 /**
- * Single Gemini call per template — rewrite every editable text node
- * across every textMarkupValue fragment in the template. We pass a flat
- * array tagged with `fragmentIndex` + local `nodeId` so the splicing
- * step knows where each rewrite belongs.
+ * Single Gemini call per template — REPLACE the generic template text
+ * with content that sounds like it was written FROM the prospect's
+ * leadership/comms team TO the prospect's employees.
+ *
+ * Key prompt design decisions (V2):
+ *   - The structured `brief` (from buildProspectBrief) takes precedence
+ *     over the raw news blob. Gemini gets crisp signals — real product
+ *     names, real leaders, real initiatives — instead of having to
+ *     forage in a news summary.
+ *   - The "if already generic enough, keep unchanged" rule from V1 was
+ *     producing timid rewrites. V2 instructs Gemini to rebrand EVERY
+ *     block — generic blocks are the ones that most need the rewrite.
+ *   - Length is a soft constraint ("stay close enough to fit the
+ *     layout") not a hard cap. Headings stay headings, CTAs stay CTA-
+ *     short, body paragraphs can flex.
+ *   - Explicit instruction to name-drop real products / programs /
+ *     leadership where natural.
  */
 const rewriteTemplateTextViaGemini = async (
   args: {
     templateName: string;
     nodes: FlatTextNode[];
     prospect?: { name?: string; news?: string };
+    brief?: ProspectBrief;
     tone?: Tone;
   },
   ctx: OperationContext,
@@ -270,33 +285,51 @@ const rewriteTemplateTextViaGemini = async (
   const tone = args.tone ?? 'professional';
   onProgress?.(`🤖 Gemini rewriting ${args.nodes.length} text block(s) in "${args.templateName}" (${tone})…`);
 
-  const prospectBlock = args.prospect?.name
+  // Prefer the structured brief when present. Fall back to raw news.
+  const briefBlock = args.brief
+    ? [
+        `About ${args.prospect?.name ?? 'the company'} — use these as raw material; name-drop real things:`,
+        `  Industry:     ${args.brief.industry}`,
+        `  Audience:     ${args.brief.audience}`,
+        `  Voice:        ${args.brief.voice}`,
+        `  Themes:       ${args.brief.themes.join(', ') || '(none)'}`,
+        `  Products:     ${args.brief.products.join(', ') || '(none)'}`,
+        `  Initiatives:  ${args.brief.recentInitiatives.join(' · ') || '(none)'}`,
+        `  Leadership:   ${args.brief.leadership.join(' · ') || '(none)'}`,
+        ``,
+        `  Summary: ${args.brief.oneLiner}`,
+        ``,
+      ].join('\n')
+    : args.prospect?.name
     ? [
         `Prospect: ${args.prospect.name}`,
         args.prospect.news ? `Recent news / context:\n${args.prospect.news.slice(0, 1600)}` : '',
-        '',
+        ``,
       ].filter(Boolean).join('\n')
     : '';
 
   const prompt = [
-    `You are tailoring the text inside an internal-comms email template for the prospect below.`,
-    `The template's name is "${args.templateName}".`,
+    `You are writing internal employee communications FOR ${args.prospect?.name ?? 'the company'}.`,
+    `The text blocks below come from a generic email template named "${args.templateName}".`,
+    `Your job: REPLACE the generic content so each block reads like real internal comms — written by this company's communications team, for this company's employees.`,
     ``,
-    prospectBlock,
-    `Tone: ${tone}. Length: keep each rewrite roughly the same character count as the original (within ~30%).`,
+    briefBlock,
+    `Tone: ${tone}.`,
     ``,
-    `Rules:`,
-    `1. Preserve the SAME LANGUAGE as the original text.`,
-    `2. Don't add markdown, HTML, or quote characters. Plain text only — the surrounding HTML keeps the formatting.`,
-    `3. Headings stay headings; CTAs stay short. A button label that says "Read more" should stay button-length, not become a sentence.`,
-    `4. Preserve any product names, integrations, or proper nouns visible in the prospect context.`,
-    `5. If a text block is already prospect-appropriate or generic enough, return it unchanged.`,
-    `6. Don't write headers or footers — these are individual text fragments and need to read coherently in isolation.`,
+    `Rules for every rewrite:`,
+    `1. Name real things from the brief above wherever natural — products, programs, initiatives, leaders. Don't stay generic.`,
+    `2. Use language that matches the audience and industry (e.g. insurance: "policyholders" / "advisors"; manufacturing: "plant" / "shift" / "line"; healthcare: "clinicians" / "patients"; tech: "engineers" / "shipping"). The audience field above is your guide.`,
+    `3. Keep each rewrite reasonably close to the original length so it fits the layout — but flex when needed. Headings stay headings (under ~10 words). CTAs stay short (3-5 words). Body paragraphs can grow or shrink by ~40% if it sounds better.`,
+    `4. Same language as the original (English in, English out — don't translate).`,
+    `5. Plain text only — no HTML, no markdown, no quote characters. The surrounding HTML wrapper preserves formatting.`,
+    `6. Each block is one piece of a larger email. Don't add "Dear [Name]" greetings or "Best regards" sign-offs unless the original block was already a greeting/signoff.`,
+    `7. Do NOT leave a block "unchanged because it's already generic" — generic is precisely what we're replacing. Every block should come back with prospect-specific energy.`,
+    `8. If a block is a template variable like {{user.profile.firstName}} you would not see it here (those are pre-filtered). If you somehow do see one, return it unchanged.`,
     ``,
-    `Text blocks (JSON):`,
+    `Text blocks (JSON — context is the surrounding HTML tag for clue about role):`,
     JSON.stringify(args.nodes.map((n) => ({ id: n.id, context: n.context, text: n.text }))),
     ``,
-    `Respond with ONLY a JSON object — no prose, no markdown:`,
+    `Respond with ONLY a JSON object — no prose, no markdown fences:`,
     `{"rewrites":[{"id":0,"newText":"..."},{"id":1,"newText":"..."}, ...]}`,
   ].join('\n');
 
@@ -336,6 +369,9 @@ export const buildEmailTemplateDiffs = async (
   args: {
     templates: EmailTemplateSummary[];
     prospect?: { name?: string; news?: string };
+    /** Structured brief from buildProspectBrief — drives aggressive,
+     *  prospect-specific rewrites. When omitted, falls back to raw news. */
+    brief?: ProspectBrief;
     tone?: Tone;
   },
   ctx: OperationContext,
@@ -400,7 +436,7 @@ export const buildEmailTemplateDiffs = async (
 
       // One Gemini call per template — keeps prompts manageable.
       const rewrites = await rewriteTemplateTextViaGemini(
-        { templateName: tpl.name, nodes: flatNodes, prospect: args.prospect, tone: args.tone },
+        { templateName: tpl.name, nodes: flatNodes, prospect: args.prospect, brief: args.brief, tone: args.tone },
         ctx,
       );
 

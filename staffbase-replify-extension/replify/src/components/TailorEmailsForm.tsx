@@ -52,7 +52,8 @@ import type {
   EmailTemplateDiff,
   EmailApplyReport,
 } from "../utils/automationOperations/emailTemplateTailor";
-import { fetchProspectIntelligence } from "../utils/aiUtils";
+import { fetchProspectIntelligence, buildProspectBrief } from "../utils/aiUtils";
+import type { ProspectBrief } from "../utils/aiUtils";
 import type { Prospect } from "./SavedProspects";
 
 type Tone = "professional" | "friendly" | "executive";
@@ -89,6 +90,16 @@ export default function TailorEmailsForm({
     prospectNewsSeed ? "branding" : prospectNameSeed ? "branding" : "manual",
   );
   const [researchBusy, setResearchBusy] = useState(false);
+  /**
+   * Structured brief derived from prospect name + news. Built either:
+   *   (a) explicitly when the user clicks Research (handleResearchProspect)
+   *   (b) on-demand inside handleGenerate when news exists but brief
+   *       doesn't (e.g. coming in from "Use Branding" which provides
+   *       news but no brief). Without a brief, Gemini gets only the raw
+   *       news blob and produces timid edits — see commit notes for
+   *       prior issue.
+   */
+  const [brief, setBrief] = useState<ProspectBrief | null>(null);
   const [tone, setTone] = useState<Tone>("professional");
   const [templates, setTemplates] = useState<EmailTemplateSummary[]>([]);
   const [discoverBusy, setDiscoverBusy] = useState(false);
@@ -169,6 +180,7 @@ export default function TailorEmailsForm({
       onLog(`🔎 Researching "${trimmed}" with Gemini…`);
       const intel = await fetchProspectIntelligence(trimmed, { apiToken, apiDomain });
       const news = (intel.news || "").trim();
+      const websiteUrl = (intel.websiteUrl || "").trim();
       setProspectNews(news);
       setProspectSource("research");
       onLog(
@@ -176,6 +188,23 @@ export default function TailorEmailsForm({
           ? `✨ Research complete — ${news.length} chars of context loaded.`
           : `⚠️ Research returned no news for "${trimmed}". Proceeding with name only.`,
       );
+
+      // Now distill into a structured brief so the rewrite prompt has
+      // crisp signals (products, leadership, initiatives) instead of a
+      // raw news blob to forage in. Skip if news is empty.
+      if (news) {
+        onLog("🧠 Distilling structured brief for the rewrite prompt…");
+        const b = await buildProspectBrief(
+          { prospectName: trimmed, prospectNews: news, websiteUrl },
+          { apiToken, apiDomain },
+        );
+        setBrief(b);
+        onLog(
+          `📋 Brief: ${b.industry} · audience "${b.audience.slice(0, 60)}" · ${b.products.length} product(s) · ${b.recentInitiatives.length} initiative(s).`,
+        );
+      } else {
+        setBrief(null);
+      }
     } catch (err) {
       onLog(`❌ Research failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
@@ -205,10 +234,33 @@ export default function TailorEmailsForm({
     setReport(null);
     try {
       const selected = templates.filter((t) => selectedTemplateIds.has(t.id));
+
+      // Lazy-build the brief if we have news but no brief yet. This
+      // covers the "Use Branding" path where news comes in from
+      // BrandingForm's sparkle but the structured brief was never built.
+      let effectiveBrief = brief;
+      if (!effectiveBrief && prospect && prospectNews) {
+        onLog("🧠 Building prospect brief (one-time) for the rewrite prompt…");
+        try {
+          effectiveBrief = await buildProspectBrief(
+            { prospectName: prospect, prospectNews },
+            { apiToken, apiDomain },
+          );
+          setBrief(effectiveBrief);
+          onLog(
+            `📋 Brief: ${effectiveBrief.industry} · ${effectiveBrief.products.length} product(s) · ${effectiveBrief.recentInitiatives.length} initiative(s).`,
+          );
+        } catch (briefErr) {
+          // Non-fatal — rewrite still works with raw news, just less specific.
+          onLog(`⚠️ Brief build failed (will fall back to raw news): ${briefErr instanceof Error ? briefErr.message : String(briefErr)}`);
+        }
+      }
+
       const result = await buildEmailTemplateDiffs(
         {
           templates: selected,
           prospect: prospect ? { name: prospect, news: prospectNews || undefined } : undefined,
+          brief: effectiveBrief ?? undefined,
           tone,
         },
         ctx,
@@ -390,6 +442,30 @@ export default function TailorEmailsForm({
             </div>
           )}
         </div>
+
+        {/* 📋 Structured brief — what Gemini extracted from the prospect news.
+            Shown as a collapsible panel so the SE can sanity-check what
+            signals are driving the rewrite before they click Generate. */}
+        {brief && (
+          <details style={{ marginTop: 8 }}>
+            <summary style={{ cursor: "pointer", fontSize: 11, color: colors.textMuted }}>
+              📋 Prospect brief ({brief.industry} · {brief.products.length} product(s) · {brief.recentInitiatives.length} initiative(s))
+            </summary>
+            <div style={{ fontSize: 11, padding: "8px 0", lineHeight: 1.5 }}>
+              <div><strong>Audience:</strong> {brief.audience}</div>
+              <div><strong>Voice:</strong> {brief.voice}</div>
+              {brief.themes.length > 0 && <div><strong>Themes:</strong> {brief.themes.join(", ")}</div>}
+              {brief.products.length > 0 && <div><strong>Products:</strong> {brief.products.join(", ")}</div>}
+              {brief.recentInitiatives.length > 0 && (
+                <div><strong>Initiatives:</strong> {brief.recentInitiatives.join(" · ")}</div>
+              )}
+              {brief.leadership.length > 0 && <div><strong>Leadership:</strong> {brief.leadership.join(" · ")}</div>}
+              <div style={{ marginTop: 4, fontStyle: "italic", color: colors.textMedium }}>
+                {brief.oneLiner}
+              </div>
+            </div>
+          </details>
+        )}
 
         <label style={{ ...labelStyle, marginTop: 12 }}>Tone</label>
         <select
