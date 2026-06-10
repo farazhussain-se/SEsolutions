@@ -82,11 +82,10 @@ const EMPLOYEE = {
     titleAr:       "مهندس بترول",
     designation:   "EMPLOYEE",
     designationAr: "موظف",
-    department:    "Upstream · Reservoir Engineering",
-    site:          "Dhahran Headquarters · EXPEC",
-    address:       "Dhahran 31311 · Eastern Province · KSA",
+    department:    "Downstream · Refining Operations",
+    site:          "Ras Tanura Refinery & Terminal",
+    address:       "Ras Tanura 31941 · Eastern Province · KSA",
     org:           "Saudi Aramco · Kingdom of Saudi Arabia",
-    shift:         "Day · 07:00 – 16:00 AST",
     expires:       "2028-03-31",
     yearsService:  9,
     safetyStatus:  "Compliant",
@@ -99,11 +98,11 @@ const EMPLOYEE = {
         { label: "Annual HSE Recertification",    status: "expiring" },
     ],
     zones: [
-        { name: "Dhahran HQ — Core",       granted: true  },
-        { name: "EXPEC Computer Center",   granted: true  },
-        { name: "Reservoir Field Ops",     granted: true  },
-        { name: "Refinery — Ras Tanura",   granted: false },
+        { name: "Ras Tanura Refinery",     granted: true  },
+        { name: "Sea Island Terminal",     granted: true  },
         { name: "Plant Control Room",      granted: true  },
+        { name: "Tank Farm — Restricted",  granted: false },
+        { name: "Dhahran HQ — Core",       granted: false },
         { name: "SAP / Corp Network",      granted: true  },
     ]
 };
@@ -173,7 +172,7 @@ const Badge = () => {
         if (qrRef.current && !qrDone) {
             qrRef.current.innerHTML = "";
             new QRCode(qrRef.current, {
-                text: `SAUDI-ARAMCO|EMP|ID:${EMPLOYEE.id}|${EMPLOYEE.firstName}+${EMPLOYEE.lastName}|SITE:DHAHRAN-HQ|VALID:${EMPLOYEE.expires}`,
+                text: `SAUDI-ARAMCO|EMP|ID:${EMPLOYEE.id}|${EMPLOYEE.firstName}+${EMPLOYEE.lastName}|SITE:RAS-TANURA|VALID:${EMPLOYEE.expires}`,
                 width: 138, height: 138,
                 colorDark: C.dark, colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
@@ -306,10 +305,9 @@ const Badge = () => {
                 {/* ── Stats row ── */}
                 <div style={{
                     background: C.surface, padding: "8px 13px",
-                    display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
+                    display: "grid", gridTemplateColumns: "1fr 1fr",
                     gap: 6, borderBottom: `1px solid ${C.divider}`
                 }}>
-                    <StatBlock icon="⏰" label="Shift"   value={EMPLOYEE.shift} />
                     <StatBlock icon="🛡️" label="Safety"  value={EMPLOYEE.safetyStatus} />
                     <StatBlock icon="📅" label="Service" value={`${EMPLOYEE.yearsService} yrs`} />
                 </div>
