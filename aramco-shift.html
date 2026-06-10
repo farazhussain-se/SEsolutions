@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Shift – Saudi Aramco</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: transparent;
+}
+
+.widget {
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #d4dada;
+  box-shadow: 0 2px 16px rgba(0,72,79,0.10);
+}
+
+/* DAY TABS (KSA work week — Sun→Thu; Fri/Sat off) */
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 14px 14px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #d4dada;
+  color: #5f6f72;
+  background: #fff;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tab.active { background: #00484F; border-color: #00484F; color: #fff; }
+.tab.off    { color: #c4cccc; cursor: default; }
+.tab:hover:not(.active):not(.off) { background: #f1f8f8; border-color: #b9c4c4; }
+
+/* SHIFT SECTION */
+.shift-section {
+  padding: 26px 20px 22px;
+  text-align: center;
+}
+.shift-icon {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: #f1f8f8;
+  border: 2px solid #00484F;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 18px;
+}
+.time-label { font-size: 12px; font-weight: 600; color: #5f6f72; margin-bottom: 5px; }
+.time-amount {
+  font-size: 32px; font-weight: 800;
+  color: #0f1f21;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.time-sub { font-size: 12px; color: #5f6f72; margin-bottom: 18px; }
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700;
+  padding: 4px 12px; border-radius: 20px;
+}
+/* Today = Aramco teal with white text (8.9:1 ✓) */
+.pill-today    { background: #00484F; color: #ffffff; }
+.pill-done     { background: #f0fdf4; color: #166534; }
+.pill-upcoming { background: #f1f8f8; color: #37474a; }
+.pill-off      { background: #f4f4f5; color: #a1a1aa; }
+
+/* ATTRS GRID */
+.attrs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: #eef2f2;
+  border-top: 1px solid #eef2f2;
+}
+.attr { background: #fff; padding: 11px 14px; }
+.attr-label { font-size: 9px; font-weight: 700; color: #5f6f72; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+.attr-value { font-size: 12px; font-weight: 700; color: #0f1f21; line-height: 1.3; }
+/* Aramco teal for emphasis — #00484F = 8.9:1 on white ✓ */
+.attr-value.brand { color: #00484F; }
+
+/* FOOTER */
+.footer {
+  background: #f1f8f8;
+  border-top: 1px solid #eef2f2;
+  padding: 7px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-brand { font-size: 9px; font-weight: 900; color: #00484F; letter-spacing: 0.06em; text-transform: lowercase; }
+.footer-clock { font-size: 9px; color: #5f6f72; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<div class="widget">
+
+  <!-- DAY TABS -->
+  <div class="tabs">
+    <div class="tab" onclick="select(this,0)">Sun 7</div>
+    <div class="tab" onclick="select(this,1)">Mon 8</div>
+    <div class="tab active" onclick="select(this,2)">Tue 9</div>
+    <div class="tab" onclick="select(this,3)">Wed 10</div>
+    <div class="tab" onclick="select(this,4)">Thu 11</div>
+    <div class="tab off">Fri 12</div>
+    <div class="tab off">Sat 13</div>
+  </div>
+
+  <!-- SHIFT DISPLAY -->
+  <div class="shift-section">
+    <div class="shift-icon">⛽</div>
+    <div class="time-label">Day Shift · وردية النهار</div>
+    <div class="time-amount" id="shiftTime">07:00 – 16:00 AST</div>
+    <div class="time-sub" id="shiftSub">9 hrs · 45 min break · HSE huddle 06:45</div>
+    <div class="status-pill pill-today" id="statusPill">● Today</div>
+  </div>
+
+  <!-- SHIFT ATTRIBUTES -->
+  <div class="attrs">
+    <div class="attr">
+      <div class="attr-label">Process Unit</div>
+      <div class="attr-value" id="attrUnit">Crude Distillation (CDU-4)</div>
+    </div>
+    <div class="attr">
+      <div class="attr-label">Area</div>
+      <div class="attr-value" id="attrArea">North Refinery · Control Room</div>
+    </div>
+    <div class="attr">
+      <div class="attr-label">Operation</div>
+      <div class="attr-value" id="attrOp">Board Operator – Monitoring</div>
+    </div>
+    <div class="attr">
+      <div class="attr-label">Shift Supervisor</div>
+      <div class="attr-value" id="attrLead">Khalid Al-Dossari</div>
+    </div>
+    <div class="attr">
+      <div class="attr-label">HSE Moment</div>
+      <div class="attr-value brand" id="attrHse">H2S Gas Test &amp; PPE Check</div>
+    </div>
+    <div class="attr">
+      <div class="attr-label">Daily Target</div>
+      <div class="attr-value" id="attrTarget">550,000 BPD throughput</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span class="footer-brand">saudi aramco · ras tanura</span>
+    <span class="footer-clock" id="clock">—</span>
+  </div>
+
+</div>
+
+<script>
+const SHIFTS = [
+  { time: '07:00 – 16:00 AST', sub: '9 hrs · 45 min break · HSE huddle 06:45', status: 'done',
+    unit: 'Hydrocracker (HCU-2)', area: 'North Refinery · Field',
+    op: 'Field Operator – Rounds', lead: 'Faisal Al-Harbi',
+    hse: 'Confined Space Permit Review', target: '92% on-spec yield' },
+  { time: '07:00 – 16:00 AST', sub: '9 hrs · 45 min break · HSE huddle 06:45', status: 'done',
+    unit: 'Sulfur Recovery (SRU-3)', area: 'Sulfur Block · Field',
+    op: 'Field Operator – Rounds', lead: 'Faisal Al-Harbi',
+    hse: 'LOTO Verification', target: '99.5% recovery' },
+  { time: '07:00 – 16:00 AST', sub: '9 hrs · 45 min break · HSE huddle 06:45', status: 'today',
+    unit: 'Crude Distillation (CDU-4)', area: 'North Refinery · Control Room',
+    op: 'Board Operator – Monitoring', lead: 'Khalid Al-Dossari',
+    hse: 'H2S Gas Test & PPE Check', target: '550,000 BPD throughput' },
+  { time: '07:00 – 16:00 AST', sub: '9 hrs · 45 min break · HSE huddle 06:45', status: 'upcoming',
+    unit: 'Crude Distillation (CDU-4)', area: 'North Refinery · Control Room',
+    op: 'Board Operator – Monitoring', lead: 'Khalid Al-Dossari',
+    hse: 'Hot Work Permit Check', target: '550,000 BPD throughput' },
+  { time: '07:00 – 16:00 AST', sub: '9 hrs · 45 min break · HSE huddle 06:45', status: 'upcoming',
+    unit: 'Storage & Sea Island Terminal', area: 'Marine Export · Berth 2',
+    op: 'Loading Operator', lead: 'Abdullah Al-Qahtani',
+    hse: 'Marine Loading Safety', target: '2 VLCC loadings' },
+];
+
+const STATUS = {
+  today:    { cls: 'pill-today',    label: '● Today'     },
+  done:     { cls: 'pill-done',     label: '✓ Completed' },
+  upcoming: { cls: 'pill-upcoming', label: '▶ Upcoming'  },
+  off:      { cls: 'pill-off',      label: 'Day Off'     },
+};
+
+function select(el, idx) {
+  if (el.classList.contains('off')) return;
+  document.querySelectorAll('.tab:not(.off)').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const s = SHIFTS[idx];
+  document.getElementById('shiftTime').textContent  = s.time;
+  document.getElementById('shiftSub').textContent   = s.sub;
+  document.getElementById('attrUnit').textContent   = s.unit;
+  document.getElementById('attrArea').textContent   = s.area;
+  document.getElementById('attrOp').textContent     = s.op;
+  document.getElementById('attrLead').textContent   = s.lead;
+  document.getElementById('attrHse').textContent    = s.hse;
+  document.getElementById('attrTarget').textContent = s.target;
+  const st = STATUS[s.status];
+  const pill = document.getElementById('statusPill');
+  pill.className = 'status-pill ' + st.cls;
+  pill.textContent = st.label;
+}
+
+function tick() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Riyadh' }) + ' AST';
+}
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
