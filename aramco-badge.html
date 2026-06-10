@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Saudi Aramco Digital ID Badge</title>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { background: transparent; }
+        body { padding: 10px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        /* Focus ring — WCAG 2.4.7. Deep Aramco teal on white = 8.9:1 ✓ */
+        :focus-visible { outline: 3px solid #00484F; outline-offset: 2px; border-radius: 4px; }
+
+        @keyframes pulse-ring {
+            0%   { box-shadow: 0 0 0 0 rgba(132,189,0,0.7); }
+            70%  { box-shadow: 0 0 0 7px rgba(132,189,0,0); }
+            100% { box-shadow: 0 0 0 0 rgba(132,189,0,0); }
+        }
+        .pulse { border-radius: 50%; animation: pulse-ring 2s infinite; }
+
+        /* Aramco "energy" gradient — green → teal → blue (logo / accent rules) */
+        .aramco-gradient {
+            background: linear-gradient(90deg, #84BD00 0%, #00A3AD 50%, #0072CE 100%);
+        }
+
+        /* QR scan-frame corner ticks */
+        .scan-frame { position: relative; }
+        .scan-frame::before, .scan-frame::after,
+        .scan-frame > .tick-bl, .scan-frame > .tick-br {
+            content: ""; position: absolute; width: 16px; height: 16px;
+            border: 3px solid #00A3AD; border-radius: 2px;
+        }
+        .scan-frame::before { top: -3px; left: -3px; border-right: none; border-bottom: none; }
+        .scan-frame::after  { top: -3px; right: -3px; border-left: none; border-bottom: none; }
+        .scan-frame > .tick-bl { bottom: -3px; left: -3px; border-right: none; border-top: none; }
+        .scan-frame > .tick-br { bottom: -3px; right: -3px; border-left: none; border-top: none; }
+
+        .ar { direction: rtl; unicode-bidi: isolate; font-family: "Geeza Pro", "Segoe UI", "Noto Naskh Arabic", "Tahoma", sans-serif; }
+
+        button { cursor: pointer; background: none; border: none; font: inherit; }
+    </style>
+</head>
+<body>
+<div id="root">Loading…</div>
+
+<script type="text/babel">
+/* ─────────────────────────────────────────
+   Staffbase user-name placeholder
+   Primary: {{user.profile.firstName}} (resolved server-side by StaticContent)
+   Fallback: "Saud" — the default profile, used if the placeholder is
+   unresolved (preview, missing profile field, or rendered outside a
+   Staffbase context).
+───────────────────────────────────────── */
+const RAW_FIRST_NAME = "{{user.profile.firstName}}";
+const IS_DEFAULT =
+    !(RAW_FIRST_NAME && !RAW_FIRST_NAME.includes("{{") && RAW_FIRST_NAME.trim().length > 0);
+const FIRST_NAME = IS_DEFAULT ? "Saud" : RAW_FIRST_NAME.trim();
+
+/* ─────────────────────────────────────────
+   SAUDI ARAMCO – DIGITAL ID BADGE
+   Default persona ("Saud") mirrors the physical contractor/employee
+   badge concept: bilingual (en / ar), gold designation band,
+   Badge No + Expiry footer. Photo → QR for an electronic credential.
+   The Arabic name line only renders for the default persona (we can't
+   transliterate an arbitrary injected first name); the rest of the
+   card stays bilingual via labels.
+───────────────────────────────────────── */
+const EMPLOYEE = {
+    id:            "8519477",
+    firstName:     FIRST_NAME,
+    lastName:      "Al-Otaibi",
+    arabicName:    "سعود العتيبي",
+    showArabicName: IS_DEFAULT,
+    title:         "Petroleum Engineer",
+    titleAr:       "مهندس بترول",
+    designation:   "EMPLOYEE",
+    designationAr: "موظف",
+    department:    "Upstream · Reservoir Engineering",
+    site:          "Dhahran Headquarters · EXPEC",
+    address:       "Dhahran 31311 · Eastern Province · KSA",
+    org:           "Saudi Aramco · Kingdom of Saudi Arabia",
+    shift:         "Day · 07:00 – 16:00 AST",
+    expires:       "2028-03-31",
+    yearsService:  9,
+    safetyStatus:  "Compliant",
+    certifications: [
+        { label: "H2S Awareness & Safety",        status: "active"   },
+        { label: "Confined Space Entry",          status: "active"   },
+        { label: "Process Safety Management",     status: "active"   },
+        { label: "Defensive Driving (KSA)",       status: "active"   },
+        { label: "First Aid / CPR / AED",         status: "active"   },
+        { label: "Annual HSE Recertification",    status: "expiring" },
+    ],
+    zones: [
+        { name: "Dhahran HQ — Core",       granted: true  },
+        { name: "EXPEC Computer Center",   granted: true  },
+        { name: "Reservoir Field Ops",     granted: true  },
+        { name: "Refinery — Ras Tanura",   granted: false },
+        { name: "Plant Control Room",      granted: true  },
+        { name: "SAP / Corp Network",      granted: true  },
+    ]
+};
+
+/* ─────────────────────────────────────────
+   Saudi Aramco palette — WCAG-safe combinations
+───────────────────────────────────────── */
+const C = {
+    bg:        "#ffffff",
+    surface:   "#f1f8f8",   /* very light teal tint */
+    border:    "#d4dada",
+    divider:   "#eef2f2",
+    text:      "#0f1f21",   /* 16.8:1 on white ✓ */
+    muted:     "#37474a",   /*  9.5:1 on white ✓ */
+    faint:     "#5f6f72",   /*  4.6:1 on white ✓ */
+    dark:      "#00383D",   /* very dark Aramco teal — header/footer bg */
+    teal:      "#00484F",   /* primary teal — body-text on white 8.9:1 ✓ */
+    tealMid:   "#00A3AD",   /* decorative accent only */
+    green:     "#84BD00",   /* Aramco green — decorative only */
+    blue:      "#0072CE",   /* Aramco blue — decorative only */
+    onDark:    "#9fd6d2",   /* light teal text on dark teal: ≥4.5:1 ✓ */
+    gold:      "#FFC72C",   /* designation band */
+    goldText:  "#1a1400",   /* near-black on gold: 13.6:1 ✓ */
+    success:   { bg: "#f0fdf4", border: "#86efac", text: "#166534" }, /* 7.5:1 ✓ */
+    warning:   { bg: "#fffbeb", border: "#fde68a", text: "#92400e" }, /* 5.7:1 ✓ */
+    error:     { bg: "#fef2f2", border: "#fecaca", text: "#991b1b" }, /* 5.9:1 ✓ */
+};
+
+const { useState, useEffect, useRef } = React;
+
+/* Saudi Aramco starburst mark (stylised 4-point energy star) */
+const AramcoMark = ({ size = 30 }) => (
+    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <defs>
+            <linearGradient id="aramcoGrad" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0"   stopColor="#84BD00" />
+                <stop offset="0.5" stopColor="#00A3AD" />
+                <stop offset="1"   stopColor="#0072CE" />
+            </linearGradient>
+        </defs>
+        <g transform="rotate(45 50 50)">
+            <path d="M50 3 L61 39 L97 50 L61 61 L50 97 L39 61 L3 50 L39 39 Z" fill="url(#aramcoGrad)" />
+        </g>
+        <path d="M50 12 L58 42 L88 50 L58 58 L50 88 L42 58 L12 50 L42 42 Z" fill="url(#aramcoGrad)" opacity="0.55" />
+    </svg>
+);
+
+const Badge = () => {
+    const qrRef               = useRef(null);
+    const [time, setTime]     = useState("");
+    const [qrDone, setQrDone] = useState(false);
+    const [tab, setTab]       = useState("zones");
+
+    /* Live Arabia Standard Time (Asia/Riyadh, UTC+3) */
+    useEffect(() => {
+        const tick = () =>
+            setTime(new Date().toLocaleTimeString("en-GB", {
+                hour: "2-digit", minute: "2-digit", second: "2-digit",
+                timeZone: "Asia/Riyadh"
+            }));
+        tick();
+        const t = setInterval(tick, 1000);
+        return () => clearInterval(t);
+    }, []);
+
+    useEffect(() => {
+        if (qrRef.current && !qrDone) {
+            qrRef.current.innerHTML = "";
+            new QRCode(qrRef.current, {
+                text: `SAUDI-ARAMCO|EMP|ID:${EMPLOYEE.id}|${EMPLOYEE.firstName}+${EMPLOYEE.lastName}|SITE:DHAHRAN-HQ|VALID:${EMPLOYEE.expires}`,
+                width: 138, height: 138,
+                colorDark: C.dark, colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            setQrDone(true);
+        }
+    }, []);
+
+    return (
+        <div style={{ maxWidth: 340, margin: "0 auto" }}>
+            <div style={{
+                background: C.bg,
+                borderRadius: 16,
+                overflow: "hidden",
+                border: `1px solid ${C.border}`,
+                boxShadow: "0 6px 24px rgba(0,72,79,0.20)"
+            }}>
+
+                {/* ── Header: status · Aramco wordmark · live time ── */}
+                <div style={{
+                    background: C.dark,
+                    padding: "9px 13px",
+                    display: "flex", justifyContent: "space-between", alignItems: "center"
+                }}>
+                    <span style={{ color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", gap: 6, minWidth: 62 }}>
+                        <span className="pulse" style={{ width: 8, height: 8, background: C.green, display: "inline-block", flexShrink: 0 }} aria-hidden="true" />
+                        ON-SITE
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                        <AramcoMark size={26} />
+                        <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.05 }}>
+                            <span className="ar" style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>أرامكو السعودية</span>
+                            <span style={{ color: C.onDark, fontSize: 10, fontWeight: 600, letterSpacing: "0.04em" }}>saudi aramco</span>
+                        </span>
+                    </span>
+                    <span style={{ color: C.onDark, fontSize: 10, fontFamily: "monospace", minWidth: 62, textAlign: "right" }} aria-live="off">{time}</span>
+                </div>
+
+                {/* ── Aramco energy gradient rule ── */}
+                <div className="aramco-gradient" style={{ height: 4 }} aria-hidden="true" />
+
+                {/* ── Digital-credential label ── */}
+                <div style={{
+                    background: C.surface, padding: "6px 13px",
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    borderBottom: `1px solid ${C.divider}`
+                }}>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: C.teal, letterSpacing: "0.08em" }}>
+                        DIGITAL ID · البطاقة الرقمية
+                    </span>
+                    <span style={{
+                        background: C.teal, color: "#fff", fontSize: 8, fontWeight: 900,
+                        padding: "2px 7px", borderRadius: 3, letterSpacing: "0.06em"
+                    }}>e-BADGE</span>
+                </div>
+
+                {/* ── QR (replaces photo) ── */}
+                <div style={{ padding: "16px 13px 10px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <div className="scan-frame">
+                        <span className="tick-bl" aria-hidden="true" />
+                        <span className="tick-br" aria-hidden="true" />
+                        <div style={{ padding: 6, border: `1px solid ${C.border}`, borderRadius: 8, background: "#fff" }}
+                             role="img" aria-label={`QR credential for ${EMPLOYEE.firstName} ${EMPLOYEE.lastName}, badge ${EMPLOYEE.id}`}>
+                            <div ref={qrRef} />
+                        </div>
+                    </div>
+                    <p style={{ fontSize: 9, color: C.faint, fontWeight: 700, letterSpacing: "0.1em", marginTop: 8 }}>
+                        SCAN TO VERIFY · امسح للتحقق
+                    </p>
+                </div>
+
+                {/* ── Name block ── */}
+                <div style={{ padding: "0 13px 12px", textAlign: "center", borderBottom: `1px solid ${C.divider}` }}>
+                    {EMPLOYEE.showArabicName && (
+                        <p className="ar" style={{ fontSize: 20, fontWeight: 700, color: C.text, lineHeight: 1.2, marginBottom: 2 }}>
+                            {EMPLOYEE.arabicName}
+                        </p>
+                    )}
+                    <p style={{ fontSize: 21, fontWeight: 800, color: C.text, lineHeight: 1.15, letterSpacing: "0.01em", textTransform: "uppercase" }}>
+                        {EMPLOYEE.firstName} {EMPLOYEE.lastName}
+                    </p>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: C.teal, marginTop: 3 }}>
+                        {EMPLOYEE.title}
+                        <span className="ar" style={{ color: C.faint, fontWeight: 600 }}> · {EMPLOYEE.titleAr}</span>
+                    </p>
+                    <p style={{ fontSize: 9.5, color: C.muted, marginTop: 2 }}>{EMPLOYEE.department}</p>
+                    <p style={{ fontSize: 9.5, color: C.faint, marginTop: 1 }}>{EMPLOYEE.site}</p>
+                </div>
+
+                {/* ── Gold designation band (mirrors physical badge) ── */}
+                <div style={{ background: C.gold, padding: "8px 13px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                        <span style={{ color: C.goldText, fontSize: 14, fontWeight: 900, letterSpacing: "0.06em" }}>
+                            {EMPLOYEE.designation}
+                        </span>
+                        <span className="ar" style={{ color: C.goldText, fontSize: 14, fontWeight: 800 }}>{EMPLOYEE.designationAr}</span>
+                    </span>
+                    <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        background: "rgba(0,56,61,0.92)", borderRadius: 99, padding: "3px 9px"
+                    }} role="status" aria-label="Credential verified">
+                        <span aria-hidden="true" style={{ fontSize: 10 }}>✓</span>
+                        <span style={{ fontSize: 8.5, fontWeight: 800, color: "#fff", letterSpacing: "0.05em" }}>VERIFIED</span>
+                    </span>
+                </div>
+
+                {/* ── Badge No / Expiry (mirrors physical badge footer) ── */}
+                <div style={{
+                    display: "grid", gridTemplateColumns: "1fr 1fr",
+                    borderBottom: `1px solid ${C.divider}`
+                }}>
+                    <div style={{ padding: "9px 13px", borderRight: `1px solid ${C.divider}` }}>
+                        <p style={{ fontSize: 8, color: C.faint, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                            Badge No · رقم البطاقة
+                        </p>
+                        <p style={{ fontSize: 16, fontWeight: 800, color: C.text, fontFamily: "monospace", letterSpacing: "0.04em" }}>
+                            {EMPLOYEE.id}
+                        </p>
+                    </div>
+                    <div style={{ padding: "9px 13px" }}>
+                        <p style={{ fontSize: 8, color: C.faint, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                            Expiry · تاريخ الانتهاء
+                        </p>
+                        <p style={{ fontSize: 16, fontWeight: 800, color: C.teal, fontFamily: "monospace", letterSpacing: "0.04em" }}>
+                            {EMPLOYEE.expires}
+                        </p>
+                    </div>
+                </div>
+
+                {/* ── Stats row ── */}
+                <div style={{
+                    background: C.surface, padding: "8px 13px",
+                    display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
+                    gap: 6, borderBottom: `1px solid ${C.divider}`
+                }}>
+                    <StatBlock icon="⏰" label="Shift"   value={EMPLOYEE.shift} />
+                    <StatBlock icon="🛡️" label="Safety"  value={EMPLOYEE.safetyStatus} />
+                    <StatBlock icon="📅" label="Service" value={`${EMPLOYEE.yearsService} yrs`} />
+                </div>
+
+                {/* ── Site address ── */}
+                <div style={{
+                    background: "#f1f8f8", padding: "5px 13px",
+                    borderBottom: `1px solid ${C.divider}`,
+                    display: "flex", alignItems: "center", gap: 6
+                }}>
+                    <span aria-hidden="true" style={{ fontSize: 10 }}>📍</span>
+                    <span style={{ fontSize: 9, fontWeight: 600, color: C.teal }}>{EMPLOYEE.address}</span>
+                </div>
+
+                {/* ── Tabs ── */}
+                <div style={{ display: "flex", borderBottom: `1px solid ${C.divider}` }} role="tablist">
+                    <TabBtn id="tab-zones" panelId="panel-zones" label="Facility Access" active={tab === "zones"} onClick={() => setTab("zones")} />
+                    <TabBtn id="tab-certs" panelId="panel-certs" label="Certifications"  active={tab === "certs"} onClick={() => setTab("certs")} />
+                </div>
+
+                {/* ── Tab content ── */}
+                <div style={{ padding: "10px 13px 13px" }}>
+                    {tab === "zones" && (
+                        <div id="panel-zones" role="tabpanel" aria-labelledby="tab-zones"
+                             style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                            {EMPLOYEE.zones.map((z, i) => <ZoneChip key={i} name={z.name} granted={z.granted} />)}
+                        </div>
+                    )}
+                    {tab === "certs" && (
+                        <div id="panel-certs" role="tabpanel" aria-labelledby="tab-certs"
+                             style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            {EMPLOYEE.certifications.map((c, i) => <CertRow key={i} label={c.label} status={c.status} />)}
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Footer ── */}
+                <div className="aramco-gradient" style={{ height: 3 }} aria-hidden="true" />
+                <div style={{
+                    background: C.dark, padding: "7px 13px",
+                    display: "flex", justifyContent: "space-between", alignItems: "center"
+                }}>
+                    <span style={{ color: C.onDark, fontSize: 9 }}>Valid through {EMPLOYEE.expires}</span>
+                    <span style={{ color: "#fff", fontSize: 9, fontWeight: 700 }}>{EMPLOYEE.org}</span>
+                </div>
+            </div>
+
+            <p style={{ textAlign: "center", fontSize: 10, color: "#5f6f72", marginTop: 7 }}>
+                Property of Saudi Aramco · Do not share or duplicate · ملكية أرامكو السعودية
+            </p>
+        </div>
+    );
+};
+
+/* ── Sub-components ── */
+
+const StatBlock = ({ icon, label, value }) => (
+    <div>
+        <p style={{ fontSize: 8, color: "#5f6f72", fontWeight: 600, textTransform: "uppercase", marginBottom: 1 }} aria-hidden="true">
+            {icon} {label}
+        </p>
+        <p style={{ fontSize: 9, fontWeight: 700, color: "#0f1f21", lineHeight: 1.3 }}>{value}</p>
+    </div>
+);
+
+const TabBtn = ({ id, panelId, label, active, onClick }) => (
+    <button
+        id={id}
+        role="tab"
+        aria-selected={active}
+        aria-controls={panelId}
+        onClick={onClick}
+        style={{
+            flex: 1, padding: "8px 4px", fontSize: 11, fontWeight: 700,
+            color: active ? "#00484F" : "#5f6f72",
+            borderBottom: active ? `3px solid #00A3AD` : "3px solid transparent",
+            transition: "all 0.15s",
+            minHeight: 36
+        }}
+    >
+        {label}
+    </button>
+);
+
+const ZoneChip = ({ name, granted }) => (
+    <div style={{
+        display: "flex", alignItems: "center", gap: 6,
+        padding: "7px 9px", borderRadius: 8,
+        background: granted ? "#f0fdf4" : "#fef2f2",
+        border: `1px solid ${granted ? "#86efac" : "#fecaca"}`
+    }}
+    role="status"
+    aria-label={`${name}: ${granted ? "Access granted" : "Access denied"}`}>
+        <span aria-hidden="true" style={{ fontSize: 12 }}>{granted ? "✅" : "🚫"}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: granted ? "#166534" : "#991b1b", lineHeight: 1.2 }}>{name}</span>
+    </div>
+);
+
+const CertRow = ({ label, status }) => {
+    const s = {
+        active:   { bg: "#f0fdf4", border: "#86efac", text: "#166534", badge: "Active"   },
+        expiring: { bg: "#fffbeb", border: "#fde68a", text: "#92400e", badge: "Expiring" },
+        expired:  { bg: "#fef2f2", border: "#fecaca", text: "#991b1b", badge: "Expired"  },
+    }[status] || { bg: "#f0fdf4", border: "#86efac", text: "#166534", badge: "Active" };
+
+    return (
+        <div style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            padding: "7px 10px", borderRadius: 8,
+            background: s.bg, border: `1px solid ${s.border}`
+        }}
+        role="status"
+        aria-label={`${label}: ${s.badge}`}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#0f1f21" }}>🏅 {label}</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: s.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.badge}</span>
+        </div>
+    );
+};
+
+ReactDOM.createRoot(document.getElementById("root")).render(<Badge />);
+</script>
+</body>
+</html>
