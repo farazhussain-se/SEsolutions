@@ -1,18 +1,144 @@
-<!-- TradingView Saudi Aramco (TADAWUL:2222) Single Quote Widget -->
-<div class="tradingview-widget-container">
-  <div class="tradingview-widget-container__widget"></div>
-  <div class="tradingview-widget-copyright">
-    <a href="https://www.tradingview.com/symbols/TADAWUL-2222/" rel="noopener" target="_blank">
-      <span style="color:#3179f5;font-size:11px;font-family:sans-serif">2222 on TradingView</span>
-    </a>
+<!-- Saudi Aramco (TADAWUL:2222) stock card — SIMULATED / INDICATIVE demo data.
+     Self-contained, no external data source. Figures are illustrative. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Saudi Aramco – TADAWUL: 2222</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: transparent; }
+
+.card {
+  width: 100%; max-width: 400px; margin: auto;
+  background: #fff; border-radius: 16px; overflow: hidden;
+  border: 1px solid #e8eaed; box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+}
+
+/* HEADER */
+.head { display: flex; align-items: center; gap: 11px; padding: 16px 18px 12px; }
+.logo {
+  width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0;
+  background: #00843d; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 15px; letter-spacing: -0.5px;
+}
+.id { flex: 1; min-width: 0; }
+.name { font-size: 14px; font-weight: 800; color: #0f172a; line-height: 1.15; }
+.ticker { font-size: 11px; font-weight: 600; color: #94a3b8; margin-top: 1px; }
+.live { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 800; color: #00843d; letter-spacing: 0.05em; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: #00843d; animation: pulse 1.6s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+/* PRICE */
+.price-row { padding: 4px 18px 16px; display: flex; align-items: baseline; gap: 10px; }
+.price { font-size: 38px; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.cur { font-size: 13px; font-weight: 700; color: #94a3b8; }
+.chg { margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
+.chg-abs { font-size: 15px; font-weight: 800; line-height: 1.1; }
+.chg-pct { font-size: 11px; font-weight: 700; }
+.up   { color: #00843d; } .up-bg   { background: #dcfce7; }
+.down { color: #dc2626; } .down-bg { background: #fee2e2; }
+.chg-pill { display: inline-block; padding: 2px 7px; border-radius: 7px; margin-top: 3px; }
+
+/* STATS */
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #f1f5f9; border-top: 1px solid #f1f5f9; }
+.stat { background: #fff; padding: 10px 14px; }
+.stat-l { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+.stat-v { font-size: 12px; font-weight: 700; color: #1e293b; font-variant-numeric: tabular-nums; }
+
+/* FOOTER */
+.foot { background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 7px 14px; display: flex; justify-content: space-between; align-items: center; }
+.foot-l { font-size: 9px; font-weight: 700; color: #00843d; letter-spacing: 0.03em; }
+.foot-r { font-size: 9px; color: #94a3b8; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="head">
+    <div class="logo">SA</div>
+    <div class="id">
+      <div class="name">Saudi Aramco</div>
+      <div class="ticker">TADAWUL: 2222 · Saudi Arabian Oil Co.</div>
+    </div>
+    <div class="live"><span class="dot"></span>LIVE</div>
   </div>
-  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-  {
-    "symbol": "TADAWUL:2222",
-    "width": "100%",
-    "locale": "en",
-    "colorTheme": "light",
-    "isTransparent": false
-  }
-  </script>
+
+  <div class="price-row">
+    <span class="price" id="price">27.06</span>
+    <span class="cur">SAR</span>
+    <span class="chg">
+      <div class="chg-abs down" id="chgAbs">−0.10</div>
+      <span class="chg-pill down-bg"><span class="chg-pct down" id="chgPct">−0.37%</span></span>
+    </span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-l">Open</div><div class="stat-v">27.10</div></div>
+    <div class="stat"><div class="stat-l">Prev Close</div><div class="stat-v">27.16</div></div>
+    <div class="stat"><div class="stat-l">Day Range</div><div class="stat-v" id="dayRange">26.94 – 27.14</div></div>
+    <div class="stat"><div class="stat-l">52-Wk Range</div><div class="stat-v">23.90 – 31.45</div></div>
+    <div class="stat"><div class="stat-l">Volume</div><div class="stat-v" id="vol">13.21M</div></div>
+    <div class="stat"><div class="stat-l">Mkt Cap</div><div class="stat-v">6.55T SAR</div></div>
+    <div class="stat"><div class="stat-l">P/E (TTM)</div><div class="stat-v">15.8</div></div>
+    <div class="stat"><div class="stat-l">Div Yield</div><div class="stat-v">6.8%</div></div>
+  </div>
+
+  <div class="foot">
+    <span class="foot-l">Saudi Exchange (Tadawul) · TASI</span>
+    <span class="foot-r" id="stamp">Indicative · —</span>
+  </div>
 </div>
+
+<script>
+// Simulated quote — drifts gently around a base so it reads as "live" in a demo.
+const PREV_CLOSE = 27.16;
+const BASE = 27.06;
+let price = BASE;
+let dayLow = 26.94, dayHigh = 27.14, baseVol = 13.21;
+
+function fmt(n) { return n.toFixed(2); }
+
+function render() {
+  const chg = price - PREV_CLOSE;
+  const pct = (chg / PREV_CLOSE) * 100;
+  const up = chg >= 0;
+  const sign = up ? '+' : '−';
+
+  document.getElementById('price').textContent  = fmt(price);
+  document.getElementById('chgAbs').textContent = sign + fmt(Math.abs(chg));
+  document.getElementById('chgPct').textContent = sign + Math.abs(pct).toFixed(2) + '%';
+  document.getElementById('dayRange').textContent = fmt(dayLow) + ' – ' + fmt(dayHigh);
+  document.getElementById('vol').textContent = baseVol.toFixed(2) + 'M';
+
+  const absEl = document.getElementById('chgAbs');
+  const pctEl = document.getElementById('chgPct');
+  const pillEl = pctEl.parentElement;
+  absEl.className = 'chg-abs ' + (up ? 'up' : 'down');
+  pctEl.className = 'chg-pct ' + (up ? 'up' : 'down');
+  pillEl.className = 'chg-pill ' + (up ? 'up-bg' : 'down-bg');
+}
+
+function tick() {
+  // tiny ± move, kept near base and inside the day range
+  const move = (Math.random() - 0.5) * 0.06;
+  price = Math.min(dayHigh, Math.max(dayLow, +(price + move).toFixed(2)));
+  if (price > dayHigh) dayHigh = price;
+  if (price < dayLow)  dayLow  = price;
+  baseVol = +(baseVol + Math.random() * 0.03).toFixed(2);
+  render();
+}
+
+function stamp() {
+  const t = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('stamp').textContent = 'Indicative · ' + t + ' AST';
+}
+
+render(); stamp();
+setInterval(tick, 4000);
+setInterval(stamp, 30000);
+</script>
+</body>
+</html>
