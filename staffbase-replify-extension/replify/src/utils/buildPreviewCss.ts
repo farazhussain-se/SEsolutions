@@ -21,6 +21,20 @@ interface BrandOptions {
   logoH?: number;
   headerTransparency?: number;
   prospectName?: string;
+  /**
+   * When true, the output CSS includes PREVIEW-ONLY overlays — currently
+   * just `.quick-links-widget__item { background-color/color !important }`,
+   * which is needed only when the user clicks Preview Branding (data
+   * hasn't changed yet, so we have to override at the CSS layer).
+   *
+   * When false (the default — used by handleCreateDemo + handleApplyDemoConfig
+   * which write the result PERSISTENTLY via postUpdatedCSS → /api/branches/{id}/config),
+   * those overlays are OMITTED so the actual stored `data-widget-conf-tile-bg-color`
+   * attribute drives the rendering. Without this flag, the !important CSS
+   * leaked into the persistent theme and masked whether the Pages API
+   * data-attribute write actually landed.
+   */
+  previewOnly?: boolean;
 }
 
 interface MultiBrandConfig {
@@ -616,12 +630,21 @@ export default function buildPreviewCss(o: BrandOptions, multiBrandings: MultiBr
         color: ${text} !important;
       }
 
-      /* ================= Link Tiles widget (preview override) =================
+      ${options.previewOnly ? `
+      /* ================= Link Tiles widget (preview-only override) ===========
+         GATED on previewOnly — only emitted by handlePreview /
+         handleMobilePreview, never by handleCreateDemo / handleApplyDemoConfig.
+
          The Staffbase Link Tiles widget (data-widget-type="QuickLinks", rendered
          as .quick-links-widget) stores colors as INLINE styles on each <li>.
          Inline styles beat stylesheet selectors, so we need !important + a
-         specific selector to take over for the live preview. The persistent
-         change happens via the Pages API in handleCreateDemo. */
+         specific selector to override at the CSS layer FOR PREVIEW ONLY.
+
+         Once branding is APPLIED, the rebrandHomePageLinkTiles op writes the
+         new colors directly into the page's data-widget-conf-tile-bg-color /
+         text-color attributes. After that, this CSS would mask the truth —
+         even if the data write failed, the !important rule would keep
+         painting the new color. So we omit it from the persistent CSS. */
       .quick-links-widget__item {
         background-color: ${options.tileBg || primary} !important;
         color: ${options.tileText || text} !important;
@@ -630,6 +653,7 @@ export default function buildPreviewCss(o: BrandOptions, multiBrandings: MultiBr
       .quick-links-widget__item .clickable {
         color: ${options.tileText || text} !important;
       }
+      ` : ''}
     `;
   };
 

@@ -2321,6 +2321,11 @@ function App() {
           logoHeight,
           logoMarginTop,
           prospectName,
+          // PERSISTENT CSS → skip the .quick-links-widget__item !important
+          // overlay. The Pages API write (rebrandHomePageLinkTiles, below)
+          // updates the data attribute directly; the CSS overlay would
+          // otherwise mask whether that write actually landed.
+          previewOnly: false,
       }, multiBrandings, customCss);
   
         const newBlock = `/* ⇢ REPLIFY START ⇠ */\n${newCssBody}\n/* ⇢ REPLIFY END ⇠ */`;
@@ -2372,6 +2377,33 @@ function App() {
           // Non-fatal — log only. Branding already succeeded above.
           console.warn("[Replify] Link Tiles rebrand skipped:", tilesErr);
           setResponse((p) => p + `\n⚠️ Link Tiles rebrand skipped: ${tilesErr instanceof Error ? tilesErr.message : String(tilesErr)}`);
+        }
+
+        /* 🧹 Remove any stale preview-only CSS overlay from the active tab.
+         *
+         * If the user clicked "Preview Branding" earlier, a
+         * <style id="replify-preview-styles"> element with the tile
+         * !important overlay is still attached to the active tab. The
+         * persistent CSS we just wrote (with previewOnly: false) does NOT
+         * contain that overlay — so the page should now reflect the TRUE
+         * post-write state driven by the data attribute. The leftover
+         * preview style would mask that. Clear it.
+         *
+         * Best-effort: failures are silent. The next page refresh would
+         * clear it anyway.
+         */
+        try {
+          const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+          if (activeTab?.id) {
+            await chrome.scripting.executeScript({
+              target: { tabId: activeTab.id },
+              func: (styleId) => { document.getElementById(styleId as string)?.remove(); },
+              args: ["replify-preview-styles"],
+            });
+            setPreviewActive(false);
+          }
+        } catch (cleanupErr) {
+          console.warn("[Replify] Preview-overlay cleanup skipped:", cleanupErr);
         }
       }
 
@@ -2680,6 +2712,11 @@ function App() {
         changeLogoSize,
         logoHeight,
         logoMarginTop,
+        // EPHEMERAL preview — include the .quick-links-widget__item
+        // !important overlay so the tile colors visually change while the
+        // user previews (the underlying data attribute hasn't been written
+        // yet at this point).
+        previewOnly: true,
       },
       multiBrandings,
       customCss
@@ -2744,6 +2781,9 @@ function App() {
           changeLogoSize,
           logoHeight,
           logoMarginTop,
+          // EPHEMERAL mobile preview — include tile overlay (same reasoning
+          // as the active-tab preview above).
+          previewOnly: true,
         },
         multiBrandings,
         customCss
@@ -3319,6 +3359,10 @@ function App() {
         logoHeight: demo.logoHeight ?? DEFAULT_BRANDING.logoHeight,
         logoMarginTop: demo.logoMarginTop ?? 0,
         prospectName: demo.prospectName,
+        // PERSISTENT CSS (loading a saved demo) — same reason as
+        // handleCreateDemo. The Pages API path drives tile colors;
+        // a CSS overlay here would mask whether it succeeded.
+        previewOnly: false,
       }, [], "");
 
       const newBlock = `/* ⇢ REPLIFY START ⇠ */\n${newCssBody}\n/* ⇢ REPLIFY END ⇠ */`;
