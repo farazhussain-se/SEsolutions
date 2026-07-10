@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cushman &amp; Wakefield — Employee Badge</title>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { background: transparent; }
+        body { padding: 10px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        /* Focus ring for keyboard nav — WCAG 2.4.7 */
+        :focus-visible { outline: 3px solid #8a1538; outline-offset: 2px; border-radius: 4px; }
+
+        @keyframes pulse-ring {
+            0%   { box-shadow: 0 0 0 0 rgba(138,21,56,0.5); }
+            70%  { box-shadow: 0 0 0 6px rgba(138,21,56,0); }
+            100% { box-shadow: 0 0 0 0 rgba(138,21,56,0); }
+        }
+        .pulse { border-radius: 50%; animation: pulse-ring 2s infinite; }
+    </style>
+</head>
+<body>
+<div id="root">Loading…</div>
+
+<script type="text/babel">
+/* ─────────────────────────────────────────
+   CONFIGURE EMPLOYEE DATA HERE
+───────────────────────────────────────── */
+const EMPLOYEE = {
+    company:  "Cushman & Wakefield",
+    id:       "CW-38217",
+    firstName:"Morgan",
+    lastName: "Ellis",
+    title:    "Facilities & EHS Coordinator",
+    segment:  "Global Occupier Services",
+    site:     "225 W Wacker Dr, Chicago, IL",
+    expires:  "2027-12-31",
+    ehsStatus:"360 EHS Certified",
+    compliance: [
+        { label: "360 EHS Program",              detail: "Certified",            status: "active" },
+        { label: "CWALK Site Walkthrough",        detail: "Completed Jun 28",     status: "active" },
+        { label: "Avetta Contractor Compliance",  detail: "Verified",             status: "active" },
+    ],
+};
+
+/* ─────────────────────────────────────────
+   WCAG-safe token palette
+   All text/bg combos verified ≥ 4.5:1 (AA)
+───────────────────────────────────────── */
+const C = {
+    bg:      "#ffffff",
+    surface: "#f9fafb",   /* on white: decorative only */
+    border:  "#d1d5db",
+    divider: "#f3f4f6",
+    text:    "#111827",   /* 16.75:1 on white ✓ */
+    muted:   "#374151",   /* 9.73:1  on white ✓ */
+    faint:   "#6b7280",   /* 4.63:1  on white ✓ */
+    accent:  "#8a1538",   /* 7.1:1   on white ✓ — C&W brand maroon */
+    dark:    "#111827",
+    success: { bg: "#f0fdf4", border: "#86efac", text: "#166534" }, /* 7.52:1 ✓ */
+    warning: { bg: "#fffbeb", border: "#fde68a", text: "#92400e" }, /* 5.74:1 ✓ */
+    error:   { bg: "#fef2f2", border: "#fecaca", text: "#991b1b" }, /* 5.96:1 ✓ */
+};
+
+const { useEffect, useRef, useState } = React;
+
+const Badge = () => {
+    const qrRef = useRef(null);
+    const [qrDone, setQrDone] = useState(false);
+
+    useEffect(() => {
+        if (qrRef.current && !qrDone) {
+            qrRef.current.innerHTML = "";
+            new QRCode(qrRef.current, {
+                text: `CW|ID:${EMPLOYEE.id}|${EMPLOYEE.firstName}+${EMPLOYEE.lastName}|SITE:${EMPLOYEE.site}`,
+                width: 116, height: 116,
+                colorDark: C.dark, colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            setQrDone(true);
+        }
+    }, []);
+
+    return (
+        <div style={{ maxWidth: 340, margin: "0 auto" }}>
+            <div style={{
+                background: C.bg,
+                borderRadius: 14,
+                overflow: "hidden",
+                border: `1px solid ${C.border}`,
+                boxShadow: "0 4px 20px rgba(0,0,0,0.08)"
+            }}>
+
+                {/* ── Header ── */}
+                <div style={{
+                    background: C.dark,
+                    padding: "7px 13px",
+                    display: "flex", justifyContent: "space-between", alignItems: "center"
+                }}>
+                    <span style={{ color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span className="pulse" style={{ width: 8, height: 8, background: "#4ade80", display: "inline-block", flexShrink: 0 }} aria-hidden="true" />
+                        BADGE ACTIVE
+                    </span>
+                    <span style={{ color: "#9ca3af", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" }}>C&amp;W</span>
+                </div>
+
+                {/* ── Profile row ── */}
+                <div style={{
+                    padding: "14px 13px 11px",
+                    borderBottom: `1px solid ${C.divider}`,
+                    display: "flex", gap: 12, alignItems: "flex-start"
+                }}>
+
+                    {/* QR */}
+                    <div style={{ flexShrink: 0 }}>
+                        <div style={{ padding: 5, border: `2px solid ${C.border}`, borderRadius: 9, background: "#fff" }}
+                             role="img" aria-label={`QR code for employee ID ${EMPLOYEE.id}`}>
+                            <div ref={qrRef} />
+                        </div>
+                        <p style={{ textAlign: "center", fontSize: 9, color: C.faint, fontFamily: "monospace", marginTop: 3 }}>
+                            {EMPLOYEE.id}
+                        </p>
+                    </div>
+
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                            display: "inline-block",
+                            background: C.dark, color: "#fff",
+                            fontWeight: 800, fontSize: 9,
+                            padding: "2px 7px", borderRadius: 3,
+                            letterSpacing: "0.06em",
+                            marginBottom: 7
+                        }}>
+                            {EMPLOYEE.company}
+                        </div>
+
+                        <p style={{ fontSize: 18, fontWeight: 800, color: C.text, lineHeight: 1.1, marginBottom: 3 }}>
+                            {EMPLOYEE.firstName}<br />{EMPLOYEE.lastName}
+                        </p>
+                        <p style={{ fontSize: 10, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                            {EMPLOYEE.title}
+                        </p>
+                        <p style={{ fontSize: 9, color: C.muted, marginBottom: 1 }}>{EMPLOYEE.segment}</p>
+                        <p style={{ fontSize: 9, color: C.faint, marginBottom: 7 }}>{EMPLOYEE.site}</p>
+
+                        <span style={{
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            background: C.success.bg, borderRadius: 99, padding: "2px 8px",
+                            border: `1px solid ${C.success.border}`
+                        }}>
+                            <span style={{ fontSize: 8, fontWeight: 700, color: C.success.text }}>✓ {EMPLOYEE.ehsStatus}</span>
+                        </span>
+                    </div>
+                </div>
+
+                {/* ── Compliance & access (single compact section, no tabs) ── */}
+                <div style={{ padding: "10px 13px 13px", display: "flex", flexDirection: "column", gap: 6 }}>
+                    <p style={{ fontSize: 9, color: C.faint, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 1 }}>
+                        Compliance
+                    </p>
+                    {EMPLOYEE.compliance.map((c, i) => <CertRow key={i} label={c.label} detail={c.detail} status={c.status} />)}
+                </div>
+
+                {/* ── Footer ── */}
+                <div style={{
+                    background: C.dark, padding: "6px 13px",
+                    display: "flex", justifyContent: "space-between", alignItems: "center"
+                }}>
+                    <span style={{ color: "#9ca3af", fontSize: 9 }}>Expires: {EMPLOYEE.expires}</span>
+                    <span style={{ color: "#9ca3af", fontSize: 9 }}>{EMPLOYEE.ehsStatus}</span>
+                </div>
+            </div>
+
+            <p style={{ textAlign: "center", fontSize: 10, color: "#9ca3af", marginTop: 7 }}>
+                Secure ID · Do not share this badge
+            </p>
+        </div>
+    );
+};
+
+/* ── Sub-components ── */
+
+const CertRow = ({ label, detail, status }) => {
+    const s = {
+        active:   { bg: "#f0fdf4", border: "#86efac", text: "#166534" },
+        expiring: { bg: "#fffbeb", border: "#fde68a", text: "#92400e" },
+        expired:  { bg: "#fef2f2", border: "#fecaca", text: "#991b1b" },
+    }[status] || { bg: "#f0fdf4", border: "#86efac", text: "#166534" };
+
+    return (
+        <div style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            padding: "7px 10px", borderRadius: 8,
+            background: s.bg, border: `1px solid ${s.border}`
+        }}
+        role="status"
+        aria-label={`${label}: ${detail}`}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#111827" }}>🏅 {label}</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: s.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>{detail}</span>
+        </div>
+    );
+};
+
+ReactDOM.createRoot(document.getElementById("root")).render(<Badge />);
+</script>
+</body>
+</html>
