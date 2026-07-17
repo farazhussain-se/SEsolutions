@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="widget-name" content="Training Schedule">
+<meta name="widget-description" content="Trainer's hourly day view of a client's workout, habit, and lesson schedule, with week navigation and quick activity add">
+<meta name="widget-tags" content="Scheduling">
+<title>Training Schedule</title>
+<style>
+    :root {
+        --primary: var(--sb-brand, #2563eb);
+        --primary-soft: #dbeafe;
+        --primary-tint: #eff6ff;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --text: #1f2937;
+        --text-light: #6b7280;
+        --bg: #ffffff;
+        --bg-gray: #f9fafb;
+        --border: #e5e7eb;
+        --shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --primary: var(--sb-brand, #3b9eff);
+            --primary-soft: #1e3a5f;
+            --primary-tint: #172033;
+            --success: #34d399;
+            --warning: #fbbf24;
+            --danger: #f87171;
+            --text: #f3f4f6;
+            --text-light: #9ca3af;
+            --bg: #1f2937;
+            --bg-gray: #111827;
+            --border: #374151;
+            --shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.35);
+        }
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "SF Pro Text", sans-serif;
+    }
+
+    body {
+        min-height: 100vh;
+        background: var(--bg-gray);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .widget-shell {
+        width: 100%;
+        max-width: 480px;
+    }
+
+    .widget-card {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        box-shadow: var(--shadow-soft);
+        padding: 20px 18px;
+    }
+
+    .widget-title {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin-bottom: 10px;
+    }
+
+    .client-select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg-gray);
+        color: var(--text);
+        font-size: 15px;
+        font-weight: 600;
+        font-family: inherit;
+        margin-bottom: 8px;
+        cursor: pointer;
+    }
+
+    .client-meta {
+        font-size: 12px;
+        color: var(--text-light);
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        margin-bottom: 18px;
+    }
+
+    .meta-sep { opacity: 0.5; }
+
+    .calendar-section { margin-bottom: 16px; }
+
+    .week-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .week-label {
+        text-align: center;
+        font-size: 16px;
+        font-weight: 700;
+        text-transform: capitalize;
+    }
+
+    .week-nav-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        color: var(--text);
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+        font-family: inherit;
+        flex-shrink: 0;
+    }
+
+    .week-nav-btn:hover { background: var(--bg-gray); }
+
+    .weekday-row {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        margin-bottom: 6px;
+    }
+
+    .weekday-label {
+        text-align: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-light);
+        text-transform: uppercase;
+    }
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+    }
+
+    .day-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 4px 0 6px;
+        border-radius: 10px;
+        cursor: pointer;
+        min-height: 44px;
+    }
+
+    .day-cell:hover { background: var(--bg-gray); }
+
+    .day-num {
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 14px;
+        font-weight: 600;
+        border: 1.5px solid transparent;
+    }
+
+    .day-cell.is-today .day-num { border-color: var(--primary); }
+
+    .day-cell.selected .day-num {
+        background: var(--primary);
+        color: #fff;
+        border-color: transparent;
+    }
+
+    .day-dots {
+        display: flex;
+        gap: 3px;
+        margin-top: 4px;
+        height: 6px;
+    }
+
+    .type-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    .type-dot.workout { background: var(--danger); }
+    .type-dot.habit { background: var(--success); }
+    .type-dot.lesson { background: var(--primary); }
+
+    .activities-section { margin-bottom: 14px; }
+
+    .selected-date-label {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        text-transform: capitalize;
+    }
+
+    .hour-agenda {
+        display: flex;
+        flex-direction: column;
+        max-height: 320px;
+        overflow-y: auto;
+    }
+
+    .hour-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        border-top: 1px solid var(--border);
+        padding: 6px 0;
+    }
+
+    .hour-row:first-child { border-top: none; }
+
+    .hour-label {
+        width: 46px;
+        flex-shrink: 0;
+        font-size: 11px;
+        color: var(--text-light);
+        text-align: right;
+        padding-top: 8px;
+        white-space: nowrap;
+    }
+
+    .hour-slot {
+        flex: 1;
+        min-height: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        border-radius: 8px;
+    }
+
+    .hour-slot.empty { cursor: pointer; }
+    .hour-slot.empty:hover { background: var(--bg-gray); }
+
+    .activity-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 8px 12px;
+        background: var(--bg-gray);
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    .activity-card:hover { background: var(--primary-tint); }
+
+    .activity-check {
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .activity-card.done .activity-check {
+        background: var(--success);
+        border-color: var(--success);
+    }
+
+    .activity-body { flex: 1; min-width: 0; }
+
+    .activity-title { font-size: 14px; font-weight: 600; }
+
+    .activity-card.done .activity-title {
+        text-decoration: line-through;
+        color: var(--text-light);
+    }
+
+    .activity-type {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text-light);
+        margin-top: 2px;
+    }
+
+    .add-activity-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: transparent;
+        color: var(--primary);
+        border: 1.5px dashed var(--primary);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    .add-activity-btn:hover { background: var(--primary-tint); }
+
+    .add-icon { font-size: 16px; line-height: 1; }
+
+    .add-activity-form {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .type-pill-row { display: flex; gap: 8px; }
+
+    .type-pill {
+        flex: 1;
+        position: relative;
+        padding: 8px 8px 8px 20px;
+        border-radius: 999px;
+        border: 1.5px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    .type-pill::before {
+        content: '';
+        position: absolute;
+        left: 9px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+
+    .type-pill.workout::before { background: var(--danger); }
+    .type-pill.habit::before { background: var(--success); }
+    .type-pill.lesson::before { background: var(--primary); }
+
+    .type-pill.active {
+        border-color: var(--primary);
+        background: var(--primary-tint);
+    }
+
+    .activity-title-input,
+    .activity-hour-select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        font-size: 14px;
+        font-family: inherit;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .cw-btn-text {
+        background: transparent;
+        border: none;
+        color: var(--text-light);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        padding: 8px 6px;
+    }
+
+    .cw-btn-primary {
+        background: var(--primary);
+        color: #fff;
+        border-radius: 999px;
+        border: none;
+        font-size: 13px;
+        padding: 8px 18px;
+        cursor: pointer;
+        font-weight: 600;
+        font-family: inherit;
+    }
+
+    .cw-btn-primary:hover { filter: brightness(0.93); }
+
+    @media (max-width: 480px) {
+        body { padding: 16px; }
+        .widget-card { border-radius: 18px; padding: 18px 14px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="widget-shell">
+    <div class="widget-card">
+        <div class="widget-title" data-i18n="widgetTitle"></div>
+
+        <select class="client-select" id="client-select"></select>
+        <div class="client-meta">
+            <span id="member-number"></span>
+            <span class="meta-sep">&middot;</span>
+            <span id="program-name"></span>
+        </div>
+
+        <div class="calendar-section">
+            <div class="week-nav">
+                <button type="button" class="week-nav-btn" id="prev-week" aria-label="Previous week">&lsaquo;</button>
+                <div class="week-label" id="week-label"></div>
+                <button type="button" class="week-nav-btn" id="next-week" aria-label="Next week">&rsaquo;</button>
+            </div>
+            <div class="weekday-row" id="weekday-row"></div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+        </div>
+
+        <div class="activities-section">
+            <div class="selected-date-label" id="selected-date-label"></div>
+            <div class="hour-agenda" id="activity-list"></div>
+        </div>
+
+        <button type="button" class="add-activity-btn" id="add-toggle">
+            <span class="add-icon">+</span><span data-i18n="addActivity"></span>
+        </button>
+
+        <div class="add-activity-form" id="add-form" style="display:none;">
+            <div class="type-pill-row">
+                <button type="button" class="type-pill workout" data-type="workout" data-i18n="typeWorkout"></button>
+                <button type="button" class="type-pill habit" data-type="habit" data-i18n="typeHabit"></button>
+                <button type="button" class="type-pill lesson" data-type="lesson" data-i18n="typeLesson"></button>
+            </div>
+            <select class="activity-hour-select" id="activity-hour-select"></select>
+            <input type="text" class="activity-title-input" id="activity-title-input"/>
+            <div class="form-actions">
+                <button type="button" class="cw-btn-text" id="cancel-add" data-i18n="cancelBtn"></button>
+                <button type="button" class="cw-btn-primary" id="save-add" data-i18n="saveBtn"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Language detection ---
+    const LANG = (() => {
+        const l = navigator.language || '';
+        if (l.startsWith('de')) return 'de';
+        if (l.startsWith('fr')) return 'fr';
+        if (l.startsWith('es')) return 'es';
+        if (l.startsWith('ja')) return 'ja';
+        if (l === 'en-GB')      return 'en-GB';
+        return 'en-US';
+    })();
+    document.documentElement.lang = LANG;
+
+    const LOCALE = {
+        'de': 'de-DE', 'fr': 'fr-FR', 'es': 'es-ES',
+        'ja': 'ja-JP', 'en-GB': 'en-GB', 'en-US': 'en-US'
+    }[LANG];
+
+    // --- Translations ---
+    const T = {
+        de: {
+            widgetTitle: 'Trainingsplan',
+            clientAria: 'Kunde auswählen',
+            memberLabel: 'Mitglieds-Nr. {n}',
+            typeWorkout: 'Workout',
+            typeHabit: 'Gewohnheit',
+            typeLesson: 'Lektion',
+            addActivity: 'Aktivität hinzufügen',
+            titlePlaceholder: 'Titel der Aktivität',
+            saveBtn: 'Speichern',
+            cancelBtn: 'Abbrechen',
+            program1Name: '6-Wochen-Definitionsplan',
+            program2Name: 'Grundlagen & Technik',
+            program3Name: 'Kraftaufbau',
+            actWorkout1: 'Oberkörper-Kraft',
+            actWorkout2: 'Unterkörper & Rumpf',
+            actHabit1: '3 Liter Wasser trinken',
+            actHabit2: '8 Stunden schlafen',
+            actLesson1: 'Ernährungsgrundlagen: Makros 101',
+            actLesson2: 'Regeneration & Mobilität'
+        },
+        fr: {
+            widgetTitle: "Programme d'entraînement",
+            clientAria: 'Sélectionner un client',
+            memberLabel: 'N° de membre {n}',
+            typeWorkout: 'Entraînement',
+            typeHabit: 'Habitude',
+            typeLesson: 'Leçon',
+            addActivity: 'Ajouter une activité',
+            titlePlaceholder: "Titre de l'activité",
+            saveBtn: 'Enregistrer',
+            cancelBtn: 'Annuler',
+            program1Name: 'Sèche en 6 semaines',
+            program2Name: 'Fondamentaux & Technique',
+            program3Name: 'Reconstruction musculaire',
+            actWorkout1: 'Force du haut du corps',
+            actWorkout2: 'Bas du corps & gainage',
+            actHabit1: "Boire 3 litres d'eau",
+            actHabit2: 'Dormir 8 heures',
+            actLesson1: 'Bases de la nutrition : les macros',
+            actLesson2: 'Récupération & mobilité'
+        },
+        es: {
+            widgetTitle: 'Plan de Entrenamiento',
+            clientAria: 'Seleccionar cliente',
+            memberLabel: 'N.º de socio {n}',
+            typeWorkout: 'Entrenamiento',
+            typeHabit: 'Hábito',
+            typeLesson: 'Lección',
+            addActivity: 'Añadir actividad',
+            titlePlaceholder: 'Título de la actividad',
+            saveBtn: 'Guardar',
+            cancelBtn: 'Cancelar',
+            program1Name: 'Definición en 6 semanas',
+            program2Name: 'Fundamentos y Técnica',
+            program3Name: 'Reconstrucción de Fuerza',
+            actWorkout1: 'Fuerza del Tren Superior',
+            actWorkout2: 'Tren Inferior y Core',
+            actHabit1: 'Beber 3 litros de agua',
+            actHabit2: 'Dormir 8 horas',
+            actLesson1: 'Nutrición Básica: Macros 101',
+            actLesson2: 'Recuperación y Movilidad'
+        },
+        ja: {
+            widgetTitle: 'トレーニングスケジュール',
+            clientAria: 'クライアントを選択',
+            memberLabel: '会員番号 {n}',
+            typeWorkout: 'ワークアウト',
+            typeHabit: '習慣',
+            typeLesson: 'レッスン',
+            addActivity: 'アクティビティを追加',
+            titlePlaceholder: 'アクティビティ名',
+            saveBtn: '保存',
+            cancelBtn: 'キャンセル',
+            program1Name: '6週間シェイプアッププログラム',
+            program2Name: '基礎とフォーム',
+            program3Name: '筋力再構築プログラム',
+            actWorkout1: '上半身強化トレーニング',
+            actWorkout2: '下半身・体幹トレーニング',
+            actHabit1: '1日3リットルの水を飲む',
+            actHabit2: '8時間の睡眠をとる',
+            actLesson1: '栄養の基礎：マクロ栄養素101',
+            actLesson2: '回復とモビリティのテクニック'
+        },
+        'en-GB': {
+            widgetTitle: 'Training Schedule',
+            clientAria: 'Select client',
+            memberLabel: 'Member #{n}',
+            typeWorkout: 'Workout',
+            typeHabit: 'Habit',
+            typeLesson: 'Lesson',
+            addActivity: 'Add Activity',
+            titlePlaceholder: 'Activity title',
+            saveBtn: 'Save',
+            cancelBtn: 'Cancel',
+            program1Name: '6-Week Shred',
+            program2Name: 'Foundations & Form',
+            program3Name: 'Strength Rebuild',
+            actWorkout1: 'Upper Body Strength',
+            actWorkout2: 'Lower Body & Core',
+            actHabit1: 'Drink 3 Litres of Water',
+            actHabit2: 'Get 8 Hours of Sleep',
+            actLesson1: 'Nutrition Basics: Macros 101',
+            actLesson2: 'Recovery & Mobility Techniques'
+        },
+        'en-US': {
+            widgetTitle: 'Training Schedule',
+            clientAria: 'Select client',
+            memberLabel: 'Member #{n}',
+            typeWorkout: 'Workout',
+            typeHabit: 'Habit',
+            typeLesson: 'Lesson',
+            addActivity: 'Add Activity',
+            titlePlaceholder: 'Activity title',
+            saveBtn: 'Save',
+            cancelBtn: 'Cancel',
+            program1Name: '6-Week Shred',
+            program2Name: 'Foundations & Form',
+            program3Name: 'Strength Rebuild',
+            actWorkout1: 'Upper Body Strength',
+            actWorkout2: 'Lower Body & Core',
+            actHabit1: 'Drink 3L of Water',
+            actHabit2: 'Get 8 Hours of Sleep',
+            actLesson1: 'Nutrition Basics: Macros 101',
+            actLesson2: 'Recovery & Mobility Techniques'
+        }
+    };
+    const t = T[LANG] ?? T['en-US'];
+
+    function tr(key, vars) {
+        let s = t[key] || key;
+        if (vars) Object.keys(vars).forEach(k => { s = s.replaceAll('{' + k + '}', vars[k]); });
+        return s;
+    }
+
+    function applyTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            if (t[key] !== undefined) el.textContent = t[key];
+        });
+    }
+
+    // --- Staffbase brand color passthrough ---
+    function applySBBrand() {
+        let sb = getComputedStyle(document.documentElement).getPropertyValue('--sb-brand').trim();
+        if (sb) {
+            document.documentElement.style.setProperty('--primary', sb);
+            return;
+        }
+        try {
+            sb = window.parent.getComputedStyle(window.parent.document.documentElement)
+                    .getPropertyValue('--sb-brand').trim();
+            if (sb) document.documentElement.style.setProperty('--primary', sb);
+        } catch (e) { /* cross-origin, ignore */ }
+    }
+
+    // --- Date helpers (anchor mock data to "now") ---
+    const now = new Date();
+    const fmtDate = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const todayStr = fmtDate(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const weekRangeFmt = new Intl.DateTimeFormat(LOCALE, { month: 'short', day: 'numeric', year: 'numeric' });
+    const selectedDateFmt = new Intl.DateTimeFormat(LOCALE, { weekday: 'long', month: 'long', day: 'numeric' });
+    const weekdayFmt = new Intl.DateTimeFormat(LOCALE, { weekday: 'narrow' });
+    const WEEKDAY_BASE = new Date(2023, 0, 1); // a Sunday, used only to derive localized weekday initials
+    const weekdayLabels = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(WEEKDAY_BASE);
+        d.setDate(d.getDate() + i);
+        return weekdayFmt.format(d);
+    });
+
+    // --- Hour agenda (6:00–20:00, a typical trainer's working day) ---
+    const HOURS = Array.from({ length: 15 }, (_, i) => 6 + i);
+    const hourFmt = new Intl.DateTimeFormat(LOCALE, { hour: 'numeric' });
+    function hourLabel(hour) { return hourFmt.format(new Date(2023, 0, 1, hour)); }
+
+    function startOfWeek(date) {
+        const d = new Date(date);
+        d.setDate(d.getDate() - d.getDay());
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
+    // --- Deterministic mock data helpers ---
+    function hashStr(s) {
+        let h = 0;
+        for (let i = 0; i < s.length; i++) { h = (h << 5) - h + s.charCodeAt(i); h |= 0; }
+        return Math.abs(h);
+    }
+    function mulberry32(seed) {
+        return function () {
+            seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+            let x = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+            x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+            return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+        };
+    }
+
+    // --- Mock clients (names from Custom Widget Names.txt) ---
+    const CLIENT_NAMES = ['Nicole Adams', 'Patrick Anderson', 'Maria Apathangelou', 'Mohammed Ashour',
+        'Marcus Barlow', 'Ruby Gray', 'Thomas Lawrence', 'Miranda Smith'];
+    const PROGRAM_KEYS = ['program1Name', 'program2Name', 'program3Name'];
+    const clients = CLIENT_NAMES.map((name, i) => ({
+        id: i,
+        name,
+        memberNumber: String(100000000 + (hashStr(name) % 900000000)),
+        programKey: PROGRAM_KEYS[i % PROGRAM_KEYS.length]
+    }));
+
+    const ACTIVITY_TEMPLATES = [
+        { type: 'workout', key: 'actWorkout1' },
+        { type: 'workout', key: 'actWorkout2' },
+        { type: 'habit', key: 'actHabit1' },
+        { type: 'habit', key: 'actHabit2' },
+        { type: 'lesson', key: 'actLesson1' },
+        { type: 'lesson', key: 'actLesson2' }
+    ];
+
+    function generateSchedule(client) {
+        const year = now.getFullYear(), month = now.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const rand = mulberry32(hashStr(client.name) + 1);
+        const schedule = {};
+
+        function addEntry(day, tmplIndex, hour, done) {
+            const dateStr = fmtDate(year, month, day);
+            if (!schedule[dateStr]) schedule[dateStr] = [];
+            const tmpl = ACTIVITY_TEMPLATES[tmplIndex];
+            schedule[dateStr].push({ type: tmpl.type, titleKey: tmpl.key, hour, done });
+        }
+
+        // Today always carries a morning workout + an evening habit so the default view has content.
+        addEntry(now.getDate(), Math.floor(rand() * 2), HOURS[Math.floor(rand() * 4)], false);
+        addEntry(now.getDate(), 2 + Math.floor(rand() * 2), HOURS[HOURS.length - 1 - Math.floor(rand() * 4)], false);
+
+        const entryCount = 9 + Math.floor(rand() * 4);
+        for (let i = 0; i < entryCount; i++) {
+            const day = 1 + Math.floor(rand() * daysInMonth);
+            const tmplIndex = Math.floor(rand() * ACTIVITY_TEMPLATES.length);
+            const hour = HOURS[Math.floor(rand() * HOURS.length)];
+            const isPast = day < now.getDate();
+            addEntry(day, tmplIndex, hour, isPast ? rand() > 0.15 : false);
+        }
+        return schedule;
+    }
+
+    const scheduleCache = {};
+    function getSchedule(client) {
+        if (!scheduleCache[client.id]) scheduleCache[client.id] = generateSchedule(client);
+        return scheduleCache[client.id];
+    }
+
+    // --- State ---
+    let currentClient = clients[0];
+    let weekStart = startOfWeek(now);
+    let selectedDateStr = todayStr;
+    let selectedNewType = 'workout';
+
+    // --- DOM refs ---
+    const clientSelectEl = document.getElementById('client-select');
+    const memberNumberEl = document.getElementById('member-number');
+    const programNameEl = document.getElementById('program-name');
+    const weekLabelEl = document.getElementById('week-label');
+    const prevWeekBtn = document.getElementById('prev-week');
+    const nextWeekBtn = document.getElementById('next-week');
+    const weekdayRowEl = document.getElementById('weekday-row');
+    const calendarGridEl = document.getElementById('calendar-grid');
+    const selectedDateLabelEl = document.getElementById('selected-date-label');
+    const activityListEl = document.getElementById('activity-list');
+    const addToggleBtn = document.getElementById('add-toggle');
+    const addFormEl = document.getElementById('add-form');
+    const hourSelectEl = document.getElementById('activity-hour-select');
+    const titleInputEl = document.getElementById('activity-title-input');
+    const cancelAddBtn = document.getElementById('cancel-add');
+    const saveAddBtn = document.getElementById('save-add');
+
+    function populateClientSelect() {
+        clientSelectEl.innerHTML = '';
+        clients.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            clientSelectEl.appendChild(opt);
+        });
+        clientSelectEl.value = currentClient.id;
+    }
+
+    function populateHourSelect() {
+        hourSelectEl.innerHTML = '';
+        HOURS.forEach(hour => {
+            const opt = document.createElement('option');
+            opt.value = hour;
+            opt.textContent = hourLabel(hour);
+            hourSelectEl.appendChild(opt);
+        });
+    }
+
+    function renderHeader() {
+        memberNumberEl.textContent = tr('memberLabel', { n: currentClient.memberNumber });
+        programNameEl.textContent = t[currentClient.programKey];
+    }
+
+    function renderWeekdayRow() {
+        weekdayRowEl.innerHTML = '';
+        weekdayLabels.forEach(label => {
+            const d = document.createElement('div');
+            d.className = 'weekday-label';
+            d.textContent = label;
+            weekdayRowEl.appendChild(d);
+        });
+    }
+
+    function renderCalendar() {
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        weekLabelEl.textContent = typeof weekRangeFmt.formatRange === 'function'
+            ? weekRangeFmt.formatRange(weekStart, weekEnd)
+            : `${weekRangeFmt.format(weekStart)} – ${weekRangeFmt.format(weekEnd)}`;
+
+        calendarGridEl.innerHTML = '';
+        const schedule = getSchedule(currentClient);
+
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(weekStart);
+            d.setDate(d.getDate() + i);
+            const dateStr = fmtDate(d.getFullYear(), d.getMonth(), d.getDate());
+
+            const cell = document.createElement('div');
+            cell.className = 'day-cell'
+                + (dateStr === selectedDateStr ? ' selected' : '')
+                + (dateStr === todayStr ? ' is-today' : '');
+            cell.dataset.date = dateStr;
+
+            const num = document.createElement('div');
+            num.className = 'day-num';
+            num.textContent = d.getDate();
+            cell.appendChild(num);
+
+            const dotsRow = document.createElement('div');
+            dotsRow.className = 'day-dots';
+            const entries = schedule[dateStr] || [];
+            const types = [...new Set(entries.map(e => e.type))].slice(0, 3);
+            types.forEach(ty => {
+                const dot = document.createElement('span');
+                dot.className = 'type-dot ' + ty;
+                dotsRow.appendChild(dot);
+            });
+            cell.appendChild(dotsRow);
+
+            cell.addEventListener('click', () => {
+                selectedDateStr = dateStr;
+                renderCalendar();
+                renderActivities();
+            });
+
+            calendarGridEl.appendChild(cell);
+        }
+    }
+
+    const TYPE_LABEL_KEY = { workout: 'typeWorkout', habit: 'typeHabit', lesson: 'typeLesson' };
+
+    function buildActivityCard(entry) {
+        const card = document.createElement('div');
+        card.className = 'activity-card' + (entry.done ? ' done' : '');
+        card.addEventListener('click', (e) => {
+            e.stopPropagation();
+            entry.done = !entry.done;
+            renderActivities();
+        });
+
+        const check = document.createElement('div');
+        check.className = 'activity-check';
+        check.textContent = entry.done ? '✓' : '';
+        card.appendChild(check);
+
+        const body = document.createElement('div');
+        body.className = 'activity-body';
+
+        const title = document.createElement('div');
+        title.className = 'activity-title';
+        title.textContent = entry.titleKey ? (t[entry.titleKey] || entry.titleKey) : entry.customTitle;
+        body.appendChild(title);
+
+        const typeRow = document.createElement('div');
+        typeRow.className = 'activity-type';
+        const dot = document.createElement('span');
+        dot.className = 'type-dot ' + entry.type;
+        typeRow.appendChild(dot);
+        typeRow.appendChild(document.createTextNode(t[TYPE_LABEL_KEY[entry.type]] || entry.type));
+        body.appendChild(typeRow);
+
+        card.appendChild(body);
+        return card;
+    }
+
+    function renderActivities() {
+        const [y, m, d] = selectedDateStr.split('-').map(Number);
+        const dateObj = new Date(y, m - 1, d);
+        selectedDateLabelEl.textContent = selectedDateFmt.format(dateObj);
+
+        const schedule = getSchedule(currentClient);
+        const entries = schedule[selectedDateStr] || [];
+        activityListEl.innerHTML = '';
+
+        HOURS.forEach(hour => {
+            const row = document.createElement('div');
+            row.className = 'hour-row';
+
+            const label = document.createElement('div');
+            label.className = 'hour-label';
+            label.textContent = hourLabel(hour);
+            row.appendChild(label);
+
+            const slot = document.createElement('div');
+            slot.className = 'hour-slot';
+            const hourEntries = entries.filter(e => e.hour === hour);
+
+            if (hourEntries.length === 0) {
+                slot.classList.add('empty');
+                slot.addEventListener('click', () => openAddForm(hour));
+            } else {
+                hourEntries.forEach(entry => slot.appendChild(buildActivityCard(entry)));
+            }
+
+            row.appendChild(slot);
+            activityListEl.appendChild(row);
+        });
+    }
+
+    function openAddForm(presetHour) {
+        addFormEl.style.display = 'flex';
+        hourSelectEl.value = presetHour;
+        titleInputEl.focus();
+    }
+
+    function renderTypePills() {
+        document.querySelectorAll('.type-pill').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.type === selectedNewType);
+        });
+    }
+
+    function init() {
+        applySBBrand();
+        applyTranslations();
+        clientSelectEl.setAttribute('aria-label', t.clientAria);
+        titleInputEl.placeholder = t.titlePlaceholder;
+
+        populateClientSelect();
+        populateHourSelect();
+        renderWeekdayRow();
+        renderHeader();
+        renderCalendar();
+        renderActivities();
+        renderTypePills();
+
+        clientSelectEl.addEventListener('change', e => {
+            currentClient = clients.find(c => c.id === Number(e.target.value));
+            weekStart = startOfWeek(now);
+            selectedDateStr = todayStr;
+            renderHeader();
+            renderCalendar();
+            renderActivities();
+        });
+
+        prevWeekBtn.addEventListener('click', () => {
+            weekStart.setDate(weekStart.getDate() - 7);
+            selectedDateStr = fmtDate(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate());
+            renderCalendar();
+            renderActivities();
+        });
+
+        nextWeekBtn.addEventListener('click', () => {
+            weekStart.setDate(weekStart.getDate() + 7);
+            selectedDateStr = fmtDate(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate());
+            renderCalendar();
+            renderActivities();
+        });
+
+        addToggleBtn.addEventListener('click', () => {
+            const isHidden = addFormEl.style.display === 'none' || !addFormEl.style.display;
+            if (isHidden) {
+                openAddForm(HOURS.includes(now.getHours()) ? now.getHours() : HOURS[0]);
+            } else {
+                addFormEl.style.display = 'none';
+            }
+        });
+
+        document.querySelectorAll('.type-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedNewType = btn.dataset.type;
+                renderTypePills();
+            });
+        });
+
+        cancelAddBtn.addEventListener('click', () => {
+            titleInputEl.value = '';
+            addFormEl.style.display = 'none';
+        });
+
+        saveAddBtn.addEventListener('click', () => {
+            const val = titleInputEl.value.trim();
+            if (!val) return;
+            const schedule = getSchedule(currentClient);
+            if (!schedule[selectedDateStr]) schedule[selectedDateStr] = [];
+            schedule[selectedDateStr].push({
+                type: selectedNewType,
+                customTitle: val,
+                hour: Number(hourSelectEl.value),
+                done: false
+            });
+            titleInputEl.value = '';
+            addFormEl.style.display = 'none';
+            renderCalendar();
+            renderActivities();
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
