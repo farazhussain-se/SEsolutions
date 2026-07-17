@@ -49,7 +49,7 @@
 
     body {
         min-height: 100vh;
-        background: var(--bg-gray);
+        background: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -68,27 +68,29 @@
         border: 1px solid var(--border);
         border-radius: 20px;
         box-shadow: var(--shadow-soft);
-        padding: 20px 18px;
+        padding: 16px;
+        max-height: 500px;
+        overflow: hidden;
     }
 
     .widget-title {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 700;
         letter-spacing: -0.01em;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
     }
 
     .client-select {
         width: 100%;
-        padding: 10px 12px;
+        padding: 7px 12px;
         border-radius: 10px;
         border: 1px solid var(--border);
         background: var(--bg-gray);
         color: var(--text);
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 600;
         font-family: inherit;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
         cursor: pointer;
     }
 
@@ -98,18 +100,18 @@
         display: flex;
         gap: 6px;
         align-items: center;
-        margin-bottom: 18px;
+        margin-bottom: 10px;
     }
 
     .meta-sep { opacity: 0.5; }
 
-    .calendar-section { margin-bottom: 16px; }
+    .calendar-section { margin-bottom: 8px; }
 
     .week-nav {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 10px;
+        margin-bottom: 4px;
     }
 
     .week-label {
@@ -120,13 +122,13 @@
     }
 
     .week-nav-btn {
-        width: 30px;
-        height: 30px;
+        width: 26px;
+        height: 26px;
         border-radius: 50%;
         border: none;
         background: transparent;
         color: var(--text);
-        font-size: 18px;
+        font-size: 16px;
         line-height: 1;
         cursor: pointer;
         font-family: inherit;
@@ -138,12 +140,12 @@
     .weekday-row {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        margin-bottom: 6px;
+        margin-bottom: 2px;
     }
 
     .weekday-label {
         text-align: center;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 600;
         color: var(--text-light);
         text-transform: uppercase;
@@ -160,22 +162,22 @@
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
-        padding: 4px 0 6px;
+        padding: 2px 0 4px;
         border-radius: 10px;
         cursor: pointer;
-        min-height: 44px;
+        min-height: 36px;
     }
 
     .day-cell:hover { background: var(--bg-gray); }
 
     .day-num {
-        width: 26px;
-        height: 26px;
+        width: 22px;
+        height: 22px;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
         border: 1.5px solid transparent;
     }
@@ -191,13 +193,13 @@
     .day-dots {
         display: flex;
         gap: 3px;
-        margin-top: 4px;
-        height: 6px;
+        margin-top: 2px;
+        height: 5px;
     }
 
     .type-dot {
-        width: 6px;
-        height: 6px;
+        width: 5px;
+        height: 5px;
         border-radius: 50%;
         display: inline-block;
         flex-shrink: 0;
@@ -207,61 +209,57 @@
     .type-dot.habit { background: var(--success); }
     .type-dot.lesson { background: var(--primary); }
 
-    .activities-section { margin-bottom: 14px; }
+    .activities-section { margin-bottom: 8px; }
 
     .selected-date-label {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
         text-transform: capitalize;
+    }
+
+    .empty-state {
+        font-size: 12px;
+        color: var(--text-light);
+        padding: 2px 0;
     }
 
     .hour-agenda {
         display: flex;
         flex-direction: column;
-        max-height: 320px;
-        overflow-y: auto;
     }
 
     .hour-row {
         display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        border-top: 1px solid var(--border);
-        padding: 6px 0;
+        align-items: center;
+        gap: 8px;
+        padding: 3px 0;
     }
 
-    .hour-row:first-child { border-top: none; }
-
     .hour-label {
-        width: 46px;
+        width: 40px;
         flex-shrink: 0;
-        font-size: 11px;
+        font-size: 10px;
         color: var(--text-light);
         text-align: right;
-        padding-top: 8px;
         white-space: nowrap;
     }
 
     .hour-slot {
         flex: 1;
-        min-height: 32px;
+        min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 6px;
-        border-radius: 8px;
+        gap: 4px;
     }
-
-    .hour-slot.empty { cursor: pointer; }
-    .hour-slot.empty:hover { background: var(--bg-gray); }
 
     .activity-card {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 8px 12px;
+        border-radius: 10px;
+        padding: 4px 10px;
         background: var(--bg-gray);
         cursor: pointer;
         transition: background 0.15s ease;
@@ -271,14 +269,14 @@
 
     .activity-check {
         flex-shrink: 0;
-        width: 24px;
-        height: 24px;
+        width: 18px;
+        height: 18px;
         border-radius: 50%;
         border: 2px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 13px;
+        font-size: 11px;
         color: #fff;
         font-weight: 700;
     }
@@ -288,9 +286,9 @@
         border-color: var(--success);
     }
 
-    .activity-body { flex: 1; min-width: 0; }
+    .activity-body { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; }
 
-    .activity-title { font-size: 14px; font-weight: 600; }
+    .activity-title { font-size: 13px; font-weight: 600; }
 
     .activity-card.done .activity-title {
         text-decoration: line-through;
@@ -300,10 +298,9 @@
     .activity-type {
         display: flex;
         align-items: center;
-        gap: 6px;
-        font-size: 12px;
+        gap: 4px;
+        font-size: 11px;
         color: var(--text-light);
-        margin-top: 2px;
     }
 
     .add-activity-btn {
@@ -316,8 +313,8 @@
         color: var(--primary);
         border: 1.5px dashed var(--primary);
         border-radius: 10px;
-        padding: 10px 14px;
-        font-size: 14px;
+        padding: 7px 14px;
+        font-size: 13px;
         font-weight: 600;
         font-family: inherit;
         cursor: pointer;
@@ -325,26 +322,26 @@
 
     .add-activity-btn:hover { background: var(--primary-tint); }
 
-    .add-icon { font-size: 16px; line-height: 1; }
+    .add-icon { font-size: 15px; line-height: 1; }
 
     .add-activity-form {
-        margin-top: 10px;
+        margin-top: 8px;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 6px;
     }
 
-    .type-pill-row { display: flex; gap: 8px; }
+    .type-pill-row { display: flex; gap: 6px; }
 
     .type-pill {
         flex: 1;
         position: relative;
-        padding: 8px 8px 8px 20px;
+        padding: 6px 8px 6px 20px;
         border-radius: 999px;
         border: 1.5px solid var(--border);
         background: var(--bg);
         color: var(--text);
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         font-family: inherit;
         cursor: pointer;
@@ -373,30 +370,30 @@
     .activity-title-input,
     .activity-hour-select {
         width: 100%;
-        padding: 10px 12px;
+        padding: 7px 10px;
         border-radius: 10px;
         border: 1px solid var(--border);
         background: var(--bg);
         color: var(--text);
-        font-size: 14px;
+        font-size: 13px;
         font-family: inherit;
     }
 
     .form-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 10px;
+        gap: 8px;
     }
 
     .cw-btn-text {
         background: transparent;
         border: none;
         color: var(--text-light);
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 600;
         cursor: pointer;
         font-family: inherit;
-        padding: 8px 6px;
+        padding: 6px;
     }
 
     .cw-btn-primary {
@@ -404,8 +401,8 @@
         color: #fff;
         border-radius: 999px;
         border: none;
-        font-size: 13px;
-        padding: 8px 18px;
+        font-size: 12px;
+        padding: 6px 16px;
         cursor: pointer;
         font-weight: 600;
         font-family: inherit;
@@ -498,6 +495,7 @@
             titlePlaceholder: 'Titel der Aktivität',
             saveBtn: 'Speichern',
             cancelBtn: 'Abbrechen',
+            emptyDay: 'Keine Aktivitäten geplant',
             program1Name: '6-Wochen-Definitionsplan',
             program2Name: 'Grundlagen & Technik',
             program3Name: 'Kraftaufbau',
@@ -519,6 +517,7 @@
             titlePlaceholder: "Titre de l'activité",
             saveBtn: 'Enregistrer',
             cancelBtn: 'Annuler',
+            emptyDay: 'Aucune activité prévue',
             program1Name: 'Sèche en 6 semaines',
             program2Name: 'Fondamentaux & Technique',
             program3Name: 'Reconstruction musculaire',
@@ -540,6 +539,7 @@
             titlePlaceholder: 'Título de la actividad',
             saveBtn: 'Guardar',
             cancelBtn: 'Cancelar',
+            emptyDay: 'No hay actividades programadas',
             program1Name: 'Definición en 6 semanas',
             program2Name: 'Fundamentos y Técnica',
             program3Name: 'Reconstrucción de Fuerza',
@@ -561,6 +561,7 @@
             titlePlaceholder: 'アクティビティ名',
             saveBtn: '保存',
             cancelBtn: 'キャンセル',
+            emptyDay: '予定されているアクティビティはありません',
             program1Name: '6週間シェイプアッププログラム',
             program2Name: '基礎とフォーム',
             program3Name: '筋力再構築プログラム',
@@ -582,6 +583,7 @@
             titlePlaceholder: 'Activity title',
             saveBtn: 'Save',
             cancelBtn: 'Cancel',
+            emptyDay: 'No activities scheduled',
             program1Name: '6-Week Shred',
             program2Name: 'Foundations & Form',
             program3Name: 'Strength Rebuild',
@@ -603,6 +605,7 @@
             titlePlaceholder: 'Activity title',
             saveBtn: 'Save',
             cancelBtn: 'Cancel',
+            emptyDay: 'No activities scheduled',
             program1Name: '6-Week Shred',
             program2Name: 'Foundations & Form',
             program3Name: 'Strength Rebuild',
@@ -883,6 +886,7 @@
     }
 
     function renderActivities() {
+        closeAddForm();
         const [y, m, d] = selectedDateStr.split('-').map(Number);
         const dateObj = new Date(y, m - 1, d);
         selectedDateLabelEl.textContent = selectedDateFmt.format(dateObj);
@@ -891,7 +895,16 @@
         const entries = schedule[selectedDateStr] || [];
         activityListEl.innerHTML = '';
 
-        HOURS.forEach(hour => {
+        if (entries.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'empty-state';
+            empty.textContent = t.emptyDay;
+            activityListEl.appendChild(empty);
+            return;
+        }
+
+        const hoursWithEntries = [...new Set(entries.map(e => e.hour))].sort((a, b) => a - b);
+        hoursWithEntries.forEach(hour => {
             const row = document.createElement('div');
             row.className = 'hour-row';
 
@@ -902,24 +915,23 @@
 
             const slot = document.createElement('div');
             slot.className = 'hour-slot';
-            const hourEntries = entries.filter(e => e.hour === hour);
-
-            if (hourEntries.length === 0) {
-                slot.classList.add('empty');
-                slot.addEventListener('click', () => openAddForm(hour));
-            } else {
-                hourEntries.forEach(entry => slot.appendChild(buildActivityCard(entry)));
-            }
-
+            entries.filter(e => e.hour === hour).forEach(entry => slot.appendChild(buildActivityCard(entry)));
             row.appendChild(slot);
+
             activityListEl.appendChild(row);
         });
     }
 
     function openAddForm(presetHour) {
+        activityListEl.style.display = 'none';
         addFormEl.style.display = 'flex';
         hourSelectEl.value = presetHour;
         titleInputEl.focus();
+    }
+
+    function closeAddForm() {
+        addFormEl.style.display = 'none';
+        activityListEl.style.display = '';
     }
 
     function renderTypePills() {
@@ -970,7 +982,7 @@
             if (isHidden) {
                 openAddForm(HOURS.includes(now.getHours()) ? now.getHours() : HOURS[0]);
             } else {
-                addFormEl.style.display = 'none';
+                closeAddForm();
             }
         });
 
@@ -983,7 +995,7 @@
 
         cancelAddBtn.addEventListener('click', () => {
             titleInputEl.value = '';
-            addFormEl.style.display = 'none';
+            closeAddForm();
         });
 
         saveAddBtn.addEventListener('click', () => {
@@ -998,7 +1010,7 @@
                 done: false
             });
             titleInputEl.value = '';
-            addFormEl.style.display = 'none';
+            closeAddForm();
             renderCalendar();
             renderActivities();
         });
