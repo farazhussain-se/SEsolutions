@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Staffbase brand color via ?brand= URL param (sb-brand-url-param) -->
+<script>(function(){try{var b=new URLSearchParams(location.search).get('brand');if(b&&/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(b)){document.documentElement.style.setProperty('--sb-brand',b);}}catch(e){}})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="widget-name" content="Cornerstone Learning (Responsive)">
+    <meta name="widget-description" content="Responsive desktop Cornerstone LMS dashboard for hospice and home health clinical training, with course catalog, filter, notifications, gamification profile, and team leaderboard.">
+    <meta name="widget-tags" content="Learning, Cornerstone">
+    <title>Cornerstone Learning Integration</title>
+    <style>
+        :root {
+            --primary-purple: #5D2E8E;
+            --primary-purple-light: #F3EFFF;
+            --text-dark: #1F1F1F;
+            --text-grey: #666666;
+            --bg-light: #F8F9FA;
+            --white: #FFFFFF;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+        body {
+            background-color: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background-color: var(--white);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Header */
+        header {
+            padding: 16px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--white);
+            border-bottom: 1px solid #eee;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .brand-icon {
+            width: 24px;
+            height: 24px;
+            background-color: var(--primary-purple);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cw-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #ddd;
+            background-image: url('https://i.pravatar.cc/100?img=5');
+            background-size: cover;
+            cursor: pointer;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            padding: 0 28px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 24px;
+        }
+
+        .cw-tab-btn {
+            background: none;
+            border: none;
+            padding: 14px 0;
+            margin-right: 32px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-grey);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .cw-tab-btn.active {
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .cw-tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--text-dark);
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 0 28px 40px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .cw-filter-btn {
+            font-size: 13px;
+            color: var(--text-grey);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            border: 1px solid #e0e0e0;
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+
+        /* Course Grid — responsive desktop */
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+            gap: 20px;
+        }
+
+        .course-card {
+            background: var(--white);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .course-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-img-wrap {
+            height: 130px;
+            width: 100%;
+            background-color: #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cw-status-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .status-required { background: rgba(30, 30, 30, 0.8); }
+        .status-inprogress { background: rgba(255, 140, 0, 0.9); }
+        .status-new { background: rgba(37, 99, 235, 0.85); }
+        .status-completed { background: rgba(16, 185, 129, 0.9); }
+
+        /* Filter dropdown */
+        .cw-filter-wrap { position: relative; }
+        .cw-filter-btn { cursor: pointer; user-select: none; }
+        .cw-filter-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background: var(--white);
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            min-width: 160px;
+            z-index: 200;
+            overflow: hidden;
+        }
+        .cw-filter-dropdown.open { display: block; }
+        .cw-filter-option {
+            padding: 10px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            color: var(--text-dark);
+            transition: background 0.15s;
+        }
+        .cw-filter-option:hover { background: #f5f5f5; }
+        .cw-filter-option.active { color: var(--primary-purple); font-weight: 600; background: var(--primary-purple-light); }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-meta {
+            font-size: 11px;
+            color: var(--text-grey);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 3px;
+        }
+
+        .card-due {
+            font-size: 11px;
+            color: var(--text-grey);
+        }
+
+        .card-due.is-overdue {
+            color: #dc2626;
+            font-weight: 500;
+        }
+
+        /* Modal — centered fixed dialog */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+        }
+
+        .modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -46%) scale(0.97);
+            width: 90%;
+            max-width: 480px;
+            max-height: 86vh;
+            background: var(--white);
+            border-radius: 16px;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s;
+            overflow: hidden;
+        }
+
+        .modal-active .modal-overlay { opacity: 1; pointer-events: auto; }
+        .modal-active .modal-content { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+
+        .modal-header {
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            flex-shrink: 0;
+        }
+
+        .cw-close-btn {
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--text-grey);
+            line-height: 1;
+        }
+
+        .modal-scroll {
+            overflow-y: auto;
+            padding: 20px 24px;
+            flex: 1;
+        }
+
+        .hero-img {
+            width: 100%;
+            height: 180px;
+            background: #eee;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            object-fit: cover;
+        }
+
+        .detail-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .detail-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--text-grey);
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .detail-meta .overdue-meta {
+            color: #dc2626;
+            font-weight: 500;
+        }
+
+        .detail-desc-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .detail-desc {
+            font-size: 14px;
+            color: var(--text-grey);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .detail-desc ul {
+            padding-left: 20px;
+            margin-top: 8px;
+        }
+
+        .cta-container {
+            padding: 16px 24px;
+            background: var(--white);
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+        }
+
+        .cw-btn {
+            width: 100%;
+            background-color: var(--primary-purple);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .cw-btn:hover { background-color: #4a2270; }
+
+        /* Notification Panel — fixed right drawer */
+        .notif-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 380px;
+            height: 100%;
+            background: var(--white);
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+        }
+
+        .notif-panel.open { transform: translateX(0); }
+
+        .notif-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .notif-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .notif-back-btn {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--text-grey);
+            padding: 4px;
+        }
+
+        .cw-notif-count-badge {
+            background: var(--primary-purple);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+
+        .notif-list { flex: 1; overflow-y: auto; scrollbar-width: none; }
+        .notif-list::-webkit-scrollbar { display: none; }
+
+        .notif-section-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-grey);
+            padding: 16px 20px 8px;
+        }
+
+        .notif-item {
+            display: flex;
+            gap: 12px;
+            padding: 14px 20px;
+            border-bottom: 1px solid #f3f3f3;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .notif-item:hover { background: #fafafa; }
+        .notif-item.unread { background: var(--primary-purple-light); }
+        .notif-item.unread:hover { background: #ebe4f7; }
+
+        .notif-icon-wrap {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .notif-icon-urgent { background: #FEE2E2; }
+        .notif-icon-due    { background: #FEF3C7; }
+        .notif-icon-assign { background: #E0E7FF; }
+        .notif-icon-complete { background: #D1FAE5; }
+        .notif-icon-event  { background: #F3E8FF; }
+
+        .notif-body { flex: 1; min-width: 0; }
+
+        .notif-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+
+        .notif-desc {
+            font-size: 12px;
+            color: var(--text-grey);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .notif-time { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+        .notif-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary-purple);
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
+
+        .notif-empty { text-align: center; padding: 60px 20px; color: var(--text-grey); }
+        .notif-empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+        .bell-btn {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .cw-bell-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background: red;
+            border-radius: 50%;
+        }
+
+        /* Profile Panel — fixed right drawer */
+        .profile-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 380px;
+            height: 100%;
+            background: var(--bg-light);
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+        }
+
+        .profile-panel.open { transform: translateX(0); }
+
+        .profile-header {
+            padding: 20px;
+            background: var(--white);
+            border-bottom: 1px solid #eee;
+        }
+
+        .profile-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-header-top h2 { font-size: 18px; font-weight: 700; color: var(--text-dark); }
+
+        .profile-back-btn {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--text-grey);
+            padding: 4px;
+        }
+
+        .profile-card { display: flex; gap: 14px; align-items: center; }
+
+        .profile-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-image: url('https://i.pravatar.cc/100?img=5');
+            background-size: cover;
+            border: 3px solid var(--primary-purple);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .cw-profile-level-badge {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            background: var(--primary-purple);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--white);
+        }
+
+        .profile-info h3 { font-size: 16px; font-weight: 700; color: var(--text-dark); margin-bottom: 2px; }
+        .profile-info .profile-role { font-size: 12px; color: var(--text-grey); margin-bottom: 6px; }
+
+        .xp-bar-wrap { display: flex; align-items: center; gap: 8px; }
+
+        .xp-bar { flex: 1; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+
+        .xp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-purple), #9B59B6);
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+
+        .xp-label { font-size: 11px; color: var(--primary-purple); font-weight: 600; white-space: nowrap; }
+
+        .profile-scroll { flex: 1; overflow-y: auto; padding: 16px 20px 20px; scrollbar-width: none; }
+        .profile-scroll::-webkit-scrollbar { display: none; }
+
+        .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+
+        .cw-stat-card { background: var(--white); border-radius: 12px; padding: 14px 10px; text-align: center; }
+        .cw-stat-value { font-size: 22px; font-weight: 700; color: var(--text-dark); }
+        .cw-stat-label { font-size: 11px; color: var(--text-grey); margin-top: 2px; }
+
+        .streak-card { background: var(--white); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+
+        .streak-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .streak-header h4 { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+        .streak-count { font-size: 13px; font-weight: 600; color: var(--primary-purple); }
+        .streak-days { display: flex; justify-content: space-between; }
+        .streak-day { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+        .streak-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .streak-dot.done { background: var(--primary-purple); color: white; }
+        .streak-dot.today { background: var(--primary-purple-light); color: var(--primary-purple); border: 2px solid var(--primary-purple); }
+        .streak-dot.future { background: #f0f0f0; color: #ccc; }
+        .streak-day-label { font-size: 10px; color: var(--text-grey); }
+
+        .badges-section { background: var(--white); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+        .badges-section h4 { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 12px; }
+        .badges-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+        .cw-badge-item { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; }
+
+        .cw-badge-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .cw-badge-icon.earned { background: var(--primary-purple-light); }
+        .cw-badge-icon.locked { background: #f0f0f0; filter: grayscale(1); opacity: 0.5; }
+        .cw-badge-name { font-size: 10px; color: var(--text-grey); line-height: 1.2; }
+
+        .leaderboard-section { background: var(--white); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+        .leaderboard-section h4 { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 12px; }
+
+        .lb-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+        .lb-row:last-child { border-bottom: none; }
+        .lb-row.is-you { background: var(--primary-purple-light); margin: 0 -16px; padding: 10px 16px; border-radius: 8px; }
+
+        .lb-rank { width: 24px; font-size: 14px; font-weight: 700; color: var(--text-grey); text-align: center; flex-shrink: 0; }
+        .lb-rank.gold { color: #F59E0B; }
+        .lb-rank.silver { color: #9CA3AF; }
+        .lb-rank.bronze { color: #D97706; }
+
+        .lb-avatar { width: 32px; height: 32px; border-radius: 50%; background-size: cover; flex-shrink: 0; }
+        .lb-info { flex: 1; min-width: 0; }
+        .lb-name { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+        .lb-dept { font-size: 11px; color: var(--text-grey); }
+        .lb-xp { font-size: 13px; font-weight: 700; color: var(--primary-purple); flex-shrink: 0; }
+
+        svg { width: 24px; height: 24px; fill: #999; }
+        .purple-fill { fill: var(--primary-purple); }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <header>
+            <div class="brand">
+                <div class="brand-icon">★</div>
+                <span>Cornerstone</span>
+            </div>
+            <div class="user-actions">
+                <div class="bell-btn" onclick="toggleNotifications()">
+                    🔔
+                    <div class="cw-bell-badge" id="bell-badge"></div>
+                </div>
+                <div class="cw-avatar" onclick="toggleProfile()"></div>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="cw-tab-btn active" onclick="switchTab('learnings')" data-i18n="tabLearnings">Learnings</button>
+            <button class="cw-tab-btn" onclick="switchTab('recommended')" data-i18n="tabRecommended">Recommended</button>
+        </div>
+
+        <div class="content-area" id="main-content"></div>
+
+        <div class="profile-panel" id="profile-panel">
+            <div class="profile-header">
+                <div class="profile-header-top">
+                    <div style="display:flex;align-items:center;gap:4px;">
+                        <button class="profile-back-btn" onclick="toggleProfile()">←</button>
+                        <h2 data-i18n="myProfile">My Profile</h2>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <div class="profile-avatar">
+                        <div class="cw-profile-level-badge" id="profile-level">12</div>
+                    </div>
+                    <div class="profile-info">
+                        <h3>Nicole Adams</h3>
+                        <div class="profile-role" data-i18n="profileRole">RN Case Manager · Atlanta, GA</div>
+                        <div class="xp-bar-wrap">
+                            <div class="xp-bar"><div class="xp-bar-fill" id="xp-bar-fill" style="width:72%"></div></div>
+                            <div class="xp-label" id="xp-label">2,160 / 3,000 XP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-scroll" id="profile-scroll"></div>
+        </div>
+
+        <div class="notif-panel" id="notif-panel">
+            <div class="notif-header">
+                <div style="display:flex; align-items:center;">
+                    <button class="notif-back-btn" onclick="toggleNotifications()">←</button>
+                    <h2><span data-i18n="notifications">Notifications</span> <span class="cw-notif-count-badge" id="notif-count"></span></h2>
+                </div>
+                <button class="notif-back-btn" onclick="markAllRead()" title="Mark all as read" style="font-size:14px;" data-i18n="markAllAsRead">✓ All</button>
+            </div>
+            <div class="notif-list" id="notif-list"></div>
+        </div>
+
+        <div class="modal-overlay" id="modal-overlay" onclick="closeModal()"></div>
+        <div class="modal-content" id="modal-content">
+            <div class="modal-header">
+                <h3 data-i18n="trainingDetails">Course Details</h3>
+                <button class="cw-close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-scroll" id="modal-body"></div>
+            <div class="cta-container">
+                <button class="cw-btn" data-i18n="startTraining">Start Training</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // — Language detection —
+        const LANG = (() => {
+            const l = navigator.language || '';
+            if (l.startsWith('de')) return 'de';
+            if (l.startsWith('fr')) return 'fr';
+            if (l.startsWith('es')) return 'es';
+            if (l.startsWith('ja')) return 'ja';
+            if (l === 'en-GB') return 'en-GB';
+            return 'en-US';
+        })();
+        document.documentElement.lang = LANG;
+
+        const LOCALE = { 'de': 'de-DE', 'fr': 'fr-FR', 'es': 'es-ES', 'ja': 'ja-JP', 'en-GB': 'en-GB', 'en-US': 'en-US' }[LANG];
+        const LANG_SUFFIX = { 'de': 'De', 'fr': 'Fr', 'es': 'Es', 'ja': 'Ja', 'en-GB': '', 'en-US': '' };
+
+        function loc(obj, key) {
+            const suffix = LANG_SUFFIX[LANG] || '';
+            return (suffix ? obj[key + suffix] : undefined) || obj[key];
+        }
+
+        const numFmt = new Intl.NumberFormat(LOCALE);
+
+        // — Date helpers —
+        const _now = new Date();
+        const daysFromNow = n => { const d = new Date(_now); d.setDate(d.getDate() + n); return d; };
+        const daysAgo = n => { const d = new Date(_now); d.setDate(d.getDate() - n); return d; };
+        const _shortDate = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short' });
+        const dueIn = n => _shortDate.format(daysFromNow(n));
+        const overdueOn = n => _shortDate.format(daysAgo(n));
+
+        // — Translations —
+        const T = {
+            de: {
+                tabLearnings: "Schulungen", tabRecommended: "Empfohlen",
+                myLearnings: "Meine Schulungen", recommendedForYou: "Für dich empfohlen",
+                filter: "Filter", filterAll: "Alle", filterUpcoming: "Bevorstehend", filterInprogress: "In Bearbeitung", filterOverdue: "Überfällig", filterCompleted: "Abgeschlossen",
+                myProfile: "Mein Profil",
+                profileRole: "Pflegefachkraft (RN) · Atlanta, GA",
+                notifications: "Benachrichtigungen", markAllAsRead: "✓ Alle",
+                trainingDetails: "Kursdetails", startTraining: "Training starten",
+                completed: "Abgeschlossen", learned: "Gelernt", certificates: "Zertifikate",
+                learningStreak: "Lernserie", days: "Tage",
+                achievements: "Erfolge", teamLeaderboard: "Team-Rangliste", you: "Du",
+                notifNew: "Neu", notifEarlier: "Früher", noNotifications: "Keine Benachrichtigungen",
+                aboutCourse: "Über den Kurs", sessionOverview: "Sitzungsübersicht",
+                viewAll: "Alle anzeigen", introduction: "Einführung",
+                required: "Pflicht", inProgress: "In Bearbeitung", newLabel: "Neu",
+                online: "Online", eventType: "Veranstaltung", video: "Video",
+                curriculum: "Lehrplan", material: "Material",
+                overdue: "Überfällig"
+            },
+            fr: {
+                tabLearnings: "Formations", tabRecommended: "Recommandé",
+                myLearnings: "Mes formations", recommendedForYou: "Recommandé pour vous",
+                filter: "Filtrer", filterAll: "Tout", filterUpcoming: "À venir", filterInprogress: "En cours", filterOverdue: "En retard", filterCompleted: "Terminé",
+                myProfile: "Mon profil",
+                profileRole: "Infirmière gestionnaire de cas (RN) · Atlanta, GA",
+                notifications: "Notifications", markAllAsRead: "✓ Tout",
+                trainingDetails: "Détails du cours", startTraining: "Commencer la formation",
+                completed: "Terminé", learned: "Appris", certificates: "Certificats",
+                learningStreak: "Série d'apprentissage", days: "jours",
+                achievements: "Réalisations", teamLeaderboard: "Classement d'équipe", you: "Vous",
+                notifNew: "Nouveau", notifEarlier: "Plus tôt", noNotifications: "Aucune notification",
+                aboutCourse: "À propos du cours", sessionOverview: "Aperçu de la session",
+                viewAll: "Voir tout", introduction: "Introduction",
+                required: "Obligatoire", inProgress: "En cours", newLabel: "Nouveau",
+                online: "En ligne", eventType: "Événement", video: "Vidéo",
+                curriculum: "Programme", material: "Support",
+                overdue: "En retard"
+            },
+            es: {
+                tabLearnings: "Formaciones", tabRecommended: "Recomendado",
+                myLearnings: "Mis formaciones", recommendedForYou: "Recomendado para ti",
+                filter: "Filtrar", filterAll: "Todo", filterUpcoming: "Próximo", filterInprogress: "En progreso", filterOverdue: "Vencido", filterCompleted: "Completado",
+                myProfile: "Mi perfil",
+                profileRole: "Enfermera gestora de casos (RN) · Atlanta, GA",
+                notifications: "Notificaciones", markAllAsRead: "✓ Todo",
+                trainingDetails: "Detalles del curso", startTraining: "Iniciar formación",
+                completed: "Completado", learned: "Aprendido", certificates: "Certificados",
+                learningStreak: "Racha de aprendizaje", days: "días",
+                achievements: "Logros", teamLeaderboard: "Clasificación del equipo", you: "Tú",
+                notifNew: "Nuevo", notifEarlier: "Anterior", noNotifications: "Sin notificaciones",
+                aboutCourse: "Sobre el curso", sessionOverview: "Resumen de la sesión",
+                viewAll: "Ver todo", introduction: "Introducción",
+                required: "Obligatorio", inProgress: "En progreso", newLabel: "Nuevo",
+                online: "En línea", eventType: "Evento", video: "Vídeo",
+                curriculum: "Programa", material: "Material",
+                overdue: "Vencido"
+            },
+            ja: {
+                tabLearnings: "学習", tabRecommended: "おすすめ",
+                myLearnings: "マイ学習", recommendedForYou: "おすすめの学習",
+                filter: "フィルター", filterAll: "すべて", filterUpcoming: "予定", filterInprogress: "進行中", filterOverdue: "期限超過", filterCompleted: "完了済み",
+                myProfile: "マイプロフィール",
+                profileRole: "RNケースマネージャー · アトランタ, GA",
+                notifications: "通知", markAllAsRead: "✓ すべて",
+                trainingDetails: "コース詳細", startTraining: "研修を開始",
+                completed: "完了", learned: "学習済み", certificates: "証明書",
+                learningStreak: "学習連続記録", days: "日間",
+                achievements: "実績", teamLeaderboard: "チームランキング", you: "あなた",
+                notifNew: "新着", notifEarlier: "以前", noNotifications: "通知はありません",
+                aboutCourse: "コースについて", sessionOverview: "セッション概要",
+                viewAll: "すべて表示", introduction: "はじめに",
+                required: "必須", inProgress: "進行中", newLabel: "新規",
+                online: "オンライン", eventType: "イベント", video: "動画",
+                curriculum: "カリキュラム", material: "教材",
+                overdue: "期限超過"
+            },
+            'en-GB': {
+                tabLearnings: "Learnings", tabRecommended: "Recommended",
+                myLearnings: "My Learnings", recommendedForYou: "Recommended for you",
+                filter: "Filter", filterAll: "All", filterUpcoming: "Upcoming", filterInprogress: "In Progress", filterOverdue: "Overdue", filterCompleted: "Completed",
+                myProfile: "My Profile",
+                profileRole: "RN Case Manager · Atlanta, GA",
+                notifications: "Notifications", markAllAsRead: "✓ All",
+                trainingDetails: "Course Details", startTraining: "Start Training",
+                completed: "Completed", learned: "Learned", certificates: "Certificates",
+                learningStreak: "Learning Streak", days: "days",
+                achievements: "Achievements", teamLeaderboard: "Team Leaderboard", you: "You",
+                notifNew: "New", notifEarlier: "Earlier", noNotifications: "No notifications",
+                aboutCourse: "About the Course", sessionOverview: "Session Overview",
+                viewAll: "View all", introduction: "Introduction",
+                required: "Required", inProgress: "In progress", newLabel: "New",
+                online: "Online", eventType: "Event", video: "Video",
+                curriculum: "Curriculum", material: "Material",
+                overdue: "Overdue"
+            },
+            'en-US': {
+                tabLearnings: "Learnings", tabRecommended: "Recommended",
+                myLearnings: "My Learnings", recommendedForYou: "Recommended for you",
+                filter: "Filter", filterAll: "All", filterUpcoming: "Upcoming", filterInprogress: "In Progress", filterOverdue: "Overdue", filterCompleted: "Completed",
+                myProfile: "My Profile",
+                profileRole: "RN Case Manager · Atlanta, GA",
+                notifications: "Notifications", markAllAsRead: "✓ All",
+                trainingDetails: "Course Details", startTraining: "Start Training",
+                completed: "Completed", learned: "Learned", certificates: "Certificates",
+                learningStreak: "Learning Streak", days: "days",
+                achievements: "Achievements", teamLeaderboard: "Team Leaderboard", you: "You",
+                notifNew: "New", notifEarlier: "Earlier", noNotifications: "No notifications",
+                aboutCourse: "About the Course", sessionOverview: "Session Overview",
+                viewAll: "View all", introduction: "Introduction",
+                required: "Required", inProgress: "In progress", newLabel: "New",
+                online: "Online", eventType: "Event", video: "Video",
+                curriculum: "Curriculum", material: "Material",
+                overdue: "Overdue"
+            }
+        };
+        const t = T[LANG];
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (t[key]) el.textContent = t[key];
+            });
+        }
+
+        // --- PROFILE & GAMIFICATION DATA ---
+        const profileData = {
+            level: 12,
+            xp: 2160,
+            xpNext: 3000,
+            completed: 18,
+            hoursLearned: 34,
+            certificates: 6,
+            streak: 5,
+            streakDays: [
+                { label: 'Mon', labelDe: 'Mo', labelFr: 'Lun', labelEs: 'Lun', labelJa: '月', done: true },
+                { label: 'Tue', labelDe: 'Di', labelFr: 'Mar', labelEs: 'Mar', labelJa: '火', done: true },
+                { label: 'Wed', labelDe: 'Mi', labelFr: 'Mer', labelEs: 'Mié', labelJa: '水', done: true },
+                { label: 'Thu', labelDe: 'Do', labelFr: 'Jeu', labelEs: 'Jue', labelJa: '木', done: true },
+                { label: 'Fri', labelDe: 'Fr', labelFr: 'Ven', labelEs: 'Vie', labelJa: '金', done: true },
+                { label: 'Sat', labelDe: 'Sa', labelFr: 'Sam', labelEs: 'Sáb', labelJa: '土', done: false, today: true },
+                { label: 'Sun', labelDe: 'So', labelFr: 'Dim', labelEs: 'Dom', labelJa: '日', done: false }
+            ],
+            badges: [
+                { emoji: '🚀', name: 'Quick Starter', nameDe: 'Schnellstarter', nameFr: "Démarrage rapide", nameEs: "Inicio rápido", nameJa: "クイックスターター", earned: true },
+                { emoji: '🔥', name: '5-Day Streak', nameDe: '5-Tage-Serie', nameFr: "Série de 5 jours", nameEs: "Racha de 5 días", nameJa: "5日連続", earned: true },
+                { emoji: '📚', name: 'Bookworm', nameDe: 'Bücherwurm', nameFr: "Rat de bibliothèque", nameEs: "Ratón de biblioteca", nameJa: "読書家", earned: true },
+                { emoji: '🏆', name: 'Top 10%', nameDe: 'Top 10%', nameFr: "Top 10%", nameEs: "Top 10%", nameJa: "トップ10%", earned: true },
+                { emoji: '🎯', name: 'Completionist', nameDe: 'Perfektionist', nameFr: "Perfectionniste", nameEs: "Perfeccionista", nameJa: "コンプリート", earned: true },
+                { emoji: '🤝', name: 'Team Player', nameDe: 'Teamplayer', nameFr: "Esprit d'équipe", nameEs: "Trabajo en equipo", nameJa: "チームプレーヤー", earned: true },
+                { emoji: '💡', name: 'Innovator', nameDe: 'Innovator', nameFr: "Innovateur", nameEs: "Innovador", nameJa: "イノベーター", earned: false },
+                { emoji: '⭐', name: 'All-Star', nameDe: 'All-Star', nameFr: "All-Star", nameEs: "Estrella", nameJa: "オールスター", earned: false }
+            ],
+            leaderboard: [
+                { name: 'Marcus Barlow', dept: 'Clinical Care', deptDe: "Klinische Versorgung", deptFr: "Soins cliniques", deptEs: "Atención clínica", deptJa: "臨床ケア", xp: 3820, avatar: 'https://i.pravatar.cc/100?img=12' },
+                { name: 'Fiona Travis', dept: 'Patient Services', deptDe: "Patientenservice", deptFr: "Services aux patients", deptEs: "Servicios al paciente", deptJa: "患者サービス", xp: 3450, avatar: 'https://i.pravatar.cc/100?img=32' },
+                { name: 'Nicole Adams', dept: 'Case Management', deptDe: "Fallmanagement", deptFr: "Gestion de cas", deptEs: "Gestión de casos", deptJa: "ケースマネジメント", xp: 2160, avatar: 'https://i.pravatar.cc/100?img=5', isYou: true },
+                { name: 'Joel Riggs', dept: 'Business Development', deptDe: "Geschäftsentwicklung", deptFr: "Développement commercial", deptEs: "Desarrollo de negocio", deptJa: "ビジネス開発", xp: 2080, avatar: 'https://i.pravatar.cc/100?img=15' },
+                { name: 'Maya Kumar', dept: 'HR', deptDe: "Personal", deptFr: "RH", deptEs: "RRHH", deptJa: "人事", xp: 1940, avatar: 'https://i.pravatar.cc/100?img=25' },
+                { name: 'Martin Wolf', dept: 'Quality & Compliance', deptDe: "Qualität & Compliance", deptFr: "Qualité et conformité", deptEs: "Calidad y cumplimiento", deptJa: "品質・コンプライアンス", xp: 1720, avatar: 'https://i.pravatar.cc/100?img=53' },
+                { name: 'Elizabeth Rorke', dept: 'Finance', deptDe: "Finanzen", deptFr: "Finance", deptEs: "Finanzas", deptJa: "財務", xp: 1580, avatar: 'https://i.pravatar.cc/100?img=44' }
+            ]
+        };
+
+        function renderProfile() {
+            const d = profileData;
+            const scroll = document.getElementById('profile-scroll');
+
+            let html = `
+                <div class="stats-row">
+                    <div class="cw-stat-card">
+                        <div class="cw-stat-value">${d.completed}</div>
+                        <div class="cw-stat-label">${t.completed}</div>
+                    </div>
+                    <div class="cw-stat-card">
+                        <div class="cw-stat-value">${d.hoursLearned}h</div>
+                        <div class="cw-stat-label">${t.learned}</div>
+                    </div>
+                    <div class="cw-stat-card">
+                        <div class="cw-stat-value">${d.certificates}</div>
+                        <div class="cw-stat-label">${t.certificates}</div>
+                    </div>
+                </div>
+            `;
+
+            let streakDaysHtml = d.streakDays.map(day => {
+                let cls = day.done ? 'done' : (day.today ? 'today' : 'future');
+                let icon = day.done ? '✓' : (day.today ? '·' : '');
+                return `
+                    <div class="streak-day">
+                        <div class="streak-dot ${cls}">${icon}</div>
+                        <div class="streak-day-label">${loc(day, 'label')}</div>
+                    </div>
+                `;
+            }).join('');
+
+            html += `
+                <div class="streak-card">
+                    <div class="streak-header">
+                        <h4>🔥 ${t.learningStreak}</h4>
+                        <div class="streak-count">${d.streak} ${t.days}</div>
+                    </div>
+                    <div class="streak-days">${streakDaysHtml}</div>
+                </div>
+            `;
+
+            let badgesHtml = d.badges.map(b => `
+                <div class="cw-badge-item">
+                    <div class="cw-badge-icon ${b.earned ? 'earned' : 'locked'}">${b.emoji}</div>
+                    <div class="cw-badge-name">${loc(b, 'name')}</div>
+                </div>
+            `).join('');
+
+            html += `
+                <div class="badges-section">
+                    <h4>${t.achievements} · ${d.badges.filter(b => b.earned).length}/${d.badges.length}</h4>
+                    <div class="badges-grid">${badgesHtml}</div>
+                </div>
+            `;
+
+            const rankCls = ['gold', 'silver', 'bronze'];
+            const rankIcon = ['🥇', '🥈', '🥉'];
+            let lbHtml = d.leaderboard.map((p, i) => {
+                const rank = i < 3 ? `<span class="lb-rank ${rankCls[i]}">${rankIcon[i]}</span>` : `<span class="lb-rank">${i + 1}</span>`;
+                return `
+                    <div class="lb-row ${p.isYou ? 'is-you' : ''}">
+                        ${rank}
+                        <div class="lb-avatar" style="background-image:url('${p.avatar}')"></div>
+                        <div class="lb-info">
+                            <div class="lb-name">${p.name}${p.isYou ? ` (${t.you})` : ''}</div>
+                            <div class="lb-dept">${loc(p, 'dept')}</div>
+                        </div>
+                        <div class="lb-xp">${numFmt.format(p.xp)} XP</div>
+                    </div>
+                `;
+            }).join('');
+
+            html += `
+                <div class="leaderboard-section">
+                    <h4>🏅 ${t.teamLeaderboard}</h4>
+                    ${lbHtml}
+                </div>
+            `;
+
+            scroll.innerHTML = html;
+            document.getElementById('xp-label').textContent = `${numFmt.format(d.xp)} / ${numFmt.format(d.xpNext)} XP`;
+        }
+
+        function toggleProfile() {
+            const panel = document.getElementById('profile-panel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) renderProfile();
+        }
+
+        // --- NOTIFICATION DATA ---
+        const notifications = [
+            {
+                id: 'n1', type: 'urgent', unread: true, courseId: 1,
+                title: 'Overdue: Compassionate Care Communication',
+                titleDe: "Überfällig: Einfühlsame Kommunikation in der Pflege",
+                titleFr: "En retard : Communication empathique en soins palliatifs",
+                titleEs: "Vencido: Comunicación compasiva en el cuidado",
+                titleJa: "期限超過：思いやりのあるケアコミュニケーション",
+                desc: 'This required training was due 3 days ago. Complete it as soon as possible to stay compliant.',
+                descDe: "Diese Pflichtschulung war vor 3 Tagen fällig. Schließen Sie sie so schnell wie möglich ab.",
+                descFr: "Cette formation obligatoire était due il y a 3 jours. Terminez-la dès que possible.",
+                descEs: "Esta formación obligatoria venció hace 3 días. Complétala lo antes posible.",
+                descJa: "この必須研修は3日前が期限でした。できるだけ早く完了してください。",
+                time: '2 hours ago', timeDe: "Vor 2 Stunden", timeFr: "Il y a 2 heures", timeEs: "Hace 2 horas", timeJa: "2時間前"
+            },
+            {
+                id: 'n2', type: 'due', unread: true, courseId: 2,
+                title: 'Due Soon: Patient Care Planning Basics',
+                titleDe: "Bald fällig: Grundlagen der Patientenversorgungsplanung",
+                titleFr: "Bientôt : Bases de la planification des soins aux patients",
+                titleEs: "Vence pronto: Conceptos básicos de la planificación de cuidados del paciente",
+                titleJa: "まもなく期限：患者ケアプランニングの基礎",
+                desc: `Your in-progress course is due on ${dueIn(3)}. You're 60% through — keep going!`,
+                descDe: `Ihr laufender Kurs ist am ${dueIn(3)} fällig. Sie haben 60% geschafft — weiter so!`,
+                descFr: `Votre cours en cours est dû le ${dueIn(3)}. Vous êtes à 60% — continuez !`,
+                descEs: `Tu curso en progreso vence el ${dueIn(3)}. Llevas un 60% — ¡sigue así!`,
+                descJa: `進行中のコースの期限は${dueIn(3)}です。60%完了 — この調子で！`,
+                time: '5 hours ago', timeDe: "Vor 5 Stunden", timeFr: "Il y a 5 heures", timeEs: "Hace 5 horas", timeJa: "5時間前"
+            },
+            {
+                id: 'n3', type: 'event', unread: true, courseId: 3,
+                title: 'Reminder: Live Training: Home Visit Safety',
+                titleDe: "Erinnerung: Live-Training: Sicherheit bei Hausbesuchen",
+                titleFr: "Rappel : Formation en direct : Sécurité lors des visites à domicile",
+                titleEs: "Recordatorio: Formación presencial: Seguridad en las visitas domiciliarias",
+                titleJa: "リマインダー：対面研修：訪問時の安全",
+                desc: `Your full-day on-site safety training is coming up on ${dueIn(5)}. Don't forget to register your attendance.`,
+                descDe: `Ihre ganztägige Sicherheitsschulung vor Ort findet am ${dueIn(5)} statt. Vergessen Sie nicht, Ihre Teilnahme zu bestätigen.`,
+                descFr: `Votre formation sécurité sur site d'une journée approche le ${dueIn(5)}. N'oubliez pas de confirmer votre présence.`,
+                descEs: `Tu formación de seguridad presencial es el ${dueIn(5)}. No olvides confirmar tu asistencia.`,
+                descJa: `${dueIn(5)}の終日安全研修が近づいています。出席登録をお忘れなく。`,
+                time: 'Yesterday', timeDe: "Gestern", timeFr: "Hier", timeEs: "Ayer", timeJa: "昨日"
+            },
+            {
+                id: 'n4', type: 'assign', unread: true, courseId: 5,
+                title: 'New Assignment: HIPAA & Patient Privacy 2026',
+                titleDe: "Neue Zuweisung: HIPAA & Patientendatenschutz 2026",
+                titleFr: "Nouvelle affectation : HIPAA et confidentialité des patients 2026",
+                titleEs: "Nueva asignación: HIPAA y privacidad del paciente 2026",
+                titleJa: "新しい割り当て：HIPAAと患者プライバシー 2026",
+                desc: 'Your manager assigned you a new required course on patient privacy and HIPAA compliance.',
+                descDe: "Ihr Vorgesetzter hat Ihnen einen neuen Pflichtkurs zum Thema Patientendatenschutz und HIPAA-Compliance zugewiesen.",
+                descFr: "Votre responsable vous a attribué un nouveau cours obligatoire sur la confidentialité des patients et la conformité HIPAA.",
+                descEs: "Tu responsable te ha asignado un nuevo curso obligatorio sobre privacidad del paciente y cumplimiento de HIPAA.",
+                descJa: "マネージャーが患者プライバシーとHIPAAコンプライアンスに関する新しい必須コースを割り当てました。",
+                time: 'Yesterday', timeDe: "Gestern", timeFr: "Hier", timeEs: "Ayer", timeJa: "昨日"
+            },
+            {
+                id: 'n5', type: 'due', unread: false, courseId: 4,
+                title: 'Upcoming: Culturally Sensitive End-of-Life Care',
+                titleDe: "Bevorstehend: Kultursensible Palliativversorgung",
+                titleFr: "À venir : Soins de fin de vie culturellement sensibles",
+                titleEs: "Próximo: Cuidado del final de la vida culturalmente sensible",
+                titleJa: "予定：文化に配慮した終末期ケア",
+                desc: `This event is scheduled for ${dueIn(7)}. Review the pre-reading materials before attending.`,
+                descDe: `Diese Veranstaltung ist für den ${dueIn(7)} geplant. Lesen Sie die Vorbereitungsmaterialien vor der Teilnahme.`,
+                descFr: `Cet événement est prévu le ${dueIn(7)}. Consultez les documents préparatoires avant d'y assister.`,
+                descEs: `Este evento está programado para el ${dueIn(7)}. Revisa los materiales de lectura previa.`,
+                descJa: `このイベントは${dueIn(7)}に予定されています。参加前に事前資料を確認してください。`,
+                time: '2 days ago', timeDe: "Vor 2 Tagen", timeFr: "Il y a 2 jours", timeEs: "Hace 2 días", timeJa: "2日前"
+            },
+            {
+                id: 'n6', type: 'complete', unread: false, courseId: null,
+                title: 'Congratulations! Hospice Onboarding Basics completed',
+                titleDe: "Glückwunsch! Hospiz-Onboarding-Grundlagen abgeschlossen",
+                titleFr: "Félicitations ! Bases d'intégration en soins palliatifs terminées",
+                titleEs: "¡Felicidades! Conceptos básicos de incorporación a hospicio completados",
+                titleJa: "おめでとうございます！ホスピス オンボーディング基礎を完了",
+                desc: "You've successfully completed the Hospice Onboarding Basics course. Your certificate is ready.",
+                descDe: "Sie haben den Kurs Hospiz-Onboarding-Grundlagen erfolgreich abgeschlossen. Ihr Zertifikat ist bereit.",
+                descFr: "Vous avez terminé le cours Bases d'intégration en soins palliatifs. Votre certificat est prêt.",
+                descEs: "Has completado el curso de conceptos básicos de incorporación a hospicio. Tu certificado está listo.",
+                descJa: "ホスピス オンボーディング基礎コースを完了しました。証明書の準備ができています。",
+                time: '3 days ago', timeDe: "Vor 3 Tagen", timeFr: "Il y a 3 jours", timeEs: "Hace 3 días", timeJa: "3日前"
+            },
+            {
+                id: 'n7', type: 'assign', unread: false, courseId: 7,
+                title: 'New Recommendation: Advanced Pain & Symptom Management',
+                titleDe: "Neue Empfehlung: Fortgeschrittenes Schmerz- und Symptommanagement",
+                titleFr: "Nouvelle recommandation : Gestion avancée de la douleur et des symptômes",
+                titleEs: "Nueva recomendación: Manejo avanzado del dolor y los síntomas",
+                titleJa: "新しいおすすめ：高度な疼痛・症状管理",
+                desc: 'Based on your role, we recommend this course to strengthen your clinical assessment skills.',
+                descDe: "Basierend auf Ihrer Rolle empfehlen wir diesen Kurs zur Stärkung Ihrer klinischen Beurteilungsfähigkeiten.",
+                descFr: "En fonction de votre rôle, nous vous recommandons ce cours pour renforcer vos compétences d'évaluation clinique.",
+                descEs: "Según tu rol, te recomendamos este curso para fortalecer tus habilidades de evaluación clínica.",
+                descJa: "あなたの役割に基づき、臨床アセスメントスキルを強化するためにこのコースをおすすめします。",
+                time: '4 days ago', timeDe: "Vor 4 Tagen", timeFr: "Il y a 4 jours", timeEs: "Hace 4 días", timeJa: "4日前"
+            }
+        ];
+
+        const notifIconMap = {
+            urgent: { cls: 'notif-icon-urgent', emoji: '🚨' },
+            due:    { cls: 'notif-icon-due',    emoji: '⏰' },
+            assign: { cls: 'notif-icon-assign',  emoji: '📋' },
+            complete:{ cls: 'notif-icon-complete',emoji: '✅' },
+            event:  { cls: 'notif-icon-event',   emoji: '📅' }
+        };
+
+        function renderNotifications() {
+            const list = document.getElementById('notif-list');
+            const unread = notifications.filter(n => n.unread);
+            const read = notifications.filter(n => !n.unread);
+
+            document.getElementById('notif-count').textContent = unread.length || '';
+            document.getElementById('bell-badge').style.display = unread.length > 0 ? 'block' : 'none';
+
+            let html = '';
+            if (unread.length > 0) {
+                html += `<div class="notif-section-label">${t.notifNew}</div>`;
+                unread.forEach(n => { html += renderNotifItem(n); });
+            }
+            if (read.length > 0) {
+                html += `<div class="notif-section-label">${t.notifEarlier}</div>`;
+                read.forEach(n => { html += renderNotifItem(n); });
+            }
+            if (notifications.length === 0) {
+                html = `<div class="notif-empty"><div class="notif-empty-icon">🔔</div><div>${t.noNotifications}</div></div>`;
+            }
+            list.innerHTML = html;
+        }
+
+        function renderNotifItem(n) {
+            const icon = notifIconMap[n.type] || notifIconMap.assign;
+            return `
+                <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="openNotification('${n.id}')">
+                    <div class="notif-icon-wrap ${icon.cls}">${icon.emoji}</div>
+                    <div class="notif-body">
+                        <div class="notif-title">${loc(n, 'title')}</div>
+                        <div class="notif-desc">${loc(n, 'desc')}</div>
+                        <div class="notif-time">${loc(n, 'time')}</div>
+                    </div>
+                    ${n.unread ? '<div class="notif-dot"></div>' : ''}
+                </div>
+            `;
+        }
+
+        function toggleNotifications() {
+            const panel = document.getElementById('notif-panel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) renderNotifications();
+        }
+
+        function openNotification(nId) {
+            const notif = notifications.find(n => n.id === nId);
+            if (!notif) return;
+            notif.unread = false;
+            renderNotifications();
+            if (notif.courseId) {
+                toggleNotifications();
+                openDetails(notif.courseId);
+            }
+        }
+
+        function markAllRead() {
+            notifications.forEach(n => { n.unread = false; });
+            renderNotifications();
+        }
+
+        // --- COURSE DATA ---
+        const myLearningsData = [
+            {
+                id: 1,
+                title: "Compassionate Care Communication",
+                titleDe: "Einfühlsame Kommunikation in der Pflege", titleFr: "Communication empathique en soins palliatifs", titleEs: "Comunicación compasiva en el cuidado", titleJa: "思いやりのあるケアコミュニケーション",
+                image: "https://images.unsplash.com/photo-1584982751601-97dcc096659c?auto=format&fit=crop&q=80&w=300",
+                status: "In progress", type: "Online",
+                duration: "1 hr", durationDe: "1 Std.", durationFr: "1 h", durationEs: "1 h", durationJa: "1時間",
+                overdueDays: 3,
+                description: "Master the essential communication skills to support patients and families through hospice and end-of-life care. Covers active listening, empathy, and delivering difficult news with compassion.",
+                descriptionDe: "Erlernen Sie die wesentlichen Kommunikationsfähigkeiten, um Patienten und Familien in der Hospiz- und Palliativversorgung zu unterstützen. Aktives Zuhören, Empathie und das einfühlsame Überbringen schwieriger Nachrichten.",
+                descriptionFr: "Maîtrisez les compétences de communication essentielles pour accompagner les patients et les familles en soins palliatifs et de fin de vie. Écoute active, empathie et annonce de nouvelles difficiles avec compassion.",
+                descriptionEs: "Domina las habilidades de comunicación esenciales para apoyar a pacientes y familias durante los cuidados paliativos y de final de vida. Escucha activa, empatía y comunicación compasiva de noticias difíciles.",
+                descriptionJa: "ホスピスおよび終末期ケアにおいて患者とご家族を支えるための必須コミュニケーションスキルを習得します。傾聴、共感、そして困難な知らせを思いやりを持って伝える方法を扱います。",
+                modules: ["Active Listening", "Delivering Difficult News", "Supporting Grieving Families"],
+                modulesDe: ["Aktives Zuhören", "Schwierige Nachrichten überbringen", "Trauernde Familien unterstützen"],
+                modulesFr: ["Écoute active", "Annoncer des nouvelles difficiles", "Soutenir les familles endeuillées"],
+                modulesEs: ["Escucha activa", "Comunicar noticias difíciles", "Apoyar a familias en duelo"],
+                modulesJa: ["傾聴", "困難な知らせを伝える", "悲しむご家族を支える"]
+            },
+            {
+                id: 2,
+                title: "Patient Care Planning Basics",
+                titleDe: "Grundlagen der Patientenversorgungsplanung", titleFr: "Bases de la planification des soins aux patients", titleEs: "Conceptos básicos de la planificación de cuidados del paciente", titleJa: "患者ケアプランニングの基礎",
+                image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300",
+                status: "In progress", type: "Online",
+                duration: "45 min", durationDe: "45 Min.", durationFr: "45 min", durationEs: "45 min", durationJa: "45分",
+                dueDate: dueIn(3),
+                description: "An introduction to the hospice care planning process, from patient admission to the interdisciplinary group (IDG) review. Learn how to set patient-centered goals and coordinate with the care team.",
+                descriptionDe: "Eine Einführung in den Hospiz-Versorgungsplanungsprozess, von der Patientenaufnahme bis zur Überprüfung durch das interdisziplinäre Team (IDG). Patientenzentrierte Ziele setzen und sich mit dem Pflegeteam abstimmen.",
+                descriptionFr: "Une introduction au processus de planification des soins palliatifs, de l'admission du patient à l'examen par l'équipe interdisciplinaire (IDG). Définir des objectifs centrés sur le patient et coordonner avec l'équipe soignante.",
+                descriptionEs: "Una introducción al proceso de planificación de cuidados paliativos, desde la admisión del paciente hasta la revisión del equipo interdisciplinario (IDG). Establecer metas centradas en el paciente y coordinar con el equipo de atención.",
+                descriptionJa: "患者の入院から学際的チーム(IDG)によるレビューまで、ホスピスケアプランニングプロセスを紹介します。患者中心の目標設定とケアチームとの連携方法を学びます。",
+                modules: ["Care Plan Lifecycle", "Patient-Centered Goals", "IDG Team Coordination"],
+                modulesDe: ["Lebenszyklus des Pflegeplans", "Patientenzentrierte Ziele", "IDG-Teamkoordination"],
+                modulesFr: ["Cycle de vie du plan de soins", "Objectifs centrés sur le patient", "Coordination de l'équipe IDG"],
+                modulesEs: ["Ciclo de vida del plan de cuidados", "Metas centradas en el paciente", "Coordinación del equipo IDG"],
+                modulesJa: ["ケアプランのライフサイクル", "患者中心の目標", "IDGチーム連携"]
+            },
+            {
+                id: 3,
+                title: "Live Training: Home Visit Safety",
+                titleDe: "Live-Training: Sicherheit bei Hausbesuchen", titleFr: "Formation en direct : Sécurité lors des visites à domicile", titleEs: "Formación presencial: Seguridad en las visitas domiciliarias", titleJa: "対面研修：訪問時の安全",
+                image: "https://images.unsplash.com/photo-1519494140681-8b17d830a3e9?auto=format&fit=crop&q=80&w=300",
+                status: null, type: "Event",
+                duration: "Full day", durationDe: "Ganztägig", durationFr: "Journée complète", durationEs: "Día completo", durationJa: "終日",
+                dueDate: dueIn(5),
+                description: "In-person safety training for all field clinicians and home health aides. Mandatory attendance.",
+                descriptionDe: "Präsenz-Sicherheitsschulung für alle Außendienst-Kliniker und Pflegehelfer. Teilnahme ist Pflicht.",
+                descriptionFr: "Formation sécurité en présentiel pour tous les cliniciens de terrain et aides à domicile. Présence obligatoire.",
+                descriptionEs: "Formación de seguridad presencial para todos los clínicos de campo y auxiliares de atención domiciliaria. Asistencia obligatoria.",
+                descriptionJa: "すべての訪問臨床スタッフおよびホームヘルスエイドを対象とした対面安全研修。参加必須。",
+                modules: ["Morning Session", "Personal Protective Equipment", "Emergency Protocols"],
+                modulesDe: ["Vormittagssitzung", "Persönliche Schutzausrüstung", "Notfallprotokolle"],
+                modulesFr: ["Session du matin", "Équipement de protection individuelle", "Protocoles d'urgence"],
+                modulesEs: ["Sesión matutina", "Equipo de protección personal", "Protocolos de emergencia"],
+                modulesJa: ["午前セッション", "個人防護具", "緊急プロトコル"]
+            },
+            {
+                id: 4,
+                title: "Culturally Sensitive End-of-Life Care",
+                titleDe: "Kultursensible Palliativversorgung", titleFr: "Soins de fin de vie culturellement sensibles", titleEs: "Cuidado del final de la vida culturalmente sensible", titleJa: "文化に配慮した終末期ケア",
+                image: "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&q=80&w=300",
+                status: null, type: "Event",
+                duration: "3 hr", durationDe: "3 Std.", durationFr: "3 h", durationEs: "3 h", durationJa: "3時間",
+                dueDate: dueIn(7),
+                description: "Learn how to navigate diverse cultural, spiritual, and family traditions around death and dying to provide respectful, patient-centered hospice care.",
+                descriptionDe: "Lernen Sie, unterschiedliche kulturelle, spirituelle und familiäre Traditionen rund um Tod und Sterben zu berücksichtigen, um respektvolle, patientenzentrierte Hospizversorgung zu bieten.",
+                descriptionFr: "Apprenez à composer avec les diverses traditions culturelles, spirituelles et familiales entourant la mort pour offrir des soins palliatifs respectueux et centrés sur le patient.",
+                descriptionEs: "Aprende a comprender las diversas tradiciones culturales, espirituales y familiares en torno a la muerte para brindar cuidados paliativos respetuosos y centrados en el paciente.",
+                descriptionJa: "死と看取りをめぐる多様な文化的・精神的・家族的伝統を理解し、患者中心の敬意あるホスピスケアを提供する方法を学びます。",
+                modules: ["Cultural Dimensions of Dying", "Spiritual Care Practices", "Case Studies"],
+                modulesDe: ["Kulturelle Dimensionen des Sterbens", "Spirituelle Betreuungspraktiken", "Fallstudien"],
+                modulesFr: ["Dimensions culturelles de la mort", "Pratiques de soins spirituels", "Études de cas"],
+                modulesEs: ["Dimensiones culturales de la muerte", "Prácticas de cuidado espiritual", "Casos de estudio"],
+                modulesJa: ["死の文化的側面", "スピリチュアルケアの実践", "ケーススタディ"]
+            },
+            {
+                id: 8,
+                title: "Hospice Code of Conduct & Ethics",
+                titleDe: "Hospiz-Verhaltenskodex & Ethik", titleFr: "Code de conduite et éthique en soins palliatifs", titleEs: "Código de conducta y ética en cuidados paliativos", titleJa: "ホスピス行動規範と倫理",
+                image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=300",
+                status: "In progress", type: "Online",
+                duration: "1 hr", durationDe: "1 Std.", durationFr: "1 h", durationEs: "1 h", durationJa: "1時間",
+                overdueDays: 10,
+                description: "Maintain professional standards and understand the ethical guidelines and policies that govern hospice and home health care.",
+                descriptionDe: "Professionelle Standards einhalten und die ethischen Richtlinien und Vorgaben verstehen, die die Hospiz- und häusliche Pflege regeln.",
+                descriptionFr: "Maintenir des normes professionnelles et comprendre les directives éthiques régissant les soins palliatifs et à domicile.",
+                descriptionEs: "Mantener estándares profesionales y comprender las directrices éticas que rigen los cuidados paliativos y de salud en el hogar.",
+                descriptionJa: "ホスピスおよび在宅医療を規定する倫理指針と方針を理解し、プロフェッショナルな基準を維持します。",
+                modules: ["Professional Standards", "Conflict of Interest", "Reporting Misconduct"],
+                modulesDe: ["Professionelle Standards", "Interessenkonflikt", "Fehlverhalten melden"],
+                modulesFr: ["Normes professionnelles", "Conflit d'intérêts", "Signaler les manquements"],
+                modulesEs: ["Estándares profesionales", "Conflicto de intereses", "Reportar conducta indebida"],
+                modulesJa: ["プロフェッショナル基準", "利益相反", "不正行為の報告"]
+            },
+            {
+                id: 9,
+                title: "Diversity, Equity & Inclusion in Patient Care",
+                titleDe: "Vielfalt, Gleichberechtigung & Inklusion in der Patientenversorgung", titleFr: "Diversité, équité et inclusion dans les soins aux patients", titleEs: "Diversidad, equidad e inclusión en la atención al paciente", titleJa: "患者ケアにおける多様性・公平性・包括性",
+                image: "https://images.unsplash.com/photo-1522252234503-e356532cafd5?auto=format&fit=crop&q=80&w=300",
+                status: "In progress", type: "Online",
+                duration: "1.5 hr", durationDe: "1,5 Std.", durationFr: "1 h 30", durationEs: "1,5 h", durationJa: "1.5時間",
+                overdueDays: 15,
+                description: "Build an inclusive care environment by understanding diversity, equity, and belonging principles as they apply to patients, families, and colleagues.",
+                descriptionDe: "Schaffen Sie ein inklusives Versorgungsumfeld, indem Sie Prinzipien von Vielfalt, Gleichberechtigung und Zugehörigkeit im Umgang mit Patienten, Familien und Kollegen verstehen.",
+                descriptionFr: "Créez un environnement de soins inclusif en comprenant les principes de diversité, d'équité et d'appartenance appliqués aux patients, aux familles et aux collègues.",
+                descriptionEs: "Construye un entorno de atención inclusivo comprendiendo los principios de diversidad, equidad y pertenencia aplicados a pacientes, familias y colegas.",
+                descriptionJa: "患者、ご家族、同僚に適用される多様性・公平性・帰属の原則を理解し、包括的なケア環境を構築します。",
+                modules: ["Understanding Bias", "Inclusive Language", "Allyship at Work"],
+                modulesDe: ["Vorurteile verstehen", "Inklusive Sprache", "Solidarität am Arbeitsplatz"],
+                modulesFr: ["Comprendre les biais", "Langage inclusif", "Solidarité au travail"],
+                modulesEs: ["Entender los sesgos", "Lenguaje inclusivo", "Apoyo en el trabajo"],
+                modulesJa: ["バイアスを理解する", "包括的な言語", "職場でのアライシップ"]
+            },
+            {
+                id: 10,
+                title: "Clinical Documentation & Compliance",
+                titleDe: "Klinische Dokumentation & Compliance", titleFr: "Documentation clinique et conformité", titleEs: "Documentación clínica y cumplimiento", titleJa: "臨床文書化とコンプライアンス",
+                image: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=300",
+                status: "In progress", type: "Curriculum",
+                duration: "4 hr", durationDe: "4 Std.", durationFr: "4 h", durationEs: "4 h", durationJa: "4時間",
+                overdueDays: 20,
+                description: "Learn the principles of accurate clinical documentation, Medicare Conditions of Participation, and quality metrics in hospice care.",
+                descriptionDe: "Lernen Sie die Grundsätze einer präzisen klinischen Dokumentation, der Medicare-Teilnahmebedingungen und der Qualitätskennzahlen in der Hospizversorgung.",
+                descriptionFr: "Apprenez les principes d'une documentation clinique précise, des conditions de participation Medicare et des indicateurs de qualité en soins palliatifs.",
+                descriptionEs: "Aprende los principios de una documentación clínica precisa, las Condiciones de Participación de Medicare y las métricas de calidad en cuidados paliativos.",
+                descriptionJa: "正確な臨床文書化の原則、メディケア参加条件、そしてホスピスケアにおける品質指標を学びます。",
+                modules: ["Documentation Standards", "Conditions of Participation", "Quality Metrics"],
+                modulesDe: ["Dokumentationsstandards", "Teilnahmebedingungen", "Qualitätskennzahlen"],
+                modulesFr: ["Normes de documentation", "Conditions de participation", "Indicateurs de qualité"],
+                modulesEs: ["Normas de documentación", "Condiciones de participación", "Métricas de calidad"],
+                modulesJa: ["文書化基準", "参加条件", "品質指標"]
+            },
+            {
+                id: 11,
+                title: "Time & Attendance Policy",
+                titleDe: "Zeit- und Anwesenheitsrichtlinie", titleFr: "Politique de temps et présence", titleEs: "Política de tiempo y asistencia", titleJa: "勤怠管理ポリシー",
+                image: "https://images.unsplash.com/photo-1550831107-1553da8c8464?auto=format&fit=crop&q=80&w=300",
+                status: "In progress", type: "Video",
+                duration: "1 hr", durationDe: "1 Std.", durationFr: "1 h", durationEs: "1 h", durationJa: "1時間",
+                overdueDays: 20,
+                description: "Understand your responsibilities around visit scheduling, absence reporting, and documenting time in the field.",
+                descriptionDe: "Verstehen Sie Ihre Verantwortung bei der Besuchsplanung, Abwesenheitsmeldung und der Zeiterfassung im Außendienst.",
+                descriptionFr: "Comprenez vos responsabilités concernant la planification des visites, la déclaration d'absence et la saisie du temps sur le terrain.",
+                descriptionEs: "Comprende tus responsabilidades en cuanto a la programación de visitas, la comunicación de ausencias y el registro de tiempo en el campo.",
+                descriptionJa: "訪問スケジューリング、欠勤報告、および現場での勤務時間記録に関する責任を理解します。",
+                modules: ["Clocking In & Out", "Absence Reporting", "Schedule Changes"],
+                modulesDe: ["Ein- und Ausstempeln", "Abwesenheitsmeldung", "Dienstplanänderungen"],
+                modulesFr: ["Pointage", "Déclaration d'absence", "Modifications d'horaire"],
+                modulesEs: ["Registro de entrada y salida", "Comunicación de ausencias", "Cambios de horario"],
+                modulesJa: ["打刻", "欠勤報告", "スケジュール変更"]
+            },
+            {
+                id: 12,
+                title: "Interdisciplinary Team Collaboration",
+                titleDe: "Zusammenarbeit im interdisziplinären Team", titleFr: "Collaboration au sein de l'équipe interdisciplinaire", titleEs: "Colaboración del equipo interdisciplinario", titleJa: "学際的チームの連携",
+                image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=300",
+                status: "In progress", type: "Material",
+                duration: "30 min", durationDe: "30 Min.", durationFr: "30 min", durationEs: "30 min", durationJa: "30分",
+                dueDate: dueIn(44),
+                description: "Practical collaboration skills for interdisciplinary care teams. Covers shift handovers, escalation paths, and peer communication.",
+                descriptionDe: "Praktische Kollaborationsfähigkeiten für interdisziplinäre Versorgungsteams. Schichtübergaben, Eskalationswege und Kommunikation unter Kollegen.",
+                descriptionFr: "Compétences pratiques de collaboration pour les équipes de soins interdisciplinaires. Passations de poste, escalades et communication entre collègues.",
+                descriptionEs: "Habilidades prácticas de colaboración para equipos de atención interdisciplinarios. Traspasos de turno, escaladas y comunicación entre compañeros.",
+                descriptionJa: "学際的ケアチームのための実践的な協業スキル。シフト引継ぎ、エスカレーション、同僚間のコミュニケーション。",
+                modules: ["Shift Handovers", "Escalation Paths", "Peer Feedback"],
+                modulesDe: ["Schichtübergaben", "Eskalationswege", "Kollegenfeedback"],
+                modulesFr: ["Passations de poste", "Voies d'escalade", "Retour entre collègues"],
+                modulesEs: ["Traspasos de turno", "Rutas de escalada", "Retroalimentación entre compañeros"],
+                modulesJa: ["シフト引継ぎ", "エスカレーションパス", "同僚へのフィードバック"]
+            }
+            ,
+            {
+                id: 15,
+                title: "Hospice Onboarding Basics",
+                titleDe: "Hospiz-Onboarding-Grundlagen", titleFr: "Bases d'intégration en soins palliatifs", titleEs: "Conceptos básicos de incorporación a hospicio", titleJa: "ホスピス オンボーディング基礎",
+                image: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&q=80&w=300",
+                status: "Completed", type: "Online",
+                duration: "2 hr", durationDe: "2 Std.", durationFr: "2 h", durationEs: "2 h", durationJa: "2時間",
+                dueDate: "—",
+                description: "Welcome to the team! This course covers Gentiva's culture, clinical systems, care processes, and your first 30 days.",
+                descriptionDe: "Willkommen im Team! Dieser Kurs behandelt die Unternehmenskultur von Gentiva, klinische Systeme, Versorgungsprozesse und Ihre ersten 30 Tage.",
+                descriptionFr: "Bienvenue dans l'équipe ! Ce cours couvre la culture de Gentiva, les systèmes cliniques, les processus de soins et vos 30 premiers jours.",
+                descriptionEs: "¡Bienvenido al equipo! Este curso cubre la cultura de Gentiva, los sistemas clínicos, los procesos de atención y tus primeros 30 días.",
+                descriptionJa: "チームへようこそ！このコースでは、Gentivaの文化、臨床システム、ケアプロセス、そして最初の30日間について学びます。",
+                modules: ["Company Overview", "Clinical Tools & Systems", "Your First 30 Days"],
+                modulesDe: ["Unternehmensübersicht", "Klinische Tools & Systeme", "Ihre ersten 30 Tage"],
+                modulesFr: ["Présentation de l'entreprise", "Outils et systèmes cliniques", "Vos 30 premiers jours"],
+                modulesEs: ["Descripción de la empresa", "Herramientas y sistemas clínicos", "Tus primeros 30 días"],
+                modulesJa: ["会社概要", "臨床ツールとシステム", "最初の30日間"]
+            },
+            {
+                id: 16,
+                title: "Home Visit Safety Essentials",
+                titleDe: "Grundlagen der Sicherheit bei Hausbesuchen", titleFr: "Essentiels de la sécurité lors des visites à domicile", titleEs: "Fundamentos de seguridad en visitas domiciliarias", titleJa: "訪問時の安全基礎",
+                image: "https://images.unsplash.com/photo-1580281657702-257584239a55?auto=format&fit=crop&q=80&w=300",
+                status: "Completed", type: "Online",
+                duration: "45 min", durationDe: "45 Min.", durationFr: "45 min", durationEs: "45 min", durationJa: "45分",
+                dueDate: "—",
+                description: "Core safety procedures every field clinician must know. Covers hazard identification in the home, emergency exits, and incident reporting.",
+                descriptionDe: "Grundlegende Sicherheitsverfahren, die jeder Außendienst-Kliniker kennen muss. Gefahrenerkennung im häuslichen Umfeld, Notausgänge und Vorfallmeldung.",
+                descriptionFr: "Procédures de sécurité essentielles que tout clinicien de terrain doit connaître. Identification des risques à domicile, sorties de secours et signalement des incidents.",
+                descriptionEs: "Procedimientos de seguridad esenciales que todo clínico de campo debe conocer. Identificación de peligros en el hogar, salidas de emergencia e informes de incidentes.",
+                descriptionJa: "すべての訪問臨床スタッフが知るべき基本的な安全手順。自宅内の危険の特定、非常口、インシデント報告。",
+                modules: ["Hazard Identification", "Emergency Procedures", "Incident Reporting"],
+                modulesDe: ["Gefahrenerkennung", "Notfallverfahren", "Vorfallmeldung"],
+                modulesFr: ["Identification des risques", "Procédures d'urgence", "Signalement d'incidents"],
+                modulesEs: ["Identificación de peligros", "Procedimientos de emergencia", "Informes de incidentes"],
+                modulesJa: ["危険の特定", "緊急手順", "インシデント報告"]
+            }
+        ];
+
+        const recommendedData = [
+            {
+                id: 5,
+                title: "HIPAA & Patient Privacy 2026",
+                titleDe: "HIPAA & Patientendatenschutz 2026", titleFr: "HIPAA et confidentialité des patients 2026", titleEs: "HIPAA y privacidad del paciente 2026", titleJa: "HIPAAと患者プライバシー 2026",
+                image: "https://images.unsplash.com/photo-1638202993928-7267aad84c31?auto=format&fit=crop&q=80&w=300",
+                status: "In progress", type: "Online",
+                duration: "1 hr", durationDe: "1 Std.", durationFr: "1 h", durationEs: "1 h", durationJa: "1時間",
+                dueDate: dueIn(3),
+                description: "Learn how to handle protected health information (PHI) responsibly and understand the key principles of HIPAA to protect patient privacy and stay compliant.",
+                descriptionDe: "Lernen Sie den verantwortungsvollen Umgang mit geschützten Gesundheitsinformationen (PHI) und die wichtigsten HIPAA-Grundsätze, um die Privatsphäre der Patienten zu schützen und compliant zu bleiben.",
+                descriptionFr: "Apprenez à traiter les informations de santé protégées (PHI) de manière responsable et comprenez les principes clés de la loi HIPAA pour protéger la confidentialité des patients et rester conforme.",
+                descriptionEs: "Aprende a manejar la información de salud protegida (PHI) de forma responsable y comprende los principios clave de HIPAA para proteger la privacidad del paciente y mantener el cumplimiento.",
+                descriptionJa: "保護対象保健情報(PHI)を責任を持って取り扱う方法と、患者のプライバシーを守りコンプライアンスを維持するためのHIPAAの主要原則を学びます。",
+                modules: ["Protected Health Information", "HIPAA Responsibilities", "Privacy Best Practices"],
+                modulesDe: ["Geschützte Gesundheitsinformationen", "HIPAA-Pflichten", "Datenschutz-Best-Practices"],
+                modulesFr: ["Informations de santé protégées", "Responsabilités HIPAA", "Bonnes pratiques de confidentialité"],
+                modulesEs: ["Información de salud protegida", "Responsabilidades de HIPAA", "Mejores prácticas de privacidad"],
+                modulesJa: ["保護対象保健情報", "HIPAAの責任", "プライバシーのベストプラクティス"]
+            },
+            {
+                id: 6,
+                title: "Infection Prevention & Control",
+                titleDe: "Infektionsprävention und -kontrolle", titleFr: "Prévention et contrôle des infections", titleEs: "Prevención y control de infecciones", titleJa: "感染予防と管理",
+                image: "https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&q=80&w=300",
+                status: null, type: "Online",
+                duration: "45 min", durationDe: "45 Min.", durationFr: "45 min", durationEs: "45 min", durationJa: "45分",
+                dueDate: dueIn(4),
+                description: "Protecting patients and staff from infection in the home care setting. Hand hygiene, PPE use, and outbreak reporting.",
+                descriptionDe: "Schutz von Patienten und Mitarbeitern vor Infektionen im häuslichen Pflegeumfeld. Handhygiene, Einsatz von Schutzausrüstung und Meldung von Ausbrüchen.",
+                descriptionFr: "Protéger les patients et le personnel contre les infections à domicile. Hygiène des mains, utilisation des EPI et signalement des épidémies.",
+                descriptionEs: "Proteger a pacientes y personal de infecciones en el entorno de atención domiciliaria. Higiene de manos, uso de EPP y notificación de brotes.",
+                descriptionJa: "在宅ケア環境における患者とスタッフを感染から守ります。手指衛生、個人防護具の使用、アウトブレイクの報告。",
+                modules: ["Hand Hygiene", "PPE in the Home", "Reporting Outbreaks"],
+                modulesDe: ["Handhygiene", "Schutzausrüstung zu Hause", "Ausbrüche melden"],
+                modulesFr: ["Hygiène des mains", "EPI à domicile", "Signalement des épidémies"],
+                modulesEs: ["Higiene de manos", "EPP en el hogar", "Notificación de brotes"],
+                modulesJa: ["手指衛生", "在宅でのPPE", "アウトブレイクの報告"]
+            },
+            {
+                id: 7,
+                title: "Advanced Pain & Symptom Management",
+                titleDe: "Fortgeschrittenes Schmerz- und Symptommanagement", titleFr: "Gestion avancée de la douleur et des symptômes", titleEs: "Manejo avanzado del dolor y los síntomas", titleJa: "高度な疼痛・症状管理",
+                image: "https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=300",
+                status: "New", type: "Online",
+                duration: "2 hr", durationDe: "2 Std.", durationFr: "2 h", durationEs: "2 h", durationJa: "2時間",
+                dueDate: "Optional", dueDateDe: "Optional", dueDateFr: "Optionnel", dueDateEs: "Opcional", dueDateJa: "任意",
+                description: "Take your clinical assessment skills to the next level with advanced pain scales, symptom titration, and comfort-focused interventions.",
+                descriptionDe: "Bringen Sie Ihre klinischen Beurteilungsfähigkeiten mit fortgeschrittenen Schmerzskalen, Symptomtitration und komfortorientierten Maßnahmen auf das nächste Level.",
+                descriptionFr: "Faites passer vos compétences d'évaluation clinique au niveau supérieur grâce aux échelles de douleur avancées, à la titration des symptômes et aux interventions axées sur le confort.",
+                descriptionEs: "Lleva tus habilidades de evaluación clínica al siguiente nivel con escalas de dolor avanzadas, titulación de síntomas e intervenciones centradas en el confort.",
+                descriptionJa: "高度な疼痛スケール、症状の調整、快適性重視の介入で臨床アセスメントスキルを次のレベルへ。",
+                modules: ["Pain Assessment Tools", "Symptom Titration", "Comfort-Focused Interventions"],
+                modulesDe: ["Schmerzbeurteilungsinstrumente", "Symptomtitration", "Komfortorientierte Maßnahmen"],
+                modulesFr: ["Outils d'évaluation de la douleur", "Titration des symptômes", "Interventions axées sur le confort"],
+                modulesEs: ["Herramientas de evaluación del dolor", "Titulación de síntomas", "Intervenciones centradas en el confort"],
+                modulesJa: ["疼痛評価ツール", "症状の調整", "快適性重視の介入"]
+            },
+            {
+                id: 13,
+                title: "AI Tools for Clinical Documentation",
+                titleDe: "KI-Tools für die klinische Dokumentation", titleFr: "Outils IA pour la documentation clinique", titleEs: "Herramientas de IA para la documentación clínica", titleJa: "臨床文書化のためのAIツール",
+                image: "https://images.unsplash.com/photo-1584362917165-526a968579e8?auto=format&fit=crop&q=80&w=300",
+                status: "New", type: "Online",
+                duration: "2 hr", durationDe: "2 Std.", durationFr: "2 h", durationEs: "2 h", durationJa: "2時間",
+                dueDate: "Optional", dueDateDe: "Optional", dueDateFr: "Optionnel", dueDateEs: "Opcional", dueDateJa: "任意",
+                description: "Practical introduction to AI-powered tools for clinical notes, care plan summaries, and productivity in your daily work.",
+                descriptionDe: "Praktische Einführung in KI-gestützte Tools für klinische Notizen, Zusammenfassungen von Pflegeplänen und Produktivität im Arbeitsalltag.",
+                descriptionFr: "Introduction pratique aux outils IA pour les notes cliniques, les résumés de plans de soins et la productivité au quotidien.",
+                descriptionEs: "Introducción práctica a las herramientas de IA para notas clínicas, resúmenes de planes de cuidado y productividad en el trabajo diario.",
+                descriptionJa: "臨床記録、ケアプランの要約、そして日々の業務における生産性向上のためのAIツールへの実践的な入門。",
+                modules: ["AI Fundamentals", "Prompting Techniques", "Responsible AI Use"],
+                modulesDe: ["KI-Grundlagen", "Prompt-Techniken", "Verantwortungsvoller KI-Einsatz"],
+                modulesFr: ["Fondamentaux de l'IA", "Techniques de prompt", "Utilisation responsable de l'IA"],
+                modulesEs: ["Fundamentos de IA", "Técnicas de prompt", "Uso responsable de la IA"],
+                modulesJa: ["AIの基礎", "プロンプトテクニック", "AIの責任ある利用"]
+            },
+            {
+                id: 14,
+                title: "Family & Caregiver Conversations",
+                titleDe: "Gespräche mit Familien und pflegenden Angehörigen", titleFr: "Conversations avec les familles et les aidants", titleEs: "Conversaciones con familias y cuidadores", titleJa: "ご家族・介護者との対話",
+                image: "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&q=80&w=300",
+                status: null, type: "Video",
+                duration: "1.5 hr", durationDe: "1,5 Std.", durationFr: "1 h 30", durationEs: "1,5 h", durationJa: "1.5時間",
+                dueDate: dueIn(14),
+                description: "Build confidence and clarity when discussing care plans and prognosis with patients' families. Covers structure, delivery, and handling difficult questions.",
+                descriptionDe: "Gewinnen Sie Sicherheit und Klarheit bei Gesprächen mit Familien über Pflegepläne und Prognosen. Struktur, Vortrag und der Umgang mit schwierigen Fragen.",
+                descriptionFr: "Développez votre confiance et votre clarté lors des discussions avec les familles sur les plans de soins et le pronostic. Structure, présentation et gestion des questions difficiles.",
+                descriptionEs: "Desarrolla confianza y claridad al hablar con las familias sobre los planes de cuidado y el pronóstico. Estructura, presentación y manejo de preguntas difíciles.",
+                descriptionJa: "患者のご家族とケアプランや予後について話す際の自信と明確さを養います。構成、伝え方、そして難しい質問への対応。",
+                modules: ["Structuring the Conversation", "Delivering Sensitive Information", "Handling Difficult Questions"],
+                modulesDe: ["Das Gespräch strukturieren", "Sensible Informationen vermitteln", "Umgang mit schwierigen Fragen"],
+                modulesFr: ["Structurer la conversation", "Transmettre des informations sensibles", "Gérer les questions difficiles"],
+                modulesEs: ["Estructurar la conversación", "Comunicar información sensible", "Manejar preguntas difíciles"],
+                modulesJa: ["対話の構成", "繊細な情報の伝達", "難しい質問への対応"]
+            }
+        ];
+
+        // --- RENDER LOGIC ---
+        const typeIconMap = { 'Online': '🎧', 'Event': '📅', 'Video': '🎬', 'Curriculum': '📚', 'Material': '📄' };
+
+        let currentFilter = 'all';
+        let filterOpen = false;
+
+        function toggleFilterDropdown(e) {
+            e.stopPropagation();
+            filterOpen = !filterOpen;
+            const dd = document.getElementById('filter-dropdown');
+            if (dd) dd.classList.toggle('open', filterOpen);
+        }
+
+        document.addEventListener('click', () => {
+            if (filterOpen) {
+                filterOpen = false;
+                const dd = document.getElementById('filter-dropdown');
+                if (dd) dd.classList.remove('open');
+            }
+        });
+
+        function applyFilter(data) {
+            if (currentFilter === 'all') return data;
+            if (currentFilter === 'upcoming') return data.filter(c => !c.overdueDays && c.status !== 'In progress' && c.status !== 'Completed');
+            if (currentFilter === 'inprogress') return data.filter(c => c.status === 'In progress' && !c.overdueDays);
+            if (currentFilter === 'overdue') return data.filter(c => !!c.overdueDays);
+            if (currentFilter === 'completed') return data.filter(c => c.status === 'Completed');
+            return data;
+        }
+
+        function renderGrid(data, title) {
+            const statusMap = { 'Required': t.required, 'In progress': t.inProgress, 'New': t.newLabel, 'Completed': t.completed };
+            const typeMap = { 'Online': t.online, 'Event': t.eventType, 'Video': t.video, 'Curriculum': t.curriculum, 'Material': t.material };
+            const filterKeys = { all: 'filterAll', upcoming: 'filterUpcoming', inprogress: 'filterInprogress', overdue: 'filterOverdue', completed: 'filterCompleted' };
+            const filterOptions = ['all', 'upcoming', 'inprogress', 'overdue', 'completed'];
+            const filtered = applyFilter(data);
+
+            const dropdownHtml = filterOptions.map(f => `
+                <div class="cw-filter-option${currentFilter === f ? ' active' : ''}" onclick="setFilter('${f}')">${t[filterKeys[f]]}</div>
+            `).join('');
+
+            const activeLabel = currentFilter !== 'all' ? ` <span style="font-size:13px;font-weight:500;color:var(--primary-purple);">(${t[filterKeys[currentFilter]]})</span>` : '';
+
+            let html = `
+                <div class="section-header">
+                    <div class="section-title">${title}${activeLabel}</div>
+                    <div class="cw-filter-wrap">
+                        <div class="cw-filter-btn" onclick="toggleFilterDropdown(event)">${t.filter} ▾</div>
+                        <div class="cw-filter-dropdown" id="filter-dropdown">${dropdownHtml}</div>
+                    </div>
+                </div>
+                <div class="course-grid">
+            `;
+
+            if (filtered.length === 0) {
+                html += `<div style="grid-column:1/-1;padding:40px 0;text-align:center;color:var(--text-grey);font-size:14px;">No courses match this filter.</div>`;
+            }
+
+            filtered.forEach(course => {
+                let badgeHtml = '';
+                if (course.status) {
+                    const badgeClass = course.status === 'Required' ? 'status-required' : course.status === 'New' ? 'status-new' : course.status === 'Completed' ? 'status-completed' : 'status-inprogress';
+                    badgeHtml = `<span class="cw-status-badge ${badgeClass}">${statusMap[course.status] || course.status}</span>`;
+                }
+
+                let dueText, dueClass = 'card-due';
+                if (course.overdueDays) {
+                    dueText = `${t.overdue} ${overdueOn(course.overdueDays)}`;
+                    dueClass += ' is-overdue';
+                } else {
+                    dueText = loc(course, 'dueDate');
+                }
+
+                const typeIcon = typeIconMap[course.type] || '🎧';
+                const typeLabel = typeMap[course.type] || course.type;
+
+                html += `
+                    <div class="course-card" onclick="openDetails(${course.id})">
+                        <div class="card-img-wrap">
+                            <img src="${course.image}" class="card-img" alt="${loc(course, 'title')}">
+                            ${badgeHtml}
+                        </div>
+                        <div class="card-title">${loc(course, 'title')}</div>
+                        <div class="card-meta">
+                            <span>${typeIcon} ${typeLabel}</span> • <span>${loc(course, 'duration')}</span>
+                        </div>
+                        <div class="${dueClass}">${dueText}</div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            return html;
+        }
+
+        let currentTab = 'learnings';
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            currentFilter = 'all';
+            document.querySelectorAll('.cw-tab-btn').forEach(btn => btn.classList.remove('active'));
+            const container = document.getElementById('main-content');
+            if (tabName === 'learnings') {
+                document.querySelectorAll('.cw-tab-btn')[0].classList.add('active');
+                container.innerHTML = renderGrid(myLearningsData, t.myLearnings);
+            } else {
+                document.querySelectorAll('.cw-tab-btn')[1].classList.add('active');
+                container.innerHTML = renderGrid(recommendedData, t.recommendedForYou);
+            }
+        }
+
+        function setFilter(f) {
+            currentFilter = f;
+            filterOpen = false;
+            const container = document.getElementById('main-content');
+            if (currentTab === 'learnings') {
+                container.innerHTML = renderGrid(myLearningsData, t.myLearnings);
+            } else {
+                container.innerHTML = renderGrid(recommendedData, t.recommendedForYou);
+            }
+        }
+
+        function openDetails(id) {
+            const course = [...myLearningsData, ...recommendedData].find(c => c.id === id);
+            if (!course) return;
+
+            const modalBody = document.getElementById('modal-body');
+            const typeMap = { 'Online': t.online, 'Event': t.eventType, 'Video': t.video, 'Curriculum': t.curriculum, 'Material': t.material };
+            const typeIcon = typeIconMap[course.type] || '🎧';
+            const localModules = loc(course, 'modules') || [];
+            const modulesHtml = localModules.map(mod => `<li style="margin-bottom:8px;color:#555;">${mod}</li>`).join('');
+
+            let dueMeta;
+            if (course.overdueDays) {
+                dueMeta = `<span class="overdue-meta">⚠ ${t.overdue} ${overdueOn(course.overdueDays)}</span>`;
+            } else {
+                dueMeta = `<span>📅 ${loc(course, 'dueDate')}</span>`;
+            }
+
+            modalBody.innerHTML = `
+                <img src="${course.image.replace('w=300', 'w=600')}" class="hero-img">
+                <h2 class="detail-title">${loc(course, 'title')}</h2>
+                <div class="detail-meta">
+                    <span>${typeIcon} ${typeMap[course.type] || course.type}</span>
+                    <span>⏱ ${loc(course, 'duration')}</span>
+                    ${dueMeta}
+                </div>
+                <div class="detail-desc-title">${t.aboutCourse}</div>
+                <div class="detail-desc">
+                    ${loc(course, 'description')}
+                    <ul>${modulesHtml}</ul>
+                    <div style="text-align:right;margin-top:8px;color:var(--primary-purple);font-weight:600;">${t.viewAll}</div>
+                </div>
+                <div class="detail-desc-title">${t.sessionOverview}</div>
+                <div style="display:flex;gap:12px;margin-top:12px;">
+                    <div style="display:flex;flex-direction:column;align-items:center;">
+                        <div style="width:24px;height:24px;background:#ccc;border-radius:50%;color:white;display:flex;justify-content:center;align-items:center;font-size:12px;">1</div>
+                        <div style="width:1px;height:30px;background:#eee;"></div>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;font-size:14px;">${t.introduction}</div>
+                        <div style="font-size:12px;color:#999;">5 min</div>
+                    </div>
+                </div>
+            `;
+
+            document.body.classList.add('modal-active');
+        }
+
+        function closeModal() {
+            document.body.classList.remove('modal-active');
+        }
+
+        // Initialize
+        switchTab('learnings');
+        renderNotifications();
+        applyTranslations();
+
+    </script>
+<!-- Widget usage counter — see CLAUDE.md -->
+<script>(function(){try{if(location.search.indexOf('preview=1')!==-1)return;var n=location.pathname.split('/').pop();if(!n||n==='index.html')return;var url='https://widget-counter.klauejohann.workers.dev/bump/'+encodeURIComponent(n);if(navigator.sendBeacon)navigator.sendBeacon(url);else fetch(url,{method:'POST',keepalive:true}).catch(function(){});var k='widgetCounts',c=JSON.parse(localStorage.getItem(k)||'{}');c[n]=(c[n]||0)+1;localStorage.setItem(k,JSON.stringify(c));}catch(e){}})();</script>
+</body>
+</html>
