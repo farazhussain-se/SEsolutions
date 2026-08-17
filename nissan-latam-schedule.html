@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Horario – Nissan LATAM</title>
+    <style>
+        :root {
+            --primary: #C3002F;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #ffffff;
+            --bg-gray: #f9fafb;
+            --border: #e5e7eb;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-gray);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 1rem;
+        }
+
+        .cw-app {
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+            position: relative;
+        }
+
+        .cw-header {
+            background: var(--primary);
+            color: white;
+            padding: 1.25rem 1rem;
+            text-align: center;
+        }
+        .cw-header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .cw-header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        main {
+            padding: 1rem;
+            flex-grow: 1;
+            background: var(--bg-gray);
+        }
+
+        h2 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--text);
+        }
+
+        .shift-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .shift-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 0.85rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .shift-info { flex-grow: 1; min-width: 0; }
+        .shift-info h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+            color: var(--text);
+        }
+        .shift-info p {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 0.1rem;
+        }
+        .shift-role {
+            font-weight: 600;
+            color: var(--primary) !important;
+        }
+
+        .cw-action-buttons {
+            display: flex;
+            gap: 0.6rem;
+            padding: 0.9rem 1rem;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+        }
+
+        .cw-btn {
+            flex: 1;
+            padding: 0.85rem 0.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            font-family: inherit;
+            transition: opacity 0.15s;
+        }
+        .cw-btn:active { opacity: 0.85; }
+        .cw-btn-primary { background: var(--primary); color: white; }
+        .cw-btn-secondary { background: var(--bg-gray); color: var(--text); border: 1px solid var(--border); }
+        .cw-btn-small {
+            flex: 0 0 auto;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.78rem;
+            border-radius: 6px;
+        }
+
+        .cw-success-msg {
+            display: none;
+            background: #d1fae5;
+            color: #065f46;
+            padding: 0.65rem 0.85rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .cw-modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.25s;
+            z-index: 10;
+        }
+        .cw-modal-overlay.active { visibility: visible; opacity: 1; }
+
+        .cw-modal-content {
+            background: var(--bg-gray);
+            width: 100%;
+            max-height: 85%;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            padding: 1rem;
+            transform: translateY(100%);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+        .cw-modal-overlay.active .cw-modal-content { transform: translateY(0); }
+
+        .cw-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .cw-modal-header h2 { font-size: 1.05rem; }
+
+        .cw-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+            line-height: 1;
+            padding: 0 0.25rem;
+        }
+
+        .cw-modal-hint {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 0.75rem;
+        }
+
+        .cw-modal-body {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cw-app">
+        <header class="cw-header">
+            <h1>Mi Horario</h1>
+            <p id="welcome-text">¡Bienvenida de nuevo, María!</p>
+        </header>
+
+        <main>
+            <div id="main-alert" class="cw-success-msg"></div>
+
+            <h2>Resumen de esta semana</h2>
+            <div class="shift-list" id="my-shifts-container"></div>
+        </main>
+
+        <div class="cw-action-buttons">
+            <button class="cw-btn cw-btn-secondary" id="open-swap-btn">Intercambiar Turno</button>
+            <button class="cw-btn cw-btn-primary" id="open-shifts-btn">Turnos Abiertos</button>
+        </div>
+
+        <div class="cw-modal-overlay" id="swap-modal">
+            <div class="cw-modal-content">
+                <div class="cw-modal-header">
+                    <h2>Seleccionar Turno para Intercambiar</h2>
+                    <button class="cw-close-btn" data-close="swap-modal">&times;</button>
+                </div>
+                <p class="cw-modal-hint">Elige cuál de tus próximos turnos deseas ofrecer para intercambio.</p>
+                <div class="cw-modal-body shift-list" id="swap-list-container"></div>
+            </div>
+        </div>
+
+        <div class="cw-modal-overlay" id="open-shifts-modal">
+            <div class="cw-modal-content">
+                <div class="cw-modal-header">
+                    <h2>Turnos Abiertos Disponibles</h2>
+                    <button class="cw-close-btn" data-close="open-shifts-modal">&times;</button>
+                </div>
+                <p class="cw-modal-hint">Regístrate abajo para horas adicionales.</p>
+                <div class="cw-modal-body shift-list" id="open-list-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const LOCALE = 'es-MX';
+
+        const dateFormatter = new Intl.DateTimeFormat(LOCALE, {
+            weekday: 'long', day: 'numeric', month: 'short'
+        });
+        const timeFormatter = new Intl.DateTimeFormat(LOCALE, {
+            hour: 'numeric', minute: '2-digit', hour12: true
+        });
+
+        const LABELS = {
+            swapBtn: 'Intercambiar',
+            claimBtn: 'Tomar',
+            noShifts: 'No hay turnos próximos.',
+            noOpen: 'No hay turnos abiertos disponibles en este momento.',
+            swapSuccess: '¡Solicitud de intercambio enviada a tu supervisor!',
+            claimSuccess: day => `¡Listo! Ahora estás programada para el ${day}.`,
+        };
+
+        const ROLES = {
+            assembly: 'Línea de Ensamble',
+            quality: 'Control de Calidad',
+            stock: 'Almacén',
+            floorLead: 'Jefe de Turno',
+            prep: 'Preparación de Materiales',
+            welding: 'Soldadura'
+        };
+
+        // — Helpers —
+        function dateAt(daysFromToday, hour, minute = 0) {
+            const d = new Date();
+            d.setHours(0, 0, 0, 0);
+            d.setDate(d.getDate() + daysFromToday);
+            d.setHours(hour, minute, 0, 0);
+            return d;
+        }
+        function fmtDay(date) { return dateFormatter.format(date); }
+        function fmtTimeRange(start, end) {
+            return `${timeFormatter.format(start)} – ${timeFormatter.format(end)}`;
+        }
+
+        // — Data: shifts spread across the next ~10 days —
+        let myShifts = [
+            { id: 1, start: dateAt(1,  6, 0), end: dateAt(1, 14, 0), roleKey: 'assembly'  },
+            { id: 2, start: dateAt(3,  7, 0), end: dateAt(3, 15, 0), roleKey: 'quality'   },
+            { id: 3, start: dateAt(5, 14, 0), end: dateAt(5, 22, 0), roleKey: 'prep'      },
+            { id: 4, start: dateAt(6,  6, 0), end: dateAt(6, 14, 0), roleKey: 'floorLead' }
+        ];
+
+        let openShifts = [
+            { id: 101, start: dateAt(2, 14, 0), end: dateAt(2, 22, 0), roleKey: 'assembly' },
+            { id: 102, start: dateAt(4, 22, 0), end: dateAt(5,  6, 0), roleKey: 'stock'    },
+            { id: 103, start: dateAt(7,  6, 0), end: dateAt(7, 14, 0), roleKey: 'welding'  }
+        ];
+
+        // — Rendering —
+        function renderMyShifts() {
+            const container = document.getElementById('my-shifts-container');
+            if (myShifts.length === 0) {
+                container.innerHTML = `<p style="color:var(--text-light);font-size:0.9rem;">${LABELS.noShifts}</p>`;
+                return;
+            }
+            container.innerHTML = myShifts.map(s => `
+                <div class="shift-card">
+                    <div class="shift-info">
+                        <h3>${fmtDay(s.start)}</h3>
+                        <p>${fmtTimeRange(s.start, s.end)}</p>
+                        <p class="shift-role">${ROLES[s.roleKey]}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSwapModal() {
+            const container = document.getElementById('swap-list-container');
+            if (myShifts.length === 0) {
+                container.innerHTML = `<p style="color:var(--text-light);font-size:0.9rem;">${LABELS.noShifts}</p>`;
+                return;
+            }
+            container.innerHTML = myShifts.map(s => `
+                <div class="shift-card">
+                    <div class="shift-info">
+                        <h3>${fmtDay(s.start)}</h3>
+                        <p>${fmtTimeRange(s.start, s.end)}</p>
+                    </div>
+                    <button class="cw-btn cw-btn-secondary cw-btn-small" data-swap="${s.id}">${LABELS.swapBtn}</button>
+                </div>
+            `).join('');
+            container.querySelectorAll('[data-swap]').forEach(btn => {
+                btn.addEventListener('click', () => requestSwap(parseInt(btn.dataset.swap, 10)));
+            });
+        }
+
+        function renderOpenShiftsModal() {
+            const container = document.getElementById('open-list-container');
+            if (openShifts.length === 0) {
+                container.innerHTML = `<p style="color:var(--text-light);font-size:0.9rem;">${LABELS.noOpen}</p>`;
+                return;
+            }
+            container.innerHTML = openShifts.map(s => `
+                <div class="shift-card">
+                    <div class="shift-info">
+                        <h3>${fmtDay(s.start)}</h3>
+                        <p>${fmtTimeRange(s.start, s.end)}</p>
+                        <p class="shift-role">${ROLES[s.roleKey]}</p>
+                    </div>
+                    <button class="cw-btn cw-btn-primary cw-btn-small" data-claim="${s.id}">${LABELS.claimBtn}</button>
+                </div>
+            `).join('');
+            container.querySelectorAll('[data-claim]').forEach(btn => {
+                btn.addEventListener('click', () => takeShift(parseInt(btn.dataset.claim, 10)));
+            });
+        }
+
+        // — Actions —
+        function requestSwap(shiftId) {
+            myShifts = myShifts.filter(s => s.id !== shiftId);
+            closeModal('swap-modal');
+            showAlert(LABELS.swapSuccess);
+            renderMyShifts();
+        }
+
+        function takeShift(shiftId) {
+            const idx = openShifts.findIndex(s => s.id === shiftId);
+            if (idx === -1) return;
+            const shift = openShifts[idx];
+            openShifts.splice(idx, 1);
+            myShifts.push(shift);
+            myShifts.sort((a, b) => a.start - b.start);
+            closeModal('open-shifts-modal');
+            showAlert(LABELS.claimSuccess(fmtDay(shift.start)));
+            renderMyShifts();
+        }
+
+        function showAlert(message) {
+            const box = document.getElementById('main-alert');
+            box.textContent = message;
+            box.style.display = 'block';
+            clearTimeout(showAlert._t);
+            showAlert._t = setTimeout(() => { box.style.display = 'none'; }, 4000);
+        }
+
+        // — Modals —
+        function openModal(modalId) {
+            if (modalId === 'swap-modal') renderSwapModal();
+            if (modalId === 'open-shifts-modal') renderOpenShiftsModal();
+            document.getElementById(modalId).classList.add('active');
+        }
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function init() {
+            myShifts.sort((a, b) => a.start - b.start);
+            renderMyShifts();
+
+            document.getElementById('open-swap-btn').addEventListener('click', () => openModal('swap-modal'));
+            document.getElementById('open-shifts-btn').addEventListener('click', () => openModal('open-shifts-modal'));
+            document.querySelectorAll('[data-close]').forEach(btn => {
+                btn.addEventListener('click', () => closeModal(btn.dataset.close));
+            });
+            document.querySelectorAll('.cw-modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', e => {
+                    if (e.target === overlay) closeModal(overlay.id);
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
