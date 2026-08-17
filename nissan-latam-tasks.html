@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Panel de Cumplimiento de Tareas – Nissan LATAM</title>
+
+<style>
+    :root {
+        --primary: #C3002F;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --text: #1f2937;
+        --text-light: #6b7280;
+        --bg: #ffffff;
+        --bg-gray: #f9fafb;
+        --border: #e5e7eb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 16px;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .widget {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    .cw-section-heading {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--text-light);
+        text-transform: uppercase;
+        margin-bottom: 12px;
+    }
+
+    .cw-overall {
+        background: var(--bg-gray);
+        border-radius: 10px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+
+    .cw-overall-label {
+        font-size: 13px;
+        color: var(--text-light);
+        margin-bottom: 2px;
+    }
+
+    .cw-overall-counts {
+        font-size: 13px;
+        color: var(--text);
+        font-weight: 500;
+    }
+
+    .cw-overall-pct {
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .center-row {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+    }
+
+    .center-row:last-child { border-bottom: none; }
+
+    .center-row:hover .center-name { color: var(--primary); }
+
+    .center-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 7px;
+    }
+
+    .center-name {
+        font-size: 14px;
+        color: var(--text);
+        transition: color 0.15s;
+    }
+
+    .center-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-left: 8px;
+    }
+
+    .center-count {
+        font-size: 12px;
+        color: var(--text-light);
+    }
+
+    .center-pct {
+        font-size: 14px;
+        font-weight: 600;
+        min-width: 38px;
+        text-align: right;
+    }
+
+    .cw-chevron {
+        font-size: 16px;
+        color: var(--text-light);
+        margin-left: 2px;
+    }
+
+    .cw-progress-track {
+        height: 6px;
+        background: var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .cw-progress-fill {
+        height: 100%;
+        border-radius: 3px;
+    }
+
+    .cw-view-all {
+        display: inline-block;
+        margin-top: 16px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--primary);
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .cw-view-all:hover { opacity: 0.8; }
+
+    .cw-back-btn {
+        background: none;
+        border: none;
+        color: var(--primary);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0 0 14px 0;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .cw-back-btn:hover { opacity: 0.8; }
+
+    .detail-center-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 3px;
+    }
+
+    .detail-stats {
+        font-size: 13px;
+        color: var(--text-light);
+        margin-bottom: 16px;
+    }
+
+    .task-item {
+        padding: 11px 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .task-item:last-child { border-bottom: none; }
+
+    .task-name {
+        font-size: 14px;
+        color: var(--text);
+        margin-bottom: 5px;
+    }
+
+    .task-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .task-category {
+        font-size: 12px;
+        color: var(--text-light);
+    }
+
+    .cw-badge {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+
+    .cw-badge-overdue  { background: rgba(239,68,68,0.12);  color: var(--danger); }
+    .cw-badge-today    { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .cw-badge-upcoming { background: rgba(107,114,128,0.12); color: var(--text-light); }
+
+    .detail-all-done {
+        padding: 20px 0;
+        font-size: 14px;
+        color: var(--success);
+        font-weight: 500;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="widget">
+    <!-- Vista principal -->
+    <div id="mainView">
+        <div class="cw-section-heading">CUMPLIMIENTO DE TAREAS — POR PLANTA</div>
+        <div class="cw-overall" id="overallSummary"></div>
+        <div id="centerList"></div>
+        <a href="#" class="cw-view-all">Ver todas las tareas →</a>
+    </div>
+
+    <!-- Vista de detalle -->
+    <div id="detailView" style="display:none">
+        <button class="cw-back-btn" id="backBtn" onclick="goBack()">← Volver</button>
+        <div class="cw-section-heading">CUMPLIMIENTO DE TAREAS — POR PLANTA</div>
+        <div class="detail-center-name" id="detailCenterName"></div>
+        <div class="detail-stats" id="detailStats"></div>
+        <div class="cw-section-heading">TAREAS PENDIENTES</div>
+        <div id="taskList"></div>
+    </div>
+</div>
+
+<script>
+    const CENTER_LABEL = 'Planta';
+    const TASKS_LABEL = 'tareas';
+    const LABELS = {
+        overdue: 'Vencida',
+        dueToday: 'Vence Hoy',
+        upcoming: 'Próxima',
+        allComplete: 'Todas las tareas completadas ✓',
+    };
+
+    const CENTERS = [
+        {
+            name: 'Aguascalientes A1', id: 'AGS-A1', country: 'México', completed: 48, total: 52,
+            outstanding: [
+                { task: 'Inspección de equipo de protección personal', category: 'Seguridad',     due: 'overdue' },
+                { task: 'Auditoría 5S de línea de ensamble',           category: 'Producción',     due: 'today'   },
+                { task: 'Verificación de torque en chasis',            category: 'Calidad',        due: 'today'   },
+                { task: 'Reporte diario de producción',                category: 'Comunicaciones', due: 'today'   },
+            ]
+        },
+        {
+            name: 'Aguascalientes A2', id: 'AGS-A2', country: 'México', completed: 31, total: 40,
+            outstanding: [
+                { task: 'Mantenimiento preventivo de robots de soldadura', category: 'Mantenimiento', due: 'overdue' },
+                { task: 'Prueba de frenos en línea final',                 category: 'Calidad',       due: 'overdue' },
+                { task: 'Revisión de extintores',                         category: 'Seguridad',     due: 'overdue' },
+                { task: 'Limpieza de cabina de pintura',                  category: 'Mantenimiento', due: 'today'   },
+                { task: 'Calibración de torque de pernos',                category: 'Calidad',       due: 'today'   },
+                { task: 'Verificación de stock de componentes',           category: 'Producción',    due: 'today'   },
+                { task: 'Auditoría de ergonomía en estación de trabajo',  category: 'Seguridad',     due: 'today'   },
+                { task: 'Actualización de tablero de indicadores (KPI)',  category: 'Comunicaciones',due: 'upcoming' },
+                { task: 'Reunión de relevo de turno',                     category: 'Comunicaciones',due: 'upcoming' },
+            ]
+        },
+        {
+            name: 'CIVAC – Cuernavaca', id: 'CIVAC', country: 'México', completed: 37, total: 42,
+            outstanding: [
+                { task: 'Inspección de bandas transportadoras',        category: 'Mantenimiento', due: 'overdue' },
+                { task: 'Control de calidad de soldadura',             category: 'Calidad',       due: 'today'   },
+                { task: 'Revisión de niveles de fluidos hidráulicos',  category: 'Mantenimiento', due: 'today'   },
+                { task: 'Inspección de sistema de rociadores',         category: 'Seguridad',     due: 'today'   },
+                { task: 'Boletín informativo para el personal',        category: 'Comunicaciones',due: 'upcoming' },
+            ]
+        },
+        {
+            name: 'Resende', id: 'RESENDE', country: 'Brasil', completed: 22, total: 35,
+            outstanding: [
+                { task: 'Inspección de área de pintura',                 category: 'Calidad',       due: 'overdue' },
+                { task: 'Verificación de EPP en línea de estampado',     category: 'Seguridad',     due: 'overdue' },
+                { task: 'Auditoría de torque en suspensión',             category: 'Calidad',       due: 'overdue' },
+                { task: 'Mantenimiento de prensas de estampado',         category: 'Mantenimiento', due: 'overdue' },
+                { task: 'Reabastecimiento de kit de primeros auxilios',  category: 'Seguridad',     due: 'overdue' },
+                { task: 'Registro diario de asistencia',                 category: 'Producción',    due: 'today'   },
+                { task: 'Verificación de stock de refacciones',          category: 'Producción',    due: 'today'   },
+                { task: 'Inspección de cabina de pintura',               category: 'Mantenimiento', due: 'today'   },
+                { task: 'Calibración de torque de pernos',               category: 'Calidad',       due: 'today'   },
+                { task: 'Registro de control de calidad final',          category: 'Calidad',       due: 'today'   },
+                { task: 'Revisión de reportes de incidentes',            category: 'Seguridad',     due: 'upcoming' },
+                { task: 'Actualización de comunicación a supervisores',  category: 'Comunicaciones',due: 'upcoming' },
+                { task: 'Orden mensual de insumos',                      category: 'Producción',    due: 'upcoming' },
+            ]
+        },
+        {
+            name: 'Alianza Córdoba', id: 'CBA', country: 'Argentina', completed: 44, total: 48,
+            outstanding: [
+                { task: 'Inspección de área exterior de la planta',   category: 'Seguridad',     due: 'overdue' },
+                { task: 'Reabastecimiento de estación de componentes',category: 'Producción',    due: 'today'   },
+                { task: 'Inventario de insumos de taller',            category: 'Producción',    due: 'today'   },
+                { task: 'Checklist semanal de limpieza',              category: 'Mantenimiento', due: 'upcoming' },
+            ]
+        },
+    ];
+
+    function statusColor(pct) {
+        if (pct >= 85) return 'var(--success)';
+        if (pct >= 75) return 'var(--warning)';
+        return 'var(--danger)';
+    }
+
+    function render() {
+        var totalCompleted = CENTERS.reduce(function(s, c) { return s + c.completed; }, 0);
+        var totalTasks = CENTERS.reduce(function(s, c) { return s + c.total; }, 0);
+        var overallPct = Math.round(totalCompleted / totalTasks * 100);
+
+        var summary = document.getElementById('overallSummary');
+        summary.innerHTML =
+            '<div>' +
+            '<div class="cw-overall-label">General</div>' +
+            '<div class="cw-overall-counts">' + totalCompleted + ' / ' + totalTasks + ' ' + TASKS_LABEL + '</div>' +
+            '</div>' +
+            '<div class="cw-overall-pct" style="color:' + statusColor(overallPct) + '">' + overallPct + '%</div>';
+
+        var list = document.getElementById('centerList');
+        list.innerHTML = CENTERS.map(function(c, i) {
+            var pct = Math.round(c.completed / c.total * 100);
+            return '<div class="center-row" onclick="showDetail(' + i + ')">' +
+                '<div class="center-header">' +
+                '<span class="center-name">' + c.name + ' — ' + CENTER_LABEL + ' ' + c.id + '</span>' +
+                '<div class="center-right">' +
+                '<span class="center-count">' + c.completed + '/' + c.total + ' ' + TASKS_LABEL + '</span>' +
+                '<span class="center-pct" style="color:' + statusColor(pct) + '">' + pct + '%</span>' +
+                '<span class="cw-chevron">›</span>' +
+                '</div>' +
+                '</div>' +
+                '<div class="cw-progress-track">' +
+                '<div class="cw-progress-fill" style="width:' + pct + '%;background:' + statusColor(pct) + '"></div>' +
+                '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    function showDetail(idx) {
+        var c = CENTERS[idx];
+        var pct = Math.round(c.completed / c.total * 100);
+
+        document.getElementById('detailCenterName').textContent = c.name + ' — ' + CENTER_LABEL + ' ' + c.id + ' · ' + c.country;
+        document.getElementById('detailStats').textContent = c.completed + '/' + c.total + ' ' + TASKS_LABEL + ' · ' + pct + '%';
+
+        var taskList = document.getElementById('taskList');
+        if (!c.outstanding || c.outstanding.length === 0) {
+            taskList.innerHTML = '<div class="detail-all-done">' + LABELS.allComplete + '</div>';
+        } else {
+            taskList.innerHTML = c.outstanding.map(function(task) {
+                var badgeClass = task.due === 'overdue' ? 'cw-badge-overdue' :
+                                 task.due === 'today'   ? 'cw-badge-today'   : 'cw-badge-upcoming';
+                var badgeLabel = task.due === 'overdue' ? LABELS.overdue :
+                                 task.due === 'today'   ? LABELS.dueToday : LABELS.upcoming;
+                return '<div class="task-item">' +
+                    '<div class="task-name">' + task.task + '</div>' +
+                    '<div class="task-meta">' +
+                    '<span class="task-category">' + task.category + '</span>' +
+                    '<span class="cw-badge ' + badgeClass + '">' + badgeLabel + '</span>' +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        document.getElementById('mainView').style.display = 'none';
+        document.getElementById('detailView').style.display = 'block';
+    }
+
+    function goBack() {
+        document.getElementById('detailView').style.display = 'none';
+        document.getElementById('mainView').style.display = 'block';
+    }
+
+    document.addEventListener('DOMContentLoaded', render);
+</script>
+
+</body>
+</html>
