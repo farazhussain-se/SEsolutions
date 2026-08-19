@@ -1,0 +1,720 @@
+        // --- Language detection ---
+        const LANG = (() => {
+            const l = navigator.language || '';
+            if (l.startsWith('de')) return 'de';
+            if (l.startsWith('fr')) return 'fr';
+            if (l.startsWith('es')) return 'es';
+            if (l.startsWith('ja')) return 'ja';
+            if (l === 'en-GB')      return 'en-GB';
+            return 'en-US';
+        })();
+        document.documentElement.lang = LANG;
+
+        const LOCALE = {
+            'de': 'de-DE', 'fr': 'fr-FR', 'es': 'es-ES',
+            'ja': 'ja-JP', 'en-GB': 'en-GB', 'en-US': 'en-US'
+        }[LANG];
+        const HOUR12 = LANG === 'en-GB' || LANG === 'en-US';
+        const LANG_SUFFIX = { 'de': 'De', 'fr': 'Fr', 'es': 'Es', 'ja': 'Ja', 'en-GB': '', 'en-US': '' };
+
+        // --- Translations ---
+        const T = {
+            de: {
+                inboxLabel: "ServiceNow",
+                myItems: "Meine Vorgänge",
+                myTasks: "Meine Aufgaben",
+                searchPlaceholder: "Suchen ...",
+                filtersLabel: "Filter",
+                showClosed: "Geschlossene anzeigen",
+                sortUpdateNew: "Aktualisierung (neueste)",
+                sortUpdateOld: "Aktualisierung (älteste)",
+                sortCreateNew: "Erstellung (neueste)",
+                sortPrioHigh: "Priorität (höchste)",
+                sortPrioLow: "Priorität (niedrigste)",
+                typesLabel: "Typen",
+                typeSearchPlaceholder: "Suchen...",
+                typeIncident: "Vorfall",
+                typeProblem: "Problem",
+                typeCatalogTask: "Katalogaufgabe",
+                typeChangeRequest: "Änderungsantrag",
+                typeRequest: "Anfrage",
+                clearAll: "Zurücksetzen",
+                apply: "Anwenden",
+                refresh: "Aktualisieren",
+                newTicket: "Neues Ticket",
+                prioCritical: "1 - Kritisch",
+                prioHigh: "2 - Hoch",
+                prioModerate: "3 - Mittel",
+                prioLow: "4 - Niedrig",
+                prioPlanning: "5 - Planung",
+                stateInProgress: "In Bearbeitung",
+                stateOnHold: "Wartend",
+                stateNew: "Neu",
+                stateOpen: "Offen",
+                updatedLabel: "Aktualisiert:",
+                openedByTpl: "Geöffnet: ${date} von ${name}",
+                noItems: "Keine Einträge gefunden",
+                refreshing: "Wird aktualisiert ...",
+                notifTitle: "Benachrichtigungen",
+                noNotifTitle: "Keine neuen Benachrichtigungen",
+                noNotifDesc: "Hier werden neue Benachrichtigungen angezeigt.",
+                newTicketTitle: "Neues Ticket",
+                shortDescription: "Kurzbeschreibung",
+                shortDescPlaceholder: "z. B. Drucker funktioniert nicht",
+                priorityLabel: "Priorität",
+                typeLabel: "Typ",
+                submit: "Absenden",
+                requestTypeLabel: "Art der Anfrage",
+                requestTypePlaceholder: "Worum geht es in Ihrer Anfrage?",
+                urgencyLabel: "Dringlichkeit",
+                urgencyPlaceholder: "Bitte wählen Sie die Dringlichkeit",
+                titleLabel: "Titel Ihres Tickets",
+                titlePlaceholder: "z. B. Drucker lässt sich nicht verbinden",
+                descriptionLabel: "Beschreiben Sie Ihr Problem im Detail (Betriebssystem, Gerät, ...)",
+                descriptionPlaceholder: "Von meinem PC Lenovo Thinkpad aus kann ich mich nicht mit dem Bürodrucker verbinden ...",
+                createTicketBtn: "Ticket erstellen"
+            },
+            fr: {
+                inboxLabel: "ServiceNow",
+                myItems: "Mes éléments",
+                myTasks: "Mes tâches",
+                searchPlaceholder: "Rechercher ...",
+                filtersLabel: "Filtres",
+                showClosed: "Afficher les éléments fermés",
+                sortUpdateNew: "Mise à jour (récentes)",
+                sortUpdateOld: "Mise à jour (anciennes)",
+                sortCreateNew: "Création (récentes)",
+                sortPrioHigh: "Priorité (la plus haute)",
+                sortPrioLow: "Priorité (la plus basse)",
+                typesLabel: "Types",
+                typeSearchPlaceholder: "Rechercher...",
+                typeIncident: "Incident",
+                typeProblem: "Problème",
+                typeCatalogTask: "Tâche de catalogue",
+                typeChangeRequest: "Demande de changement",
+                typeRequest: "Demande",
+                clearAll: "Tout effacer",
+                apply: "Appliquer",
+                refresh: "Actualiser",
+                newTicket: "Nouveau ticket",
+                prioCritical: "1 - Critique",
+                prioHigh: "2 - Haute",
+                prioModerate: "3 - Modérée",
+                prioLow: "4 - Basse",
+                prioPlanning: "5 - Planification",
+                stateInProgress: "En cours",
+                stateOnHold: "En attente",
+                stateNew: "Nouveau",
+                stateOpen: "Ouvert",
+                updatedLabel: "Mis à jour :",
+                openedByTpl: "Ouvert : ${date} par ${name}",
+                noItems: "Aucun élément trouvé",
+                refreshing: "Actualisation...",
+                notifTitle: "Notifications",
+                noNotifTitle: "Aucune nouvelle notification",
+                noNotifDesc: "Vos nouvelles notifications s'afficheront ici.",
+                newTicketTitle: "Nouveau ticket",
+                shortDescription: "Brève description",
+                shortDescPlaceholder: "ex. l'imprimante ne fonctionne pas",
+                priorityLabel: "Priorité",
+                typeLabel: "Type",
+                submit: "Envoyer",
+                requestTypeLabel: "Type de demande",
+                requestTypePlaceholder: "Quel est le sujet de votre demande ?",
+                urgencyLabel: "Urgence",
+                urgencyPlaceholder: "Veuillez choisir le niveau d'urgence",
+                titleLabel: "Titre de votre ticket",
+                titlePlaceholder: "ex. impossible de connecter une imprimante",
+                descriptionLabel: "Décrivez votre problème en détail (OS, appareil, ...)",
+                descriptionPlaceholder: "Depuis mon PC Lenovo Thinkpad, je n'arrive pas à me connecter à l'imprimante du bureau ...",
+                createTicketBtn: "Créer un ticket"
+            },
+            es: {
+                inboxLabel: "ServiceNow",
+                myItems: "Mis elementos",
+                myTasks: "Mis tareas",
+                searchPlaceholder: "Buscar ...",
+                filtersLabel: "Filtros",
+                showClosed: "Mostrar cerrados",
+                sortUpdateNew: "Actualización (más recientes)",
+                sortUpdateOld: "Actualización (más antiguos)",
+                sortCreateNew: "Creación (más recientes)",
+                sortPrioHigh: "Prioridad (más alta)",
+                sortPrioLow: "Prioridad (más baja)",
+                typesLabel: "Tipos",
+                typeSearchPlaceholder: "Buscar...",
+                typeIncident: "Incidente",
+                typeProblem: "Problema",
+                typeCatalogTask: "Tarea de catálogo",
+                typeChangeRequest: "Solicitud de cambio",
+                typeRequest: "Solicitud",
+                clearAll: "Borrar todo",
+                apply: "Aplicar",
+                refresh: "Actualizar",
+                newTicket: "Nuevo ticket",
+                prioCritical: "1 - Crítica",
+                prioHigh: "2 - Alta",
+                prioModerate: "3 - Moderada",
+                prioLow: "4 - Baja",
+                prioPlanning: "5 - Planificación",
+                stateInProgress: "En curso",
+                stateOnHold: "En espera",
+                stateNew: "Nuevo",
+                stateOpen: "Abierto",
+                updatedLabel: "Actualizado:",
+                openedByTpl: "Abierto: ${date} por ${name}",
+                noItems: "No se encontraron elementos",
+                refreshing: "Actualizando...",
+                notifTitle: "Notificaciones",
+                noNotifTitle: "Sin notificaciones nuevas",
+                noNotifDesc: "Aquí verás las nuevas notificaciones.",
+                newTicketTitle: "Nuevo ticket",
+                shortDescription: "Descripción breve",
+                shortDescPlaceholder: "p. ej. la impresora no funciona",
+                priorityLabel: "Prioridad",
+                typeLabel: "Tipo",
+                submit: "Enviar",
+                requestTypeLabel: "Tipo de solicitud",
+                requestTypePlaceholder: "¿Cuál es el tema de tu solicitud?",
+                urgencyLabel: "Urgencia",
+                urgencyPlaceholder: "Elige el nivel de urgencia",
+                titleLabel: "Título de tu ticket",
+                titlePlaceholder: "p. ej. no puedo conectar una impresora",
+                descriptionLabel: "Describe tu problema con todos los detalles (SO, dispositivo, ...)",
+                descriptionPlaceholder: "Desde mi PC Lenovo Thinkpad no consigo conectarme a la impresora de la oficina ...",
+                createTicketBtn: "Crear un ticket"
+            },
+            ja: {
+                inboxLabel: "ServiceNow",
+                myItems: "マイアイテム",
+                myTasks: "マイタスク",
+                searchPlaceholder: "検索 ...",
+                filtersLabel: "フィルター",
+                showClosed: "クローズ済みを表示",
+                sortUpdateNew: "更新日（新しい順）",
+                sortUpdateOld: "更新日（古い順）",
+                sortCreateNew: "作成日（新しい順）",
+                sortPrioHigh: "優先度（高い順）",
+                sortPrioLow: "優先度（低い順）",
+                typesLabel: "種類",
+                typeSearchPlaceholder: "検索...",
+                typeIncident: "インシデント",
+                typeProblem: "問題",
+                typeCatalogTask: "カタログタスク",
+                typeChangeRequest: "変更依頼",
+                typeRequest: "依頼",
+                clearAll: "すべてクリア",
+                apply: "適用",
+                refresh: "更新",
+                newTicket: "新規チケット",
+                prioCritical: "1 - 重大",
+                prioHigh: "2 - 高",
+                prioModerate: "3 - 中",
+                prioLow: "4 - 低",
+                prioPlanning: "5 - 計画",
+                stateInProgress: "進行中",
+                stateOnHold: "保留中",
+                stateNew: "新規",
+                stateOpen: "オープン",
+                updatedLabel: "更新:",
+                openedByTpl: "作成: ${date} 担当: ${name}",
+                noItems: "該当するアイテムはありません",
+                refreshing: "更新中...",
+                notifTitle: "通知",
+                noNotifTitle: "新しい通知はありません",
+                noNotifDesc: "新しい通知はここに表示されます。",
+                newTicketTitle: "新規チケット",
+                shortDescription: "概要",
+                shortDescPlaceholder: "例：プリンターが動作しない",
+                priorityLabel: "優先度",
+                typeLabel: "種類",
+                submit: "送信",
+                requestTypeLabel: "依頼の種類",
+                requestTypePlaceholder: "ご依頼の内容を選択してください",
+                urgencyLabel: "緊急度",
+                urgencyPlaceholder: "緊急度を選択してください",
+                titleLabel: "チケットのタイトル",
+                titlePlaceholder: "例：プリンターに接続できない",
+                descriptionLabel: "問題の詳細を記入してください（OS、デバイスなど）",
+                descriptionPlaceholder: "Lenovo Thinkpad の PC からオフィスのプリンターに接続できません ...",
+                createTicketBtn: "チケットを作成"
+            },
+            'en-GB': {
+                inboxLabel: "ServiceNow",
+                myItems: "My Items",
+                myTasks: "My Tasks",
+                searchPlaceholder: "Search ...",
+                filtersLabel: "Filters",
+                showClosed: "Show closed items",
+                sortUpdateNew: "Update Date (Newest)",
+                sortUpdateOld: "Update Date (Oldest)",
+                sortCreateNew: "Creation Date (Newest)",
+                sortPrioHigh: "Priority (Highest)",
+                sortPrioLow: "Priority (Lowest)",
+                typesLabel: "Types",
+                typeSearchPlaceholder: "Search...",
+                typeIncident: "Incident",
+                typeProblem: "Problem",
+                typeCatalogTask: "Catalogue Task",
+                typeChangeRequest: "Change Request",
+                typeRequest: "Request",
+                clearAll: "Clear all",
+                apply: "Apply",
+                refresh: "Refresh",
+                newTicket: "New ticket",
+                prioCritical: "1 - Critical",
+                prioHigh: "2 - High",
+                prioModerate: "3 - Moderate",
+                prioLow: "4 - Low",
+                prioPlanning: "5 - Planning",
+                stateInProgress: "In Progress",
+                stateOnHold: "On Hold",
+                stateNew: "New",
+                stateOpen: "Open",
+                updatedLabel: "Updated:",
+                openedByTpl: "Opened: ${date} by ${name}",
+                noItems: "No items found",
+                refreshing: "Refreshing...",
+                notifTitle: "Notifications",
+                noNotifTitle: "No new notifications",
+                noNotifDesc: "You'll see new notifications here.",
+                newTicketTitle: "New ticket",
+                shortDescription: "Short description",
+                shortDescPlaceholder: "e.g. printer not working",
+                priorityLabel: "Priority",
+                typeLabel: "Type",
+                submit: "Submit",
+                requestTypeLabel: "Request Type",
+                requestTypePlaceholder: "What is the topic of your request?",
+                urgencyLabel: "Urgency",
+                urgencyPlaceholder: "Please choose your emergency level",
+                titleLabel: "Title of your ticket",
+                titlePlaceholder: "e.g. impossible to connect a printer",
+                descriptionLabel: "Describe your problem with all details (OS, device, ...)",
+                descriptionPlaceholder: "From my PC Lenovo Thinkpad, I can't seem to connect to the office printer...",
+                createTicketBtn: "Create a ticket"
+            },
+            'en-US': {
+                inboxLabel: "ServiceNow",
+                myItems: "My Items",
+                myTasks: "My Tasks",
+                searchPlaceholder: "Search ...",
+                filtersLabel: "Filters",
+                showClosed: "Show closed items",
+                sortUpdateNew: "Update Date (Newest)",
+                sortUpdateOld: "Update Date (Oldest)",
+                sortCreateNew: "Creation Date (Newest)",
+                sortPrioHigh: "Priority (Highest)",
+                sortPrioLow: "Priority (Lowest)",
+                typesLabel: "Types",
+                typeSearchPlaceholder: "Search...",
+                typeIncident: "Incident",
+                typeProblem: "Problem",
+                typeCatalogTask: "Catalog Task",
+                typeChangeRequest: "Change Request",
+                typeRequest: "Request",
+                clearAll: "Clear all",
+                apply: "Apply",
+                refresh: "Refresh",
+                newTicket: "New ticket",
+                prioCritical: "1 - Critical",
+                prioHigh: "2 - High",
+                prioModerate: "3 - Moderate",
+                prioLow: "4 - Low",
+                prioPlanning: "5 - Planning",
+                stateInProgress: "In Progress",
+                stateOnHold: "On Hold",
+                stateNew: "New",
+                stateOpen: "Open",
+                updatedLabel: "Updated:",
+                openedByTpl: "Opened: ${date} by ${name}",
+                noItems: "No items found",
+                refreshing: "Refreshing...",
+                notifTitle: "Notifications",
+                noNotifTitle: "No new notifications",
+                noNotifDesc: "You'll see new notifications here.",
+                newTicketTitle: "New ticket",
+                shortDescription: "Short description",
+                shortDescPlaceholder: "e.g. printer not working",
+                priorityLabel: "Priority",
+                typeLabel: "Type",
+                submit: "Submit",
+                requestTypeLabel: "Request Type",
+                requestTypePlaceholder: "What is the topic of your request?",
+                urgencyLabel: "Urgency",
+                urgencyPlaceholder: "Please choose your emergency level",
+                titleLabel: "Title of your ticket",
+                titlePlaceholder: "e.g. impossible to connect a printer",
+                descriptionLabel: "Describe your problem with all details (OS, device, ...)",
+                descriptionPlaceholder: "From my PC Lenovo Thinkpad, I can't seem to connect to the office printer...",
+                createTicketBtn: "Create a ticket"
+            }
+        };
+        const t = T[LANG] ?? T['en-US'];
+
+        function tr(key, vars = {}) {
+            let s = t[key] || key;
+            for (const [k, v] of Object.entries(vars)) s = s.replace('${' + k + '}', v);
+            return s;
+        }
+
+        function loc(obj, key) {
+            const suffix = LANG_SUFFIX[LANG] || '';
+            return (suffix ? obj[key + suffix] : undefined) || obj[key];
+        }
+
+        // --- Map canonical state/priority labels to T keys ---
+        const PRIO_KEY = {
+            '1 - Critical': 'prioCritical',
+            '2 - High': 'prioHigh',
+            '3 - Moderate': 'prioModerate',
+            '4 - Low': 'prioLow',
+            '5 - Planning': 'prioPlanning'
+        };
+        const STATE_KEY = {
+            'In Progress': 'stateInProgress',
+            'On Hold': 'stateOnHold',
+            'New': 'stateNew',
+            'Open': 'stateOpen'
+        };
+
+        // --- Mock data ---
+        // Dates are expressed as hour-offsets from "now" (updatedAgoH / createdAgoH, both 0–168)
+        // and resolved to ISO strings at load time, so the demo always shows tickets from
+        // within the last 7 days regardless of when the widget is opened.
+        const data = [
+            {
+                id: 'INC0000027', type: 'Incident', prio: 2, prioLabel: '2 - High', state: 'In Progress',
+                title: 'Please remove the latest hotfix from my PC',
+                titleDe: 'Bitte den letzten Hotfix von meinem PC entfernen',
+                titleFr: "Veuillez supprimer le dernier correctif de mon PC",
+                titleEs: 'Por favor, elimine la última actualización urgente de mi PC',
+                titleJa: '最新のホットフィックスを PC から削除してください',
+                updatedAgoH: 2, createdAgoH: 26, cat: 'items'
+            },
+            {
+                id: 'INC0001990', type: 'Incident', prio: 5, prioLabel: '5 - Planning', state: 'On Hold',
+                title: 'Unable to access the personal details section in profile',
+                titleDe: 'Zugriff auf den Bereich „Persönliche Daten" im Profil nicht möglich',
+                titleFr: "Impossible d'accéder à la section informations personnelles du profil",
+                titleEs: 'No se puede acceder a la sección de datos personales del perfil',
+                titleJa: 'プロフィールの個人情報セクションにアクセスできません',
+                updatedAgoH: 5, createdAgoH: 72, cat: 'items'
+            },
+            {
+                id: 'INC0000059', type: 'Incident', prio: 3, prioLabel: '3 - Moderate', state: 'In Progress',
+                title: 'Unable to access team file share',
+                titleDe: 'Kein Zugriff auf die Team-Dateifreigabe',
+                titleFr: "Impossible d'accéder au partage de fichiers de l'équipe",
+                titleEs: 'No se puede acceder al recurso compartido del equipo',
+                titleJa: 'チームのファイル共有にアクセスできません',
+                updatedAgoH: 18, createdAgoH: 96, cat: 'items'
+            },
+            {
+                id: 'TASK0022395', type: 'Incident Task', prio: 2, prioLabel: '2 - High', state: 'Open',
+                title: 'Connect with caller to run through our performance diagnostics tool',
+                titleDe: 'Anrufer kontaktieren, um das Performance-Diagnosetool durchzugehen',
+                titleFr: "Contacter l'appelant pour exécuter notre outil de diagnostic des performances",
+                titleEs: 'Contactar con el solicitante para ejecutar la herramienta de diagnóstico de rendimiento',
+                titleJa: '依頼者と連絡し、パフォーマンス診断ツールを実行する',
+                updatedAgoH: 1, createdAgoH: 1, cat: 'tasks',
+                by: 'System Administrator'
+            },
+            {
+                id: 'INC0000088', type: 'Incident', prio: 4, prioLabel: '4 - Low', state: 'New',
+                title: 'Mouse scroll wheel behaving erratically',
+                titleDe: 'Maus-Scrollrad verhält sich unregelmäßig',
+                titleFr: "La molette de la souris se comporte de manière erratique",
+                titleEs: 'La rueda de desplazamiento del ratón funciona de forma errática',
+                titleJa: 'マウスのスクロールホイールの動作が不安定です',
+                updatedAgoH: 48, createdAgoH: 48, cat: 'items'
+            },
+            {
+                id: 'INC0000092', type: 'Incident', prio: 3, prioLabel: '3 - Moderate', state: 'New',
+                title: 'VPN connection dropping intermittently',
+                titleDe: 'VPN-Verbindung bricht zeitweise ab',
+                titleFr: "La connexion VPN se coupe par intermittence",
+                titleEs: 'La conexión VPN se interrumpe de forma intermitente',
+                titleJa: 'VPN 接続が断続的に切断されます',
+                updatedAgoH: 120, createdAgoH: 120, cat: 'items'
+            }
+        ];
+
+        // Resolve hour-offsets to ISO timestamps once, anchored to load time.
+        const hoursAgo = h => new Date(Date.now() - h * 3600 * 1000).toISOString();
+        data.forEach(d => {
+            d.updated = hoursAgo(d.updatedAgoH);
+            d.created = hoursAgo(d.createdAgoH);
+        });
+
+        let state = {
+            view: 'items',
+            sort: 'update_new',
+            filtersOpen: false
+        };
+
+        // --- Date / number formatters ---
+        const dateFormatter = new Intl.DateTimeFormat(LOCALE, {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: HOUR12
+        });
+        function formatDate(isoStr) {
+            return dateFormatter.format(new Date(isoStr));
+        }
+
+        // --- Branding ---
+        function applySBBrand() {
+            var sb = getComputedStyle(document.documentElement).getPropertyValue('--sb-brand').trim();
+            if (sb) {
+                document.documentElement.style.setProperty('--primary', sb);
+                return;
+            }
+            try {
+                sb = window.parent.getComputedStyle(window.parent.document.documentElement)
+                        .getPropertyValue('--sb-brand').trim();
+                if (sb) document.documentElement.style.setProperty('--primary', sb);
+            } catch (e) { /* cross-origin, ignore */ }
+        }
+
+        // --- Translations to static HTML ---
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (t[key] !== undefined) el.textContent = t[key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.dataset.i18nPlaceholder;
+                if (t[key] !== undefined) el.placeholder = t[key];
+            });
+            // Localize priority dropdown options
+            document.querySelectorAll('#ntPriority option[data-prio-key]').forEach(opt => {
+                const key = opt.dataset.prioKey;
+                if (t[key]) opt.textContent = t[key];
+            });
+        }
+
+        // --- Render ---
+        function renderList() {
+            const container = document.getElementById('listContainer');
+            container.innerHTML = '';
+
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const checkedTypes = Array.from(document.querySelectorAll('.checkbox-list input:checked')).map(cb => cb.value);
+
+            let filtered = data.filter(d => d.cat === state.view);
+
+            filtered = filtered.filter(d => {
+                const title = (loc(d, 'title') || '').toLowerCase();
+                return title.includes(searchTerm) || d.id.toLowerCase().includes(searchTerm);
+            });
+
+            if (state.view === 'items') {
+                filtered = filtered.filter(d => checkedTypes.some(type => d.type.includes(type)));
+            }
+
+            filtered.sort((a, b) => {
+                const dateA = new Date(a.updated), dateB = new Date(b.updated);
+                const createA = new Date(a.created), createB = new Date(b.created);
+                switch (state.sort) {
+                    case 'update_new': return dateB - dateA;
+                    case 'update_old': return dateA - dateB;
+                    case 'create_new': return createB - createA;
+                    case 'prio_high':  return a.prio - b.prio;
+                    case 'prio_low':   return b.prio - a.prio;
+                    default:           return dateB - dateA;
+                }
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state">${t.noItems}</div>`;
+                return;
+            }
+
+            const frag = document.createDocumentFragment();
+            filtered.forEach(item => {
+                const isHighPrio = item.prio <= 2;
+                const prioClass = isHighPrio ? 'priority-high' : 'priority-mod';
+                const stateClass = item.state === 'On Hold' ? 'state-hold' : 'state-prog';
+
+                const prioText = t[PRIO_KEY[item.prioLabel]] || item.prioLabel;
+                const stateText = t[STATE_KEY[item.state]] || item.state;
+                const titleText = loc(item, 'title');
+
+                let footerHtml;
+                if (item.by) {
+                    footerHtml = tr('openedByTpl', {
+                        date: formatDate(item.created),
+                        name: `<span class="by-name">${escapeHtml(item.by)}</span>`
+                    });
+                } else {
+                    footerHtml = `${escapeHtml(t.updatedLabel)} ${escapeHtml(formatDate(item.updated))}`;
+                }
+
+                const div = document.createElement('div');
+                div.className = 'ticket-item';
+                div.innerHTML = `
+                    <div class="ticket-header">
+                        <span class="t-id">${escapeHtml(item.id)}</span>
+                        <span class="t-badge">${escapeHtml(item.type)}</span>
+                    </div>
+                    <div class="t-meta">
+                        <span class="${prioClass}">${escapeHtml(prioText)}</span>
+                        <span> · </span>
+                        <span class="${stateClass}">${escapeHtml(stateText)}</span>
+                    </div>
+                    <div class="t-title">${escapeHtml(titleText)}</div>
+                    <div class="t-footer">${footerHtml}</div>
+                `;
+                frag.appendChild(div);
+            });
+            container.appendChild(frag);
+        }
+
+        function escapeHtml(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        // --- Interaction ---
+        function switchMainView(view) {
+            state.view = view;
+            document.getElementById('currentViewLabel').textContent = view === 'items' ? t.myItems : t.myTasks;
+            document.getElementById('viewDropdown').classList.remove('show');
+            renderList();
+        }
+
+        function toggleViewDropdown() {
+            document.getElementById('viewDropdown').classList.toggle('show');
+        }
+
+        function toggleContextMenu(e) {
+            e.stopPropagation();
+            document.getElementById('contextMenu').classList.toggle('show');
+        }
+
+        function toggleNotifications() {
+            document.getElementById('notifView').classList.add('active');
+        }
+
+        function closeOverlay(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function toggleFilterPanel() {
+            const panel = document.getElementById('filterPanel');
+            const arrow = document.getElementById('filterArrow');
+            state.filtersOpen = !state.filtersOpen;
+            panel.classList.toggle('open', state.filtersOpen);
+            arrow.classList.toggle('up', state.filtersOpen);
+        }
+
+        function toggleDropdown(id) {
+            document.querySelectorAll('.cw-dropdown').forEach(d => {
+                if (d.id !== id) d.classList.remove('show');
+            });
+            document.getElementById(id).classList.toggle('show');
+        }
+
+        function setSort(e, sortType) {
+            state.sort = sortType;
+            const element = e.currentTarget;
+            document.querySelectorAll('.cw-sort-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('sortLabel').textContent = element.textContent.trim();
+            document.getElementById('sortDropdown').classList.remove('show');
+            renderList();
+        }
+
+        function refreshList() {
+            const list = document.getElementById('listContainer');
+            list.innerHTML = `<div class="loading-row"><span class="spinner"></span>${escapeHtml(t.refreshing)}</div>`;
+            setTimeout(renderList, 800);
+            document.getElementById('contextMenu').classList.remove('show');
+        }
+
+        function openNewTicket() {
+            document.getElementById('newTicketView').classList.add('active');
+            document.getElementById('contextMenu').classList.remove('show');
+        }
+
+        function submitTicket(e) {
+            e.preventDefault();
+            const typeSel = document.getElementById('ntType');
+            const prioSel = document.getElementById('ntPriority');
+            const titleInput = document.getElementById('ntTitle');
+            const descInput = document.getElementById('ntDescription');
+
+            const type = typeSel.value;
+            const prioVal = parseInt(prioSel.value, 10);
+            // Map back to canonical English priority label so PRIO_KEY lookup works
+            const canonicalPrio = ['', '1 - Critical', '2 - High', '3 - Moderate', '4 - Low'][prioVal] || `${prioVal}`;
+            const title = titleInput.value;
+            const description = descInput.value;
+
+            const requestedBy = getRequestedByName();
+
+            const newItem = {
+                id: (type === 'Incident' ? 'INC' : 'REQ') + String(Math.floor(Math.random() * 1000000)).padStart(7, '0'),
+                type: type,
+                prio: prioVal,
+                prioLabel: canonicalPrio,
+                state: 'New',
+                title: title,
+                description: description,
+                updated: new Date().toISOString(),
+                created: new Date().toISOString(),
+                cat: 'items',
+                by: requestedBy
+            };
+
+            data.unshift(newItem);
+            document.getElementById('ticketForm').reset();
+            closeOverlay('newTicketView');
+
+            if (state.view !== 'items') switchMainView('items');
+            else renderList();
+        }
+
+        // Close menus on outside click
+        window.addEventListener('click', function (e) {
+            if (!e.target.closest('.view-select')) {
+                document.getElementById('viewDropdown').classList.remove('show');
+            }
+            if (!e.target.closest('.icon-actions') && !e.target.closest('.cw-context-menu')) {
+                document.getElementById('contextMenu').classList.remove('show');
+            }
+            if (!e.target.closest('.dropdown-wrapper')) {
+                document.querySelectorAll('.cw-dropdown').forEach(d => d.classList.remove('show'));
+            }
+        });
+
+        // --- Init ---
+        function init() {
+            applySBBrand();
+            applyTranslations();
+            renderList();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Expose handlers referenced by inline on* attributes in the mounted markup —
+        // this script runs inside `new Function(...)`, so top-level function
+        // declarations are local to that call and would otherwise be invisible
+        // to onclick="..." lookups, which resolve names against `window`.
+        window.toggleViewDropdown = toggleViewDropdown;
+        window.switchMainView = switchMainView;
+        window.toggleContextMenu = toggleContextMenu;
+        window.toggleNotifications = toggleNotifications;
+        window.closeOverlay = closeOverlay;
+        window.toggleFilterPanel = toggleFilterPanel;
+        window.toggleDropdown = toggleDropdown;
+        window.setSort = setSort;
+        window.refreshList = refreshList;
+        window.openNewTicket = openNewTicket;
+        window.submitTicket = submitTicket;
+        window.renderList = renderList;
