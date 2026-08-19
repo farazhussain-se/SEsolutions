@@ -828,6 +828,21 @@
   .journey-step-name { color: var(--text); font-weight: 600; }
   .journey-step-count { color: var(--text-light); font-weight: 700; white-space: nowrap; }
 
+  /* ============ TEAM TASKS (grouped by assignee) ============ */
+  .task-group { padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .task-group:last-child { border-bottom: none; }
+  .task-group-name { font-weight: 700; font-size: 13.5px; color: var(--text); margin-bottom: 5px; }
+  .task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-light);
+    padding: 3px 0;
+  }
+  .task-item-title { flex: 1; }
+
   /* ============ MANAGER NOTE (pay inquiries) ============ */
   .manager-note {
     font-size: 12px;
@@ -1476,6 +1491,32 @@
               <span>Individual Progress — I-9, Tax Forms &amp; LMS (Workday)</span>
             </h3>
             <div id="journeyRoster"></div>
+          </div>
+
+          <div class="side-card">
+            <h3>
+              <span class="accent-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </span>
+              <span>Team Tasks</span>
+            </h3>
+            <div class="journey-tracker-header" style="margin-bottom:10px;">
+              <div>
+                <div class="journey-meta" id="tasksMeta">Loading…</div>
+              </div>
+              <div class="journey-header-actions">
+                <span class="live-badge demo" id="tasksBadge">Demo Data</span>
+                <button class="journey-connect-btn" id="tasksConnectToggle" type="button">Connect Live</button>
+              </div>
+            </div>
+            <div class="journey-connect-form" id="tasksConnectForm">
+              <input class="policy-input" id="tasksCfgBase" placeholder="Branch API base (e.g. https://yourbranch.staffbase.rocks/api)">
+              <input class="policy-input" id="tasksCfgInstallId" placeholder="Tasks installation ID">
+              <input class="policy-input" id="tasksCfgToken" placeholder="API token" type="password">
+              <button class="action-btn" id="tasksConnectBtn" type="button" style="padding:8px 16px;">Connect</button>
+              <span class="journey-connect-note">Calls GET /tasks/{installationId}/task/search and groups results by assignee. Tasks and Journeys are separate Staffbase systems with no native cross-reference — this pairs them by person, in this UI only, not a real system link.</span>
+            </div>
+            <div id="tasksList"></div>
           </div>
 
           <div class="side-card accent danger">
@@ -2156,6 +2197,143 @@
     });
 
     renderRosterDemo();
+  })();
+
+  /* ============ TEAM TASKS: real Tasks API, grouped by assignee ============
+     Real endpoint (confirmed working): GET {base}/tasks/{installationId}/task/search
+     — requires at least one date filter despite the docs saying it's optional,
+     and does not support filtering by assignee server-side, so this fetches
+     open tasks and groups them client-side. Each unique assigneeId gets one
+     GET /users/{id} lookup (parallelized) to resolve a display name.
+     Tasks and Journeys are separate Staffbase plugins with no shared field —
+     the demo data below pairs them by using the same three names as the
+     Journey tracker's demo roster; live mode is honest that it's just
+     "open tasks assigned within the org," not a real cross-system link. */
+  (function () {
+    var DEMO_TASKS = [
+      { name: 'Jamie Cole', tasks: [
+        { title: 'Submit CPR/AED certification documentation', priority: 'Priority_1' }
+      ] },
+      { name: 'Priya Shah', tasks: [
+        { title: 'Shadow 2 opening shifts with Front Desk Lead', priority: 'Priority_3' }
+      ] },
+      { name: 'Chris Diaz', tasks: [
+        { title: 'Complete lifeguard certification renewal', priority: 'Priority_2' }
+      ] }
+    ];
+
+    var tasksMetaEl = document.getElementById('tasksMeta');
+    var tasksBadgeEl = document.getElementById('tasksBadge');
+    var tasksListEl = document.getElementById('tasksList');
+
+    function setTasksBadge(state, label) {
+      tasksBadgeEl.className = 'live-badge ' + state;
+      tasksBadgeEl.textContent = label;
+    }
+
+    function priorityPillClass(p) {
+      if (p === 'Priority_1') return 'required';
+      if (p === 'Priority_2') return 'warn';
+      return '';
+    }
+
+    function renderTaskGroups(groups) {
+      tasksListEl.innerHTML = '';
+      groups.forEach(function (g) {
+        var group = document.createElement('div');
+        group.className = 'task-group';
+        var nameEl = document.createElement('div');
+        nameEl.className = 'task-group-name';
+        nameEl.textContent = g.name;
+        group.appendChild(nameEl);
+        g.tasks.forEach(function (t) {
+          var item = document.createElement('div');
+          item.className = 'task-item';
+          item.innerHTML = '<span class="task-item-title"></span><span class="cw-pill"></span>';
+          item.querySelector('.task-item-title').textContent = t.title;
+          var pill = item.querySelector('.cw-pill');
+          var pc = priorityPillClass(t.priority);
+          if (pc) pill.classList.add(pc);
+          pill.textContent = t.status || 'Open';
+          group.appendChild(item);
+        });
+        tasksListEl.appendChild(group);
+      });
+    }
+
+    function renderTasksDemo() {
+      var total = DEMO_TASKS.reduce(function (n, g) { return n + g.tasks.length; }, 0);
+      tasksMetaEl.textContent = total + ' open tasks · sample data';
+      setTasksBadge('demo', 'Demo Data');
+      renderTaskGroups(DEMO_TASKS);
+    }
+
+    function connectTasksLive(cfg) {
+      var url = cfg.base.replace(/\/$/, '') + '/tasks/' + cfg.installId +
+        '/task/search?updateDateFrom=2020-01-01T00:00:00.000Z&status=OPEN&limit=50';
+      return fetch(url, { headers: { Authorization: 'Basic ' + cfg.token } })
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          var entries = data.entries || [];
+          if (!entries.length) throw new Error('no open tasks found');
+
+          var idsNeeded = {};
+          entries.forEach(function (t) {
+            (t.assigneeIds || []).forEach(function (id) { idsNeeded[id] = true; });
+          });
+          var ids = Object.keys(idsNeeded);
+
+          return Promise.all(ids.map(function (id) {
+            return fetch(cfg.base.replace(/\/$/, '') + '/users/' + id, {
+              headers: { Authorization: 'Basic ' + cfg.token }
+            }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+          })).then(function (users) {
+            var nameById = {};
+            users.forEach(function (u, i) {
+              nameById[ids[i]] = u ? ((u.firstName || '') + ' ' + (u.lastName || '')).trim() : 'Unassigned';
+            });
+
+            var byAssignee = {};
+            var order = [];
+            entries.forEach(function (t) {
+              var aid = (t.assigneeIds || [])[0];
+              var name = aid ? (nameById[aid] || 'Unknown') : 'Unassigned';
+              if (!byAssignee[name]) { byAssignee[name] = []; order.push(name); }
+              byAssignee[name].push({ title: t.title, priority: t.priority, status: t.status === 'OPEN' ? 'Open' : t.status });
+            });
+
+            var groups = order.map(function (name) { return { name: name, tasks: byAssignee[name] }; });
+            tasksMetaEl.textContent = entries.length + ' open tasks · ' + order.length + ' people';
+            setTasksBadge('live', 'Live');
+            renderTaskGroups(groups);
+          });
+        });
+    }
+
+    var toggle = document.getElementById('tasksConnectToggle');
+    var form = document.getElementById('tasksConnectForm');
+    toggle.addEventListener('click', function () {
+      form.classList.toggle('open');
+    });
+
+    document.getElementById('tasksConnectBtn').addEventListener('click', function () {
+      var cfg = {
+        base: document.getElementById('tasksCfgBase').value.trim(),
+        installId: document.getElementById('tasksCfgInstallId').value.trim(),
+        token: document.getElementById('tasksCfgToken').value.trim()
+      };
+      if (!cfg.base || !cfg.installId || !cfg.token) return;
+      tasksMetaEl.textContent = 'Connecting…';
+      connectTasksLive(cfg).catch(function () {
+        renderTasksDemo();
+        alert('Could not connect — check the base URL, installation ID, and token, then try again.');
+      });
+    });
+
+    renderTasksDemo();
   })();
 
   /* ============ ONE-CLICK PROMOTION LAUNCHER ============
