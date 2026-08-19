@@ -249,7 +249,14 @@
             margin-top: 10px; font-family: inherit; font-size: 14px;
         }
         .cw-btn-submit:hover { filter: brightness(0.95); }
-        .cw-btn-submit.cw-btn-create { background: var(--success); }
+        .cw-btn-submit.cw-btn-create {
+            background: var(--success);
+            font-size: 16px; font-weight: 700; padding: 14px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+        }
+        .cw-btn-submit.cw-btn-create:hover { filter: brightness(1.05); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45); }
+        .cw-btn-submit.cw-btn-create svg { width: 18px; height: 18px; }
         .cw-textarea {
             width: 100%; padding: 10px; resize: vertical; min-height: 90px;
             border: 1px solid var(--border); border-radius: 6px; font-size: 14px;

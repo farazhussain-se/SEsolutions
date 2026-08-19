@@ -259,7 +259,14 @@
             margin-top: 10px; font-family: inherit; font-size: 14px;
         }
         .cw-btn-submit:hover { filter: brightness(0.95); }
-        .cw-btn-submit.cw-btn-create { background: var(--success); }
+        .cw-btn-submit.cw-btn-create {
+            background: var(--success);
+            font-size: 16px; font-weight: 700; padding: 14px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+        }
+        .cw-btn-submit.cw-btn-create:hover { filter: brightness(1.05); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45); }
+        .cw-btn-submit.cw-btn-create svg { width: 18px; height: 18px; }
         .cw-textarea {
             width: 100%; padding: 10px; resize: vertical; min-height: 90px;
             border: 1px solid var(--border); border-radius: 6px; font-size: 14px;
@@ -295,6 +302,7 @@
             <symbol id="ic-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></symbol>
             <symbol id="ic-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></symbol>
             <symbol id="ic-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol>
+            <symbol id="ic-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></symbol>
         </defs>
     </svg>
 
@@ -451,7 +459,10 @@
                                   data-i18n-placeholder="descriptionPlaceholder"
                                   placeholder="From my PC Lenovo Thinkpad, I can't seem to connect to the office printer..."></textarea>
                     </div>
-                    <button type="submit" class="cw-btn-submit cw-btn-create" data-i18n="createTicketBtn">Create a ticket</button>
+                    <button type="submit" class="cw-btn-submit cw-btn-create">
+                        <svg class="icon"><use href="#ic-check-circle"/></svg>
+                        <span data-i18n="createTicketBtn">Create a ticket</span>
+                    </button>
                 </form>
             </div>
         </div>
