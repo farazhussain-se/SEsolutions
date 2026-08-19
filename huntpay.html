@@ -323,9 +323,9 @@
 
       <!-- Month Tabs -->
       <div class="month-tabs">
-        <button class="month-tab active" onclick="switchMonth(this)">March 2026</button>
-        <button class="month-tab" onclick="switchMonth(this)">February 2026</button>
-        <button class="month-tab" onclick="switchMonth(this)">January 2026</button>
+        <button class="month-tab active" onclick="switchMonth(this)">August 2026</button>
+        <button class="month-tab" onclick="switchMonth(this)">July 2026</button>
+        <button class="month-tab" onclick="switchMonth(this)">June 2026</button>
       </div>
       <div class="scrollbar-mock"></div>
 
@@ -350,7 +350,7 @@
       <!-- Payslips List -->
       <div class="payslips-title">Payslips</div>
       <div class="payslips-list">
-        <div class="payslip-row">
+        <div class="payslip-row" onclick="openPayslip('payslips/payslip-2026-08-31.pdf')">
           <div class="payslip-left">
             <div class="file-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -358,7 +358,7 @@
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
             </div>
-            <span class="payslip-date">03/31/2026</span>
+            <span class="payslip-date">08/31/2026</span>
           </div>
           <div class="payslip-right">
             <span class="payslip-amount">4,151.60</span>
@@ -370,7 +370,7 @@
           </div>
         </div>
 
-        <div class="payslip-row">
+        <div class="payslip-row" onclick="openPayslip('payslips/payslip-2026-08-15.pdf')">
           <div class="payslip-left">
             <div class="file-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -378,7 +378,7 @@
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
             </div>
-            <span class="payslip-date">03/15/2026</span>
+            <span class="payslip-date">08/15/2026</span>
           </div>
           <div class="payslip-right">
             <span class="payslip-amount">4,151.60</span>
@@ -411,6 +411,10 @@
   function switchMonth(el) {
     document.querySelectorAll('.month-tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
+  }
+
+  function openPayslip(url) {
+    window.open(url, '_blank');
   }
 </script>
 
