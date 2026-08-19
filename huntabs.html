@@ -34,7 +34,13 @@
       font-size: 22px;
       font-weight: 800;
       color: #111;
-      margin-bottom: 14px;
+      margin-bottom: 4px;
+    }
+
+    .user-greeting {
+      font-size: 13px;
+      color: #777;
+      margin-bottom: 16px;
     }
 
     .section-label {
@@ -153,6 +159,7 @@
       display: flex;
       gap: 8px;
       margin-bottom: 16px;
+      flex-wrap: wrap;
     }
 
     .tab {
@@ -225,14 +232,167 @@
       line-height: 1.55;
       max-width: 240px;
     }
+
+    /* ── Submitted request cards ── */
+    .request-item {
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+
+    .request-item:last-child { margin-bottom: 0; }
+
+    .request-item-reason {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 4px;
+    }
+
+    .request-item-dates {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .request-item-status {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #a06600;
+      background: #fdf1dc;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    /* ── New Request tab (Workday-style form) ── */
+    .request-card {
+      position: relative;
+      border: 1px solid #e8e8e8;
+      border-radius: 14px;
+      padding: 22px 20px 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    }
+
+    .request-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      line-height: 1;
+      color: #999;
+      cursor: pointer;
+    }
+
+    .request-close:hover { color: #444; }
+
+    .request-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .request-kicker {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: #8a8a8a;
+      margin-bottom: 4px;
+    }
+
+    /* ── Workday branding (top of widget) ── */
+    .widget-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .workday-wordmark {
+      font-size: 17px;
+      font-weight: 700;
+      color: #f7941e;
+      letter-spacing: -0.01em;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin: 14px 0 6px;
+    }
+
+    .form-label:first-of-type { margin-top: 0; }
+
+    .req { color: #e02020; }
+
+    .form-select,
+    .form-input,
+    .form-textarea {
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #111;
+      background: #fff;
+    }
+
+    .form-select:focus,
+    .form-input:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: #1e6fe0;
+    }
+
+    .form-textarea { resize: vertical; }
+
+    .date-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .date-row .form-label { margin-top: 14px; }
+
+    .submit-btn {
+      width: 100%;
+      margin-top: 20px;
+      background: #1e6fe0;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .submit-btn:hover { background: #1859b8; }
   </style>
 </head>
 <body>
 
 <div class="widget">
+  <div class="widget-brand">
+    <svg width="22" height="22" viewBox="0 0 40 40">
+      <path d="M20 5 A15 15 0 0 1 35 20" fill="none" stroke="#f7941e" stroke-width="5" stroke-linecap="round"/>
+      <path d="M20 5 A15 15 0 0 0 5 20" fill="none" stroke="#f7941e" stroke-width="5" stroke-linecap="round" opacity="0.35"/>
+    </svg>
+    <span class="workday-wordmark">workday.</span>
+  </div>
   <div class="widget-inner">
 
     <h2>My Absences</h2>
+    <p class="user-greeting">Hi, <span id="user-name">Team Member</span></p>
     <p class="section-label">Absence Balance</p>
 
     <!-- Balance Cards -->
@@ -252,7 +412,7 @@
         <div class="card-body">
           <div class="card-title">Paid Time Off</div>
           <div class="card-label">Balance</div>
-          <div class="card-value" id="pto-value">69.8 hours</div>
+          <div class="card-value" data-hours="69.8">69.8 hours</div>
         </div>
       </div>
 
@@ -271,7 +431,37 @@
         <div class="card-body">
           <div class="card-title">Floating Holiday</div>
           <div class="card-label">Balance</div>
-          <div class="card-value" id="fh-value">16 hours</div>
+          <div class="card-value" data-hours="16">16 hours</div>
+        </div>
+      </div>
+
+      <!-- Sick Leave -->
+      <div class="balance-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>
+            <path d="M12 8v6M9 11h6"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-title">Sick Leave</div>
+          <div class="card-label">Balance</div>
+          <div class="card-value" data-hours="24">24 hours</div>
+        </div>
+      </div>
+
+      <!-- Personal Days -->
+      <div class="balance-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-title">Personal Days</div>
+          <div class="card-label">Balance</div>
+          <div class="card-value" data-hours="8">8 hours</div>
         </div>
       </div>
     </div>
@@ -296,53 +486,160 @@
 
     <!-- Tabs -->
     <div class="tabs">
-      <button class="tab active" onclick="switchTab(this, 'requests')">Your Requests</button>
-      <button class="tab" onclick="switchTab(this, 'history')">History</button>
+      <button class="tab active" data-tab="requests" onclick="switchTab(this)">Your Requests</button>
+      <button class="tab" data-tab="history" onclick="switchTab(this)">History</button>
+      <button class="tab" data-tab="new" onclick="switchTab(this)">New Request</button>
     </div>
 
-    <!-- Empty State -->
-    <div class="empty-state">
-      <div class="empty-icon">
-        <div class="empty-icon-bg"></div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="16" rx="2"/>
-          <line x1="3" y1="9" x2="21" y2="9"/>
-          <line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="16" y1="2" x2="16" y2="6"/>
-          <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>
-        </svg>
+    <!-- Your Requests -->
+    <div class="tab-content" id="tab-requests">
+      <div class="empty-state" id="requests-empty">
+        <div class="empty-icon">
+          <div class="empty-icon-bg"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>
+          </svg>
+        </div>
+        <div class="empty-title">No Requests Yet</div>
+        <div class="empty-desc">Once you've submitted absence requests, you can view them here.</div>
       </div>
-      <div class="empty-title">No Requests Yet</div>
-      <div class="empty-desc">Once you've submitted absence requests, you can view them here.</div>
+      <div id="requests-list"></div>
+    </div>
+
+    <!-- History -->
+    <div class="tab-content" id="tab-history" style="display:none">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <div class="empty-icon-bg"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 7v5l3 3"/>
+          </svg>
+        </div>
+        <div class="empty-title">No History Yet</div>
+        <div class="empty-desc">Approved or declined requests will show up here.</div>
+      </div>
+    </div>
+
+    <!-- New Request (Workday-style leave request form) -->
+    <div class="tab-content" id="tab-new" style="display:none">
+      <div class="request-card">
+        <button class="request-close" onclick="cancelRequestForm()" aria-label="Close">&times;</button>
+        <div class="request-header">
+          <div class="request-kicker">Submit a paid leave request</div>
+        </div>
+
+        <form id="leave-form" onsubmit="submitLeaveRequest(event)">
+          <label class="form-label" for="reason">Reason <span class="req">*</span></label>
+          <select class="form-select" id="reason" required>
+            <option value="" disabled selected>Select a reason</option>
+            <option>Paid Time Off</option>
+            <option>Floating Holiday</option>
+            <option>Sick Leave</option>
+            <option>Personal Day</option>
+            <option>Bereavement Leave</option>
+            <option>Jury Duty</option>
+            <option>Unpaid Leave</option>
+            <option>Other</option>
+          </select>
+
+          <div class="date-row">
+            <div>
+              <label class="form-label" for="start-date">Start date <span class="req">*</span></label>
+              <input class="form-input" type="date" id="start-date" required>
+            </div>
+            <div>
+              <label class="form-label" for="end-date">End date <span class="req">*</span></label>
+              <input class="form-input" type="date" id="end-date" required>
+            </div>
+          </div>
+
+          <label class="form-label" for="note">Leave a note</label>
+          <textarea class="form-textarea" id="note" rows="3" placeholder="Write a note to your manager here"></textarea>
+
+          <button type="submit" class="submit-btn">Submit</button>
+        </form>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
   let showingDays = false;
-  const ptoHours = 69.8;
-  const fhHours = 16;
+
+  // Personalization: in Staffbase, a real custom widget receives the viewer's
+  // name via a configured widget attribute or merge field. This static demo
+  // checks for that same hook (a `data-username` attribute or `?firstName=`
+  // query param) and falls back to dummy data when neither is present.
+  function getCurrentUserName() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('firstName') || params.get('username') || document.body.getAttribute('data-username') || 'Jordan';
+  }
+
+  document.getElementById('user-name').textContent = getCurrentUserName();
 
   function toggleUnits() {
     showingDays = !showingDays;
-    const ptoEl = document.getElementById('pto-value');
-    const fhEl = document.getElementById('fh-value');
     const label = document.getElementById('toggle-label');
 
-    if (showingDays) {
-      ptoEl.textContent = (ptoHours / 8).toFixed(1) + ' days';
-      fhEl.textContent = (fhHours / 8).toFixed(1) + ' days';
-      label.textContent = 'Show balances in hours';
-    } else {
-      ptoEl.textContent = ptoHours + ' hours';
-      fhEl.textContent = fhHours + ' hours';
-      label.textContent = 'Show balances in days (8h/day)';
-    }
+    document.querySelectorAll('.card-value[data-hours]').forEach(el => {
+      const hours = parseFloat(el.getAttribute('data-hours'));
+      el.textContent = showingDays
+        ? (hours / 8).toFixed(1) + ' days'
+        : hours + ' hours';
+    });
+
+    label.textContent = showingDays ? 'Show balances in hours' : 'Show balances in days (8h/day)';
   }
 
-  function switchTab(el, tab) {
+  function switchTab(el) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
+
+    const tab = el.getAttribute('data-tab');
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    document.getElementById('tab-' + tab).style.display = '';
+  }
+
+  function goToTab(name) {
+    switchTab(document.querySelector('.tab[data-tab="' + name + '"]'));
+  }
+
+  function cancelRequestForm() {
+    document.getElementById('leave-form').reset();
+    goToTab('requests');
+  }
+
+  function submitLeaveRequest(event) {
+    event.preventDefault();
+
+    const reason = document.getElementById('reason').value;
+    const start = document.getElementById('start-date').value;
+    const end = document.getElementById('end-date').value;
+
+    const item = document.createElement('div');
+    item.className = 'request-item';
+    item.innerHTML = `
+      <div class="request-item-reason">${reason}</div>
+      <div class="request-item-dates">${formatDate(start)} – ${formatDate(end)}</div>
+      <span class="request-item-status">Pending Approval</span>
+    `;
+
+    document.getElementById('requests-list').prepend(item);
+    document.getElementById('requests-empty').style.display = 'none';
+
+    event.target.reset();
+    goToTab('requests');
+  }
+
+  function formatDate(value) {
+    if (!value) return '';
+    const [y, m, d] = value.split('-');
+    return `${m}/${d}/${y}`;
   }
 </script>
 
