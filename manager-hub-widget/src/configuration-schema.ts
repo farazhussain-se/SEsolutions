@@ -23,7 +23,7 @@ import { JSONSchema7 } from "json-schema";
  */
 export const configurationSchema: JSONSchema7 = {
   properties: {
-    apiToken: {
+    apitoken: {
       type: "string",
       title: "Staffbase API Token",
     },
@@ -31,7 +31,7 @@ export const configurationSchema: JSONSchema7 = {
 };
 
 export const uiSchema: UiSchema = {
-  apiToken: {
+  apitoken: {
     "ui:widget": "password",
     "ui:help": "One-time setup — paste the Branch API token here when installing this widget. The branch URL itself is detected automatically via the widget SDK.",
   },

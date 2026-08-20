@@ -21,10 +21,16 @@ import icon from "../resources/manager-hub-widget.svg";
 import pkg from '../package.json'
 
 /**
- * Define which attributes are handled by the widget. This should be also reflected in configuration schema
+ * Define which attributes are handled by the widget. This should be also reflected in configuration schema.
+ *
+ * NOTE: keep these all-lowercase, single-word names (like Staffbase's own
+ * examples use "apikey" rather than "apiKey"). Custom element attribute
+ * names get lowercased by the DOM when set, but `observedAttributes` is
+ * matched against the literal string — a camelCase name here silently never
+ * matches, so the widget never sees attribute updates from Studio.
  */
 const widgetAttributes: string[] = [
-  'apiToken',
+  'apitoken',
 ];
 
 /**
@@ -33,7 +39,7 @@ const widgetAttributes: string[] = [
  */
 const factory: BlockFactory = (BaseBlockClass, _widgetApi) => {
   /**
-   *  <manager-hub-widget api-token="..."></manager-hub-widget>
+   *  <manager-hub-widget apitoken="..."></manager-hub-widget>
    */
   return class ManagerHubWidgetBlock extends BaseBlockClass implements BaseBlock {
     private _root: ReactDOM.Root | null = null;

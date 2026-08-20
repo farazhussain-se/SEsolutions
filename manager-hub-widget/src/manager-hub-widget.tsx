@@ -20,11 +20,11 @@ import { initDashboard } from "./dashboard-logic";
 
 export interface ManagerHubWidgetProps {
   widgetApi: WidgetApi;
-  apiToken?: string;
+  apitoken?: string;
   contentLanguage?: string;
 }
 
-export const ManagerHubWidget = ({ widgetApi, apiToken }: ManagerHubWidgetProps): ReactElement => {
+export const ManagerHubWidget = ({ widgetApi, apitoken }: ManagerHubWidgetProps): ReactElement => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,18 +37,18 @@ export const ManagerHubWidget = ({ widgetApi, apiToken }: ManagerHubWidgetProps)
       container: containerRef.current,
       widgetApi,
       branchBase,
-      apiToken: apiToken || "",
+      apiToken: apitoken || "",
     });
-    // Re-runs if apiToken changes (e.g. Studio config updated) — the `key`
+    // Re-runs if apitoken changes (e.g. Studio config updated) — the `key`
     // below forces a fresh DOM tree each time so initDashboard never wires
     // duplicate event listeners onto stale markup.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiToken]);
+  }, [apitoken]);
 
   return (
     <div>
       <style>{dashboardCss}</style>
-      <div key={apiToken || "no-token"} ref={containerRef} dangerouslySetInnerHTML={{ __html: dashboardHtml }} />
+      <div key={apitoken || "no-token"} ref={containerRef} dangerouslySetInnerHTML={{ __html: dashboardHtml }} />
     </div>
   );
 };

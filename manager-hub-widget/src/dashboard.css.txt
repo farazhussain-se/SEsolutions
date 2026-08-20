@@ -1,5 +1,12 @@
 
-  :root {
+  /* Scoped to .hub (the widget's own top-level wrapper), not :root — this
+     widget renders directly into the real Staffbase page's DOM with no
+     Shadow DOM isolation. Defining these on :root would leak generic names
+     like --text/--bg/--border onto the whole host page, and would let any
+     same-named custom property the host page already defines on :root
+     silently win over ours (breaking contrast on the live page even though
+     everything looks correct in the isolated dev harness). */
+  .hub {
     --primary: var(--sb-brand, #2E2A24);
     --primary-end: #463F35;
     --success: #5B7A5E;
@@ -15,7 +22,7 @@
     --radius: 14px;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    .hub {
       --primary: var(--sb-brand, #8A6D45);
       --primary-end: #6B5636;
       --success: #7FA084;
