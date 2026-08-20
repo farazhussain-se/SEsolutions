@@ -445,6 +445,21 @@
     display: inline-flex;
     align-items: center;
   }
+
+  .collapse-chevron {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-light);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+  .side-card.collapsed .collapse-chevron {
+    transform: rotate(-90deg);
+  }
+  .side-card.collapsed > *:not(h3) {
+    display: none;
+  }
   .side-card h3 .accent-icon.danger { color: var(--danger); }
 
   .side-card p {

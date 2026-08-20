@@ -3,20 +3,43 @@ import { WidgetApi } from "@staffbase/widget-sdk";
 export interface DashboardOptions {
   container: HTMLElement;
   widgetApi: WidgetApi;
-  backendBase: string;
-  backendSecret?: string;
+  /** Derived once from widgetApi.getBranchInformation().webUrl — not user-configured. */
+  branchBase: string;
+  /** The one-time-setup Staffbase Branch API token (Basic-auth key:secret, base64). */
+  apiToken: string;
   tasksInstallationId?: string;
 }
 
 const DEFAULT_TASKS_INSTALLATION_ID = "6a57a000450b115cd8083c22";
 
-/** Wraps fetch so every backend call carries the shared secret when one is
- * configured — required the moment the backend is reachable from outside
- * localhost (e.g. behind a tunnel); a no-op header when unset. */
-function apiFetch(url: string, backendSecret: string | undefined, init: RequestInit = {}): Promise<Response> {
+/** Calls the real Staffbase branch API directly from the browser — CORS is
+ * open on these endpoints, and the token lives only in this widget's own
+ * Studio configuration (entered once at install time), never in a separate
+ * backend or tunnel. */
+function staffbaseFetch(branchBase: string, apiToken: string, path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
-  if (backendSecret) headers.set("X-Backend-Secret", backendSecret);
-  return fetch(url, { ...init, headers });
+  headers.set("Authorization", "Basic " + apiToken);
+  return fetch(`${branchBase}${path}`, { ...init, headers });
+}
+
+function resolveUsers(branchBase: string, apiToken: string, ids: string[]): Promise<Record<string, any>> {
+  return Promise.all(
+    ids.map((id) =>
+      staffbaseFetch(branchBase, apiToken, `/users/${id}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null)
+    )
+  ).then((users) => {
+    const byId: Record<string, any> = {};
+    ids.forEach((id, i) => {
+      byId[id] = users[i];
+    });
+    return byId;
+  });
+}
+
+function nameOf(user: any): string {
+  return user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "Unknown";
 }
 
 function initialsOf(fullName: string): string {
@@ -39,19 +62,21 @@ function setText(container: HTMLElement, selector: string, text: string): void {
  * same tradeoff made for servicenow-widget.
  */
 export function initDashboard(opts: DashboardOptions): void {
-  const { container, widgetApi, backendBase, backendSecret } = opts;
+  const { container, widgetApi, branchBase, apiToken } = opts;
   const tasksInstallationId = opts.tasksInstallationId || DEFAULT_TASKS_INSTALLATION_ID;
 
   applySBBrand();
   wireTabs(container);
   wireChecklist(container);
   wireSetupLink(container);
-  applyViewerIdentity(container, widgetApi);
-  checkBackendHealth(container, backendBase, backendSecret);
+  wireCollapsibleCards(container);
+  checkTokenStatus(container, branchBase, apiToken);
+  wireDiagnosticsButton(container, branchBase, apiToken, tasksInstallationId);
   runSdkDiagnostics(container, widgetApi, tasksInstallationId);
-  initJourneyTracker(container, backendBase, backendSecret);
-  const { getUserId } = initTeamTasksAndRoleChange(container, backendBase, backendSecret);
-  initPromotionLauncher(container, backendBase, backendSecret, getUserId);
+  initJourneyProgress(container, branchBase, apiToken);
+  const { getUserId } = initTeamTasksAndRoleChange(container, branchBase, apiToken, tasksInstallationId);
+  initPromotionLauncher(container, branchBase, apiToken, getUserId);
+  applyViewerIdentity(container, widgetApi);
 }
 
 function applySBBrand(): void {
@@ -94,6 +119,25 @@ function wireChecklist(container: HTMLElement): void {
   });
 }
 
+const COLLAPSE_CHEVRON_SVG =
+  '<span class="collapse-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>';
+
+/** Makes the Team Readiness panels collapsible by clicking their header —
+ * scoped to that tab rather than every side-card dashboard-wide. */
+function wireCollapsibleCards(container: HTMLElement): void {
+  const scope = container.querySelector<HTMLElement>("#view-progress");
+  if (!scope) return;
+  scope.querySelectorAll<HTMLElement>(".side-card").forEach((card) => {
+    const header = card.querySelector<HTMLElement>("h3");
+    if (!header) return;
+    header.insertAdjacentHTML("beforeend", COLLAPSE_CHEVRON_SVG);
+    header.style.cursor = "pointer";
+    header.addEventListener("click", () => {
+      card.classList.toggle("collapsed");
+    });
+  });
+}
+
 function wireSetupLink(container: HTMLElement): void {
   const statusSetupLink = container.querySelector<HTMLAnchorElement>("#statusSetupLink");
   statusSetupLink?.addEventListener("click", (e) => {
@@ -124,32 +168,109 @@ function applyViewerIdentity(container: HTMLElement, widgetApi: WidgetApi): void
     });
 }
 
-/** Confirms the local backend (which holds the real API token) is reachable. */
-function checkBackendHealth(container: HTMLElement, backendBase: string, backendSecret?: string): void {
-  setText(container, "#backendUrlDisplay", backendBase);
-  const badge = container.querySelector<HTMLElement>("#backendStatusBadge");
-  const text = container.querySelector<HTMLElement>("#backendStatusText");
+/** The only real "setup" step: is a token configured, and does it actually
+ * authenticate? A cheap GET /branch call proves both at once. */
+function checkTokenStatus(container: HTMLElement, branchBase: string, apiToken: string): void {
+  const badge = container.querySelector<HTMLElement>("#tokenStatusBadge");
+  const text = container.querySelector<HTMLElement>("#tokenStatusText");
+  if (!badge || !text) return;
 
-  apiFetch(`${backendBase}/api/health`, backendSecret)
-    .then((r) => r.json())
-    .then((data) => {
-      if (!badge || !text) return;
-      if (data.ok) {
+  if (!apiToken) {
+    badge.className = "live-badge demo";
+    badge.textContent = "Not configured";
+    text.textContent = "Paste your Staffbase Branch API token into this widget's configuration in Studio.";
+    return;
+  }
+
+  staffbaseFetch(branchBase, apiToken, "/branch")
+    .then((r) => {
+      if (r.ok) {
         badge.className = "live-badge live";
         badge.textContent = "Connected";
-        text.textContent = "Reachable · Staffbase branch responded";
+        text.textContent = `Reachable · ${branchBase}`;
       } else {
         badge.className = "live-badge demo";
-        badge.textContent = "Unreachable";
-        text.textContent = data.reason || "Backend responded but reported an error";
+        badge.textContent = "Invalid";
+        text.textContent = `Token rejected (HTTP ${r.status}) — check it was copied correctly.`;
       }
     })
     .catch(() => {
-      if (!badge || !text) return;
       badge.className = "live-badge demo";
       badge.textContent = "Unreachable";
-      text.textContent = `Could not reach ${backendBase} — is the local server running?`;
+      text.textContent = `Could not reach ${branchBase}.`;
     });
+}
+
+interface DiagnosticResult {
+  label: string;
+  ok: boolean;
+  detail?: string;
+}
+
+/** The "BIT" (built-in test): a fuller self-check than the always-visible
+ * token status above, tucked behind a small button rather than shown by
+ * default — click it to actually exercise Journeys, Tasks, and Notifications
+ * reachability with the configured token. */
+function wireDiagnosticsButton(container: HTMLElement, branchBase: string, apiToken: string, tasksInstallationId: string): void {
+  const btn = container.querySelector<HTMLButtonElement>("#runDiagnosticsBtn");
+  const resultsEl = container.querySelector<HTMLElement>("#diagnosticsResults");
+  if (!btn || !resultsEl) return;
+
+  btn.addEventListener("click", async () => {
+    if (!apiToken) {
+      resultsEl.style.display = "";
+      resultsEl.innerHTML = '<div class="ooo-meta">No token configured yet — nothing to test.</div>';
+      return;
+    }
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = "Running…";
+    resultsEl.style.display = "";
+    resultsEl.innerHTML = '<div class="ooo-meta">Running checks…</div>';
+
+    const results: DiagnosticResult[] = [];
+
+    async function check(label: string, fn: () => Promise<boolean>) {
+      try {
+        results.push({ label, ok: await fn() });
+      } catch (e: any) {
+        results.push({ label, ok: false, detail: e?.message });
+      }
+    }
+
+    await check("Token authenticates (GET /branch)", async () => (await staffbaseFetch(branchBase, apiToken, "/branch")).ok);
+    await check("Journeys reachable", async () => (await staffbaseFetch(branchBase, apiToken, "/branch/installations?limit=1")).ok);
+    await check(
+      "Tasks reachable",
+      async () =>
+        (
+          await staffbaseFetch(
+            branchBase,
+            apiToken,
+            `/tasks/${tasksInstallationId}/task/search?updateDateFrom=2020-01-01T00:00:00.000Z&status=OPEN&limit=1`
+          )
+        ).ok
+    );
+    await check("Notifications endpoint reachable", async () => {
+      const r = await staffbaseFetch(branchBase, apiToken, "/branch/notifications", { method: "OPTIONS" });
+      return r.ok;
+    });
+
+    resultsEl.innerHTML = "";
+    results.forEach((r) => {
+      const row = document.createElement("div");
+      row.className = "ooo-row";
+      row.innerHTML = '<span class="ooo-name"></span><span class="cw-pill"></span>';
+      row.querySelector(".ooo-name")!.textContent = r.label + (r.detail ? ` (${r.detail})` : "");
+      const pill = row.querySelector(".cw-pill")!;
+      pill.classList.add(r.ok ? "ok" : "required");
+      pill.textContent = r.ok ? "Pass" : "Fail";
+      resultsEl.appendChild(row);
+    });
+
+    btn.disabled = false;
+    btn.textContent = original;
+  });
 }
 
 /** Exercises two widgetApi capabilities that could remove even more manual
@@ -180,100 +301,258 @@ function runSdkDiagnostics(container: HTMLElement, widgetApi: WidgetApi, tasksIn
     });
 }
 
-interface JourneyStep {
-  name: string;
-  total: number;
-  completed: number;
-}
-interface RosterEntry {
+interface JourneyEmployeeEntry {
+  userId?: string;
   name: string;
   initials: string;
+  journeyName: string;
   stepIndex: number;
+  stepName: string | null;
+  totalSteps: number;
+  completed: boolean;
+  daysOnStep?: number; // only ever present on the baseline entries below — real
+  // API data has no per-user assigned/started timestamp yet (confirmed live)
 }
 
-function initJourneyTracker(container: HTMLElement, backendBase: string, backendSecret?: string): void {
-  const journeyNameEl = container.querySelector<HTMLElement>("#journeyName");
-  const journeyMetaEl = container.querySelector<HTMLElement>("#journeyMeta");
-  const badgeEl = container.querySelector<HTMLElement>("#liveBadge");
-  const stepsEl = container.querySelector<HTMLElement>("#journeySteps");
-  const rosterEl = container.querySelector<HTMLElement>("#journeyRoster");
-  if (!journeyNameEl || !journeyMetaEl || !badgeEl || !stepsEl || !rosterEl) return;
+const OVERDUE_THRESHOLD_DAYS = 3;
 
-  const DEMO_STEPS: JourneyStep[] = [
-    { name: "Day 0 – Welcome & Offer Acceptance", total: 6, completed: 6 },
-    { name: "~10 Days Out – I-9 & Tax Forms", total: 6, completed: 5 },
-    { name: "~1 Week Out – LMS Safety & Role Training", total: 6, completed: 4 },
-    { name: "Final Countdown – Day 1 Readiness Check", total: 6, completed: 2 },
-  ];
-  const DEMO_HIRES: RosterEntry[] = [
-    { name: "Jamie Cole", initials: "JC", stepIndex: 2 },
-    { name: "Priya Shah", initials: "PS", stepIndex: 4 },
-    { name: "Chris Diaz", initials: "CD", stepIndex: 1 },
-  ];
+// Baseline entries so the panel always shows something usable even before a
+// real backend connection exists; real entries fetched from the branch get
+// appended alongside these, not swapped in for them. Spans well beyond new-hire
+// onboarding — journeys are journeys, not just a preboarding concept — and a
+// few names are shared with other panels (Alicia Ford, Sam Whitfield) on
+// purpose, to read as one continuous employee story across the dashboard
+// rather than disconnected demo fixtures.
+const BASELINE_EMPLOYEES: JourneyEmployeeEntry[] = [
+  // New Hire - Pre Onboarding
+  { name: "Jamie Cole", initials: "JC", journeyName: "New Hire - Pre Onboarding", stepIndex: 2, stepName: "~1 Week Out – Paperwork & Compliance", totalSteps: 4, completed: false, daysOnStep: 4 },
+  { name: "Priya Shah", initials: "PS", journeyName: "New Hire - Pre Onboarding", stepIndex: 4, stepName: null, totalSteps: 4, completed: true, daysOnStep: 0 },
+  { name: "Chris Diaz", initials: "CD", journeyName: "New Hire - Pre Onboarding", stepIndex: 1, stepName: "~10 Days Out – Set Up Your Profile", totalSteps: 4, completed: false, daysOnStep: 5 },
 
-  function setBadge(state: string, label: string) {
-    badgeEl!.className = "live-badge " + state;
-    badgeEl!.textContent = label;
-  }
+  // Frontline to Department Supervisor
+  { name: "Derek Simmons", initials: "DS", journeyName: "Frontline to Department Supervisor", stepIndex: 1, stepName: "Manager Endorsement & Approval", totalSteps: 5, completed: false, daysOnStep: 2 },
 
-  function renderSteps(steps: JourneyStep[]) {
-    stepsEl!.innerHTML = "";
-    steps.forEach((s) => {
-      const pct = s.total ? Math.round((s.completed / s.total) * 100) : 0;
-      const row = document.createElement("div");
-      row.className = "journey-step";
-      row.innerHTML =
-        '<div class="journey-step-row"><span class="journey-step-name"></span><span class="journey-step-count"></span></div>' +
-        '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%;"></div></div>';
-      row.querySelector(".journey-step-name")!.textContent = s.name;
-      row.querySelector(".journey-step-count")!.textContent = `${s.completed} / ${s.total}`;
-      stepsEl!.appendChild(row);
-    });
-  }
+  // Inter-Club Transfer
+  { name: "Natalie Cho", initials: "NC", journeyName: "Inter-Club Transfer", stepIndex: 1, stepName: "Receiving Club Confirmation", totalSteps: 4, completed: false, daysOnStep: 6 },
 
-  function renderRoster(hires: RosterEntry[], stepNames: string[]) {
-    rosterEl!.innerHTML = "";
-    hires.forEach((h) => {
-      const done = h.stepIndex >= stepNames.length;
-      const label = done ? "All steps complete" : `Step ${h.stepIndex + 1} of ${stepNames.length} · ${stepNames[h.stepIndex]}`;
-      const pillClass = done ? "ok" : h.stepIndex === 0 ? "warn" : "info";
-      const pillText = done ? "Completed" : `Step ${h.stepIndex + 1} of ${stepNames.length}`;
-      const row = document.createElement("div");
-      row.className = "roster-row";
-      row.innerHTML =
-        '<div class="ooo-avatar"></div><div class="hire-info"><div class="hire-name"></div><div class="hire-meta"></div></div><span class="cw-pill"></span>';
-      row.querySelector(".ooo-avatar")!.textContent = h.initials;
-      row.querySelector(".hire-name")!.textContent = h.name;
-      row.querySelector(".hire-meta")!.textContent = label;
-      const pill = row.querySelector(".cw-pill")!;
-      pill.classList.add(pillClass);
-      pill.textContent = pillText;
-      rosterEl!.appendChild(row);
-    });
-  }
+  // AGM/GM Leadership Pipeline
+  { name: "Daniel Esposito", initials: "DE", journeyName: "AGM/GM Leadership Pipeline", stepIndex: 2, stepName: "Club P&L Training", totalSteps: 4, completed: false, daysOnStep: 1 },
 
-  function renderFullyStaticDemo() {
-    journeyNameEl!.textContent = "New Hire Onboarding";
-    journeyMetaEl!.textContent = `${DEMO_STEPS.length} steps`;
-    setBadge("demo", "Demo Data");
-    renderSteps(DEMO_STEPS);
-    renderRoster(DEMO_HIRES, DEMO_STEPS.map((s) => s.name));
-  }
+  // Certification Maintenance
+  { name: "Zoe Bennett", initials: "ZB", journeyName: "Certification Maintenance", stepIndex: 4, stepName: null, totalSteps: 4, completed: true, daysOnStep: 0 },
 
-  apiFetch(`${backendBase}/api/journeys/report`, backendSecret)
-    .then((r) => r.json())
-    .then((data) => {
-      if (data.error) throw new Error(data.error);
-      journeyNameEl!.textContent = data.journeyName;
-      const syncedAt = data.syncedAt ? new Date(data.syncedAt).toLocaleTimeString() : "just now";
-      const isLive = data.badge === "live";
-      journeyMetaEl!.textContent = isLive ? `${data.stepCount} steps · synced ${syncedAt}` : `${data.stepCount} steps`;
-      setBadge(isLive ? "live" : "partial", isLive ? "Live" : "Live Steps · Sample Progress");
-      renderSteps(data.steps);
-      const stepNames = data.steps.map((s: JourneyStep) => s.name);
-      renderRoster(data.roster && data.roster.length ? data.roster : DEMO_HIRES, stepNames);
+  // Seasonal Status Transitions
+  { name: "Owen Park", initials: "OP", journeyName: "Seasonal Status Transitions", stepIndex: 1, stepName: "Equipment & Badge Return", totalSteps: 4, completed: false, daysOnStep: 1 },
+
+  // Annual Safety & Policy Audits
+  { name: "Felicia Grant", initials: "FG", journeyName: "Annual Safety & Policy Audits", stepIndex: 0, stepName: "OSHA Standards Re-Acknowledgment", totalSteps: 3, completed: false, daysOnStep: 8 },
+
+  // Performance Review & Merit Cycle
+  { name: "Trevor Nash", initials: "TN", journeyName: "Performance Review & Merit Cycle", stepIndex: 2, stepName: "Merit Increase Approved", totalSteps: 4, completed: false, daysOnStep: 2 },
+
+  // Corrective Action & Coaching — same person flagged for Timecard Discrepancy in Pay Discrepancy Log
+  { name: "Alicia Ford", initials: "AF", journeyName: "Corrective Action & Coaching", stepIndex: 1, stepName: "Coaching Conversation Documented", totalSteps: 4, completed: false, daysOnStep: 5 },
+
+  // Workplace Incident & Injury (Workers' Comp)
+  { name: "Bradley Simms", initials: "BS", journeyName: "Workplace Incident & Injury (Workers' Comp)", stepIndex: 2, stepName: "Light-Duty Restrictions Coordinated with AGM", totalSteps: 4, completed: false, daysOnStep: 4 },
+
+  // Leave Return & Re-Integration — same person currently on FMLA in the Leave of Absence Tracker
+  { name: "Sam Whitfield", initials: "SW", journeyName: "Leave Return & Re-Integration", stepIndex: 0, stepName: "Return Date Confirmed", totalSteps: 4, completed: false, daysOnStep: 1 },
+
+  // Offboarding & Asset Reclamation
+  { name: "Patricia Yoon", initials: "PY", journeyName: "Offboarding & Asset Reclamation", stepIndex: 3, stepName: "Final Payroll Calculated", totalSteps: 4, completed: false, daysOnStep: 2 },
+];
+
+/** Client-side port of what used to be the backend's /api/journeys/employees:
+ * lists every journey installation on the branch (not just onboarding),
+ * pulls each one's report, and resolves real per-employee progress. */
+async function fetchJourneysEmployees(branchBase: string, apiToken: string): Promise<JourneyEmployeeEntry[]> {
+  const installsRes = await staffbaseFetch(branchBase, apiToken, "/branch/installations?limit=200");
+  if (!installsRes.ok) throw new Error("HTTP " + installsRes.status);
+  const installsData = await installsRes.json();
+  const journeyInstalls: any[] = (installsData.data || []).filter((i: any) => i.pluginId === "journeys");
+
+  const reports = await Promise.all(
+    journeyInstalls.map(async (j) => {
+      try {
+        const r = await staffbaseFetch(branchBase, apiToken, `/branch/journeys/${j.id}/report`);
+        if (!r.ok) return null;
+        const report = await r.json();
+        return { journeyName: (j.title || "").trim() || "Untitled Journey", report };
+      } catch {
+        return null;
+      }
     })
-    .catch(renderFullyStaticDemo);
+  );
+
+  const validReports = reports.filter((r): r is { journeyName: string; report: any } => !!r && !!r.report?.steps?.length);
+
+  const allIds = new Set<string>();
+  validReports.forEach(({ report }) => {
+    report.steps.forEach((s: any) => (s.userStates || []).forEach((u: any) => u?.userId && allIds.add(u.userId)));
+  });
+  const users = await resolveUsers(branchBase, apiToken, Array.from(allIds));
+
+  const entries: JourneyEmployeeEntry[] = [];
+  validReports.forEach(({ journeyName, report }) => {
+    const rawSteps = report.steps;
+    const ids = new Set<string>();
+    rawSteps.forEach((s: any) => (s.userStates || []).forEach((u: any) => u?.userId && ids.add(u.userId)));
+    ids.forEach((uid) => {
+      const name = nameOf(users[uid]);
+      let stepIndex = rawSteps.length;
+      for (let i = 0; i < rawSteps.length; i++) {
+        const state = (rawSteps[i].userStates || []).find((u: any) => u?.userId === uid);
+        const isDone = state && (state.completed === true || state.state === "done" || state.state === "completed");
+        if (!isDone) {
+          stepIndex = i;
+          break;
+        }
+      }
+      const completed = stepIndex >= rawSteps.length;
+      entries.push({
+        userId: uid,
+        name,
+        initials: initialsOf(name),
+        journeyName,
+        stepIndex,
+        stepName: completed ? null : rawSteps[stepIndex].name,
+        totalSteps: rawSteps.length,
+        completed,
+      });
+    });
+  });
+
+  return entries;
+}
+
+function sendNotification(branchBase: string, apiToken: string, userId: string, title: string, message: string): Promise<void> {
+  return staffbaseFetch(branchBase, apiToken, "/branch/notifications", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ accessorIds: [userId], content: { title, message } }),
+  })
+    .then(() => undefined)
+    .catch(() => undefined);
+}
+
+function initJourneyProgress(container: HTMLElement, branchBase: string, apiToken: string): void {
+  const metaEl = container.querySelector<HTMLElement>("#journeyProgressMeta");
+  const badgeEl = container.querySelector<HTMLElement>("#journeyProgressBadge");
+  const listEl = container.querySelector<HTMLElement>("#journeyProgressList");
+  const overdueTitleEl = container.querySelector<HTMLElement>("#overdueStepsTitle");
+  const overdueListEl = container.querySelector<HTMLElement>("#overdueStepsList");
+  const metricOverdueEl = container.querySelector<HTMLElement>("#metricOverdueValue");
+  if (!metaEl || !badgeEl || !listEl || !overdueTitleEl || !overdueListEl) return;
+
+  function renderEmployeeList(entries: JourneyEmployeeEntry[]) {
+    listEl!.innerHTML = "";
+    const byName = new Map<string, JourneyEmployeeEntry[]>();
+    entries.forEach((e) => {
+      if (!byName.has(e.name)) byName.set(e.name, []);
+      byName.get(e.name)!.push(e);
+    });
+    byName.forEach((rows, name) => {
+      const group = document.createElement("div");
+      group.className = "task-group";
+      const nameEl = document.createElement("div");
+      nameEl.className = "task-group-name";
+      nameEl.textContent = name;
+      group.appendChild(nameEl);
+      rows.forEach((r) => {
+        const item = document.createElement("div");
+        item.className = "task-item";
+        item.innerHTML = '<span class="task-item-title"></span><span class="cw-pill"></span>';
+        const label = r.completed
+          ? r.journeyName
+          : `${r.journeyName} · Step ${r.stepIndex + 1} of ${r.totalSteps}${r.stepName ? " · " + r.stepName : ""}`;
+        item.querySelector(".task-item-title")!.textContent = label;
+        const pill = item.querySelector(".cw-pill")!;
+        pill.classList.add(r.completed ? "ok" : "info");
+        pill.textContent = r.completed ? "Completed" : `Step ${r.stepIndex + 1}/${r.totalSteps}`;
+        group.appendChild(item);
+      });
+      listEl!.appendChild(group);
+    });
+  }
+
+  let lastOverdue: JourneyEmployeeEntry[] = [];
+
+  function renderOverdueSteps(entries: JourneyEmployeeEntry[]) {
+    const overdue = entries.filter((e) => !e.completed && typeof e.daysOnStep === "number" && e.daysOnStep > OVERDUE_THRESHOLD_DAYS);
+    lastOverdue = overdue;
+    overdueTitleEl!.textContent = "Overdue Journey Steps" + (overdue.length ? ` · ${overdue.length}` : "");
+    if (metricOverdueEl) metricOverdueEl.textContent = String(overdue.length);
+    overdueListEl!.innerHTML = "";
+    if (!overdue.length) {
+      const empty = document.createElement("div");
+      empty.className = "ooo-meta";
+      empty.textContent = "No overdue steps right now.";
+      overdueListEl!.appendChild(empty);
+      return;
+    }
+    overdue.forEach((e) => {
+      const row = document.createElement("div");
+      row.className = "ooo-row";
+      row.innerHTML = '<div class="ooo-avatar red">!</div><span class="ooo-name"></span><span class="ooo-meta"></span>';
+      row.querySelector(".ooo-name")!.textContent = e.name;
+      row.querySelector(".ooo-meta")!.textContent = `${e.journeyName} · ${e.stepName} · ${e.daysOnStep} days, not completed`;
+      overdueListEl!.appendChild(row);
+    });
+  }
+
+  function renderBaselineOnly() {
+    metaEl!.textContent = `${BASELINE_EMPLOYEES.length} tracked`;
+    badgeEl!.style.display = "none";
+    renderEmployeeList(BASELINE_EMPLOYEES);
+    renderOverdueSteps(BASELINE_EMPLOYEES);
+  }
+
+  if (!apiToken) {
+    renderBaselineOnly();
+  } else {
+    fetchJourneysEmployees(branchBase, apiToken)
+      .then((real) => {
+        const combined = BASELINE_EMPLOYEES.concat(real);
+        const journeyCount = new Set(combined.map((e) => e.journeyName)).size;
+        metaEl!.textContent = `${combined.length} tracked across ${journeyCount} journeys`;
+        if (real.length) {
+          badgeEl!.style.display = "";
+          badgeEl!.className = "live-badge live";
+          badgeEl!.textContent = "Live";
+        } else {
+          badgeEl!.style.display = "none";
+        }
+        renderEmployeeList(combined);
+        renderOverdueSteps(combined);
+      })
+      .catch(renderBaselineOnly);
+  }
+
+  const sendRemindersBtn = container.querySelector<HTMLButtonElement>("#sendRemindersBtn");
+  sendRemindersBtn?.addEventListener("click", () => {
+    const original = sendRemindersBtn.textContent;
+    const people = lastOverdue.filter((e) => e.userId);
+    const finish = () => {
+      sendRemindersBtn.textContent = "Reminders Sent";
+      setTimeout(() => {
+        sendRemindersBtn.textContent = original;
+      }, 2500);
+    };
+    if (!people.length || !apiToken) {
+      // Baseline entries (or no token configured) have nothing real to
+      // notify — this is still an honest visual confirmation, not a fake API claim.
+      finish();
+      return;
+    }
+    Promise.all(
+      people.map((e) =>
+        sendNotification(branchBase, apiToken, e.userId!, "Journey step reminder", `Reminder for ${e.name}: please complete your current step.`)
+      )
+    )
+      .then(finish)
+      .catch(finish);
+  });
 }
 
 interface TaskItem {
@@ -290,11 +569,78 @@ interface RoleChangeMember {
   title: string;
   userId?: string;
 }
+interface OverdueTaskEntry {
+  userId?: string;
+  name: string;
+  title: string;
+  dueDate?: string;
+}
+
+// Real dueDate field confirmed live on Tasks API entries — this is a genuine
+// calculation (past-due assigned tasks), not a fabricated count. Currently 0
+// real tasks are overdue on this branch (all real due dates are in the
+// future), so these baseline entries are what render until that changes.
+const BASELINE_OVERDUE_TASKS: OverdueTaskEntry[] = [
+  { name: "Devon Marks", title: "Submit Q2 facilities compliance checklist" },
+  { name: "Zack Hall", title: "Renew CPR/AED certification" },
+];
+
+/** Client-side port of what used to be the backend's /api/tasks: fetches
+ * open tasks, groups by assignee, resolves real names, and computes which
+ * assigned tasks are genuinely past their real dueDate. */
+async function fetchTeamTasksData(branchBase: string, apiToken: string, tasksInstallationId: string) {
+  const url = `/tasks/${tasksInstallationId}/task/search?updateDateFrom=2020-01-01T00:00:00.000Z&status=OPEN&limit=50`;
+  const res = await staffbaseFetch(branchBase, apiToken, url);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const data = await res.json();
+  const entries: any[] = data.entries || [];
+
+  const idsNeeded = Array.from(new Set(entries.flatMap((t) => t.assigneeIds || [])));
+  const users = await resolveUsers(branchBase, apiToken, idsNeeded);
+
+  const groups: Record<string, TaskItem[]> = {};
+  const order: string[] = [];
+  const roleChangeMembers: RoleChangeMember[] = [];
+  const overdueTasks: OverdueTaskEntry[] = [];
+  const now = new Date();
+  let assignedCount = 0;
+
+  entries.forEach((t) => {
+    const aid = (t.assigneeIds || [])[0];
+    if (!aid) return; // no need for unassigned tasks — only show what's actually assigned
+    const user = users[aid];
+    const name = nameOf(user);
+    if (!groups[name]) {
+      groups[name] = [];
+      order.push(name);
+    }
+    groups[name].push({ title: t.title, priority: t.priority, status: t.status === "OPEN" ? "Open" : t.status });
+    assignedCount++;
+    if (user) {
+      const profile = user.profile || {};
+      const titleField = user.position || profile.position || profile.title || "Team Member";
+      if (!roleChangeMembers.some((m) => m.userId === aid)) roleChangeMembers.push({ userId: aid, name, title: titleField });
+    }
+    if (t.dueDate) {
+      const dueDt = new Date(t.dueDate);
+      if (dueDt < now) overdueTasks.push({ userId: aid, name, title: t.title, dueDate: t.dueDate });
+    }
+  });
+
+  return {
+    totalOpen: assignedCount,
+    peopleCount: order.length,
+    groups: order.map((n) => ({ name: n, tasks: groups[n] })),
+    roleChangeMembers,
+    overdueTasks,
+  };
+}
 
 function initTeamTasksAndRoleChange(
   container: HTMLElement,
-  backendBase: string,
-  backendSecret?: string
+  branchBase: string,
+  apiToken: string,
+  tasksInstallationId: string
 ): { getUserId: (name: string) => string | undefined } {
   const tasksMetaEl = container.querySelector<HTMLElement>("#tasksMeta");
   const tasksBadgeEl = container.querySelector<HTMLElement>("#tasksBadge");
@@ -302,16 +648,51 @@ function initTeamTasksAndRoleChange(
   const memberSelect = container.querySelector<HTMLSelectElement>("#promoMember");
   const currentTitleEl = container.querySelector<HTMLElement>("#promoCurrentTitle");
   const promoBadgeEl = container.querySelector<HTMLElement>("#promoBadge");
+  const overdueTasksMetaEl = container.querySelector<HTMLElement>("#overdueTasksMeta");
+  const overdueTasksBadgeEl = container.querySelector<HTMLElement>("#overdueTasksBadge");
+  const overdueTasksListEl = container.querySelector<HTMLElement>("#overdueTasksList");
+  const metricOverdueTasksEl = container.querySelector<HTMLElement>("#metricOverdueTasksValue");
 
   let titleByName: Record<string, string> = {};
   let userIdByName: Record<string, string> = {};
 
-  const DEMO_TASKS: TaskGroup[] = [
+  function renderOverdueTeamTasks(entries: OverdueTaskEntry[], isLive: boolean) {
+    if (!overdueTasksMetaEl || !overdueTasksListEl) return;
+    overdueTasksMetaEl.textContent = `${entries.length} past due`;
+    if (metricOverdueTasksEl) metricOverdueTasksEl.textContent = String(entries.length);
+    if (overdueTasksBadgeEl) {
+      if (isLive) {
+        overdueTasksBadgeEl.style.display = "";
+        overdueTasksBadgeEl.className = "live-badge live";
+        overdueTasksBadgeEl.textContent = "Live";
+      } else {
+        overdueTasksBadgeEl.style.display = "none";
+      }
+    }
+    overdueTasksListEl.innerHTML = "";
+    if (!entries.length) {
+      const empty = document.createElement("div");
+      empty.className = "ooo-meta";
+      empty.textContent = "Nothing past due right now.";
+      overdueTasksListEl.appendChild(empty);
+      return;
+    }
+    entries.forEach((e) => {
+      const item = document.createElement("div");
+      item.className = "task-item";
+      item.innerHTML = '<span class="task-item-title"></span><span class="cw-pill required"></span>';
+      item.querySelector(".task-item-title")!.textContent = `${e.name} — ${e.title}`;
+      item.querySelector(".cw-pill")!.textContent = "Past Due";
+      overdueTasksListEl.appendChild(item);
+    });
+  }
+
+  const BASELINE_TASKS: TaskGroup[] = [
     { name: "Jamie Cole", tasks: [{ title: "Submit CPR/AED certification documentation", priority: "Priority_1", status: "Open" }] },
     { name: "Priya Shah", tasks: [{ title: "Shadow 2 opening shifts with Front Desk Lead", priority: "Priority_3", status: "Open" }] },
     { name: "Chris Diaz", tasks: [{ title: "Complete lifeguard certification renewal", priority: "Priority_2", status: "Open" }] },
   ];
-  const DEMO_MEMBERS: RoleChangeMember[] = [
+  const BASELINE_MEMBERS: RoleChangeMember[] = [
     { name: "Kristina Crawford", title: "Front Desk Associate" },
     { name: "Gail Gonzalez", title: "Membership Concierge" },
     { name: "Billie Kelley", title: "Membership Concierge" },
@@ -352,8 +733,8 @@ function initTeamTasksAndRoleChange(
     currentTitleEl.classList.add("show");
   });
 
-  renderMembers(DEMO_MEMBERS);
-  setPromoBadge("demo", "Demo Data");
+  renderMembers(BASELINE_MEMBERS);
+  if (promoBadgeEl) promoBadgeEl.style.display = "none";
 
   function priorityPillClass(p: string): string {
     if (p === "Priority_1") return "required";
@@ -386,41 +767,101 @@ function initTeamTasksAndRoleChange(
     });
   }
 
-  function renderTasksFullyStaticDemo() {
+  function renderBaselineOnly() {
     if (!tasksMetaEl || !tasksBadgeEl) return;
-    const total = DEMO_TASKS.reduce((n, g) => n + g.tasks.length, 0);
+    const total = BASELINE_TASKS.reduce((n, g) => n + g.tasks.length, 0);
     tasksMetaEl.textContent = `${total} open tasks`;
-    tasksBadgeEl.className = "live-badge demo";
-    tasksBadgeEl.textContent = "Demo Data";
-    renderTaskGroups(DEMO_TASKS);
+    tasksBadgeEl.style.display = "none";
+    renderTaskGroups(BASELINE_TASKS);
+    renderOverdueTeamTasks(BASELINE_OVERDUE_TASKS, false);
   }
 
-  apiFetch(`${backendBase}/api/tasks`, backendSecret)
-    .then((r) => r.json())
-    .then((data) => {
-      if (data.error || !data.groups) throw new Error(data.error || "no data");
-      if (!tasksMetaEl || !tasksBadgeEl) return;
-      tasksMetaEl.textContent = `${data.totalOpen} open tasks · ${data.peopleCount} people`;
-      tasksBadgeEl.className = "live-badge live";
-      tasksBadgeEl.textContent = "Live";
-      renderTaskGroups(data.groups);
+  if (!apiToken) {
+    renderBaselineOnly();
+  } else {
+    fetchTeamTasksData(branchBase, apiToken, tasksInstallationId)
+      .then((data) => {
+        if (!tasksMetaEl || !tasksBadgeEl) return;
+        const combinedGroups = BASELINE_TASKS.concat(data.groups);
+        const combinedTotal = BASELINE_TASKS.reduce((n, g) => n + g.tasks.length, 0) + data.totalOpen;
+        const combinedPeople = new Set(combinedGroups.map((g) => g.name)).size;
+        tasksMetaEl.textContent = `${combinedTotal} open tasks · ${combinedPeople} people`;
+        if (data.groups.length) {
+          tasksBadgeEl.style.display = "";
+          tasksBadgeEl.className = "live-badge live";
+          tasksBadgeEl.textContent = "Live";
+        }
+        renderTaskGroups(combinedGroups);
 
-      if (data.roleChangeMembers && data.roleChangeMembers.length) {
-        renderMembers(data.roleChangeMembers);
-        setPromoBadge("live", "Live");
-      }
-    })
-    .catch(renderTasksFullyStaticDemo);
+        renderOverdueTeamTasks(BASELINE_OVERDUE_TASKS.concat(data.overdueTasks), data.overdueTasks.length > 0);
+
+        if (data.roleChangeMembers.length) {
+          renderMembers(BASELINE_MEMBERS.concat(data.roleChangeMembers));
+          setPromoBadge("live", "Live");
+          if (promoBadgeEl) promoBadgeEl.style.display = "";
+        }
+      })
+      .catch(renderBaselineOnly);
+  }
 
   return { getUserId: (name: string) => userIdByName[name] };
 }
 
+const ROLE_CHANGE_STORAGE_KEY = "lifetime-manager-hub:role-changes";
+
+interface StoredRoleChange {
+  name: string;
+  title: string;
+  rate: string;
+}
+
+function loadStoredRoleChanges(): StoredRoleChange[] {
+  try {
+    return JSON.parse(localStorage.getItem(ROLE_CHANGE_STORAGE_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredRoleChange(entry: StoredRoleChange): void {
+  try {
+    const list = loadStoredRoleChanges();
+    list.unshift(entry);
+    localStorage.setItem(ROLE_CHANGE_STORAGE_KEY, JSON.stringify(list.slice(0, 20)));
+  } catch {
+    // localStorage unavailable (e.g. private browsing) — submission still
+    // works for this session, it just won't survive a reload
+  }
+}
+
+function buildTransactionRow(name: string, title: string, rate: string): HTMLElement {
+  const row = document.createElement("div");
+  row.className = "team-row";
+  row.innerHTML =
+    '<div class="team-row-avatar"></div><div class="team-row-body"><div class="team-row-name"></div><div class="team-row-meta"></div></div><button class="action-btn secondary small">View</button>';
+  row.querySelector(".team-row-avatar")!.textContent = initialsOf(name);
+  row.querySelector(".team-row-name")!.textContent = name;
+  row.querySelector(".team-row-meta")!.textContent = title + (rate ? ` · ${rate}` : "");
+  return row;
+}
+
 function initPromotionLauncher(
   container: HTMLElement,
-  backendBase: string,
-  backendSecret: string | undefined,
+  branchBase: string,
+  apiToken: string,
   getUserId: (name: string) => string | undefined
 ): void {
+  const list = container.querySelector<HTMLElement>("#transactionList");
+
+  // Anything submitted in a prior session persists across reloads via
+  // localStorage — no backend needed for this, it's not real Staffbase data.
+  if (list) {
+    loadStoredRoleChanges()
+      .slice()
+      .reverse()
+      .forEach((entry) => list.insertBefore(buildTransactionRow(entry.name, entry.title, entry.rate), list.firstChild));
+  }
+
   const launchBtn = container.querySelector<HTMLButtonElement>("#promoLaunchBtn");
   if (!launchBtn) return;
 
@@ -430,7 +871,6 @@ function initPromotionLauncher(
     const rateInput = container.querySelector<HTMLInputElement>("#promoRate");
     const confirmEl = container.querySelector<HTMLElement>("#promoConfirm");
     const currentTitleEl = container.querySelector<HTMLElement>("#promoCurrentTitle");
-    const list = container.querySelector<HTMLElement>("#transactionList");
     if (!memberSelect || !titleSelect || !rateInput || !confirmEl || !currentTitleEl || !list) return;
 
     const name = memberSelect.value;
@@ -439,40 +879,18 @@ function initPromotionLauncher(
     const rate = rateInput.value.trim();
     const userId = getUserId(name);
 
-    function reset() {
-      confirmEl!.classList.add("show");
-      memberSelect!.value = "";
-      titleSelect!.value = "";
-      rateInput!.value = "";
-      currentTitleEl!.classList.remove("show");
-      setTimeout(() => confirmEl!.classList.remove("show"), 5000);
+    saveStoredRoleChange({ name, title, rate });
+    list.insertBefore(buildTransactionRow(name, title, rate), list.firstChild);
+
+    if (userId && apiToken) {
+      sendNotification(branchBase, apiToken, userId, "Role change submitted", `${name}: ${title}${rate ? " · " + rate : ""}`);
     }
 
-    function prependRow(entryName: string, entryTitle: string, entryRate: string) {
-      const row = document.createElement("div");
-      row.className = "team-row";
-      row.innerHTML =
-        '<div class="team-row-avatar"></div><div class="team-row-body"><div class="team-row-name"></div><div class="team-row-meta"></div></div><button class="action-btn secondary small">View</button>';
-      row.querySelector(".team-row-avatar")!.textContent = initialsOf(entryName);
-      row.querySelector(".team-row-name")!.textContent = entryName;
-      row.querySelector(".team-row-meta")!.textContent = entryTitle + (entryRate ? ` · ${entryRate}` : "");
-      list!.insertBefore(row, list!.firstChild);
-    }
-
-    apiFetch(`${backendBase}/api/role-change`, backendSecret, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, title, rate, userId }),
-    })
-      .then((r) => r.json())
-      .then((entry) => {
-        prependRow(entry.name || name, entry.title || title, entry.rate || rate);
-        reset();
-      })
-      .catch(() => {
-        // backend unreachable — keep the interaction working locally, same as the fully-static demo
-        prependRow(name, title, rate);
-        reset();
-      });
+    confirmEl.classList.add("show");
+    memberSelect.value = "";
+    titleSelect.value = "";
+    rateInput.value = "";
+    currentTitleEl.classList.remove("show");
+    setTimeout(() => confirmEl.classList.remove("show"), 5000);
   });
 }

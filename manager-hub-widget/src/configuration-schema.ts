@@ -15,33 +15,24 @@ import { UiSchema } from "@rjsf/utils";
 import { JSONSchema7 } from "json-schema";
 
 /**
- * schema used for generation of the configuration dialog
- * see https://rjsf-team.github.io/react-jsonschema-form/docs/ for documentation
+ * One-time setup: a Staffbase Branch API token (Basic-auth key:secret,
+ * base64-encoded — the same kind of token created once in Studio's API
+ * Access settings). CORS is open on Staffbase branch APIs, so the widget
+ * calls Journeys/Tasks/Notifications directly with this token — no separate
+ * backend to stand up or reconfigure after install.
  */
 export const configurationSchema: JSONSchema7 = {
   properties: {
-    backendBase: {
+    apiToken: {
       type: "string",
-      title: "Backend URL",
-      default: "http://localhost:5050",
-    },
-    backendSecret: {
-      type: "string",
-      title: "Backend shared secret",
+      title: "Staffbase API Token",
     },
   },
 };
 
-/**
- * schema to add more customization to the form's look and feel
- * @see https://rjsf-team.github.io/react-jsonschema-form/docs/api-reference/uiSchema
- */
 export const uiSchema: UiSchema = {
-  backendBase: {
-    "ui:help": "URL of the local backend that holds the real API credentials (see server/ in the repo). Point this at a tunnel URL if the widget is hosted somewhere that can't reach localhost.",
-  },
-  backendSecret: {
+  apiToken: {
     "ui:widget": "password",
-    "ui:help": "Must match BACKEND_SHARED_SECRET in server/.env — only required once the backend is reachable from outside localhost (e.g. behind a tunnel).",
+    "ui:help": "One-time setup — paste the Branch API token here when installing this widget. The branch URL itself is detected automatically via the widget SDK.",
   },
 };

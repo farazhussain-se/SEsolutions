@@ -24,8 +24,7 @@ import pkg from '../package.json'
  * Define which attributes are handled by the widget. This should be also reflected in configuration schema
  */
 const widgetAttributes: string[] = [
-  'backendBase',
-  'backendSecret',
+  'apiToken',
 ];
 
 /**
@@ -34,7 +33,7 @@ const widgetAttributes: string[] = [
  */
 const factory: BlockFactory = (BaseBlockClass, _widgetApi) => {
   /**
-   *  <manager-hub-widget backend-base="https://your-tunnel.example.com"></manager-hub-widget>
+   *  <manager-hub-widget api-token="..."></manager-hub-widget>
    */
   return class ManagerHubWidgetBlock extends BaseBlockClass implements BaseBlock {
     private _root: ReactDOM.Root | null = null;

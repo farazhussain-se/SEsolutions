@@ -20,33 +20,35 @@ import { initDashboard } from "./dashboard-logic";
 
 export interface ManagerHubWidgetProps {
   widgetApi: WidgetApi;
-  backendBase?: string;
-  backendSecret?: string;
+  apiToken?: string;
   contentLanguage?: string;
 }
 
-const DEFAULT_BACKEND_BASE = "http://localhost:5050";
-
-export const ManagerHubWidget = ({ widgetApi, backendBase, backendSecret }: ManagerHubWidgetProps): ReactElement => {
+export const ManagerHubWidget = ({ widgetApi, apiToken }: ManagerHubWidgetProps): ReactElement => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!containerRef.current || !widgetApi) return;
+    // The branch's own base URL is available straight from the SDK — no
+    // manual "which instance" config needed, only the token itself.
+    const branch = widgetApi.getBranchInformation();
+    const branchBase = (branch?.webUrl || "").replace(/\/$/, "") + "/api";
     initDashboard({
       container: containerRef.current,
       widgetApi,
-      backendBase: backendBase || DEFAULT_BACKEND_BASE,
-      backendSecret,
+      branchBase,
+      apiToken: apiToken || "",
     });
-    // Intentionally runs once per mount — the dashboard wires its own event
-    // listeners and does its own fetching internally.
+    // Re-runs if apiToken changes (e.g. Studio config updated) — the `key`
+    // below forces a fresh DOM tree each time so initDashboard never wires
+    // duplicate event listeners onto stale markup.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [apiToken]);
 
   return (
     <div>
       <style>{dashboardCss}</style>
-      <div ref={containerRef} dangerouslySetInnerHTML={{ __html: dashboardHtml }} />
+      <div key={apiToken || "no-token"} ref={containerRef} dangerouslySetInnerHTML={{ __html: dashboardHtml }} />
     </div>
   );
 };

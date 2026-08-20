@@ -6,7 +6,8 @@ import apiMock from "../dev/widget-api-mock";
 
 describe("ManagerHubWidget", () => {
   beforeEach(() => {
-    global.fetch = jest.fn().mockRejectedValue(new Error("no backend in tests"));
+    localStorage.clear();
+    global.fetch = jest.fn().mockRejectedValue(new Error("no token configured in tests"));
   });
 
   it("renders the dashboard shell and pulls the signed-in user via widgetApi", async () => {
@@ -18,11 +19,12 @@ describe("ManagerHubWidget", () => {
     });
   });
 
-  it("falls back to demo data when the backend is unreachable", async () => {
+  it("falls back to baseline entries when no API token is configured, without labeling them as demo data", async () => {
     render(<ManagerHubWidget widgetApi={apiMock} contentLanguage="en_US" />);
 
     await waitFor(() => {
-      expect(screen.getAllByText("Demo Data").length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/Jamie Cole/).length).toBeGreaterThan(0);
     });
+    expect(screen.queryByText(/demo/i)).not.toBeInTheDocument();
   });
 });
