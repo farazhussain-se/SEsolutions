@@ -36,10 +36,10 @@
       {
         id: uid(),
         type: 'a2a',
-        name: 'https://www.workday.com/en-us/artificial-intelligence/ai-agents.html',
+        name: 'Workday Sana',
         description: 'Delegates HR and workforce-related tasks to Workday\'s AI agent.',
-        agentCardUrl: 'https://www.workday.com/en-us/artificial-intelligence/ai-agents.html',
-        endpointUrl: '',
+        agentCardUrl: 'https://us.agent.workday.com',
+        endpointUrl: 'https://us.agent.workday.com',
         auth: { method: 'oauth2_client_creds', connected: true, account: null },
         permissions: { allowDelegation: true, approval: 'each' },
         status: 'connected',
