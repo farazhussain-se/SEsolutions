@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="widget-name" content="DocuSign Employee Handbook Signing">
+<meta name="widget-description" content="DocuSign-branded e-signature workflow for acknowledging receipt of the Employee Handbook (handbook itself is read via a separate link)">
+<meta name="widget-tags" content="HR Data, Safety">
+<title>DocuSign — Employee Handbook Acknowledgment</title>
+
+<style>
+    :root {
+        --ds-yellow: #FFCC00;
+        --ds-yellow-dark: #E6B800;
+        --ds-black: #131313;
+        --ds-navy: #21160a;
+        --ds-text: #1a1a1a;
+        --ds-text-light: #5c5c5c;
+        --ds-bg: #ffffff;
+        --ds-bg-gray: #f7f7f5;
+        --ds-border: #e1ded8;
+        --ds-success: #1b8a5a;
+        --ds-danger: #d0393e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        background: var(--ds-bg-gray);
+        color: var(--ds-text);
+        margin: 0;
+        padding: 16px;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .widget {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        background: var(--ds-bg);
+        border: 1px solid var(--ds-border);
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    /* --- Envelope header bar --- */
+    .ds-topbar {
+        background: var(--ds-black);
+        color: #fff;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .ds-logo {
+        display: flex;
+        align-items: baseline;
+        font-weight: 700;
+        font-size: 16px;
+        letter-spacing: -0.01em;
+    }
+
+    .ds-logo .ds-docu { color: #ffffff; }
+    .ds-logo .ds-sign { color: var(--ds-yellow); }
+
+    .ds-envelope-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 2px;
+        color: var(--ds-yellow);
+        flex-shrink: 0;
+    }
+
+    .ds-body { padding: 18px; }
+
+    .ds-subject {
+        font-size: 15px;
+        font-weight: 700;
+        margin: 0 0 2px 0;
+        line-height: 1.3;
+    }
+
+    .ds-from {
+        font-size: 12px;
+        color: var(--ds-text-light);
+        margin: 0 0 14px 0;
+    }
+
+    .ds-divider {
+        border: none;
+        border-top: 1px solid var(--ds-border);
+        margin: 14px 0;
+    }
+
+    .ds-intro {
+        font-size: 13.5px;
+        line-height: 1.55;
+        margin: 0 0 14px 0;
+        color: var(--ds-text);
+    }
+
+    .ds-handbook-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #0b5fae;
+        text-decoration: none;
+        margin-bottom: 14px;
+    }
+    .ds-handbook-link:hover { text-decoration: underline; }
+    .ds-handbook-link svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    .ds-checkbox-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        background: var(--ds-bg-gray);
+        border: 1px solid var(--ds-border);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+
+    .ds-checkbox-row input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        margin: 1px 0 0 0;
+        accent-color: var(--ds-black);
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+
+    .ds-checkbox-row label {
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: var(--ds-text);
+        cursor: pointer;
+    }
+
+    /* --- Buttons --- */
+    .ds-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 11px 20px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        font-family: inherit;
+        transition: filter 0.15s, opacity 0.15s;
+    }
+
+    .ds-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .ds-btn-primary {
+        background: var(--ds-yellow);
+        color: var(--ds-black);
+        width: 100%;
+    }
+    .ds-btn-primary:hover:not(:disabled) { background: var(--ds-yellow-dark); }
+
+    .ds-btn-text {
+        background: none;
+        color: var(--ds-text-light);
+        font-weight: 600;
+    }
+    .ds-btn-text:hover { color: var(--ds-text); }
+
+    /* --- Document / tag view --- */
+    .ds-doc-frame {
+        border: 1px solid var(--ds-border);
+        border-radius: 8px;
+        background: #fdfdfc;
+        padding: 20px 16px 16px;
+        position: relative;
+        margin-bottom: 4px;
+    }
+
+    .ds-doc-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ds-text);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .ds-doc-title svg { width: 14px; height: 14px; color: var(--ds-text-light); flex-shrink: 0; }
+
+    .ds-doc-body-text {
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--ds-text-light);
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+        border-bottom: 1px dashed var(--ds-border);
+    }
+
+    .ds-tag-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .ds-tag-start {
+        background: var(--ds-yellow);
+        color: var(--ds-black);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        padding: 4px 8px;
+        border-radius: 3px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .ds-tag-arrow { font-weight: 700; }
+
+    .ds-sign-tag {
+        background: var(--ds-yellow);
+        color: var(--ds-black);
+        border: none;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        padding: 9px 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: inherit;
+        animation: ds-pulse 2s ease-in-out infinite;
+    }
+    .ds-sign-tag:hover { background: var(--ds-yellow-dark); }
+    .ds-sign-tag svg { width: 13px; height: 13px; }
+
+    @keyframes ds-pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(255,204,0,0.55); }
+        50% { box-shadow: 0 0 0 5px rgba(255,204,0,0); }
+    }
+
+    .ds-signed-mark {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--ds-success);
+        background: rgba(27,138,90,0.06);
+        border-radius: 6px;
+        padding: 8px 12px;
+        width: 100%;
+    }
+    .ds-signed-mark.visible { display: flex; }
+
+    .ds-signed-mark .ds-signature-render {
+        font-size: 22px;
+        line-height: 1;
+        color: #10381f;
+        flex: 1;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .ds-signed-mark .ds-check {
+        width: 16px;
+        height: 16px;
+        color: var(--ds-success);
+        flex-shrink: 0;
+    }
+
+    /* --- Finish bar --- */
+    .ds-finish-bar {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: var(--ds-black);
+        border-radius: 8px;
+        padding: 10px 12px 10px 16px;
+        margin-top: 16px;
+    }
+    .ds-finish-bar.visible {
+        display: flex;
+        animation: ds-slide-in 0.25s ease-out;
+    }
+    @keyframes ds-slide-in {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .ds-finish-hint {
+        color: #d8d5cf;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+    .ds-finish-bar .ds-btn-primary { width: auto; padding: 9px 18px; flex-shrink: 0; }
+
+    /* --- Modal --- */
+    .ds-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(19,19,19,0.55);
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 10;
+    }
+    .ds-modal-overlay.visible { display: flex; }
+
+    .ds-modal {
+        background: #fff;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 380px;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+    .ds-modal-title {
+        font-size: 17px;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+    }
+    .ds-modal-sub {
+        font-size: 12.5px;
+        color: var(--ds-text-light);
+        margin: 0 0 16px 0;
+        line-height: 1.4;
+    }
+
+    .ds-field { margin-bottom: 12px; }
+    .ds-field label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--ds-text-light);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 5px;
+    }
+    .ds-field input[type="text"] {
+        width: 100%;
+        padding: 9px 10px;
+        font-size: 14px;
+        border: 1px solid var(--ds-border);
+        border-radius: 6px;
+        font-family: inherit;
+        color: var(--ds-text);
+        background: #fff;
+    }
+    .ds-field input[type="text"]:focus {
+        outline: none;
+        border-color: var(--ds-black);
+    }
+
+    .ds-style-row {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+    .ds-style-swatch {
+        flex: 1;
+        min-width: 76px;
+        border: 2px solid var(--ds-border);
+        border-radius: 6px;
+        padding: 6px 4px;
+        text-align: center;
+        font-size: 16px;
+        cursor: pointer;
+        background: #fff;
+        color: #111;
+    }
+    .ds-style-swatch.active { border-color: var(--ds-yellow-dark); background: #fffbea; }
+
+    .ds-sig-preview {
+        border: 1px solid var(--ds-border);
+        border-radius: 6px;
+        background: var(--ds-bg-gray);
+        padding: 14px 12px;
+        text-align: center;
+        font-size: 26px;
+        min-height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #111;
+        margin-bottom: 12px;
+        overflow: hidden;
+    }
+    .ds-sig-preview-empty { color: var(--ds-text-light); font-size: 12px; font-family: -apple-system, sans-serif; font-style: italic; }
+
+    .ds-agree-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .ds-agree-row input { margin-top: 2px; accent-color: var(--ds-black); flex-shrink: 0; cursor: pointer; }
+    .ds-agree-row label { font-size: 11px; line-height: 1.5; color: var(--ds-text-light); cursor: pointer; }
+
+    .ds-modal-actions { display: flex; gap: 8px; align-items: center; }
+    .ds-modal-actions .ds-btn-primary { flex: 1; }
+
+    /* --- Completed view --- */
+    .ds-completed { text-align: center; padding: 8px 4px 4px; }
+    .ds-completed-icon {
+        width: 52px;
+        height: 52px;
+        margin: 0 auto 14px;
+        background: rgba(27,138,90,0.08);
+        color: var(--ds-success);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .ds-completed-icon svg { width: 26px; height: 26px; }
+    .ds-completed-heading { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .ds-completed-sub { font-size: 12.5px; color: var(--ds-text-light); margin-bottom: 16px; }
+    .ds-completed-file {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--ds-bg-gray);
+        border: 1px solid var(--ds-border);
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 16px;
+        text-align: left;
+    }
+    .ds-completed-file svg { width: 18px; height: 18px; color: var(--ds-danger); flex-shrink: 0; }
+    .ds-completed-file .fname { font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ds-completed-file .fsub { font-size: 11px; color: var(--ds-text-light); }
+    .ds-completed-actions { display: flex; flex-direction: column; gap: 8px; }
+
+    .hidden { display: none !important; }
+</style>
+</head>
+
+<body>
+
+<div class="widget">
+
+    <div class="ds-topbar">
+        <svg class="ds-envelope-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M3 7l8.2 6.2a1.6 1.6 0 0 0 1.9 0L21 7"/></svg>
+        <span class="ds-logo"><span class="ds-docu">docu</span><span class="ds-sign">sign.</span></span>
+    </div>
+
+    <div class="ds-body">
+
+        <!-- Step 1: Envelope / read-confirmation view -->
+        <div id="envelope-view">
+            <p class="ds-subject" data-i18n="envelopeSubject"></p>
+            <p class="ds-from" data-i18n="fromLine"></p>
+            <hr class="ds-divider"/>
+            <p class="ds-intro" data-i18n="introText"></p>
+            <a class="ds-handbook-link" id="handbook-link" href="#" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/></svg>
+                <span data-i18n="handbookLinkText"></span>
+            </a>
+            <div class="ds-checkbox-row">
+                <input type="checkbox" id="confirm-read-checkbox">
+                <label for="confirm-read-checkbox" data-i18n="confirmReadLabel"></label>
+            </div>
+            <button class="ds-btn ds-btn-primary" id="continue-btn" data-i18n="continueBtn"></button>
+        </div>
+
+        <!-- Step 2: Document / tag-to-sign view -->
+        <div id="document-view" class="hidden">
+            <div class="ds-doc-frame">
+                <div class="ds-doc-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/></svg>
+                    <span data-i18n="docTitle"></span>
+                </div>
+                <p class="ds-doc-body-text" data-i18n="docBody"></p>
+                <div class="ds-tag-row">
+                    <span class="ds-tag-start"><span data-i18n="startTag"></span></span>
+                    <span class="ds-tag-arrow">→</span>
+                    <button id="sign-tag-btn" class="ds-sign-tag">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/><path d="M14.06 6.19l3.75 3.75"/></svg>
+                        <span data-i18n="signTag"></span>
+                    </button>
+                    <div id="signed-mark" class="ds-signed-mark">
+                        <svg class="ds-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+                        <span class="ds-signature-render" id="signature-render"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="finish-bar" class="ds-finish-bar">
+                <span class="ds-finish-hint" data-i18n="finishHint"></span>
+                <button class="ds-btn ds-btn-primary" id="finish-btn" data-i18n="finishBtn"></button>
+            </div>
+        </div>
+
+        <!-- Step 3: Completed view -->
+        <div id="completed-view" class="ds-completed hidden">
+            <div class="ds-completed-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            </div>
+            <div class="ds-completed-heading" data-i18n="completedHeading"></div>
+            <div class="ds-completed-sub" id="completed-sub"></div>
+            <div class="ds-completed-file">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" opacity="0.15"/><path d="M14 2v6h6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                <div>
+                    <div class="fname" id="completed-fname"></div>
+                    <div class="fsub" id="completed-fsub"></div>
+                </div>
+            </div>
+            <div class="ds-completed-actions">
+                <a class="ds-handbook-link" id="handbook-link-2" href="#" target="_blank" rel="noopener" style="justify-content:center; margin-bottom:4px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/></svg>
+                    <span data-i18n="revisitHandbook"></span>
+                </a>
+                <button class="ds-btn ds-btn-text" id="start-over-btn" data-i18n="startOverBtn"></button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Adopt Your Signature modal -->
+<div class="ds-modal-overlay" id="modal-overlay">
+    <div class="ds-modal">
+        <p class="ds-modal-title" data-i18n="modalTitle"></p>
+        <p class="ds-modal-sub" data-i18n="modalSub"></p>
+
+        <div class="ds-field">
+            <label for="full-name-input" data-i18n="fullNameLabel"></label>
+            <input type="text" id="full-name-input" autocomplete="name">
+        </div>
+        <div class="ds-field">
+            <label for="initials-input" data-i18n="initialsLabel"></label>
+            <input type="text" id="initials-input" maxlength="6">
+        </div>
+
+        <label style="display:block; font-size:11px; font-weight:700; color:var(--ds-text-light); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:5px;" data-i18n="styleLabel"></label>
+        <div class="ds-style-row" id="style-row">
+            <div class="ds-style-swatch active" data-font="'Snell Roundhand','Brush Script MT',cursive" style="font-family:'Snell Roundhand','Brush Script MT',cursive;">Ab</div>
+            <div class="ds-style-swatch" data-font="'Lucida Handwriting','Comic Sans MS',cursive" style="font-family:'Lucida Handwriting','Comic Sans MS',cursive;">Ab</div>
+            <div class="ds-style-swatch" data-font="'Segoe Script','Bradley Hand',cursive" style="font-family:'Segoe Script','Bradley Hand',cursive;">Ab</div>
+            <div class="ds-style-swatch" data-font="Georgia,serif" style="font-family:Georgia,serif; font-style:italic;">Ab</div>
+        </div>
+
+        <label style="display:block; font-size:11px; font-weight:700; color:var(--ds-text-light); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:5px;" data-i18n="previewLabel"></label>
+        <div class="ds-sig-preview" id="sig-preview">
+            <span class="ds-sig-preview-empty" id="sig-preview-empty" data-i18n="fullNameLabel"></span>
+        </div>
+
+        <div class="ds-agree-row">
+            <input type="checkbox" id="agree-checkbox">
+            <label for="agree-checkbox" data-i18n="agreeLabel"></label>
+        </div>
+
+        <div class="ds-modal-actions">
+            <button class="ds-btn ds-btn-text" id="cancel-modal-btn" data-i18n="cancelBtn"></button>
+            <button class="ds-btn ds-btn-primary" id="adopt-btn" data-i18n="adoptBtn"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Language detection ---
+    const LANG = (() => {
+        const l = navigator.language || '';
+        if (l.startsWith('de')) return 'de';
+        if (l.startsWith('fr')) return 'fr';
+        if (l.startsWith('es')) return 'es';
+        if (l.startsWith('ja')) return 'ja';
+        if (l === 'en-GB')      return 'en-GB';
+        return 'en-US';
+    })();
+    document.documentElement.lang = LANG;
+
+    const LOCALE = {
+        'de': 'de-DE', 'fr': 'fr-FR', 'es': 'es-ES',
+        'ja': 'ja-JP', 'en-GB': 'en-GB', 'en-US': 'en-US'
+    }[LANG];
+
+    // --- Translations ---
+    const T = {
+        de: {
+            envelopeSubject: 'Mitarbeiterhandbuch 2026 — Unterschrift erforderlich',
+            fromLine: 'HR-Team via DocuSign',
+            introText: 'Bitte prüfen und unterschreiben Sie die Bestätigung für das Mitarbeiterhandbuch 2026.',
+            handbookLinkText: 'Mitarbeiterhandbuch öffnen',
+            confirmReadLabel: 'Ich habe das Mitarbeiterhandbuch gelesen und geprüft.',
+            continueBtn: 'WEITER',
+            docTitle: 'Mitarbeiterhandbuch 2026 — Empfangsbestätigung',
+            docBody: 'Mit meiner Unterschrift bestätige ich, dass ich das Mitarbeiterhandbuch erhalten, gelesen und verstanden habe, und stimme zu, die darin enthaltenen Richtlinien einzuhalten.',
+            startTag: 'START',
+            signTag: 'HIER UNTERSCHREIBEN',
+            modalTitle: 'Unterschrift festlegen',
+            modalSub: 'Bestätigen Sie unten Ihren Namen, Ihre Initialen und Ihren Unterschriftsstil.',
+            fullNameLabel: 'Vollständiger Name',
+            initialsLabel: 'Initialen',
+            styleLabel: 'Stil auswählen',
+            previewLabel: 'Vorschau',
+            agreeLabel: 'Ich stimme zu, dass Unterschrift und Initialen die elektronische Darstellung meiner Unterschrift und Initialen für alle Zwecke sind, einschließlich rechtsverbindlicher Verträge.',
+            adoptBtn: 'ÜBERNEHMEN UND UNTERSCHREIBEN',
+            cancelBtn: 'ABBRECHEN',
+            finishBtn: 'FERTIGSTELLEN',
+            finishHint: 'Bitte prüfen Sie das Dokument und wählen Sie dann FERTIGSTELLEN.',
+            completedHeading: 'Sie haben dieses Dokument abgeschlossen.',
+            completedSub: 'Eine Bestätigung wurde an Ihre E-Mail-Adresse gesendet.',
+            completedFile: 'mitarbeiterhandbuch-2026-bestaetigung.pdf',
+            revisitHandbook: 'Mitarbeiterhandbuch ansehen',
+            startOverBtn: 'Erneut beginnen',
+            signedOn: 'Unterschrieben am {date}',
+            alertRead: 'Bitte bestätigen Sie, dass Sie das Mitarbeiterhandbuch gelesen haben, bevor Sie fortfahren.',
+            alertAgree: 'Bitte stimmen Sie zu, diese Unterschrift zu übernehmen, bevor Sie fortfahren.'
+        },
+        fr: {
+            envelopeSubject: "Manuel de l'employé 2026 — Signature requise",
+            fromLine: 'Équipe RH via DocuSign',
+            introText: "Veuillez examiner et signer l'accusé de réception du Manuel de l'employé 2026.",
+            handbookLinkText: "Ouvrir le manuel de l'employé",
+            confirmReadLabel: "J'ai lu et examiné le Manuel de l'employé.",
+            continueBtn: 'CONTINUER',
+            docTitle: "Manuel de l'employé 2026 — Accusé de réception",
+            docBody: "En signant ci-dessous, je reconnais avoir reçu, lu et compris le Manuel de l'employé, et j'accepte de respecter ses politiques.",
+            startTag: 'DÉBUT',
+            signTag: 'SIGNER ICI',
+            modalTitle: 'Adopter votre signature',
+            modalSub: 'Confirmez votre nom, vos initiales et votre style de signature ci-dessous.',
+            fullNameLabel: 'Nom complet',
+            initialsLabel: 'Initiales',
+            styleLabel: 'Choisir un style',
+            previewLabel: 'Aperçu',
+            agreeLabel: "J'accepte que ma signature et mes initiales constituent la représentation électronique de ma signature et de mes initiales à toutes fins, y compris pour les contrats juridiquement contraignants.",
+            adoptBtn: 'ADOPTER ET SIGNER',
+            cancelBtn: 'ANNULER',
+            finishBtn: 'TERMINER',
+            finishHint: 'Veuillez examiner le document, puis sélectionner TERMINER.',
+            completedHeading: 'Vous avez terminé ce document.',
+            completedSub: 'Une confirmation a été envoyée à votre e-mail.',
+            completedFile: 'manuel-employe-2026-accuse-reception.pdf',
+            revisitHandbook: "Voir le manuel de l'employé",
+            startOverBtn: 'Recommencer',
+            signedOn: 'Signé le {date}',
+            alertRead: "Merci de confirmer avoir lu le Manuel de l'employé avant de continuer.",
+            alertAgree: "Merci d'accepter d'adopter cette signature avant de continuer."
+        },
+        es: {
+            envelopeSubject: 'Manual del empleado 2026 — Firma requerida',
+            fromLine: 'Equipo de RR. HH. vía DocuSign',
+            introText: 'Por favor, revise y firme el acuse de recibo del Manual del empleado 2026.',
+            handbookLinkText: 'Abrir el manual del empleado',
+            confirmReadLabel: 'He leído y revisado el Manual del empleado.',
+            continueBtn: 'CONTINUAR',
+            docTitle: 'Manual del empleado 2026 — Acuse de recibo',
+            docBody: 'Al firmar a continuación, reconozco haber recibido, leído y entendido el Manual del empleado, y acepto cumplir con sus políticas.',
+            startTag: 'INICIO',
+            signTag: 'FIRME AQUÍ',
+            modalTitle: 'Adoptar su firma',
+            modalSub: 'Confirme su nombre, iniciales y estilo de firma a continuación.',
+            fullNameLabel: 'Nombre completo',
+            initialsLabel: 'Iniciales',
+            styleLabel: 'Seleccionar estilo',
+            previewLabel: 'Vista previa',
+            agreeLabel: 'Acepto que la firma y las iniciales serán la representación electrónica de mi firma e iniciales para todos los efectos, incluidos los contratos legalmente vinculantes.',
+            adoptBtn: 'ADOPTAR Y FIRMAR',
+            cancelBtn: 'CANCELAR',
+            finishBtn: 'FINALIZAR',
+            finishHint: 'Revise el documento y luego seleccione FINALIZAR.',
+            completedHeading: 'Ha completado este documento.',
+            completedSub: 'Se ha enviado una confirmación a su correo electrónico.',
+            completedFile: 'manual-empleado-2026-acuse-recibo.pdf',
+            revisitHandbook: 'Ver el manual del empleado',
+            startOverBtn: 'Empezar de nuevo',
+            signedOn: 'Firmado el {date}',
+            alertRead: 'Confirme que ha leído el Manual del empleado antes de continuar.',
+            alertAgree: 'Acepte adoptar esta firma antes de continuar.'
+        },
+        ja: {
+            envelopeSubject: '従業員ハンドブック2026 — 署名が必要です',
+            fromLine: '人事部（DocuSign経由）',
+            introText: '従業員ハンドブック2026の受領確認書をご確認のうえ、署名してください。',
+            handbookLinkText: '従業員ハンドブックを開く',
+            confirmReadLabel: '従業員ハンドブックを読み、確認しました。',
+            continueBtn: '続行',
+            docTitle: '従業員ハンドブック2026 — 受領確認書',
+            docBody: '以下に署名することで、従業員ハンドブックを受領し、読み、理解したことを確認し、その方針に従うことに同意します。',
+            startTag: '開始',
+            signTag: 'ここに署名',
+            modalTitle: '署名の設定',
+            modalSub: '氏名、イニシャル、署名スタイルを確認してください。',
+            fullNameLabel: '氏名',
+            initialsLabel: 'イニシャル',
+            styleLabel: 'スタイルを選択',
+            previewLabel: 'プレビュー',
+            agreeLabel: 'この署名およびイニシャルが、法的拘束力のある契約を含むすべての目的において、私の署名およびイニシャルの電子的表現となることに同意します。',
+            adoptBtn: '設定して署名する',
+            cancelBtn: 'キャンセル',
+            finishBtn: '完了',
+            finishHint: '文書を確認のうえ、「完了」を選択してください。',
+            completedHeading: 'この文書は完了しました。',
+            completedSub: '確認メールが送信されました。',
+            completedFile: 'employee-handbook-2026-acknowledgment.pdf',
+            revisitHandbook: '従業員ハンドブックを見る',
+            startOverBtn: 'もう一度開始',
+            signedOn: '{date}に署名済み',
+            alertRead: '続行する前に、従業員ハンドブックを読んだことを確認してください。',
+            alertAgree: '続行する前に、この署名の設定に同意してください。'
+        },
+        'en-GB': {
+            envelopeSubject: 'Employee Handbook 2026 — Signature Required',
+            fromLine: 'HR Team via DocuSign',
+            introText: 'Please review and sign the acknowledgement for the Employee Handbook 2026.',
+            handbookLinkText: 'Open Employee Handbook',
+            confirmReadLabel: 'I have read and reviewed the Employee Handbook.',
+            continueBtn: 'CONTINUE',
+            docTitle: 'Employee Handbook 2026 — Acknowledgement of Receipt',
+            docBody: 'By signing below, I acknowledge that I have received, read, and understand the Employee Handbook, and I agree to comply with its policies.',
+            startTag: 'START',
+            signTag: 'SIGN HERE',
+            modalTitle: 'Adopt Your Signature',
+            modalSub: 'Confirm your name, initials, and signature style below.',
+            fullNameLabel: 'Full Name',
+            initialsLabel: 'Initials',
+            styleLabel: 'Select Style',
+            previewLabel: 'Preview',
+            agreeLabel: 'I agree that the signature and initials will be the electronic representation of my signature and initials for all purposes when used on documents, including legally binding contracts.',
+            adoptBtn: 'ADOPT AND SIGN',
+            cancelBtn: 'CANCEL',
+            finishBtn: 'FINISH',
+            finishHint: 'Please review the document, then select FINISH.',
+            completedHeading: "You've completed this document.",
+            completedSub: 'A confirmation has been sent to your email.',
+            completedFile: 'employee-handbook-2026-acknowledgement.pdf',
+            revisitHandbook: 'View Employee Handbook',
+            startOverBtn: 'Start Again',
+            signedOn: 'Signed on {date}',
+            alertRead: "Please confirm you've read the Employee Handbook before continuing.",
+            alertAgree: 'Please agree to adopt this signature before continuing.'
+        },
+        'en-US': {
+            envelopeSubject: 'Employee Handbook 2026 — Signature Required',
+            fromLine: 'HR Team via DocuSign',
+            introText: 'Please review and sign the acknowledgment for the Employee Handbook 2026.',
+            handbookLinkText: 'Open Employee Handbook',
+            confirmReadLabel: 'I have read and reviewed the Employee Handbook.',
+            continueBtn: 'CONTINUE',
+            docTitle: 'Employee Handbook 2026 — Acknowledgment of Receipt',
+            docBody: 'By signing below, I acknowledge that I have received, read, and understand the Employee Handbook, and I agree to comply with its policies.',
+            startTag: 'START',
+            signTag: 'SIGN HERE',
+            modalTitle: 'Adopt Your Signature',
+            modalSub: 'Confirm your name, initials, and signature style below.',
+            fullNameLabel: 'Full Name',
+            initialsLabel: 'Initials',
+            styleLabel: 'Select Style',
+            previewLabel: 'Preview',
+            agreeLabel: 'I agree that the signature and initials will be the electronic representation of my signature and initials for all purposes when used on documents, including legally binding contracts.',
+            adoptBtn: 'ADOPT AND SIGN',
+            cancelBtn: 'CANCEL',
+            finishBtn: 'FINISH',
+            finishHint: 'Please review the document, then select FINISH.',
+            completedHeading: "You've completed this document.",
+            completedSub: 'A confirmation has been sent to your email.',
+            completedFile: 'employee-handbook-2026-acknowledgment.pdf',
+            revisitHandbook: 'View Employee Handbook',
+            startOverBtn: 'Start Again',
+            signedOn: 'Signed on {date}',
+            alertRead: "Please confirm you've read the Employee Handbook before continuing.",
+            alertAgree: 'Please agree to adopt this signature before continuing.'
+        }
+    };
+    const t = T[LANG] ?? T['en-US'];
+
+    function tr(key, vars) {
+        let s = t[key] || key;
+        if (vars) Object.keys(vars).forEach(k => { s = s.replaceAll('{' + k + '}', vars[k]); });
+        return s;
+    }
+
+    function applyTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            if (t[key] !== undefined) el.textContent = t[key];
+        });
+    }
+
+    // --- Placeholder link to the handbook (lives outside this widget) ---
+    const HANDBOOK_URL = '#employee-handbook';
+    document.getElementById('handbook-link').href = HANDBOOK_URL;
+    document.getElementById('handbook-link-2').href = HANDBOOK_URL;
+
+    // --- Elements ---
+    const envelopeView = document.getElementById('envelope-view');
+    const documentView = document.getElementById('document-view');
+    const completedView = document.getElementById('completed-view');
+
+    const confirmReadCheckbox = document.getElementById('confirm-read-checkbox');
+    const continueBtn = document.getElementById('continue-btn');
+
+    const signTagBtn = document.getElementById('sign-tag-btn');
+    const signedMark = document.getElementById('signed-mark');
+    const signatureRender = document.getElementById('signature-render');
+    const finishBar = document.getElementById('finish-bar');
+    const finishBtn = document.getElementById('finish-btn');
+
+    const modalOverlay = document.getElementById('modal-overlay');
+    const fullNameInput = document.getElementById('full-name-input');
+    const initialsInput = document.getElementById('initials-input');
+    const styleRow = document.getElementById('style-row');
+    const sigPreview = document.getElementById('sig-preview');
+    const sigPreviewEmpty = document.getElementById('sig-preview-empty');
+    const agreeCheckbox = document.getElementById('agree-checkbox');
+    const cancelModalBtn = document.getElementById('cancel-modal-btn');
+    const adoptBtn = document.getElementById('adopt-btn');
+
+    const completedSub = document.getElementById('completed-sub');
+    const completedFname = document.getElementById('completed-fname');
+    const completedFsub = document.getElementById('completed-fsub');
+    const startOverBtn = document.getElementById('start-over-btn');
+
+    let selectedFont = "'Snell Roundhand','Brush Script MT',cursive";
+
+    // --- Persistence (per-browser; mocked, no backend) ---
+    const STORAGE_KEY = 'docusign-employee-handbook/2026-acknowledgment';
+
+    function loadSaved() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) { return null; }
+    }
+
+    function persistSaved(signatureText, font) {
+        const record = { signatureText, font, ts: new Date().toISOString() };
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(record)); } catch (e) {}
+        return record;
+    }
+
+    function clearSaved() {
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    }
+
+    function formatSignedDate(iso) {
+        const d = new Date(iso);
+        return new Intl.DateTimeFormat(LOCALE, {
+            year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        }).format(d);
+    }
+
+    // --- View switching ---
+    function showEnvelopeView() {
+        completedView.classList.add('hidden');
+        documentView.classList.add('hidden');
+        envelopeView.classList.remove('hidden');
+    }
+
+    function showDocumentView() {
+        envelopeView.classList.add('hidden');
+        completedView.classList.add('hidden');
+        documentView.classList.remove('hidden');
+    }
+
+    function showCompletedView(record) {
+        envelopeView.classList.add('hidden');
+        documentView.classList.add('hidden');
+        completedView.classList.remove('hidden');
+        completedSub.textContent = tr('completedSub');
+        completedFname.textContent = tr('completedFile');
+        completedFsub.textContent = tr('signedOn', { date: formatSignedDate(record.ts) });
+    }
+
+    function applySignedState(record) {
+        signTagBtn.classList.add('hidden');
+        signedMark.classList.add('visible');
+        signatureRender.textContent = record.signatureText;
+        signatureRender.style.fontFamily = record.font;
+        finishBar.classList.add('visible');
+    }
+
+    // --- Step 1 -> Step 2 ---
+    continueBtn.addEventListener('click', () => {
+        if (!confirmReadCheckbox.checked) {
+            alert(tr('alertRead'));
+            return;
+        }
+        showDocumentView();
+    });
+
+    // --- Tag click opens modal ---
+    signTagBtn.addEventListener('click', () => {
+        modalOverlay.classList.add('visible');
+        if (!fullNameInput.value) fullNameInput.focus();
+    });
+
+    cancelModalBtn.addEventListener('click', () => {
+        modalOverlay.classList.remove('visible');
+    });
+
+    // --- Style swatch selection ---
+    styleRow.addEventListener('click', (e) => {
+        const swatch = e.target.closest('.ds-style-swatch');
+        if (!swatch) return;
+        styleRow.querySelectorAll('.ds-style-swatch').forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+        selectedFont = swatch.dataset.font;
+        updateSigPreview();
+    });
+
+    function updateSigPreview() {
+        const name = fullNameInput.value.trim();
+        if (!name) {
+            sigPreview.innerHTML = '';
+            sigPreview.appendChild(sigPreviewEmpty);
+            return;
+        }
+        sigPreview.innerHTML = '';
+        const span = document.createElement('span');
+        span.textContent = name;
+        span.style.fontFamily = selectedFont;
+        sigPreview.appendChild(span);
+    }
+
+    fullNameInput.addEventListener('input', updateSigPreview);
+
+    // --- Adopt and sign ---
+    adoptBtn.addEventListener('click', () => {
+        const name = fullNameInput.value.trim();
+        if (!name) {
+            fullNameInput.focus();
+            return;
+        }
+        if (!agreeCheckbox.checked) {
+            alert(tr('alertAgree'));
+            return;
+        }
+        const record = persistSaved(name, selectedFont);
+        applySignedState(record);
+        modalOverlay.classList.remove('visible');
+    });
+
+    // --- Finish ---
+    finishBtn.addEventListener('click', () => {
+        const record = loadSaved();
+        if (record) showCompletedView(record);
+    });
+
+    // --- Start again ---
+    startOverBtn.addEventListener('click', () => {
+        clearSaved();
+        fullNameInput.value = '';
+        initialsInput.value = '';
+        agreeCheckbox.checked = false;
+        confirmReadCheckbox.checked = false;
+        signTagBtn.classList.remove('hidden');
+        signedMark.classList.remove('visible');
+        finishBar.classList.remove('visible');
+        updateSigPreview();
+        showEnvelopeView();
+    });
+
+    // --- Initial render ---
+    function init() {
+        applyTranslations();
+        updateSigPreview();
+        const existing = loadSaved();
+        if (existing && existing.signatureText) {
+            showDocumentView();
+            applySignedState(existing);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
