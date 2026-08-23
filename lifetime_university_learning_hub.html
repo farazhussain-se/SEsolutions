@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="widget-name" content="Life Time University Learning Hub">
+    <meta name="widget-description" content="Life Time University learning hub for team member certifications, leadership development, and Phenom-powered career pathing">
+    <title>Life Time University — Learning Hub</title>
+    <style>
+        /* --- CSS STYLING (Life Time / Kumiko Brand) --- */
+        :root {
+            /* Life Time Kumiko design system palette */
+            --lt-charcoal:   #313131;
+            --lt-cream:      #FBF7F2;
+            --lt-blue:       #3A6DAF;
+            --lt-blue-light: #3AA6EF;
+            --lt-red:        #DA0000;
+            --lt-green:      #477F33;
+            --lt-gray-mid:   #707070;
+            --lt-gray-light: #E8E6E3;
+
+            /* Semantic Mappings */
+            --sb-primary: var(--lt-charcoal);
+            --sb-accent:  var(--lt-blue);
+            --sb-text:    var(--lt-charcoal);
+            --sb-bg:      var(--lt-cream);
+            --sb-card-bg: #FFFFFF;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: var(--sb-bg);
+            color: var(--sb-text);
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- HERO BANNER --- */
+        .hero-banner {
+            width: 100%;
+            height: 220px;
+            background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=80');
+            background-size: cover;
+            background-position: center top;
+            position: relative;
+            margin-bottom: -4px;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, rgba(49,49,49,0.90) 0%, rgba(49,49,49,0.3) 100%);
+            display: flex;
+            align-items: center;
+            padding: 0 40px;
+            gap: 20px;
+        }
+
+        .hero-logo-box {
+            background-color: var(--lt-blue);
+            color: white;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            padding: 10px 14px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .hero-text { display: flex; flex-direction: column; }
+
+        .hero-title {
+            color: white;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            line-height: 1.1;
+        }
+
+        .hero-tagline {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.95rem;
+            font-weight: 400;
+            margin-top: 6px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* --- WIDGET HEADER --- */
+        .widget-header {
+            background-color: var(--lt-charcoal);
+            color: var(--lt-cream);
+            padding: 24px 24px 0 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 12px; }
+
+        .header-icon {
+            background-color: var(--lt-blue);
+            color: white;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .header-subtitle {
+            font-size: 0.85rem;
+            color: rgba(251,247,242,0.6);
+            display: block;
+            margin-top: 3px;
+        }
+
+        .header-stats { display: flex; gap: 40px; }
+
+        .cw-stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+        }
+
+        .cw-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--lt-blue-light);
+        }
+
+        .cw-stat-label {
+            font-size: 0.7rem;
+            color: rgba(251,247,242,0.75);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        /* --- TABS --- */
+        .filter-bar {
+            display: flex;
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .filter-tab {
+            color: rgba(251,247,242,0.55);
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding-bottom: 12px;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+        }
+
+        .filter-tab:hover { color: white; }
+
+        .filter-tab.active { color: white; }
+
+        .filter-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 3px;
+            background-color: var(--lt-blue-light);
+            border-radius: 3px 3px 0 0;
+        }
+
+        /* --- CONTENT CONTAINER --- */
+        .content-container {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* --- COURSE GRID --- */
+        .event-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .event-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+                gap: 24px;
+            }
+        }
+
+        .event-card {
+            background: var(--sb-card-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border: 1px solid var(--lt-gray-light);
+        }
+
+        .event-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.14);
+        }
+
+        .card-thumbnail {
+            height: 180px;
+            background-color: #ccc;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        /* Category pill on thumbnail */
+        .category-pill {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background-color: var(--lt-charcoal);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            z-index: 2;
+        }
+
+        .live-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background-color: var(--lt-red);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+            z-index: 2;
+        }
+
+        .upcoming-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background-color: rgba(49,49,49,0.85);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+            backdrop-filter: blur(4px);
+        }
+
+        .archive-badge {
+            position: absolute;
+            top: 12px; right: 12px;
+            background-color: rgba(112,112,112,0.9);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+
+        .card-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .event-date {
+            font-size: 0.78rem;
+            color: var(--lt-gray-mid);
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .event-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            color: var(--lt-charcoal);
+            line-height: 1.3;
+        }
+
+        .event-desc {
+            font-size: 0.9rem;
+            color: #444;
+            line-height: 1.55;
+            flex-grow: 1;
+        }
+
+        /* Duration / level meta */
+        .course-meta {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .meta-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--lt-gray-mid);
+            background: var(--lt-gray-light);
+            padding: 3px 8px;
+            border-radius: 2px;
+        }
+
+        .meta-tag.accent {
+            background: rgba(58,109,175,0.1);
+            color: var(--lt-blue);
+        }
+
+        .card-footer {
+            padding: 14px 20px;
+            border-top: 1px solid var(--lt-gray-light);
+            background-color: #fafafa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .open-btn {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--lt-charcoal);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .open-btn::after { content: " →"; margin-left: 2px; transition: margin-left 0.2s; }
+        .event-card:hover .open-btn::after { margin-left: 5px; }
+
+        .calendar-btn {
+            background: none;
+            border: 1px solid var(--lt-gray-light);
+            border-radius: 2px;
+            padding: 6px 10px;
+            cursor: pointer;
+            color: var(--lt-gray-mid);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .calendar-btn:hover {
+            border-color: var(--lt-blue);
+            color: var(--lt-blue);
+            background-color: rgba(58,109,175,0.05);
+        }
+        .calendar-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+        /* --- DETAIL VIEW --- */
+        .detail-wrapper {
+            padding: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .custom-player-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            background-color: #000;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+            margin-bottom: 32px;
+        }
+
+        .player-background {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.85;
+        }
+
+        .player-gradient {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.95) 100%);
+        }
+
+        .player-logo-box {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            background-color: var(--lt-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1rem;
+            padding: 10px 14px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border-radius: 2px;
+            letter-spacing: 1px;
+        }
+
+        .player-text-overlay {
+            position: absolute;
+            bottom: 90px;
+            left: 24px;
+            color: white;
+            z-index: 10;
+        }
+        .player-brand-name { font-size: 1.5rem; font-weight: 700; display: block; }
+        .player-sub-name { font-size: 1.1rem; font-weight: 300; opacity: 0.85; }
+
+        .player-controls {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            right: 24px;
+            height: 56px;
+            background-color: rgba(0, 0, 0, 0.88);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-radius: 3px;
+            backdrop-filter: blur(5px);
+        }
+
+        .control-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin-right: 20px; }
+        .control-btn svg { fill: white; width: 24px; height: 24px; }
+        .control-btn:hover svg { fill: var(--lt-blue-light); }
+
+        .progress-track {
+            flex-grow: 1;
+            height: 4px;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            margin: 0 20px;
+            position: relative;
+            cursor: pointer;
+        }
+        .progress-fill {
+            width: 35%;
+            height: 100%;
+            background-color: var(--lt-blue-light);
+            border-radius: 2px;
+        }
+
+        .time-display {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-right: 20px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .right-controls { display: flex; gap: 16px; align-items: center; }
+
+        .detail-info {
+            background: var(--sb-card-bg);
+            border-radius: 4px;
+            padding: 32px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+            border: 1px solid var(--lt-gray-light);
+        }
+
+        .detail-category {
+            display: inline-block;
+            background: var(--lt-blue);
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 2px;
+            margin-bottom: 14px;
+        }
+
+        .detail-title { margin: 0 0 8px 0; font-size: 1.9rem; color: var(--lt-charcoal); font-weight: 700; }
+        .detail-meta { color: var(--lt-gray-mid); font-size: 0.95rem; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--lt-gray-light); }
+        .back-btn { background: none; border: none; color: var(--lt-charcoal); font-weight: 700; cursor: pointer; padding: 0; margin-bottom: 24px; display: flex; align-items: center; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .back-btn:hover { color: var(--lt-blue); }
+
+        .loader { text-align: center; padding: 60px; color: var(--lt-charcoal); opacity: 0.5; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+
+        <div class="hero-banner">
+            <div class="hero-overlay">
+                <div class="hero-logo-box">LTU</div>
+                <div class="hero-text">
+                    <h1 class="hero-title">Life Time University</h1>
+                    <span class="hero-tagline">Team Member Learning &amp; Career Development</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="mainHeader" class="widget-header">
+            <div class="header-top">
+                <div class="header-left">
+                    <div class="header-icon">LTU</div>
+                    <div>
+                        <div class="header-title">Life Time University</div>
+                        <span class="header-subtitle">Certifications, Leadership &amp; Career Pathing</span>
+                    </div>
+                </div>
+
+                <div class="header-stats">
+                    <div class="cw-stat-item">
+                        <span id="statLive" class="cw-stat-value">0</span>
+                        <span class="cw-stat-label">Live Now</span>
+                    </div>
+                    <div class="cw-stat-item">
+                        <span id="statUpcoming" class="cw-stat-value">0</span>
+                        <span class="cw-stat-label">Upcoming</span>
+                    </div>
+                    <div class="cw-stat-item">
+                        <span id="statReplays" class="cw-stat-value">0</span>
+                        <span class="cw-stat-label">On Demand</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-tab active" onclick="app.filterEvents('all', this)">All Courses</div>
+                <div class="filter-tab" onclick="app.filterEvents('live', this)">Live Now</div>
+                <div class="filter-tab" onclick="app.filterEvents('upcoming', this)">Upcoming</div>
+                <div class="filter-tab" onclick="app.filterEvents('archive', this)">On Demand</div>
+            </div>
+        </div>
+
+        <div class="content-container">
+            <div id="loader" class="loader">Loading courses...</div>
+
+            <div id="listView" class="hidden">
+                <div id="eventListContainer" class="event-list"></div>
+                <div id="noEventsMessage" class="hidden" style="text-align:center; opacity:0.5; padding:40px;">No courses in this category.</div>
+            </div>
+
+            <div id="detailView" class="hidden detail-wrapper">
+                <button class="back-btn" onclick="app.showList()">&larr; Back to Courses</button>
+
+                <div class="custom-player-container">
+                    <div class="player-background" id="playerBg" style="background-image: url('');"></div>
+                    <div class="player-gradient"></div>
+                    <div class="player-logo-box">LTU</div>
+                    <div class="player-text-overlay">
+                        <span class="player-brand-name">Life Time</span>
+                        <span class="player-sub-name">Life Time University</span>
+                    </div>
+                    <div class="player-controls">
+                        <button class="control-btn">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                        <button class="control-btn">
+                            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                        </button>
+                        <div class="progress-track"><div class="progress-fill"></div></div>
+                        <div class="time-display">00:00</div>
+                        <div class="right-controls">
+                            <button class="control-btn" style="margin:0;"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-info">
+                    <span id="detailCategory" class="detail-category"></span>
+                    <h2 id="detailTitle" class="detail-title"></h2>
+                    <div id="detailDate" class="detail-meta"></div>
+                    <p id="detailDesc" style="line-height:1.65; font-size:1.05rem; color:#333;"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const LOCALE = 'en-US';
+        const HOUR12 = true;
+
+        const listDateFormatter = new Intl.DateTimeFormat(LOCALE, {
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: HOUR12,
+        });
+
+        const detailDateFormatter = new Intl.DateTimeFormat(LOCALE, {
+            weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: HOUR12,
+        });
+
+        const CONFIG = {
+            apiEndpoint: 'https://your-backend-service.example.com/api/courses',
+            useMockData: true
+        };
+
+        // --- Life Time University Course Data ---
+        const MOCK_DATA = [
+            // LIVE
+            {
+                id: 1,
+                title: 'AFAA Group Fitness Certification: Live Renewal Q&A',
+                category: 'Group Fitness',
+                duration: '45 min',
+                level: 'Certified GFIs',
+                date: new Date(new Date().getTime() - 1000 * 60 * 20).toISOString(),
+                description: 'Get renewal-cycle guidance straight from Life Time\'s AFAA-aligned coaches — CEU requirements, submission deadlines, and answers on the updated Group Fitness Instructor Certification standards.',
+                isLive: true,
+                status: 'live',
+                imageUrl: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=800&q=80'
+            },
+            // UPCOMING
+            {
+                id: 2,
+                title: 'NASM Personal Trainer Certification: Cohort Kickoff',
+                category: 'Personal Training',
+                duration: '90 min',
+                level: 'New Hires',
+                date: '2026-09-08T15:00:00.000Z',
+                description: 'Kickoff session for the fall Life Time Academy cohort. Trainers work toward the NASM Certified Personal Trainer (CPT) credential through Life Time\'s ongoing partnership with the National Academy of Sports Medicine.',
+                isLive: false,
+                status: 'upcoming',
+                imageUrl: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 3,
+                title: 'Corrective Exercise Specialist (CES): Program Design Deep Dive',
+                category: 'Personal Training',
+                duration: '2 hrs',
+                level: 'Certified Trainers',
+                date: '2026-09-16T16:00:00.000Z',
+                description: 'Advanced programming for trainers pursuing the NASM Corrective Exercise Specialist designation on top of their CPT — movement assessment, corrective strategy, and client case review.',
+                isLive: false,
+                status: 'upcoming',
+                imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 4,
+                title: 'Leadership Essentials for Department Heads',
+                category: 'Leadership',
+                duration: '3 hrs',
+                level: 'Newly Promoted',
+                date: '2026-09-22T14:00:00.000Z',
+                description: 'Coaching conversations, scheduling, and performance management for team members stepping into a department head role for the first time.',
+                isLive: false,
+                status: 'upcoming',
+                imageUrl: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 5,
+                title: 'Career Pathing at Life Time: Build Your Growth Plan',
+                category: 'Career Development',
+                duration: '60 min',
+                level: 'All Team Members',
+                date: '2026-09-29T17:00:00.000Z',
+                description: 'Use your Phenom career profile to map your skills, browse open roles across clubs, and build a development plan to review with your GM.',
+                isLive: false,
+                status: 'upcoming',
+                imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 6,
+                title: 'LT Kids Academy: Child Safety & Swim Instructor Certification',
+                category: 'Youth Programs',
+                duration: '4 hrs',
+                level: 'Kids Academy Staff',
+                date: '2026-10-06T13:00:00.000Z',
+                description: 'Required certification for team members teaching swim lessons or supervising Kids Academy pools — water safety, lesson progressions, and emergency response.',
+                isLive: false,
+                status: 'upcoming',
+                imageUrl: 'https://images.unsplash.com/photo-1560090995-01632a28895b?auto=format&fit=crop&w=800&q=80'
+            },
+            // ON DEMAND / ARCHIVE
+            {
+                id: 10,
+                title: 'Life Time University Orientation: Welcome to the Team',
+                category: 'Onboarding',
+                duration: '50 min',
+                level: 'New Team Members',
+                date: '2026-06-02T14:00:00.000Z',
+                description: 'New team member orientation covering Life Time\'s mission, Signature Service Standards, and how to find your required certifications inside Life Time University.',
+                isLive: false,
+                status: 'archive',
+                imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 11,
+                title: 'Signature Service Standards: The Member Experience',
+                category: 'Hospitality',
+                duration: '40 min',
+                level: 'All Team Members',
+                date: '2026-04-14T15:00:00.000Z',
+                description: 'How front-desk, café, and fitness floor team members deliver Life Time\'s Signature Service Standards at every member touchpoint.',
+                isLive: false,
+                status: 'archive',
+                imageUrl: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 12,
+                title: 'Find Your Mentor: Getting Started with LT Mentoring',
+                category: 'Career Development',
+                duration: '35 min',
+                level: 'All Team Members',
+                date: '2026-03-05T16:00:00.000Z',
+                description: 'How to request a mentor match through your Phenom profile, set goals for the relationship, and get the most out of your first 90 days with a mentor.',
+                isLive: false,
+                status: 'archive',
+                imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80'
+            }
+        ];
+
+        const app = {
+            allEvents: [],
+            currentFilter: 'all',
+
+            init: function() {
+                this.loadEvents();
+            },
+
+            loadEvents: async function() {
+                try {
+                    if (CONFIG.useMockData) {
+                        await new Promise(r => setTimeout(r, 500));
+                        this.allEvents = MOCK_DATA;
+                    } else {
+                        const response = await fetch(CONFIG.apiEndpoint);
+                        this.allEvents = await response.json();
+                    }
+                    this.updateStats();
+                    this.filterEvents('all', document.querySelector('.filter-tab.active'));
+                } catch (error) {
+                    console.error("Load error:", error);
+                    document.getElementById('loader').innerText = 'Could not load courses.';
+                }
+            },
+
+            updateStats: function() {
+                const liveCount     = this.allEvents.filter(e => e.status === 'live' || e.isLive).length;
+                const upcomingCount = this.allEvents.filter(e => e.status === 'upcoming').length;
+                const replayCount   = this.allEvents.filter(e => e.status === 'archive').length;
+                document.getElementById('statLive').innerText     = liveCount;
+                document.getElementById('statUpcoming').innerText = upcomingCount;
+                document.getElementById('statReplays').innerText  = replayCount;
+            },
+
+            filterEvents: function(category, tabElement) {
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                if (tabElement) tabElement.classList.add('active');
+                this.currentFilter = category;
+                let filtered = [];
+                if (category === 'all')      filtered = this.allEvents.filter(e => e.status !== 'archive');
+                else if (category === 'live') filtered = this.allEvents.filter(e => e.status === 'live' || e.isLive);
+                else if (category === 'upcoming') filtered = this.allEvents.filter(e => e.status === 'upcoming');
+                else if (category === 'archive')  filtered = this.allEvents.filter(e => e.status === 'archive');
+                this.renderList(filtered);
+            },
+
+            renderList: function(events) {
+                const container = document.getElementById('eventListContainer');
+                container.innerHTML = '';
+                document.getElementById('loader').classList.add('hidden');
+
+                if (events.length === 0) {
+                    document.getElementById('noEventsMessage').classList.remove('hidden');
+                    document.getElementById('listView').classList.remove('hidden');
+                    return;
+                } else {
+                    document.getElementById('noEventsMessage').classList.add('hidden');
+                }
+
+                events.sort((a, b) => {
+                    if (a.isLive && !b.isLive) return -1;
+                    if (!a.isLive && b.isLive) return 1;
+                    return new Date(a.date) - new Date(b.date);
+                });
+
+                events.forEach(event => {
+                    const card = document.createElement('div');
+                    card.className = 'event-card';
+                    card.onclick = (e) => {
+                        if (e.target.closest('.calendar-btn')) return;
+                        this.showDetail(event);
+                    };
+
+                    const dateStr = listDateFormatter.format(new Date(event.date));
+
+                    let badgeHtml = '';
+                    if (event.isLive || event.status === 'live') {
+                        badgeHtml = `<span class="live-badge">&#9679; LIVE</span>`;
+                    } else if (event.status === 'upcoming') {
+                        badgeHtml = `<span class="upcoming-badge">Upcoming</span>`;
+                    } else if (event.status === 'archive') {
+                        badgeHtml = `<span class="archive-badge">On Demand</span>`;
+                    }
+
+                    let actionHtml = '';
+                    if (event.status === 'upcoming') {
+                        actionHtml = `
+                            <button class="calendar-btn" onclick="app.addToCalendar(event, '${event.title.replace(/'/g, "\\'")}')">
+                                <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z"/></svg>
+                                Add to Calendar
+                            </button>`;
+                    } else if (event.status === 'archive') {
+                        actionHtml = `<button class="calendar-btn" style="border:none; padding-left:0;"><span style="font-size:0.8rem;">Watch Recording</span></button>`;
+                    }
+
+                    const metaHtml = `
+                        <div class="course-meta">
+                            <span class="meta-tag accent">${event.category || 'LTU'}</span>
+                            ${event.duration ? `<span class="meta-tag">${event.duration}</span>` : ''}
+                            ${event.level ? `<span class="meta-tag">${event.level}</span>` : ''}
+                        </div>`;
+
+                    card.innerHTML = `
+                        <div class="card-thumbnail" style="background-image: url('${event.imageUrl}');">
+                            ${badgeHtml}
+                        </div>
+                        <div class="card-content">
+                            <span class="event-date">${dateStr}</span>
+                            <h4 class="event-title">${event.title}</h4>
+                            <p class="event-desc">${event.description}</p>
+                            ${metaHtml}
+                        </div>
+                        <div class="card-footer">
+                            <span class="open-btn">Open</span>
+                            ${actionHtml}
+                        </div>`;
+                    container.appendChild(card);
+                });
+
+                document.getElementById('listView').classList.remove('hidden');
+            },
+
+            addToCalendar: function(e, title) {
+                e.stopPropagation();
+                alert(`Course "${title}" has been added to your calendar! (Simulation)`);
+            },
+
+            showDetail: function(event) {
+                document.getElementById('mainHeader').classList.add('hidden');
+                document.querySelector('.hero-banner').classList.add('hidden');
+                document.getElementById('listView').classList.add('hidden');
+                document.getElementById('detailView').classList.remove('hidden');
+
+                document.getElementById('detailCategory').textContent = event.category || 'LTU';
+                document.getElementById('detailTitle').innerText = event.title;
+                document.getElementById('detailDesc').innerText = event.description;
+                document.getElementById('detailDate').innerText = detailDateFormatter.format(new Date(event.date));
+                document.getElementById('playerBg').style.backgroundImage = `url('${event.imageUrl}')`;
+
+                document.querySelector('.player-brand-name').innerText = 'Life Time';
+                document.querySelector('.player-sub-name').innerText = event.category || 'Life Time University';
+                window.scrollTo(0, 0);
+            },
+
+            showList: function() {
+                document.getElementById('detailView').classList.add('hidden');
+                document.getElementById('listView').classList.remove('hidden');
+                document.getElementById('mainHeader').classList.remove('hidden');
+                document.querySelector('.hero-banner').classList.remove('hidden');
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => { app.init(); });
+    </script>
+</body>
+</html>
