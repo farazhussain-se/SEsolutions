@@ -7,6 +7,10 @@ export interface DashboardOptions {
   branchBase: string;
   /** The one-time-setup Staffbase Branch API token (Basic-auth key:secret, base64). */
   apiToken: string;
+  /** Studio "Demo mode" toggle. When true (default), built-in sample data is
+   * blended in alongside whatever the API returns so every panel is populated
+   * and every workflow is demoable; when false, only real API data shows. */
+  demoMode?: boolean;
   tasksInstallationId?: string;
 }
 
@@ -77,8 +81,11 @@ function setText(container: HTMLElement, selector: string, text: string): void {
 export function initDashboard(opts: DashboardOptions): void {
   const { container, widgetApi, branchBase, apiToken } = opts;
   const tasksInstallationId = opts.tasksInstallationId || DEFAULT_TASKS_INSTALLATION_ID;
+  // Default ON so the widget is never empty unless demo mode is explicitly off.
+  const demoMode = opts.demoMode !== false;
 
   applySBBrand();
+  applyDemoModeBadge(container, demoMode);
   wireTabs(container);
   wireSubTabs(container);
   wireChecklist(container);
@@ -87,18 +94,28 @@ export function initDashboard(opts: DashboardOptions): void {
   checkTokenStatus(container, branchBase, apiToken);
   wireDiagnosticsButton(container, branchBase, apiToken, tasksInstallationId);
   runSdkDiagnostics(container, widgetApi, tasksInstallationId);
-  const { setOverdueFilterActive: setJourneyOverdueFilter } = initJourneyProgress(container, branchBase, apiToken, tasksInstallationId);
+  const { setOverdueFilterActive: setJourneyOverdueFilter } = initJourneyProgress(container, branchBase, apiToken, tasksInstallationId, demoMode);
   const { getUserId, setOverdueFilterActive: setTaskOverdueFilter } = initTeamTasksAndRoleChange(
     container,
     branchBase,
     apiToken,
-    tasksInstallationId
+    tasksInstallationId,
+    demoMode
   );
   wireMetricLinks(container, setTaskOverdueFilter, setJourneyOverdueFilter);
   initPromotionLauncher(container, branchBase, apiToken, getUserId);
-  initRequisitions(container);
-  initMyTasks(container, branchBase, apiToken, tasksInstallationId, widgetApi);
+  initRequisitions(container, demoMode);
+  initMyTasks(container, branchBase, apiToken, tasksInstallationId, widgetApi, demoMode);
   applyViewerIdentity(container, widgetApi);
+}
+
+/** Small "Demo mode" chip in the setup view so it's obvious, when demoing,
+ * whether blended sample data is on. Purely informational. */
+function applyDemoModeBadge(container: HTMLElement, demoMode: boolean): void {
+  const el = container.querySelector<HTMLElement>("#demoModeStatus");
+  if (!el) return;
+  el.textContent = demoMode ? "On — sample data blended with live API data" : "Off — live API data only";
+  el.className = "live-badge " + (demoMode ? "partial" : "live");
 }
 
 function applySBBrand(): void {
@@ -684,8 +701,12 @@ function initJourneyProgress(
   container: HTMLElement,
   branchBase: string,
   apiToken: string,
-  tasksInstallationId: string
+  tasksInstallationId: string,
+  demoMode: boolean
 ): { setOverdueFilterActive: () => void } {
+  // In demo mode the built-in sample journeys are blended in; with it off the
+  // panel shows only what the live Journeys API returns.
+  const baselineEmployees = demoMode ? BASELINE_EMPLOYEES : [];
   const metaEl = container.querySelector<HTMLElement>("#journeyProgressMeta");
   const badgeEl = container.querySelector<HTMLElement>("#journeyProgressBadge");
   const listEl = container.querySelector<HTMLElement>("#journeyProgressList");
@@ -918,10 +939,10 @@ function initJourneyProgress(
   }
 
   function renderBaselineOnly() {
-    metaEl!.textContent = `${BASELINE_EMPLOYEES.length} tracked`;
+    metaEl!.textContent = `${baselineEmployees.length} tracked`;
     badgeEl!.style.display = "none";
-    setJourneyEmployees(BASELINE_EMPLOYEES);
-    renderOverdueSteps(BASELINE_EMPLOYEES);
+    setJourneyEmployees(baselineEmployees);
+    renderOverdueSteps(baselineEmployees);
   }
 
   if (!apiToken) {
@@ -929,7 +950,7 @@ function initJourneyProgress(
   } else {
     fetchJourneysEmployees(branchBase, apiToken)
       .then((real) => {
-        const combined = BASELINE_EMPLOYEES.concat(real);
+        const combined = baselineEmployees.concat(real);
         const journeyCount = new Set(combined.map((e) => e.journeyName)).size;
         metaEl!.textContent = `${combined.length} tracked across ${journeyCount} journeys`;
         if (real.length) {
@@ -1070,7 +1091,8 @@ function initTeamTasksAndRoleChange(
   container: HTMLElement,
   branchBase: string,
   apiToken: string,
-  tasksInstallationId: string
+  tasksInstallationId: string,
+  demoMode: boolean
 ): { getUserId: (name: string) => string | undefined; setOverdueFilterActive: () => void } {
   const tasksMetaEl = container.querySelector<HTMLElement>("#tasksMeta");
   const tasksBadgeEl = container.querySelector<HTMLElement>("#tasksBadge");
@@ -1203,17 +1225,23 @@ function initTeamTasksAndRoleChange(
       .catch(() => done(false));
   });
 
-  const BASELINE_TASKS: TaskGroup[] = [
-    { name: "Jamie Cole", tasks: [{ title: "Submit CPR/AED certification documentation", priority: "Priority_1", status: "Open" }] },
-    { name: "Priya Shah", tasks: [{ title: "Shadow 2 opening shifts with Front Desk Lead", priority: "Priority_3", status: "Open" }] },
-    { name: "Chris Diaz", tasks: [{ title: "Complete lifeguard certification renewal", priority: "Priority_2", status: "Open" }] },
-  ];
-  const BASELINE_MEMBERS: RoleChangeMember[] = [
-    { name: "Kristina Crawford", title: "Front Desk Associate" },
-    { name: "Gail Gonzalez", title: "Membership Concierge" },
-    { name: "Billie Kelley", title: "Membership Concierge" },
-    { name: "Greg Russell", title: "Membership Concierge" },
-  ];
+  // Sample data blended in only when demo mode is on.
+  const BASELINE_TASKS: TaskGroup[] = demoMode
+    ? [
+        { name: "Jamie Cole", tasks: [{ title: "Submit CPR/AED certification documentation", priority: "Priority_1", status: "Open" }] },
+        { name: "Priya Shah", tasks: [{ title: "Shadow 2 opening shifts with Front Desk Lead", priority: "Priority_3", status: "Open" }] },
+        { name: "Chris Diaz", tasks: [{ title: "Complete lifeguard certification renewal", priority: "Priority_2", status: "Open" }] },
+      ]
+    : [];
+  const BASELINE_MEMBERS: RoleChangeMember[] = demoMode
+    ? [
+        { name: "Kristina Crawford", title: "Front Desk Associate" },
+        { name: "Gail Gonzalez", title: "Membership Concierge" },
+        { name: "Billie Kelley", title: "Membership Concierge" },
+        { name: "Greg Russell", title: "Membership Concierge" },
+      ]
+    : [];
+  const baselineOverdueTasks: OverdueTaskEntry[] = demoMode ? BASELINE_OVERDUE_TASKS : [];
 
   function renderMembers(members: RoleChangeMember[]) {
     if (!memberSelect || !currentTitleEl) return;
@@ -1397,7 +1425,7 @@ function initTeamTasksAndRoleChange(
     tasksMetaEl.textContent = `${total} open tasks`;
     tasksBadgeEl.style.display = "none";
     setTaskGroups(BASELINE_TASKS);
-    renderOverdueTeamTasks(BASELINE_OVERDUE_TASKS, false);
+    renderOverdueTeamTasks(baselineOverdueTasks, false);
   }
 
   if (!apiToken) {
@@ -1417,7 +1445,7 @@ function initTeamTasksAndRoleChange(
         }
         setTaskGroups(combinedGroups);
 
-        renderOverdueTeamTasks(BASELINE_OVERDUE_TASKS.concat(data.overdueTasks), data.overdueTasks.length > 0);
+        renderOverdueTeamTasks(baselineOverdueTasks.concat(data.overdueTasks), data.overdueTasks.length > 0);
 
         if (data.roleChangeMembers.length) {
           renderMembers(BASELINE_MEMBERS.concat(data.roleChangeMembers));
@@ -1457,7 +1485,7 @@ const BASELINE_WORK_ORDERS: WorkOrderItem[] = [
   { title: "Close 2 aged work orders (>30 days)", source: "ServiceChannel", sourceCode: "SC", meta: "", action: "Review" },
 ];
 
-function initRequisitions(container: HTMLElement): void {
+function initRequisitions(container: HTMLElement, demoMode: boolean): void {
   const cardListEl = container.querySelector<HTMLElement>("#reqCardList");
   const cardViewEl = container.querySelector<HTMLElement>("#reqCardView");
   const fullViewEl = container.querySelector<HTMLElement>("#reqFullView");
@@ -1471,7 +1499,15 @@ function initRequisitions(container: HTMLElement): void {
   if (!cardListEl || !cardViewEl || !fullViewEl) return;
 
   cardListEl.innerHTML = "";
-  BASELINE_WORK_ORDERS.forEach((item) => {
+  // Requisitions has no live backend (ServiceChannel/Workday aren't connected),
+  // so it's sample-only — shown when demo mode is on, hidden when off.
+  if (!demoMode) {
+    const note = document.createElement("div");
+    note.className = "ooo-meta";
+    note.textContent = "Connect ServiceChannel / Workday Procurement to populate work orders.";
+    cardListEl.appendChild(note);
+  }
+  (demoMode ? BASELINE_WORK_ORDERS : []).forEach((item) => {
     const row = document.createElement("div");
     row.className = "team-row";
     row.innerHTML =
@@ -1565,13 +1601,15 @@ function initMyTasks(
   branchBase: string,
   apiToken: string,
   tasksInstallationId: string,
-  widgetApi: WidgetApi
+  widgetApi: WidgetApi,
+  demoMode: boolean
 ): void {
   const metaEl = container.querySelector<HTMLElement>("#myTasksMeta");
   const badgeEl = container.querySelector<HTMLElement>("#myTasksBadge");
   const listEl = container.querySelector<HTMLElement>("#myTasksList");
   const headingEl = container.querySelector<HTMLElement>("#myTasksHeading");
   if (!metaEl || !listEl) return;
+  const baselineMyTasks = demoMode ? BASELINE_MY_TASKS : [];
 
   function render(tasks: MyTaskEntry[]) {
     // Overdue first, then by priority, then keep insertion order.
@@ -1623,9 +1661,9 @@ function initMyTasks(
   }
 
   function renderBaseline() {
-    metaEl!.textContent = `${BASELINE_MY_TASKS.length} open tasks`;
+    metaEl!.textContent = `${baselineMyTasks.length} open task${baselineMyTasks.length === 1 ? "" : "s"}`;
     if (badgeEl) badgeEl.style.display = "none";
-    render(BASELINE_MY_TASKS);
+    render(baselineMyTasks);
   }
 
   if (!apiToken) {

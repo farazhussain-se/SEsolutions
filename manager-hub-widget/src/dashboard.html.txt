@@ -562,6 +562,17 @@
         <div id="diagnosticsResults" style="display:none; margin-top:10px;"></div>
       </div>
 
+      <div class="panel-title spaced">Demo Mode</div>
+      <div class="side-card" style="max-width:520px;">
+        <p>Set in this widget's configuration in Studio. When on, built-in sample team members, tasks, journeys and requisitions are blended with whatever the API returns — so every panel is populated and every workflow (reminders, filters, role changes) is demoable even on a fresh branch. Turn it off to show only real API data.</p>
+        <div class="team-row" style="border-bottom:none;">
+          <div class="team-row-body">
+            <div class="team-row-name">Sample data</div>
+          </div>
+          <span class="live-badge partial" id="demoModeStatus">—</span>
+        </div>
+      </div>
+
       <div class="panel-title spaced">Signed In As</div>
       <div class="side-card" style="max-width:520px;">
         <p>Pulled automatically via the Staffbase widget SDK (<code>widgetApi.getUserInformation()</code>) — no manual login or token needed.</p>

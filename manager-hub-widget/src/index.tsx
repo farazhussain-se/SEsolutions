@@ -31,6 +31,7 @@ import pkg from '../package.json'
  */
 const widgetAttributes: string[] = [
   'apitoken',
+  'demomode',
 ];
 
 /**

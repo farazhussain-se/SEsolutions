@@ -27,6 +27,11 @@ export const configurationSchema: JSONSchema7 = {
       type: "string",
       title: "Staffbase API Token",
     },
+    demomode: {
+      type: "boolean",
+      title: "Demo mode",
+      default: true,
+    },
   },
 };
 
@@ -34,5 +39,9 @@ export const uiSchema: UiSchema = {
   apitoken: {
     "ui:widget": "password",
     "ui:help": "One-time setup — paste the Branch API token here when installing this widget. The branch URL itself is detected automatically via the widget SDK.",
+  },
+  demomode: {
+    "ui:help":
+      "On: blends built-in sample team members, tasks, journeys and requisitions with whatever is live from the API, so every panel is populated and every workflow (reminders, filters, role changes) is demoable even on a fresh branch. Off: shows only real data returned by the API.",
   },
 };

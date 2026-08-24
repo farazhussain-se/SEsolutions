@@ -21,11 +21,22 @@ import { initDashboard } from "./dashboard-logic";
 export interface ManagerHubWidgetProps {
   widgetApi: WidgetApi;
   apitoken?: string;
+  /** Studio boolean config. Custom-element attributes arrive as strings, so
+   * this can be a real boolean (dev harness) or "true"/"false" (production). */
+  demomode?: boolean | string;
   contentLanguage?: string;
 }
 
-export const ManagerHubWidget = ({ widgetApi, apitoken }: ManagerHubWidgetProps): ReactElement => {
+/** Demo mode defaults ON so a freshly-installed widget is never empty. Only
+ * an explicit "false" (or real boolean false) turns it off. */
+function resolveDemoMode(demomode?: boolean | string): boolean {
+  if (demomode === undefined || demomode === null || demomode === "") return true;
+  return String(demomode) !== "false";
+}
+
+export const ManagerHubWidget = ({ widgetApi, apitoken, demomode }: ManagerHubWidgetProps): ReactElement => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const demoMode = resolveDemoMode(demomode);
 
   useEffect(() => {
     if (!containerRef.current || !widgetApi) return;
@@ -38,17 +49,22 @@ export const ManagerHubWidget = ({ widgetApi, apitoken }: ManagerHubWidgetProps)
       widgetApi,
       branchBase,
       apiToken: apitoken || "",
+      demoMode,
     });
-    // Re-runs if apitoken changes (e.g. Studio config updated) — the `key`
-    // below forces a fresh DOM tree each time so initDashboard never wires
-    // duplicate event listeners onto stale markup.
+    // Re-runs if apitoken or demoMode changes (e.g. Studio config updated) —
+    // the `key` below forces a fresh DOM tree each time so initDashboard never
+    // wires duplicate event listeners onto stale markup.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apitoken]);
+  }, [apitoken, demoMode]);
 
   return (
     <div>
       <style>{dashboardCss}</style>
-      <div key={apitoken || "no-token"} ref={containerRef} dangerouslySetInnerHTML={{ __html: dashboardHtml }} />
+      <div
+        key={`${apitoken || "no-token"}:${demoMode ? "demo" : "live"}`}
+        ref={containerRef}
+        dangerouslySetInnerHTML={{ __html: dashboardHtml }}
+      />
     </div>
   );
 };
