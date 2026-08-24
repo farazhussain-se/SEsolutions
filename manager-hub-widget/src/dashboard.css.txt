@@ -771,6 +771,55 @@
   }
   .task-item-title { flex: 1; }
 
+  /* ============ CLICKABLE METRIC CARDS ============ */
+  .metric-link { cursor: pointer; }
+  .metric-link:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .metric-cta {
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--primary);
+    margin-left: 6px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .metric-link:hover .metric-cta,
+  .metric-link:focus-visible .metric-cta { opacity: 1; }
+
+  /* ============ JOURNEY COMPLETION RING (per employee) ============ */
+  .prog-ring { flex-shrink: 0; display: block; }
+  .prog-ring-track { stroke: var(--border); }
+  .prog-ring-fill { stroke: var(--success); transition: stroke-dashoffset 0.6s ease; }
+  .prog-ring-fill.partial { stroke: var(--warning); }
+  .prog-ring-text { font-size: 11px; font-weight: 800; fill: var(--text); }
+  .roster-ring-cell { display: flex; align-items: center; gap: 12px; }
+
+  /* ============ PER-PERSON REMIND BUTTON ============ */
+  .remind-btn {
+    background: var(--bg);
+    border: 1.5px solid var(--primary);
+    color: var(--primary);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+  .remind-btn:hover { background: var(--primary); color: #fff; }
+  .remind-btn:disabled { opacity: 0.6; cursor: default; }
+  .task-group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 5px;
+  }
+  .task-group-head .task-group-name { margin-bottom: 0; }
+
   /* ============ REQUISITIONS (ServiceChannel + Workday Procurement) ============ */
   .req-subtabs {
     display: flex;

@@ -70,10 +70,11 @@ export function initDashboard(opts: DashboardOptions): void {
   wireChecklist(container);
   wireSetupLink(container);
   wireCollapsibleCards(container);
+  wireMetricLinks(container);
   checkTokenStatus(container, branchBase, apiToken);
   wireDiagnosticsButton(container, branchBase, apiToken, tasksInstallationId);
   runSdkDiagnostics(container, widgetApi, tasksInstallationId);
-  initJourneyProgress(container, branchBase, apiToken);
+  initJourneyProgress(container, branchBase, apiToken, tasksInstallationId);
   const { getUserId } = initTeamTasksAndRoleChange(container, branchBase, apiToken, tasksInstallationId);
   initPromotionLauncher(container, branchBase, apiToken, getUserId);
   initRequisitions(container);
@@ -135,6 +136,25 @@ function wireCollapsibleCards(container: HTMLElement): void {
     header.style.cursor = "pointer";
     header.addEventListener("click", () => {
       card.classList.toggle("collapsed");
+    });
+  });
+}
+
+/** The two top-of-dashboard metric cards (Overdue Team Tasks / Overdue
+ * Journey Steps) jump straight to the Team Readiness tab, where the actual
+ * overdue lists and their reminder actions live. */
+function wireMetricLinks(container: HTMLElement): void {
+  const openProgress = () => container.querySelector<HTMLElement>('.cw-tab[data-tab="progress"]')?.click();
+  ["#metricOverdueTasksCard", "#metricOverdueCard"].forEach((sel) => {
+    const card = container.querySelector<HTMLElement>(sel);
+    if (!card) return;
+    card.addEventListener("click", openProgress);
+    card.addEventListener("keydown", (e) => {
+      const key = (e as KeyboardEvent).key;
+      if (key === "Enter" || key === " ") {
+        e.preventDefault();
+        openProgress();
+      }
     });
   });
 }
@@ -311,8 +331,9 @@ interface JourneyEmployeeEntry {
   stepName: string | null;
   totalSteps: number;
   completed: boolean;
-  daysOnStep?: number; // only ever present on the baseline entries below — real
-  // API data has no per-user assigned/started timestamp yet (confirmed live)
+  daysOnStep?: number; // days waiting on the current step. Baseline entries set
+  // this directly; real entries derive it from the current step's
+  // userState.lastReceivedAt (see fetchJourneysEmployees).
 }
 
 const OVERDUE_THRESHOLD_DAYS = 3;
@@ -436,6 +457,26 @@ async function fetchJourneysEmployees(branchBase: string, apiToken: string): Pro
         }
       }
       const completed = stepIndex >= rawSteps.length;
+      // Real "days waiting": the API exposes no per-step assigned timestamp,
+      // and the *current* (not-yet-delivered) step has null timestamps —
+      // only the steps a person has already been pushed carry lastReceivedAt.
+      // So we take the most recent lastReceivedAt across their userStates:
+      // days since they were last advanced, while the journey is still
+      // unfinished, is a genuine overdue signal. This flows real employees
+      // into the Overdue Journey Steps panel (and its reminders), not just
+      // baseline fixtures. Verified live against real userStates.
+      let daysOnStep: number | undefined;
+      if (!completed) {
+        let latestReceived = 0;
+        rawSteps.forEach((s: any) => {
+          const st = (s.userStates || []).find((u: any) => u?.id === uid);
+          if (st?.lastReceivedAt) {
+            const t = new Date(st.lastReceivedAt).getTime();
+            if (!Number.isNaN(t) && t > latestReceived) latestReceived = t;
+          }
+        });
+        if (latestReceived > 0) daysOnStep = Math.max(0, Math.floor((Date.now() - latestReceived) / 86400000));
+      }
       entries.push({
         userId: uid,
         name,
@@ -445,6 +486,7 @@ async function fetchJourneysEmployees(branchBase: string, apiToken: string): Pro
         stepName: completed ? null : rawSteps[stepIndex].name,
         totalSteps: rawSteps.length,
         completed,
+        daysOnStep,
       });
     });
   });
@@ -452,17 +494,113 @@ async function fetchJourneysEmployees(branchBase: string, apiToken: string): Pro
   return entries;
 }
 
-function sendNotification(branchBase: string, apiToken: string, userId: string, title: string, message: string): Promise<void> {
+// POST /branch/notifications (Notifications API, operation
+// sendAccessorsNotification). Payload shape verified live (2026-08-24, → 201
+// {notificationId}) and against the official spec at
+// developers.staffbase.com/openapi/notificationsapi.yaml:
+//   { accessorIds: [id], content: { <locale>: { text } }, link? }
+// accessorIds is TOP-LEVEL (the nested `recipients.accessorIds` form belongs
+// to the deprecated /notifications endpoint), and content is a locale-keyed
+// map whose leaf field is `text` — NOT the { title, message } the original
+// code sent, which the API rejected with 400 "could not parse".
+function sendNotification(branchBase: string, apiToken: string, userId: string, title: string, message: string, link?: string): Promise<boolean> {
+  const body: Record<string, unknown> = {
+    accessorIds: [userId],
+    content: { en_US: { text: message || title } },
+  };
+  if (link) body.link = link;
   return staffbaseFetch(branchBase, apiToken, "/branch/notifications", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ accessorIds: [userId], content: { title, message } }),
+    body: JSON.stringify(body),
   })
-    .then(() => undefined)
-    .catch(() => undefined);
+    .then((r) => r.ok)
+    .catch(() => false);
 }
 
-function initJourneyProgress(container: HTMLElement, branchBase: string, apiToken: string): void {
+// Resolves a real task list to create tasks in. There's no list-index
+// endpoint on this API, but every existing task carries its taskListId, so
+// we borrow the list of an existing open task (cached after first lookup).
+// Verified live (2026-08-23): POST /tasks/{inst}/task with a valid
+// taskListId returns 201, dueDate round-trips, and DELETE removes it.
+let cachedTaskListId: string | null = null;
+async function getDefaultTaskListId(branchBase: string, apiToken: string, tasksInstallationId: string): Promise<string | null> {
+  if (cachedTaskListId) return cachedTaskListId;
+  try {
+    const res = await staffbaseFetch(
+      branchBase,
+      apiToken,
+      `/tasks/${tasksInstallationId}/task/search?updateDateFrom=2020-01-01T00:00:00.000Z&status=OPEN&limit=1`
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    cachedTaskListId = (data.entries || [])[0]?.taskListId || null;
+    return cachedTaskListId;
+  } catch {
+    return null;
+  }
+}
+
+interface NewTask {
+  title: string;
+  description?: string;
+  assigneeIds: string[];
+  priority?: string;
+  dueDate?: string;
+}
+
+function createTask(branchBase: string, apiToken: string, tasksInstallationId: string, taskListId: string, task: NewTask): Promise<boolean> {
+  return staffbaseFetch(branchBase, apiToken, `/tasks/${tasksInstallationId}/task`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title: task.title,
+      description: task.description || "",
+      priority: task.priority || "Priority_2",
+      taskListId,
+      assigneeIds: task.assigneeIds,
+      dueDate: task.dueDate,
+    }),
+  })
+    .then((r) => r.ok)
+    .catch(() => false);
+}
+
+/** Puts a button into a "Sending…" state, then to a success label (auto-
+ * reverting) or back to its original text on failure. Returns the finisher. */
+function flashButton(btn: HTMLButtonElement, doneLabel: string): (ok: boolean) => void {
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Sending…";
+  return (ok: boolean) => {
+    btn.textContent = ok ? doneLabel : original;
+    btn.disabled = false;
+    if (ok) setTimeout(() => (btn.textContent = original), 2500);
+  };
+}
+
+/** Small inline SVG donut showing journey completion for one employee.
+ * Everything drawn here is code-derived (numbers), never user input, so the
+ * innerHTML assignment at the call site stays XSS-safe. */
+function progressRing(completedSteps: number, totalSteps: number, done: boolean): string {
+  const size = 44;
+  const stroke = 4;
+  const r = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * r;
+  const pct = totalSteps > 0 ? Math.max(0, Math.min(1, completedSteps / totalSteps)) : 0;
+  const offset = circumference * (1 - pct);
+  const fillClass = "prog-ring-fill" + (done ? "" : " partial");
+  return (
+    `<svg class="prog-ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="${completedSteps} of ${totalSteps} steps complete">` +
+    `<circle class="prog-ring-track" cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke-width="${stroke}"/>` +
+    `<circle class="${fillClass}" cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke-width="${stroke}" stroke-linecap="round" ` +
+    `stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}" transform="rotate(-90 ${size / 2} ${size / 2})"/>` +
+    `<text class="prog-ring-text" x="50%" y="50%" text-anchor="middle" dominant-baseline="central">${completedSteps}/${totalSteps}</text>` +
+    `</svg>`
+  );
+}
+
+function initJourneyProgress(container: HTMLElement, branchBase: string, apiToken: string, tasksInstallationId: string): void {
   const metaEl = container.querySelector<HTMLElement>("#journeyProgressMeta");
   const badgeEl = container.querySelector<HTMLElement>("#journeyProgressBadge");
   const listEl = container.querySelector<HTMLElement>("#journeyProgressList");
@@ -489,14 +627,19 @@ function initJourneyProgress(container: HTMLElement, branchBase: string, apiToke
       rows.forEach((r) => {
         const item = document.createElement("div");
         item.className = "task-item";
-        item.innerHTML = '<span class="task-item-title"></span><span class="cw-pill"></span>';
-        const label = r.completed
+        // completedSteps = current step index (0-based) = number already done;
+        // a fully completed journey has stepIndex === totalSteps.
+        const completedSteps = Math.min(r.stepIndex, r.totalSteps);
+        const ringCell = document.createElement("span");
+        ringCell.className = "roster-ring-cell";
+        ringCell.innerHTML = progressRing(completedSteps, r.totalSteps, r.completed);
+        const titleEl = document.createElement("span");
+        titleEl.className = "task-item-title";
+        titleEl.textContent = r.completed
           ? r.journeyName
           : `${r.journeyName} · Step ${r.stepIndex + 1} of ${r.totalSteps}${r.stepName ? " · " + r.stepName : ""}`;
-        item.querySelector(".task-item-title")!.textContent = label;
-        const pill = item.querySelector(".cw-pill")!;
-        pill.classList.add(r.completed ? "ok" : "info");
-        pill.textContent = r.completed ? "Completed" : `Step ${r.stepIndex + 1}/${r.totalSteps}`;
+        item.appendChild(titleEl);
+        item.appendChild(ringCell);
         group.appendChild(item);
       });
       listEl!.appendChild(group);
@@ -504,6 +647,33 @@ function initJourneyProgress(container: HTMLElement, branchBase: string, apiToke
   }
 
   let lastOverdue: JourneyEmployeeEntry[] = [];
+
+  // A journey reminder is BOTH a real assigned task (so it lands in the
+  // person's task list) AND a push notification — per the requirement that
+  // "send reminder creates a task for the individual and also as a reminder
+  // notification". Returns false only if there's nothing real to act on
+  // (baseline entry with no userId, or no token configured).
+  function remindJourneyPerson(person: JourneyEmployeeEntry): Promise<boolean> {
+    if (!person.userId || !apiToken) return Promise.resolve(false);
+    const critical = (person.daysOnStep || 0) >= CRITICAL_THRESHOLD_DAYS;
+    const stepLabel = person.stepName || "your current step";
+    const title = `Journey step due: ${stepLabel}`;
+    const message = `Reminder: please complete "${stepLabel}" in ${person.journeyName}.`;
+    const dueDate = new Date(Date.now() + 3 * 86400000).toISOString();
+    const notif = sendNotification(branchBase, apiToken, person.userId, "Journey step reminder", message);
+    const taskP = getDefaultTaskListId(branchBase, apiToken, tasksInstallationId).then((listId) =>
+      listId
+        ? createTask(branchBase, apiToken, tasksInstallationId, listId, {
+            title,
+            description: message,
+            assigneeIds: [person.userId!],
+            priority: critical ? "Priority_1" : "Priority_2",
+            dueDate,
+          })
+        : false
+    );
+    return Promise.all([notif, taskP]).then(([n, t]) => n || t);
+  }
 
   function renderOverdueSteps(entries: JourneyEmployeeEntry[]) {
     const overdue = entries
@@ -543,10 +713,27 @@ function initJourneyProgress(container: HTMLElement, branchBase: string, apiToke
     byName.forEach((rows, name) => {
       const group = document.createElement("div");
       group.className = "task-group";
+
+      const head = document.createElement("div");
+      head.className = "task-group-head";
       const nameEl = document.createElement("div");
       nameEl.className = "task-group-name";
       nameEl.textContent = name;
-      group.appendChild(nameEl);
+      head.appendChild(nameEl);
+
+      // Per-person reminder: creates a task + fires a notification for this
+      // one employee. Uses their most-overdue entry as the task subject.
+      const person = rows.slice().sort((a, b) => (b.daysOnStep || 0) - (a.daysOnStep || 0))[0];
+      const remindBtn = document.createElement("button");
+      remindBtn.className = "remind-btn";
+      remindBtn.textContent = "Remind";
+      remindBtn.addEventListener("click", () => {
+        const done = flashButton(remindBtn, "Reminded");
+        remindJourneyPerson(person).then(done);
+      });
+      head.appendChild(remindBtn);
+      group.appendChild(head);
+
       rows.forEach((e) => {
         const item = document.createElement("div");
         item.className = "task-item";
@@ -592,27 +779,26 @@ function initJourneyProgress(container: HTMLElement, branchBase: string, apiToke
 
   const sendRemindersBtn = container.querySelector<HTMLButtonElement>("#sendRemindersBtn");
   sendRemindersBtn?.addEventListener("click", () => {
-    const original = sendRemindersBtn.textContent;
-    const people = lastOverdue.filter((e) => e.userId);
-    const finish = () => {
-      sendRemindersBtn.textContent = "Reminders Sent";
-      setTimeout(() => {
-        sendRemindersBtn.textContent = original;
-      }, 2500);
-    };
+    // One reminder (task + notification) per distinct person, using their
+    // most-overdue step, so someone stuck on several steps isn't spammed.
+    const byUser = new Map<string, JourneyEmployeeEntry>();
+    lastOverdue
+      .filter((e) => e.userId)
+      .forEach((e) => {
+        const existing = byUser.get(e.userId!);
+        if (!existing || (e.daysOnStep || 0) > (existing.daysOnStep || 0)) byUser.set(e.userId!, e);
+      });
+    const people = Array.from(byUser.values());
+    const done = flashButton(sendRemindersBtn, "Reminders Sent");
     if (!people.length || !apiToken) {
       // Baseline entries (or no token configured) have nothing real to
-      // notify — this is still an honest visual confirmation, not a fake API claim.
-      finish();
+      // notify — honest visual confirmation, not a fake API claim.
+      done(true);
       return;
     }
-    Promise.all(
-      people.map((e) =>
-        sendNotification(branchBase, apiToken, e.userId!, "Journey step reminder", `Reminder for ${e.name}: please complete your current step.`)
-      )
-    )
-      .then(finish)
-      .catch(finish);
+    Promise.all(people.map(remindJourneyPerson))
+      .then((results) => done(results.some(Boolean)))
+      .catch(() => done(false));
   });
 }
 
@@ -722,10 +908,21 @@ function initTeamTasksAndRoleChange(
 
   let titleByName: Record<string, string> = {};
   let userIdByName: Record<string, string> = {};
+  let lastOverdueTasks: OverdueTaskEntry[] = [];
+
+  // Overdue team tasks already exist as tasks, so a reminder here is a
+  // notification only (no new task created) — per the requirement that this
+  // is triggered through the notifications API.
+  function remindTaskPerson(entry: OverdueTaskEntry): Promise<boolean> {
+    if (!entry.userId || !apiToken) return Promise.resolve(false);
+    const message = `Reminder: "${entry.title}" is ${entry.daysOverdue} day${entry.daysOverdue === 1 ? "" : "s"} past due.`;
+    return sendNotification(branchBase, apiToken, entry.userId, "Overdue task reminder", message);
+  }
 
   function renderOverdueTeamTasks(entries: OverdueTaskEntry[], isLive: boolean) {
     if (!overdueTasksMetaEl || !overdueTasksListEl) return;
     const sorted = entries.slice().sort((a, b) => b.daysOverdue - a.daysOverdue);
+    lastOverdueTasks = sorted;
     const criticalCount = sorted.filter((e) => e.daysOverdue >= CRITICAL_THRESHOLD_DAYS).length;
 
     overdueTasksMetaEl.textContent = `${sorted.length} past due`;
@@ -767,10 +964,27 @@ function initTeamTasksAndRoleChange(
     byName.forEach((rows, name) => {
       const group = document.createElement("div");
       group.className = "task-group";
+
+      const head = document.createElement("div");
+      head.className = "task-group-head";
       const nameEl = document.createElement("div");
       nameEl.className = "task-group-name";
       nameEl.textContent = name;
-      group.appendChild(nameEl);
+      head.appendChild(nameEl);
+
+      // Per-person reminder: notification only, for this person's most-
+      // overdue task.
+      const worst = rows.slice().sort((a, b) => b.daysOverdue - a.daysOverdue)[0];
+      const remindBtn = document.createElement("button");
+      remindBtn.className = "remind-btn";
+      remindBtn.textContent = "Remind";
+      remindBtn.addEventListener("click", () => {
+        const done = flashButton(remindBtn, "Reminded");
+        remindTaskPerson(worst).then(done);
+      });
+      head.appendChild(remindBtn);
+      group.appendChild(head);
+
       rows.forEach((e) => {
         const item = document.createElement("div");
         item.className = "task-item";
@@ -785,6 +999,27 @@ function initTeamTasksAndRoleChange(
       overdueTasksListEl.appendChild(group);
     });
   }
+
+  const sendTaskRemindersBtn = container.querySelector<HTMLButtonElement>("#sendTaskRemindersBtn");
+  sendTaskRemindersBtn?.addEventListener("click", () => {
+    // One notification per distinct person, for their most-overdue task.
+    const byUser = new Map<string, OverdueTaskEntry>();
+    lastOverdueTasks
+      .filter((e) => e.userId)
+      .forEach((e) => {
+        const existing = byUser.get(e.userId!);
+        if (!existing || e.daysOverdue > existing.daysOverdue) byUser.set(e.userId!, e);
+      });
+    const people = Array.from(byUser.values());
+    const done = flashButton(sendTaskRemindersBtn, "Reminders Sent");
+    if (!people.length || !apiToken) {
+      done(true);
+      return;
+    }
+    Promise.all(people.map(remindTaskPerson))
+      .then((results) => done(results.some(Boolean)))
+      .catch(() => done(false));
+  });
 
   const BASELINE_TASKS: TaskGroup[] = [
     { name: "Jamie Cole", tasks: [{ title: "Submit CPR/AED certification documentation", priority: "Priority_1", status: "Open" }] },

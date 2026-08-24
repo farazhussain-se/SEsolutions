@@ -34,23 +34,23 @@
 
   <!-- METRICS -->
   <div class="metrics" style="grid-template-columns: repeat(2, 1fr);">
-    <div class="cw-metric">
+    <div class="cw-metric metric-link" id="metricOverdueTasksCard" role="button" tabindex="0" title="View overdue team tasks">
       <div class="metric-icon rust">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
         </svg>
       </div>
       <div class="metric-value" id="metricOverdueTasksValue">—</div>
-      <div class="metric-label">Overdue Team Tasks</div>
+      <div class="metric-label">Overdue Team Tasks <span class="metric-cta">View →</span></div>
     </div>
-    <div class="cw-metric">
+    <div class="cw-metric metric-link" id="metricOverdueCard" role="button" tabindex="0" title="View overdue journey steps">
       <div class="metric-icon charcoal">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
       </div>
       <div class="metric-value" id="metricOverdueValue">—</div>
-      <div class="metric-label">Overdue Journey Steps</div>
+      <div class="metric-label">Overdue Journey Steps <span class="metric-cta">View →</span></div>
     </div>
   </div>
 
@@ -225,7 +225,7 @@
               <span class="cw-pill required" id="overdueStepsCritical" style="display:none;"></span>
             </h3>
             <div id="overdueStepsList"></div>
-            <button class="ghost-btn" id="sendRemindersBtn" style="margin-top:10px;">Send Reminders</button>
+            <button class="ghost-btn" id="sendRemindersBtn" style="margin-top:10px;">Remind All — Task + Notification</button>
           </div>
         </div>
 
@@ -254,6 +254,7 @@
               </div>
             </div>
             <div id="overdueTasksList"></div>
+            <button class="ghost-btn" id="sendTaskRemindersBtn" style="margin-top:10px;">Remind All — Notification</button>
           </div>
         </div>
       </div>
