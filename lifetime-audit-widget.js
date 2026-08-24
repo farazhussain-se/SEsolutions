@@ -3402,7 +3402,12 @@ const factory = (BaseBlockClass, widgetApi) => {
                             return;
                         }
                         if (!installations.length) {
-                            optsList.innerHTML = `<div class="${p}-dd-msg">No ${esc(storeP.toLowerCase())} found</div>`;
+                            // Clubs are the instance's Tasks-plugin installations (fetched live).
+                            // An empty list almost always means one of these — say which.
+                            const why = !apiToken
+                                ? "Set an API Token in the widget settings — clubs load from the Tasks app via the API."
+                                : `No Tasks-app installations are visible to you in this instance. A "${esc(storeS.toLowerCase())}" is a Tasks-app installation; create one (or check your access) so it appears here.`;
+                            optsList.innerHTML = `<div class="${p}-dd-msg">No ${esc(storeP.toLowerCase())} found<br><span style="font-size:11px;color:var(--gray-lt);display:block;margin-top:6px;line-height:1.5">${why}</span></div>`;
                             return;
                         }
                         const matches = installations.filter(s => s.title.toLowerCase().includes(filter.toLowerCase()));
