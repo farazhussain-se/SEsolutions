@@ -1953,41 +1953,39 @@ const DEFAULT_THRESHOLD = "90";
 const DUMMY_QUESTIONS = [
     { id: "ARR-001", cat: "Arrival & Lobby", text: "Front desk staffed and member greeted within 10 seconds of entry", type: "pf", pts: 3, critical: false, task: true, passCriteria: "Member acknowledged within 10s", taskTitle: "Front desk greeting standard not met", taskRole: "Club Operations", taskPriority: "Medium", taskDue: 2 },
     { id: "ARR-002", cat: "Arrival & Lobby", text: "Lobby floors, glass, and seating are clean and free of clutter", type: "pf", pts: 2, critical: false, task: true, passCriteria: "No visible debris, smudges, or clutter", taskTitle: "Deep clean lobby area", taskRole: "Housekeeping", taskPriority: "Medium", taskDue: 1 },
-    { id: "ARR-003", cat: "Arrival & Lobby", text: "Lobby signage / member app screens are powered on and displaying current content", type: "pf", pts: 2, critical: false, task: true, passCriteria: "All screens live with current content", taskTitle: "Restore lobby signage display", taskRole: "Facility Operations", taskPriority: "Medium", taskDue: 2 },
-    { id: "FIT-001", cat: "Fitness Floor", text: "% of cardio machines fully operational (no out-of-service tags)", type: "pct", pts: 5, critical: false, task: true, passCriteria: "≥ 95%", taskTitle: "Repair out-of-service cardio equipment", taskRole: "Facility Operations", taskPriority: "High", taskDue: 3 },
-    { id: "FIT-002", cat: "Fitness Floor", text: "Strength machines have intact cables, pads, and pins", type: "pf", pts: 5, critical: false, task: true, passCriteria: "No frayed cables or torn pads", taskTitle: "Repair/replace damaged strength equipment", taskRole: "Facility Operations", taskPriority: "High", taskDue: 3 },
+    { id: "ARR-003", cat: "Arrival & Lobby", text: "Lobby signage / member app screens are powered on and displaying current content", type: "pf", pts: 2, critical: false, task: true, passCriteria: "All screens live with current content", taskTitle: "Restore lobby signage display", taskRole: "Club Facility Specialists & Engineers", taskPriority: "Medium", taskDue: 2 },
+    { id: "FIT-001", cat: "Fitness Floor", text: "% of cardio machines fully operational (no out-of-service tags)", type: "pct", pts: 5, critical: false, task: true, passCriteria: "≥ 95%", taskTitle: "Repair out-of-service cardio equipment", taskRole: "Club Facility Specialists & Engineers", taskPriority: "High", taskDue: 3 },
+    { id: "FIT-002", cat: "Fitness Floor", text: "Strength machines have intact cables, pads, and pins", type: "pf", pts: 5, critical: false, task: true, passCriteria: "No frayed cables or torn pads", taskTitle: "Repair/replace damaged strength equipment", taskRole: "Club Facility Specialists & Engineers", taskPriority: "High", taskDue: 3 },
     { id: "FIT-003", cat: "Fitness Floor", text: "Sanitizing wipe stations stocked and functional across the floor", type: "pf", pts: 2, critical: false, task: true, passCriteria: "All stations stocked", taskTitle: "Restock sanitizing wipe stations", taskRole: "Housekeeping", taskPriority: "Medium", taskDue: 1 },
     { id: "FIT-004", cat: "Fitness Floor", text: "Free weights and benches re-racked and orderly", type: "rating", pts: 2, critical: false, task: true, passCriteria: "≥ 4 of 5", taskTitle: "Re-rack and organize free weight area", taskRole: "Fitness", taskPriority: "Low", taskDue: 1 },
     { id: "LOC-001", cat: "Locker Rooms", text: "Showers, vanities, and floors clean and dry; no standing water", type: "pf", pts: 3, critical: false, task: true, passCriteria: "Clean, dry, no standing water", taskTitle: "Address locker room cleanliness", taskRole: "Housekeeping", taskPriority: "High", taskDue: 1 },
     { id: "LOC-002", cat: "Locker Rooms", text: "Towels, toiletries, and hair dryers stocked and working", type: "pf", pts: 2, critical: false, task: true, passCriteria: "All amenities stocked and functional", taskTitle: "Restock locker room amenities", taskRole: "Housekeeping", taskPriority: "Medium", taskDue: 1 },
-    { id: "LOC-003", cat: "Locker Rooms", text: "Steam room / sauna operating within target temperature", type: "temp", pts: 4, critical: false, task: true, passCriteria: "Sauna 160–190°F; steam 110–120°F", taskTitle: "Service sauna/steam room temperature", taskRole: "Facility Operations", taskPriority: "High", taskDue: 2 },
-    { id: "LOC-004", cat: "Locker Rooms", text: "All locker room lighting fully operational (no dark zones)", type: "pf", pts: 2, critical: false, task: true, passCriteria: "No burned-out fixtures", taskTitle: "Replace locker room lighting", taskRole: "Facility Operations", taskPriority: "Medium", taskDue: 2 },
+    { id: "LOC-003", cat: "Locker Rooms", text: "Steam room / sauna operating within target temperature", type: "temp", pts: 4, critical: false, task: true, passCriteria: "Sauna 160–190°F; steam 110–120°F", taskTitle: "Service sauna/steam room temperature", taskRole: "Club Facility Specialists & Engineers", taskPriority: "High", taskDue: 2 },
+    { id: "LOC-004", cat: "Locker Rooms", text: "All locker room lighting fully operational (no dark zones)", type: "pf", pts: 2, critical: false, task: true, passCriteria: "No burned-out fixtures", taskTitle: "Replace locker room lighting", taskRole: "Club Facility Specialists & Engineers", taskPriority: "Medium", taskDue: 2 },
     { id: "AQU-001", cat: "Aquatics", text: "Pool water chemistry (chlorine/pH) within safe range", type: "pf", pts: 5, critical: true, task: true, passCriteria: "Chlorine 1–3 ppm; pH 7.2–7.8", taskTitle: "Rebalance pool water chemistry — SAFETY", taskRole: "Aquatics", taskPriority: "Critical", taskDue: 0 },
-    { id: "AQU-002", cat: "Aquatics", text: "Pool water temperature within target range", type: "temp", pts: 3, critical: false, task: true, passCriteria: "83–86°F lap; 90–92°F therapy", taskTitle: "Adjust pool heater temperature", taskRole: "Facility Operations", taskPriority: "High", taskDue: 1 },
+    { id: "AQU-002", cat: "Aquatics", text: "Pool water temperature within target range", type: "temp", pts: 3, critical: false, task: true, passCriteria: "83–86°F lap; 90–92°F therapy", taskTitle: "Adjust pool heater temperature", taskRole: "Club Facility Specialists & Engineers", taskPriority: "High", taskDue: 1 },
     { id: "AQU-003", cat: "Aquatics", text: "Lifeguard stand staffed and rescue equipment present", type: "pf", pts: 5, critical: true, task: true, passCriteria: "Guard present; equipment complete", taskTitle: "Correct aquatics safety coverage", taskRole: "Aquatics", taskPriority: "Critical", taskDue: 0 },
-    { id: "AQU-004", cat: "Aquatics", text: "Deck drains clear and pool pump room free of leaks", type: "pf", pts: 3, critical: false, task: true, passCriteria: "No clogs or active leaks", taskTitle: "Inspect/repair pool pump room", taskRole: "Facility Operations", taskPriority: "High", taskDue: 2 },
+    { id: "AQU-004", cat: "Aquatics", text: "Deck drains clear and pool pump room free of leaks", type: "pf", pts: 3, critical: false, task: true, passCriteria: "No clogs or active leaks", taskTitle: "Inspect/repair pool pump room", taskRole: "Club Facility Specialists & Engineers", taskPriority: "High", taskDue: 2 },
     { id: "GRP-001", cat: "Group Fitness", text: "Studio floors and mirrors clean; equipment sanitized between classes", type: "pf", pts: 2, critical: false, task: true, passCriteria: "Clean floors/mirrors; sanitized gear", taskTitle: "Clean and sanitize group fitness studio", taskRole: "Housekeeping", taskPriority: "Medium", taskDue: 1 },
-    { id: "GRP-002", cat: "Group Fitness", text: "Studio HVAC maintaining comfortable temperature during class", type: "temp", pts: 3, critical: false, task: true, passCriteria: "68–72°F during class", taskTitle: "Service studio HVAC", taskRole: "Facility Operations", taskPriority: "High", taskDue: 2 },
-    { id: "GRP-003", cat: "Group Fitness", text: "Cycle bikes, spin shoes clips, and audio system fully functional", type: "pf", pts: 3, critical: false, task: true, passCriteria: "All bikes and audio working", taskTitle: "Repair studio equipment / audio", taskRole: "Facility Operations", taskPriority: "Medium", taskDue: 2 },
+    { id: "GRP-002", cat: "Group Fitness", text: "Studio HVAC maintaining comfortable temperature during class", type: "temp", pts: 3, critical: false, task: true, passCriteria: "68–72°F during class", taskTitle: "Service studio HVAC", taskRole: "Club Facility Specialists & Engineers", taskPriority: "High", taskDue: 2 },
+    { id: "GRP-003", cat: "Group Fitness", text: "Cycle bikes, spin shoes clips, and audio system fully functional", type: "pf", pts: 3, critical: false, task: true, passCriteria: "All bikes and audio working", taskTitle: "Repair studio equipment / audio", taskRole: "Club Facility Specialists & Engineers", taskPriority: "Medium", taskDue: 2 },
     { id: "KID-001", cat: "Kids Academy", text: "Child check-in/out system operational and ratios met", type: "pf", pts: 5, critical: true, task: true, passCriteria: "System working; ratios compliant", taskTitle: "Correct Kids Academy safety compliance", taskRole: "Kids Academy", taskPriority: "Critical", taskDue: 0 },
     { id: "KID-002", cat: "Kids Academy", text: "Toys, mats, and surfaces sanitized; no broken items", type: "pf", pts: 3, critical: false, task: true, passCriteria: "Sanitized; no broken/hazardous items", taskTitle: "Sanitize and inspect Kids Academy", taskRole: "Housekeeping", taskPriority: "High", taskDue: 1 },
     { id: "CAF-001", cat: "LifeCafe", text: "Cold-hold cases within safe temperature range", type: "temp", pts: 5, critical: true, task: true, passCriteria: "≤ 41°F cold hold", taskTitle: "Correct LifeCafe cold-hold temperature — FOOD SAFETY", taskRole: "LifeCafe", taskPriority: "Critical", taskDue: 0 },
     { id: "CAF-002", cat: "LifeCafe", text: "Prep surfaces, blenders, and seating area clean", type: "pf", pts: 2, critical: false, task: true, passCriteria: "No residue; sanitized surfaces", taskTitle: "Deep clean LifeCafe prep and seating", taskRole: "LifeCafe", taskPriority: "Medium", taskDue: 1 },
     { id: "CAF-003", cat: "LifeCafe", text: "Average member wait time at counter", type: "time", pts: 2, critical: false, task: false, passCriteria: "≤ 180 seconds", taskTitle: "", taskRole: "", taskPriority: "Low", taskDue: 0, timeUnit: "sec" },
-    { id: "FAC-001", cat: "Facility Operations", text: "Main HVAC system operating; no comfort complaints logged today", type: "pf", pts: 4, critical: false, task: true, passCriteria: "System operational; no open complaints", taskTitle: "Investigate/repair main HVAC system", taskRole: "Facility Operations", taskPriority: "High", taskDue: 2 },
-    { id: "FAC-002", cat: "Facility Operations", text: "No active plumbing leaks in back-of-house or wet areas", type: "pf", pts: 4, critical: false, task: true, passCriteria: "No active leaks", taskTitle: "Dispatch plumbing repair", taskRole: "Facility Operations", taskPriority: "High", taskDue: 1 },
-    { id: "FAC-003", cat: "Facility Operations", text: "Emergency lighting and exit signs functional", type: "pf", pts: 5, critical: true, task: true, passCriteria: "All emergency fixtures functional", taskTitle: "Repair emergency lighting / exit signage", taskRole: "Facility Operations", taskPriority: "Critical", taskDue: 1 },
-    { id: "FAC-004", cat: "Facility Operations", text: "Parking lot and exterior lighting fully operational", type: "pf", pts: 3, critical: false, task: true, passCriteria: "No dark exterior zones", taskTitle: "Replace exterior lighting", taskRole: "Facility Operations", taskPriority: "Medium", taskDue: 3 },
-    { id: "FAC-005", cat: "Facility Operations", text: "Snow/ice cleared from entrances and walkways (Winter Park)", type: "pf", pts: 4, critical: false, task: true, passCriteria: "Entrances/walkways clear and salted", taskTitle: "Clear and treat entrance walkways — SAFETY", taskRole: "Facility Operations", taskPriority: "High", taskDue: 0 },
-    { id: "SAF-001", cat: "Safety & Compliance", text: "AEDs present, charged, and within inspection date", type: "pf", pts: 5, critical: true, task: true, passCriteria: "All AEDs charged and in date", taskTitle: "Service/replace AED units — SAFETY", taskRole: "Facility Operations", taskPriority: "Critical", taskDue: 0 },
+    { id: "FAC-001", cat: "Facility Operations", text: "Main HVAC system operating; no comfort complaints logged today", type: "pf", pts: 4, critical: false, task: true, passCriteria: "System operational; no open complaints", taskTitle: "Investigate/repair main HVAC system", taskRole: "Club Facility Specialists & Engineers", taskPriority: "High", taskDue: 2 },
+    { id: "FAC-002", cat: "Facility Operations", text: "No active plumbing leaks in back-of-house or wet areas", type: "pf", pts: 4, critical: false, task: true, passCriteria: "No active leaks", taskTitle: "Dispatch plumbing repair", taskRole: "Club Facility Specialists & Engineers", taskPriority: "High", taskDue: 1 },
+    { id: "FAC-003", cat: "Facility Operations", text: "Emergency lighting and exit signs functional", type: "pf", pts: 5, critical: true, task: true, passCriteria: "All emergency fixtures functional", taskTitle: "Repair emergency lighting / exit signage", taskRole: "Club Facility Specialists & Engineers", taskPriority: "Critical", taskDue: 1 },
+    { id: "FAC-004", cat: "Facility Operations", text: "Parking lot and exterior lighting fully operational", type: "pf", pts: 3, critical: false, task: true, passCriteria: "No dark exterior zones", taskTitle: "Replace exterior lighting", taskRole: "Club Facility Specialists & Engineers", taskPriority: "Medium", taskDue: 3 },
+    { id: "FAC-005", cat: "Facility Operations", text: "Snow/ice cleared from entrances and walkways (Winter Park)", type: "pf", pts: 4, critical: false, task: true, passCriteria: "Entrances/walkways clear and salted", taskTitle: "Clear and treat entrance walkways — SAFETY", taskRole: "Club Facility Specialists & Engineers", taskPriority: "High", taskDue: 0 },
+    { id: "SAF-001", cat: "Safety & Compliance", text: "AEDs present, charged, and within inspection date", type: "pf", pts: 5, critical: true, task: true, passCriteria: "All AEDs charged and in date", taskTitle: "Service/replace AED units — SAFETY", taskRole: "Club Facility Specialists & Engineers", taskPriority: "Critical", taskDue: 0 },
     { id: "SAF-002", cat: "Safety & Compliance", text: "Wet floor signage and hazard signage available and in use", type: "pf", pts: 2, critical: false, task: true, passCriteria: "Signage present where required", taskTitle: "Deploy required safety signage", taskRole: "Club Operations", taskPriority: "Medium", taskDue: 1 },
 ];
 // ── Config schema ─────────────────────────────────────────────────────────────
 const configurationSchema = {
     properties: {
-        appsscripturl: { type: "string", title: "Apps Script URL", default: DEFAULT_APPS_SCRIPT_URL },
         apitoken: { type: "string", title: "API Token", default: DEFAULT_API_TOKEN },
-        baseurl: { type: "string", title: "Base URL", default: DEFAULT_BASE_URL },
         usethemecolors: { type: "boolean", title: "Use Theme Colors", default: false },
         backgroundcolor: { type: "string", title: "Background Color", default: "" },
         storelabelsingular: { type: "string", title: "Club Label (singular)", default: "Club" },
@@ -1995,7 +1993,7 @@ const configurationSchema = {
         passthreshold: { type: "string", title: "Pass Threshold (%)", default: DEFAULT_THRESHOLD },
         notifyonassign: { type: "boolean", title: "Notify on Assignment", default: false },
         enablerequisitions: { type: "boolean", title: "Enable Workday Requisitions", default: true },
-        facopsrole: { type: "string", title: "Facility Operations Role", default: "Facility Operations" },
+        facopsrole: { type: "string", title: "Facility Operations Group", default: "Club Facility Specialists & Engineers" },
         workdaytenant: { type: "string", title: "Workday Tenant (label)", default: "lifetime" },
         limitheight: { type: "boolean", title: "Limit Height", default: false },
     },
@@ -2029,8 +2027,6 @@ const configurationSchema = {
 };
 const uiSchema = {
     apitoken: { "ui:widget": "password", "ui:help": "Staffbase Basic auth token" },
-    appsscripturl: { "ui:help": "Deployed Google Apps Script URL returning audit questions" },
-    baseurl: { "ui:help": "Staffbase API base URL" },
     usethemecolors: { "ui:help": "Pull Primary & Accent from the app's branding theme (uses the API Token). Hides the color pickers below." },
     primarycolor: { "ui:widget": "color" },
     accentcolor: { "ui:widget": "color" },
@@ -2115,7 +2111,7 @@ const factory = (BaseBlockClass, widgetApi) => {
                 // marks a question as facility-ops: its task routes to the same-named
                 // group AND it becomes eligible for a (simulated) Workday requisition.
                 const enableRequisitions = (this.getAttribute("enablerequisitions") || "true") !== "false";
-                const facopsRole = (this.getAttribute("facopsrole") || "Facility Operations").trim();
+                const facopsRole = (this.getAttribute("facopsrole") || "Club Facility Specialists & Engineers").trim();
                 const workdayTenant = (this.getAttribute("workdaytenant") || "lifetime").trim();
                 // A question is "facility-ops" when its assignee role matches facopsRole
                 // (primary signal), or — as a fallback — its category names facilities.
@@ -4041,7 +4037,7 @@ const factory = (BaseBlockClass, widgetApi) => {
               <label class="${p}-req-toggle${reqOn ? " on" : ""}" data-qid="${esc(q.id)}">
                 <input type="checkbox" class="${p}-req-check" data-qid="${esc(q.id)}" ${reqOn ? "checked" : ""}>
                 <span class="${p}-req-mark">${iWrench}</span>
-                <span class="${p}-req-text"><strong>Raise Facilities requisition in Workday</strong><span class="${p}-req-sub">Routes to Facility Operations · tenant: ${esc(workdayTenant)}</span></span>
+                <span class="${p}-req-text"><strong>Raise Facilities requisition in Workday</strong><span class="${p}-req-sub">Routes to the Facilities team · tenant: ${esc(workdayTenant)}</span></span>
               </label>` : "";
                             return `<div class="${p}-fail-item${facil ? ` ${p}-fail-facil` : ""}">
               <div class="${p}-fail-head">
@@ -4453,14 +4449,14 @@ const factory = (BaseBlockClass, widgetApi) => {
             });
         }
         static get observedAttributes() {
-            return ["appsscripturl", "apitoken", "baseurl", "usethemecolors", "primarycolor", "accentcolor", "backgroundcolor", "storelabelsingular", "storelabelplural", "passthreshold", "notifyonassign", "enablerequisitions", "facopsrole", "workdaytenant"];
+            return ["apitoken", "usethemecolors", "primarycolor", "accentcolor", "backgroundcolor", "storelabelsingular", "storelabelplural", "passthreshold", "notifyonassign", "enablerequisitions", "facopsrole", "workdaytenant"];
         }
     };
 };
 // ── Block registration ────────────────────────────────────────────────────────
 const blockDefinition = {
     name: "lifetime-audit-widget", label: "Life Time Club Audit",
-    attributes: ["appsscripturl", "apitoken", "baseurl", "usethemecolors", "primarycolor", "accentcolor", "backgroundcolor", "storelabelsingular", "storelabelplural", "passthreshold", "notifyonassign", "limitheight", "maxheight", "enablerequisitions", "facopsrole", "workdaytenant"],
+    attributes: ["apitoken", "usethemecolors", "primarycolor", "accentcolor", "backgroundcolor", "storelabelsingular", "storelabelplural", "passthreshold", "notifyonassign", "limitheight", "maxheight", "enablerequisitions", "facopsrole", "workdaytenant"],
     factory, configurationSchema, uiSchema, blockLevel: "block", iconUrl: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNzEgMTcxIj48Y2lyY2xlIGN4PSI4NS41IiBjeT0iODUuNSIgcj0iODUuNSIgZmlsbD0iIzQ3NTU2OSIvPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQzLjUgNDMuNSkgc2NhbGUoMy41KSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0ibTggMTEgMiAyIDQtNCIvPjxjaXJjbGUgY3g9IjExIiBjeT0iMTEiIHI9IjgiLz48cGF0aCBkPSJtMjEgMjEtNC4zLTQuMyIvPjwvZz48L3N2Zz4=",
 };
 window.defineBlock({ blockDefinition, author: "Staffbase", version: "1.0.0" });
