@@ -1,0 +1,9 @@
+/*!
+ * Life Time Club Audit widget — Studio configuration schema.
+ *
+ * No "Apps Script URL" or "Base URL" fields here on purpose: the question
+ * bank ships embedded (see DUMMY_QUESTIONS in index.ts) and the branch's API
+ * base URL is read from widgetApi.getBranchInformation() at render time —
+ * same pattern as this repo's manager-hub-widget. The only setting most
+ * installs need is the API Token.
+ */
