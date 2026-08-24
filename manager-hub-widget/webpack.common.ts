@@ -11,6 +11,7 @@
  * limitations under the License.
  */
 
+import * as path from "path";
 import * as webpack from "webpack";
 
 const config: webpack.Configuration = {
@@ -44,6 +45,9 @@ const config: webpack.Configuration = {
   },
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
+    alias: {
+      "widget-sdk": path.resolve(__dirname, "node_modules/@staffbase/widget-sdk"),
+    },
   },
   output: {
     filename: "[name].js",

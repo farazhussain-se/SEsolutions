@@ -771,6 +771,39 @@
   }
   .task-item-title { flex: 1; }
 
+  /* ============ REQUISITIONS (ServiceChannel + Workday Procurement) ============ */
+  .req-subtabs {
+    display: flex;
+    gap: 18px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .req-subtabs .cw-tab { padding: 4px 0 8px; }
+
+  .req-stepper { display: flex; align-items: flex-start; margin-top: 16px; padding: 0 4px; }
+  .req-step { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+  .req-line {
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    z-index: 0;
+  }
+  .req-line.done { background: var(--primary); }
+  .req-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    z-index: 1;
+  }
+  .req-dot.done { background: var(--primary); border-color: var(--primary); }
+  .req-steplbl { font-size: 11px; color: var(--text-light); margin-top: 6px; }
+  .req-step.done .req-steplbl { color: var(--text); font-weight: 600; }
+
   /* ============ PROMOTION LAUNCHER ============ */
   .promo-form { display: flex; flex-direction: column; gap: 8px; }
   select.policy-input { appearance: none; cursor: pointer; }

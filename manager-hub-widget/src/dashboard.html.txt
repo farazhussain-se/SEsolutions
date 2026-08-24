@@ -19,6 +19,7 @@
       <button class="cw-tab active" data-tab="action">Action Center</button>
       <button class="cw-tab" data-tab="progress">Team Readiness</button>
       <button class="cw-tab" data-tab="roster">Roster &amp; Leave</button>
+      <button class="cw-tab" data-tab="requisitions">Requisitions</button>
       <button class="cw-tab" data-tab="talent">Talent Mobility</button>
       <button class="cw-tab" data-tab="setup">Setup</button>
     </div>
@@ -207,15 +208,21 @@
                 <span class="live-badge live" id="tasksBadge" style="display:none;">Live</span>
               </div>
             </div>
+            <select class="policy-input" id="taskMemberFilter" style="margin-bottom:10px;">
+              <option value="">All Team Members</option>
+            </select>
             <div id="tasksList"></div>
           </div>
 
           <div class="side-card accent danger">
-            <h3>
-              <span class="accent-icon danger">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <h3 style="justify-content:space-between;">
+              <span style="display:flex; align-items:center; gap:8px;">
+                <span class="accent-icon danger">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </span>
+                <span id="overdueStepsTitle">Overdue Journey Steps</span>
               </span>
-              <span id="overdueStepsTitle">Overdue Journey Steps</span>
+              <span class="cw-pill required" id="overdueStepsCritical" style="display:none;"></span>
             </h3>
             <div id="overdueStepsList"></div>
             <button class="ghost-btn" id="sendRemindersBtn" style="margin-top:10px;">Send Reminders</button>
@@ -226,14 +233,17 @@
         <div>
           <div class="panel-title">Overdue Team Tasks</div>
 
-          <div class="side-card">
-            <h3>
-              <span class="accent-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                </svg>
+          <div class="side-card accent danger">
+            <h3 style="justify-content:space-between;">
+              <span style="display:flex; align-items:center; gap:8px;">
+                <span class="accent-icon danger">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                  </svg>
+                </span>
+                <span>Past Due</span>
               </span>
-              <span>Past Due</span>
+              <span class="cw-pill required" id="overdueTasksCritical" style="display:none;"></span>
             </h3>
             <div class="journey-tracker-header" style="margin-bottom:10px;">
               <div>
@@ -300,6 +310,83 @@
               <span class="ooo-name">Leah Kim</span>
               <span class="ooo-meta" style="margin-left:auto;">Parental · Returns Oct 15</span>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ REQUISITIONS (ServiceChannel + Workday Procurement) ============ -->
+    <div class="view" id="view-requisitions">
+
+      <!-- Landing: Work Orders & Ordering summary card -->
+      <div id="reqCardView">
+        <div class="panel-title">Work Orders &amp; Ordering</div>
+        <div class="side-card">
+          <div class="journey-tracker-header" style="margin-bottom:10px;">
+            <div>
+              <div class="journey-name" style="font-size:15px;">Work Orders &amp; Ordering</div>
+            </div>
+            <div class="journey-header-actions">
+              <span class="training-link" id="reqViewAllBtn">
+                <span>View all</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </span>
+            </div>
+          </div>
+          <div id="reqCardList"></div>
+        </div>
+      </div>
+
+      <!-- Full history: reskinned Workday Requisitions screen -->
+      <div id="reqFullView" style="display:none;">
+        <button class="ghost-btn" id="reqBackBtn" style="margin-bottom:12px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span>Work Orders &amp; Ordering</span>
+        </button>
+
+        <div class="side-card">
+          <h3 id="reqInstrToggle" style="justify-content:space-between; cursor:pointer;">
+            <span style="display:flex; align-items:center; gap:8px;">
+              <span class="accent-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              </span>
+              <span>Instructions</span>
+            </span>
+            <span class="collapse-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+          </h3>
+          <p style="margin-bottom:4px;"><a href="#" style="color:var(--primary); font-weight:600; text-decoration:none;">Requisitions App Overview</a></p>
+          <p style="margin-bottom:0;"><a href="#" style="color:var(--primary); font-weight:600; text-decoration:none;">Creating Requisitions — Resources on LT Central</a></p>
+        </div>
+
+        <div class="side-card">
+          <div class="journey-tracker-header" style="margin-bottom:6px;">
+            <div>
+              <div class="journey-name" style="font-size:15px;">Requisitions <span style="color:var(--text-light); font-weight:600; font-size:12.5px;">· Past 6 Months</span></div>
+            </div>
+            <div class="journey-header-actions">
+              <button class="action-btn secondary small">Edit Filters</button>
+            </div>
+          </div>
+          <div class="req-subtabs">
+            <button class="cw-tab active" id="reqTabOpen">Open (1)</button>
+            <button class="cw-tab" id="reqTabCompleted">Completed (0)</button>
+          </div>
+          <div id="reqOpenList">
+            <div class="team-row" style="border-bottom:none;">
+              <div class="team-row-body">
+                <div class="team-row-name">REQ-1673287</div>
+                <div class="team-row-meta">Total Amount $141.85 · Created 09/29/2023 · 1 item</div>
+              </div>
+              <span class="cw-pill ok">Approved</span>
+            </div>
+            <div class="req-stepper">
+              <div class="req-step done"><div class="req-line done"></div><div class="req-dot done"></div><div class="req-steplbl">Ordered</div></div>
+              <div class="req-step"><div class="req-line"></div><div class="req-dot"></div><div class="req-steplbl">Receiving</div></div>
+              <div class="req-step"><div class="req-dot"></div><div class="req-steplbl">Invoicing</div></div>
+            </div>
+          </div>
+          <div id="reqCompletedList" style="display:none;">
+            <div class="ooo-meta">No completed requisitions in the last 6 months.</div>
           </div>
         </div>
       </div>
@@ -438,6 +525,11 @@
       <div class="panel-title spaced">HR Tickets — ServiceNow</div>
       <div class="side-card" style="max-width:520px;">
         <p>Requires a ServiceNow instance URL and credentials that aren't configured here — the ticket list in Action Center stays on baseline data regardless of how this widget is hosted.</p>
+      </div>
+
+      <div class="panel-title spaced">Requisitions — ServiceChannel + Workday Procurement</div>
+      <div class="side-card" style="max-width:520px;">
+        <p>Requires ServiceChannel and Workday Procurement API access that aren't configured here — Work Orders &amp; Ordering stays on baseline data regardless of how this widget is hosted.</p>
       </div>
     </div>
 

@@ -1,6 +1,6 @@
 {
   "name": "@farazhussain/manager-hub-widget",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "",
   "scripts": {
     "start": "webpack serve --open --config webpack.dev.ts",

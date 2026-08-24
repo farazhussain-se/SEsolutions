@@ -76,6 +76,7 @@ export function initDashboard(opts: DashboardOptions): void {
   initJourneyProgress(container, branchBase, apiToken);
   const { getUserId } = initTeamTasksAndRoleChange(container, branchBase, apiToken, tasksInstallationId);
   initPromotionLauncher(container, branchBase, apiToken, getUserId);
+  initRequisitions(container);
   applyViewerIdentity(container, widgetApi);
 }
 
@@ -315,6 +316,7 @@ interface JourneyEmployeeEntry {
 }
 
 const OVERDUE_THRESHOLD_DAYS = 3;
+const CRITICAL_THRESHOLD_DAYS = 6;
 
 // Baseline entries so the panel always shows something usable even before a
 // real backend connection exists; real entries fetched from the branch get
@@ -365,7 +367,22 @@ const BASELINE_EMPLOYEES: JourneyEmployeeEntry[] = [
 
 /** Client-side port of what used to be the backend's /api/journeys/employees:
  * lists every journey installation on the branch (not just onboarding),
- * pulls each one's report, and resolves real per-employee progress. */
+ * pulls each one's report, and resolves real per-employee progress.
+ *
+ * Verified live against a real branch (2026-08-23): userStates entries key
+ * their user by `id`, not `userId` as originally assumed — that mismatch
+ * meant this always silently resolved zero real employees before. The
+ * report also already inlines a `users: {id: {name, username}}` map, so
+ * names come from that instead of a redundant GET /users/{id} per person.
+ *
+ * Completion is read from `status` (also not `completed`/`state` as
+ * originally assumed). Only "not read" has been observed live so far (no
+ * real completed example exists on the tested branch yet) — this endpoint
+ * is undocumented (confirmed: absent from Staffbase's public API docs, and
+ * a separate org's own "inofficial" endpoint notes have no captured sample
+ * for this report either), so treating anything other than "not read" as
+ * done is the best inference available, not a confirmed enum. Revisit once
+ * a real "read"/"completed" example is observed. */
 async function fetchJourneysEmployees(branchBase: string, apiToken: string): Promise<JourneyEmployeeEntry[]> {
   const installsRes = await staffbaseFetch(branchBase, apiToken, "/branch/installations?limit=200");
   if (!installsRes.ok) throw new Error("HTTP " + installsRes.status);
@@ -389,21 +406,30 @@ async function fetchJourneysEmployees(branchBase: string, apiToken: string): Pro
 
   const allIds = new Set<string>();
   validReports.forEach(({ report }) => {
-    report.steps.forEach((s: any) => (s.userStates || []).forEach((u: any) => u?.userId && allIds.add(u.userId)));
+    report.steps.forEach((s: any) => (s.userStates || []).forEach((u: any) => u?.id && allIds.add(u.id)));
   });
-  const users = await resolveUsers(branchBase, apiToken, Array.from(allIds));
+  const idsMissingFromReport = Array.from(allIds).filter((id) => {
+    return !validReports.some(({ report }) => report.users && report.users[id]);
+  });
+  const fallbackUsers = idsMissingFromReport.length ? await resolveUsers(branchBase, apiToken, idsMissingFromReport) : {};
+
+  function resolveName(uid: string, report: any): string {
+    const inlineUser = report.users && report.users[uid];
+    if (inlineUser?.name) return inlineUser.name;
+    return nameOf(fallbackUsers[uid]);
+  }
 
   const entries: JourneyEmployeeEntry[] = [];
   validReports.forEach(({ journeyName, report }) => {
     const rawSteps = report.steps;
     const ids = new Set<string>();
-    rawSteps.forEach((s: any) => (s.userStates || []).forEach((u: any) => u?.userId && ids.add(u.userId)));
+    rawSteps.forEach((s: any) => (s.userStates || []).forEach((u: any) => u?.id && ids.add(u.id)));
     ids.forEach((uid) => {
-      const name = nameOf(users[uid]);
+      const name = resolveName(uid, report);
       let stepIndex = rawSteps.length;
       for (let i = 0; i < rawSteps.length; i++) {
-        const state = (rawSteps[i].userStates || []).find((u: any) => u?.userId === uid);
-        const isDone = state && (state.completed === true || state.state === "done" || state.state === "completed");
+        const state = (rawSteps[i].userStates || []).find((u: any) => u?.id === uid);
+        const isDone = !!state && !!state.status && state.status !== "not read";
         if (!isDone) {
           stepIndex = i;
           break;
@@ -442,6 +468,7 @@ function initJourneyProgress(container: HTMLElement, branchBase: string, apiToke
   const listEl = container.querySelector<HTMLElement>("#journeyProgressList");
   const overdueTitleEl = container.querySelector<HTMLElement>("#overdueStepsTitle");
   const overdueListEl = container.querySelector<HTMLElement>("#overdueStepsList");
+  const overdueCriticalEl = container.querySelector<HTMLElement>("#overdueStepsCritical");
   const metricOverdueEl = container.querySelector<HTMLElement>("#metricOverdueValue");
   if (!metaEl || !badgeEl || !listEl || !overdueTitleEl || !overdueListEl) return;
 
@@ -479,10 +506,23 @@ function initJourneyProgress(container: HTMLElement, branchBase: string, apiToke
   let lastOverdue: JourneyEmployeeEntry[] = [];
 
   function renderOverdueSteps(entries: JourneyEmployeeEntry[]) {
-    const overdue = entries.filter((e) => !e.completed && typeof e.daysOnStep === "number" && e.daysOnStep > OVERDUE_THRESHOLD_DAYS);
+    const overdue = entries
+      .filter((e) => !e.completed && typeof e.daysOnStep === "number" && e.daysOnStep > OVERDUE_THRESHOLD_DAYS)
+      .sort((a, b) => (b.daysOnStep || 0) - (a.daysOnStep || 0));
     lastOverdue = overdue;
+
+    const criticalCount = overdue.filter((e) => (e.daysOnStep || 0) >= CRITICAL_THRESHOLD_DAYS).length;
     overdueTitleEl!.textContent = "Overdue Journey Steps" + (overdue.length ? ` · ${overdue.length}` : "");
+    if (overdueCriticalEl) {
+      if (criticalCount) {
+        overdueCriticalEl.style.display = "";
+        overdueCriticalEl.textContent = `${criticalCount} critical`;
+      } else {
+        overdueCriticalEl.style.display = "none";
+      }
+    }
     if (metricOverdueEl) metricOverdueEl.textContent = String(overdue.length);
+
     overdueListEl!.innerHTML = "";
     if (!overdue.length) {
       const empty = document.createElement("div");
@@ -491,13 +531,34 @@ function initJourneyProgress(container: HTMLElement, branchBase: string, apiToke
       overdueListEl!.appendChild(empty);
       return;
     }
+
+    // Grouped by employee (like the other panels) so a person stuck on
+    // multiple steps reads as one entry, not scattered rows — sorted so the
+    // most-overdue people surface first within the group order.
+    const byName = new Map<string, JourneyEmployeeEntry[]>();
     overdue.forEach((e) => {
-      const row = document.createElement("div");
-      row.className = "ooo-row";
-      row.innerHTML = '<div class="ooo-avatar red">!</div><span class="ooo-name"></span><span class="ooo-meta"></span>';
-      row.querySelector(".ooo-name")!.textContent = e.name;
-      row.querySelector(".ooo-meta")!.textContent = `${e.journeyName} · ${e.stepName} · ${e.daysOnStep} days, not completed`;
-      overdueListEl!.appendChild(row);
+      if (!byName.has(e.name)) byName.set(e.name, []);
+      byName.get(e.name)!.push(e);
+    });
+    byName.forEach((rows, name) => {
+      const group = document.createElement("div");
+      group.className = "task-group";
+      const nameEl = document.createElement("div");
+      nameEl.className = "task-group-name";
+      nameEl.textContent = name;
+      group.appendChild(nameEl);
+      rows.forEach((e) => {
+        const item = document.createElement("div");
+        item.className = "task-item";
+        item.innerHTML = '<span class="task-item-title"></span><span class="cw-pill"></span>';
+        item.querySelector(".task-item-title")!.textContent = `${e.journeyName} · ${e.stepName}`;
+        const pill = item.querySelector(".cw-pill")!;
+        const critical = (e.daysOnStep || 0) >= CRITICAL_THRESHOLD_DAYS;
+        pill.classList.add(critical ? "required" : "warn");
+        pill.textContent = `${critical ? "Critical" : "Attention"} · ${e.daysOnStep}d`;
+        group.appendChild(item);
+      });
+      overdueListEl!.appendChild(group);
     });
   }
 
@@ -574,6 +635,7 @@ interface OverdueTaskEntry {
   name: string;
   title: string;
   dueDate?: string;
+  daysOverdue: number;
 }
 
 // Real dueDate field confirmed live on Tasks API entries — this is a genuine
@@ -581,8 +643,8 @@ interface OverdueTaskEntry {
 // real tasks are overdue on this branch (all real due dates are in the
 // future), so these baseline entries are what render until that changes.
 const BASELINE_OVERDUE_TASKS: OverdueTaskEntry[] = [
-  { name: "Devon Marks", title: "Submit Q2 facilities compliance checklist" },
-  { name: "Zack Hall", title: "Renew CPR/AED certification" },
+  { name: "Devon Marks", title: "Submit Q2 facilities compliance checklist", daysOverdue: 4 },
+  { name: "Zack Hall", title: "Renew CPR/AED certification", daysOverdue: 9 },
 ];
 
 /** Client-side port of what used to be the backend's /api/tasks: fetches
@@ -623,7 +685,10 @@ async function fetchTeamTasksData(branchBase: string, apiToken: string, tasksIns
     }
     if (t.dueDate) {
       const dueDt = new Date(t.dueDate);
-      if (dueDt < now) overdueTasks.push({ userId: aid, name, title: t.title, dueDate: t.dueDate });
+      if (dueDt < now) {
+        const daysOverdue = Math.max(1, Math.floor((now.getTime() - dueDt.getTime()) / 86400000));
+        overdueTasks.push({ userId: aid, name, title: t.title, dueDate: t.dueDate, daysOverdue });
+      }
     }
   });
 
@@ -651,15 +716,28 @@ function initTeamTasksAndRoleChange(
   const overdueTasksMetaEl = container.querySelector<HTMLElement>("#overdueTasksMeta");
   const overdueTasksBadgeEl = container.querySelector<HTMLElement>("#overdueTasksBadge");
   const overdueTasksListEl = container.querySelector<HTMLElement>("#overdueTasksList");
+  const overdueTasksCriticalEl = container.querySelector<HTMLElement>("#overdueTasksCritical");
   const metricOverdueTasksEl = container.querySelector<HTMLElement>("#metricOverdueTasksValue");
+  const taskMemberFilterEl = container.querySelector<HTMLSelectElement>("#taskMemberFilter");
 
   let titleByName: Record<string, string> = {};
   let userIdByName: Record<string, string> = {};
 
   function renderOverdueTeamTasks(entries: OverdueTaskEntry[], isLive: boolean) {
     if (!overdueTasksMetaEl || !overdueTasksListEl) return;
-    overdueTasksMetaEl.textContent = `${entries.length} past due`;
-    if (metricOverdueTasksEl) metricOverdueTasksEl.textContent = String(entries.length);
+    const sorted = entries.slice().sort((a, b) => b.daysOverdue - a.daysOverdue);
+    const criticalCount = sorted.filter((e) => e.daysOverdue >= CRITICAL_THRESHOLD_DAYS).length;
+
+    overdueTasksMetaEl.textContent = `${sorted.length} past due`;
+    if (metricOverdueTasksEl) metricOverdueTasksEl.textContent = String(sorted.length);
+    if (overdueTasksCriticalEl) {
+      if (criticalCount) {
+        overdueTasksCriticalEl.style.display = "";
+        overdueTasksCriticalEl.textContent = `${criticalCount} critical`;
+      } else {
+        overdueTasksCriticalEl.style.display = "none";
+      }
+    }
     if (overdueTasksBadgeEl) {
       if (isLive) {
         overdueTasksBadgeEl.style.display = "";
@@ -669,21 +747,42 @@ function initTeamTasksAndRoleChange(
         overdueTasksBadgeEl.style.display = "none";
       }
     }
+
     overdueTasksListEl.innerHTML = "";
-    if (!entries.length) {
+    if (!sorted.length) {
       const empty = document.createElement("div");
       empty.className = "ooo-meta";
       empty.textContent = "Nothing past due right now.";
       overdueTasksListEl.appendChild(empty);
       return;
     }
-    entries.forEach((e) => {
-      const item = document.createElement("div");
-      item.className = "task-item";
-      item.innerHTML = '<span class="task-item-title"></span><span class="cw-pill required"></span>';
-      item.querySelector(".task-item-title")!.textContent = `${e.name} — ${e.title}`;
-      item.querySelector(".cw-pill")!.textContent = "Past Due";
-      overdueTasksListEl.appendChild(item);
+
+    // Grouped by assignee, most-overdue first, same visual language as the
+    // Overdue Journey Steps and Team Tasks panels.
+    const byName = new Map<string, OverdueTaskEntry[]>();
+    sorted.forEach((e) => {
+      if (!byName.has(e.name)) byName.set(e.name, []);
+      byName.get(e.name)!.push(e);
+    });
+    byName.forEach((rows, name) => {
+      const group = document.createElement("div");
+      group.className = "task-group";
+      const nameEl = document.createElement("div");
+      nameEl.className = "task-group-name";
+      nameEl.textContent = name;
+      group.appendChild(nameEl);
+      rows.forEach((e) => {
+        const item = document.createElement("div");
+        item.className = "task-item";
+        item.innerHTML = '<span class="task-item-title"></span><span class="cw-pill required"></span>';
+        item.querySelector(".task-item-title")!.textContent = e.title;
+        const critical = e.daysOverdue >= CRITICAL_THRESHOLD_DAYS;
+        const pill = item.querySelector(".cw-pill")!;
+        pill.className = "cw-pill " + (critical ? "required" : "warn");
+        pill.textContent = `${critical ? "Critical" : "Past Due"} · ${e.daysOverdue}d`;
+        group.appendChild(item);
+      });
+      overdueTasksListEl.appendChild(group);
     });
   }
 
@@ -767,12 +866,56 @@ function initTeamTasksAndRoleChange(
     });
   }
 
+  // Lets a manager pull tasks for one team member at a time instead of
+  // scrolling a flat list of everyone's — defaults to "All Team Members" so
+  // the existing at-a-glance view is never lost, just made drillable.
+  let allTaskGroups: TaskGroup[] = [];
+
+  function populateTaskMemberFilter(groups: TaskGroup[]) {
+    if (!taskMemberFilterEl) return;
+    const previousSelection = taskMemberFilterEl.value;
+    taskMemberFilterEl.innerHTML = "";
+
+    const totalTasks = groups.reduce((n, g) => n + g.tasks.length, 0);
+    const allOpt = document.createElement("option");
+    allOpt.value = "";
+    allOpt.textContent = `All Team Members (${totalTasks})`;
+    taskMemberFilterEl.appendChild(allOpt);
+
+    groups
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .forEach((g) => {
+        const opt = document.createElement("option");
+        opt.value = g.name;
+        opt.textContent = `${g.name} (${g.tasks.length})`;
+        taskMemberFilterEl!.appendChild(opt);
+      });
+
+    if (previousSelection && groups.some((g) => g.name === previousSelection)) {
+      taskMemberFilterEl.value = previousSelection;
+    }
+  }
+
+  function applyTaskMemberFilter() {
+    const selected = taskMemberFilterEl?.value || "";
+    renderTaskGroups(selected ? allTaskGroups.filter((g) => g.name === selected) : allTaskGroups);
+  }
+
+  function setTaskGroups(groups: TaskGroup[]) {
+    allTaskGroups = groups;
+    populateTaskMemberFilter(groups);
+    applyTaskMemberFilter();
+  }
+
+  taskMemberFilterEl?.addEventListener("change", applyTaskMemberFilter);
+
   function renderBaselineOnly() {
     if (!tasksMetaEl || !tasksBadgeEl) return;
     const total = BASELINE_TASKS.reduce((n, g) => n + g.tasks.length, 0);
     tasksMetaEl.textContent = `${total} open tasks`;
     tasksBadgeEl.style.display = "none";
-    renderTaskGroups(BASELINE_TASKS);
+    setTaskGroups(BASELINE_TASKS);
     renderOverdueTeamTasks(BASELINE_OVERDUE_TASKS, false);
   }
 
@@ -791,7 +934,7 @@ function initTeamTasksAndRoleChange(
           tasksBadgeEl.className = "live-badge live";
           tasksBadgeEl.textContent = "Live";
         }
-        renderTaskGroups(combinedGroups);
+        setTaskGroups(combinedGroups);
 
         renderOverdueTeamTasks(BASELINE_OVERDUE_TASKS.concat(data.overdueTasks), data.overdueTasks.length > 0);
 
@@ -805,6 +948,83 @@ function initTeamTasksAndRoleChange(
   }
 
   return { getUserId: (name: string) => userIdByName[name] };
+}
+
+interface WorkOrderItem {
+  title: string;
+  source: string;
+  sourceCode: string;
+  meta: string;
+  action?: string;
+}
+
+// ServiceChannel and Workday Procurement are not connected in this build
+// (see Setup tab) — same honest treatment as the ServiceNow ticket list:
+// baseline data only, no live-badge claim.
+const BASELINE_WORK_ORDERS: WorkOrderItem[] = [
+  { title: "Approve HVAC vendor quote — $1,850", source: "ServiceChannel", sourceCode: "SC", meta: "Awaiting you", action: "Review" },
+  { title: "Submit requisition: towels & cleaning supplies", source: "Workday PO", sourceCode: "WD", meta: "Draft ready", action: "Submit" },
+  { title: "Receive pool chemical delivery", source: "ServiceChannel", sourceCode: "SC", meta: "Arriving today, 11:00a" },
+  { title: "Monthly fire-safety inspection", source: "ServiceChannel", sourceCode: "SC", meta: "Due Fri", action: "Schedule" },
+  { title: "Close 2 aged work orders (>30 days)", source: "ServiceChannel", sourceCode: "SC", meta: "", action: "Review" },
+];
+
+function initRequisitions(container: HTMLElement): void {
+  const cardListEl = container.querySelector<HTMLElement>("#reqCardList");
+  const cardViewEl = container.querySelector<HTMLElement>("#reqCardView");
+  const fullViewEl = container.querySelector<HTMLElement>("#reqFullView");
+  const viewAllBtn = container.querySelector<HTMLElement>("#reqViewAllBtn");
+  const backBtn = container.querySelector<HTMLButtonElement>("#reqBackBtn");
+  const instrToggle = container.querySelector<HTMLElement>("#reqInstrToggle");
+  const tabOpen = container.querySelector<HTMLButtonElement>("#reqTabOpen");
+  const tabCompleted = container.querySelector<HTMLButtonElement>("#reqTabCompleted");
+  const openListEl = container.querySelector<HTMLElement>("#reqOpenList");
+  const completedListEl = container.querySelector<HTMLElement>("#reqCompletedList");
+  if (!cardListEl || !cardViewEl || !fullViewEl) return;
+
+  cardListEl.innerHTML = "";
+  BASELINE_WORK_ORDERS.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "team-row";
+    row.innerHTML =
+      '<div class="team-row-avatar"></div><div class="team-row-body"><div class="team-row-name"></div><div class="team-row-meta"></div></div>';
+    row.querySelector(".team-row-avatar")!.textContent = item.sourceCode;
+    row.querySelector(".team-row-name")!.textContent = item.title;
+    row.querySelector(".team-row-meta")!.textContent = [item.source, item.meta].filter(Boolean).join(" · ");
+    if (item.action) {
+      const btn = document.createElement("button");
+      btn.className = "action-btn secondary small";
+      btn.textContent = item.action;
+      row.appendChild(btn);
+    }
+    cardListEl.appendChild(row);
+  });
+
+  viewAllBtn?.addEventListener("click", () => {
+    cardViewEl.style.display = "none";
+    fullViewEl.style.display = "";
+  });
+  backBtn?.addEventListener("click", () => {
+    fullViewEl.style.display = "none";
+    cardViewEl.style.display = "";
+  });
+
+  instrToggle?.addEventListener("click", () => {
+    instrToggle.closest(".side-card")?.classList.toggle("collapsed");
+  });
+
+  tabOpen?.addEventListener("click", () => {
+    tabOpen.classList.add("active");
+    tabCompleted?.classList.remove("active");
+    if (openListEl) openListEl.style.display = "";
+    if (completedListEl) completedListEl.style.display = "none";
+  });
+  tabCompleted?.addEventListener("click", () => {
+    tabCompleted.classList.add("active");
+    tabOpen?.classList.remove("active");
+    if (openListEl) openListEl.style.display = "none";
+    if (completedListEl) completedListEl.style.display = "";
+  });
 }
 
 const ROLE_CHANGE_STORAGE_KEY = "lifetime-manager-hub:role-changes";
