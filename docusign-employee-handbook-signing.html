@@ -89,6 +89,33 @@
         margin: 0 0 14px 0;
     }
 
+    .ds-signer-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 14px 0;
+    }
+
+    .ds-signer-avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--ds-black);
+        color: var(--ds-yellow);
+        font-size: 11px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .ds-signer-text {
+        font-size: 12.5px;
+        color: var(--ds-text-light);
+    }
+    .ds-signer-text strong { color: var(--ds-text); font-weight: 700; }
+
     .ds-divider {
         border: none;
         border-top: 1px solid var(--ds-border);
@@ -403,6 +430,21 @@
     }
     .ds-sig-preview-empty { color: var(--ds-text-light); font-size: 12px; font-family: -apple-system, sans-serif; font-style: italic; }
 
+    .ds-profile-name-display {
+        padding: 9px 10px;
+        font-size: 14px;
+        font-weight: 600;
+        border: 1px solid var(--ds-border);
+        border-radius: 6px;
+        background: var(--ds-bg-gray);
+        color: var(--ds-text);
+    }
+    .ds-field-note {
+        font-size: 10.5px;
+        color: var(--ds-text-light);
+        margin: 4px 0 0 0;
+    }
+
     .ds-agree-row {
         display: flex;
         align-items: flex-start;
@@ -466,6 +508,10 @@
         <div id="envelope-view">
             <p class="ds-subject" data-i18n="envelopeSubject"></p>
             <p class="ds-from" data-i18n="fromLine"></p>
+            <div class="ds-signer-badge" id="signer-badge">
+                <span class="ds-signer-avatar" id="signer-avatar"></span>
+                <span class="ds-signer-text"><span data-i18n="signingAsLabel"></span> <strong id="signer-name-display"></strong></span>
+            </div>
             <hr class="ds-divider"/>
             <p class="ds-intro" data-i18n="introText"></p>
             <a class="ds-handbook-link" id="handbook-link" href="#" target="_blank" rel="noopener">
@@ -540,8 +586,9 @@
         <p class="ds-modal-sub" data-i18n="modalSub"></p>
 
         <div class="ds-field">
-            <label for="full-name-input" data-i18n="fullNameLabel"></label>
-            <input type="text" id="full-name-input" autocomplete="name">
+            <label data-i18n="fullNameLabel"></label>
+            <div class="ds-profile-name-display" id="profile-name-display"></div>
+            <p class="ds-field-note" data-i18n="profileSourceNote"></p>
         </div>
         <div class="ds-field">
             <label for="initials-input" data-i18n="initialsLabel"></label>
@@ -558,7 +605,7 @@
 
         <label style="display:block; font-size:11px; font-weight:700; color:var(--ds-text-light); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:5px;" data-i18n="previewLabel"></label>
         <div class="ds-sig-preview" id="sig-preview">
-            <span class="ds-sig-preview-empty" id="sig-preview-empty" data-i18n="fullNameLabel"></span>
+            <span class="ds-sig-preview-empty" id="sig-preview-empty" data-i18n="signaturePlaceholder"></span>
         </div>
 
         <div class="ds-agree-row">
@@ -622,7 +669,10 @@
             startOverBtn: 'Erneut beginnen',
             signedOn: 'Unterschrieben am {date}',
             alertRead: 'Bitte bestätigen Sie, dass Sie das Mitarbeiterhandbuch gelesen haben, bevor Sie fortfahren.',
-            alertAgree: 'Bitte stimmen Sie zu, diese Unterschrift zu übernehmen, bevor Sie fortfahren.'
+            alertAgree: 'Bitte stimmen Sie zu, diese Unterschrift zu übernehmen, bevor Sie fortfahren.',
+            signingAsLabel: 'Unterschreibt als',
+            profileSourceNote: 'Wird automatisch aus Ihrem Staffbase-Profil übernommen.',
+            signaturePlaceholder: 'Ihre Unterschrift wird hier angezeigt'
         },
         fr: {
             envelopeSubject: "Manuel de l'employé 2026 — Signature requise",
@@ -653,7 +703,10 @@
             startOverBtn: 'Recommencer',
             signedOn: 'Signé le {date}',
             alertRead: "Merci de confirmer avoir lu le Manuel de l'employé avant de continuer.",
-            alertAgree: "Merci d'accepter d'adopter cette signature avant de continuer."
+            alertAgree: "Merci d'accepter d'adopter cette signature avant de continuer.",
+            signingAsLabel: 'Signe en tant que',
+            profileSourceNote: 'Récupéré automatiquement depuis votre profil Staffbase.',
+            signaturePlaceholder: 'Votre signature apparaîtra ici'
         },
         es: {
             envelopeSubject: 'Manual del empleado 2026 — Firma requerida',
@@ -684,7 +737,10 @@
             startOverBtn: 'Empezar de nuevo',
             signedOn: 'Firmado el {date}',
             alertRead: 'Confirme que ha leído el Manual del empleado antes de continuar.',
-            alertAgree: 'Acepte adoptar esta firma antes de continuar.'
+            alertAgree: 'Acepte adoptar esta firma antes de continuar.',
+            signingAsLabel: 'Firma como',
+            profileSourceNote: 'Obtenido automáticamente de su perfil de Staffbase.',
+            signaturePlaceholder: 'Su firma aparecerá aquí'
         },
         ja: {
             envelopeSubject: '従業員ハンドブック2026 — 署名が必要です',
@@ -715,7 +771,10 @@
             startOverBtn: 'もう一度開始',
             signedOn: '{date}に署名済み',
             alertRead: '続行する前に、従業員ハンドブックを読んだことを確認してください。',
-            alertAgree: '続行する前に、この署名の設定に同意してください。'
+            alertAgree: '続行する前に、この署名の設定に同意してください。',
+            signingAsLabel: '署名者',
+            profileSourceNote: 'Staffbaseプロフィールから自動的に取得されます。',
+            signaturePlaceholder: 'ここに署名が表示されます'
         },
         'en-GB': {
             envelopeSubject: 'Employee Handbook 2026 — Signature Required',
@@ -746,7 +805,10 @@
             startOverBtn: 'Start Again',
             signedOn: 'Signed on {date}',
             alertRead: "Please confirm you've read the Employee Handbook before continuing.",
-            alertAgree: 'Please agree to adopt this signature before continuing.'
+            alertAgree: 'Please agree to adopt this signature before continuing.',
+            signingAsLabel: 'Signing as',
+            profileSourceNote: 'Pulled automatically from your Staffbase profile.',
+            signaturePlaceholder: 'Your signature will appear here'
         },
         'en-US': {
             envelopeSubject: 'Employee Handbook 2026 — Signature Required',
@@ -777,7 +839,10 @@
             startOverBtn: 'Start Again',
             signedOn: 'Signed on {date}',
             alertRead: "Please confirm you've read the Employee Handbook before continuing.",
-            alertAgree: 'Please agree to adopt this signature before continuing.'
+            alertAgree: 'Please agree to adopt this signature before continuing.',
+            signingAsLabel: 'Signing as',
+            profileSourceNote: 'Pulled automatically from your Staffbase profile.',
+            signaturePlaceholder: 'Your signature will appear here'
         }
     };
     const t = T[LANG] ?? T['en-US'];
@@ -814,8 +879,11 @@
     const finishBar = document.getElementById('finish-bar');
     const finishBtn = document.getElementById('finish-btn');
 
+    const signerAvatar = document.getElementById('signer-avatar');
+    const signerNameDisplay = document.getElementById('signer-name-display');
+
     const modalOverlay = document.getElementById('modal-overlay');
-    const fullNameInput = document.getElementById('full-name-input');
+    const profileNameDisplay = document.getElementById('profile-name-display');
     const initialsInput = document.getElementById('initials-input');
     const styleRow = document.getElementById('style-row');
     const sigPreview = document.getElementById('sig-preview');
@@ -830,6 +898,54 @@
     const startOverBtn = document.getElementById('start-over-btn');
 
     let selectedFont = "'Snell Roundhand','Brush Script MT',cursive";
+
+    // --- Staffbase profile identity ---
+    // A widget iframe is embedded cross-origin (served from github.io, framed
+    // inside a customer's *.staffbase.com host), so it cannot read the parent
+    // page's DOM directly. The signer's name is resolved from, in order:
+    //   1. A postMessage handshake from the Staffbase host once the widget
+    //      announces it is ready (the real integration path).
+    //   2. ?firstName=&lastName= URL params — the same cross-origin-safe
+    //      bridge this widget family already uses for ?brand=.
+    //   3. A demo profile, only used when previewing this file standalone.
+    const DEMO_FALLBACK_PROFILE = { firstName: 'Miranda', lastName: 'Smith' };
+
+    function profileFromUrlParams() {
+        const p = new URLSearchParams(location.search);
+        const firstName = p.get('firstName');
+        const lastName = p.get('lastName');
+        if (firstName || lastName) return { firstName: firstName || '', lastName: lastName || '' };
+        return null;
+    }
+
+    function fullName(profile) {
+        return `${profile.firstName} ${profile.lastName}`.trim();
+    }
+
+    function initialsFrom(profile) {
+        return `${(profile.firstName || '')[0] || ''}${(profile.lastName || '')[0] || ''}`.toUpperCase();
+    }
+
+    let currentProfile = profileFromUrlParams() || DEMO_FALLBACK_PROFILE;
+
+    function applyProfile(profile) {
+        currentProfile = profile;
+        const name = fullName(profile);
+        signerNameDisplay.textContent = name;
+        signerAvatar.textContent = initialsFrom(profile);
+        profileNameDisplay.textContent = name;
+        initialsInput.value = initialsFrom(profile);
+        updateSigPreview();
+    }
+
+    window.addEventListener('message', (event) => {
+        const data = event.data;
+        if (data && data.type === 'staffbase:user' && (data.firstName || data.lastName)) {
+            applyProfile({ firstName: data.firstName || '', lastName: data.lastName || '' });
+        }
+    });
+
+    try { window.parent.postMessage({ type: 'staffbase-widget:ready' }, '*'); } catch (e) {}
 
     // --- Persistence (per-browser; mocked, no backend) ---
     const STORAGE_KEY = 'docusign-employee-handbook/2026-acknowledgment';
@@ -901,7 +1017,6 @@
     // --- Tag click opens modal ---
     signTagBtn.addEventListener('click', () => {
         modalOverlay.classList.add('visible');
-        if (!fullNameInput.value) fullNameInput.focus();
     });
 
     cancelModalBtn.addEventListener('click', () => {
@@ -919,7 +1034,7 @@
     });
 
     function updateSigPreview() {
-        const name = fullNameInput.value.trim();
+        const name = fullName(currentProfile);
         if (!name) {
             sigPreview.innerHTML = '';
             sigPreview.appendChild(sigPreviewEmpty);
@@ -932,20 +1047,13 @@
         sigPreview.appendChild(span);
     }
 
-    fullNameInput.addEventListener('input', updateSigPreview);
-
     // --- Adopt and sign ---
     adoptBtn.addEventListener('click', () => {
-        const name = fullNameInput.value.trim();
-        if (!name) {
-            fullNameInput.focus();
-            return;
-        }
         if (!agreeCheckbox.checked) {
             alert(tr('alertAgree'));
             return;
         }
-        const record = persistSaved(name, selectedFont);
+        const record = persistSaved(fullName(currentProfile), selectedFont);
         applySignedState(record);
         modalOverlay.classList.remove('visible');
     });
@@ -959,21 +1067,19 @@
     // --- Start again ---
     startOverBtn.addEventListener('click', () => {
         clearSaved();
-        fullNameInput.value = '';
-        initialsInput.value = '';
         agreeCheckbox.checked = false;
         confirmReadCheckbox.checked = false;
         signTagBtn.classList.remove('hidden');
         signedMark.classList.remove('visible');
         finishBar.classList.remove('visible');
-        updateSigPreview();
+        applyProfile(currentProfile);
         showEnvelopeView();
     });
 
     // --- Initial render ---
     function init() {
         applyTranslations();
-        updateSigPreview();
+        applyProfile(currentProfile);
         const existing = loadSaved();
         if (existing && existing.signatureText) {
             showDocumentView();
