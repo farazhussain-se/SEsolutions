@@ -1466,72 +1466,414 @@ function initTeamTasksAndRoleChange(
   };
 }
 
-interface WorkOrderItem {
-  title: string;
-  source: string;
-  sourceCode: string;
-  meta: string;
-  action?: string;
+// ── Workday Procurement requisitions ─────────────────────────────────────────
+// Modeled on the real Workday Resource Management objects: a requisition has
+// header fields + Worktags (Cost Center / Spend Category / Location) + one or
+// more Goods/Service lines, a Workday document status, and a downstream
+// procurement chain (Requisition → Purchase Order → Receipt → Supplier
+// Invoice). Status vocabulary matches Workday's Requisition_Document_Status.
+// Not a live integration — Workday Procurement isn't connected in this build,
+// so this is demo-mode sample data (honest, same as the other unconnected
+// sources). See the accompanying local-connector plan for making it live.
+
+type ReqStatus =
+  | "Draft"
+  | "In Progress"
+  | "Sent Back"
+  | "Denied"
+  | "Successfully Completed"
+  | "Closed"
+  | "Canceled";
+
+// Where the request sits in the procurement chain past the requisition itself.
+type ChainStage = "Requisition" | "PO Issued" | "Received" | "Invoiced";
+
+interface Worktags {
+  costCenter: string; // e.g. "CC-4102 · Winter Park – Facilities"
+  spendCategory: string; // e.g. "SC-REPAIRS-BLDG · Repairs & Maintenance – Building"
+  location: string; // e.g. "Life Time Winter Park"
 }
 
-// ServiceChannel and Workday Procurement are not connected in this build
-// (see Setup tab) — same honest treatment as the ServiceNow ticket list:
-// baseline data only, no live-badge claim.
-const BASELINE_WORK_ORDERS: WorkOrderItem[] = [
-  { title: "Approve HVAC vendor quote — $1,850", source: "ServiceChannel", sourceCode: "SC", meta: "Awaiting you", action: "Review" },
-  { title: "Submit requisition: towels & cleaning supplies", source: "Workday PO", sourceCode: "WD", meta: "Draft ready", action: "Submit" },
-  { title: "Receive pool chemical delivery", source: "ServiceChannel", sourceCode: "SC", meta: "Arriving today, 11:00a" },
-  { title: "Monthly fire-safety inspection", source: "ServiceChannel", sourceCode: "SC", meta: "Due Fri", action: "Schedule" },
-  { title: "Close 2 aged work orders (>30 days)", source: "ServiceChannel", sourceCode: "SC", meta: "", action: "Review" },
+interface RequisitionLine {
+  lineType: "Goods" | "Service";
+  itemDescription: string;
+  spendCategory: string;
+  quantity?: number;
+  unitOfMeasure?: string;
+  unitCost?: number;
+  extendedAmount: number;
+}
+
+interface Requisition {
+  requisitionNumber: string; // "REQ-WD-2026-1042"
+  requisitionDate: string; // "2026-08-18"
+  requester: string;
+  company: string; // "Life Time, Inc."
+  requisitionType: string; // "Non-Catalog", "Catalog", "Delegated – Standard PO"
+  supplier: string;
+  worktags: Worktags;
+  status: ReqStatus;
+  currency: string; // "USD"
+  memo?: string;
+  lines: RequisitionLine[];
+  chainStage: ChainStage;
+  purchaseOrderNumber?: string;
+}
+
+const REQ_CHAIN: ChainStage[] = ["Requisition", "PO Issued", "Received", "Invoiced"];
+
+// Open vs Completed buckets by Workday status.
+const OPEN_STATUSES: ReqStatus[] = ["Draft", "In Progress", "Sent Back"];
+
+function reqStatusPillClass(status: ReqStatus): string {
+  switch (status) {
+    case "Successfully Completed":
+    case "Closed":
+      return "ok";
+    case "In Progress":
+    case "Sent Back":
+      return "warn";
+    case "Denied":
+      return "required";
+    default:
+      return "info"; // Draft, Canceled
+  }
+}
+
+function formatUsd(n: number): string {
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatReqDate(iso: string): string {
+  const d = new Date(iso + "T00:00:00");
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function reqTotal(r: Requisition): number {
+  return r.lines.reduce((n, l) => n + l.extendedAmount, 0);
+}
+
+// Realistic Life Time facilities/club requisitions across the status range so
+// the demo shows Draft → In Progress → Successfully Completed → Closed, plus a
+// Sent Back and a Denied, and the procurement chain at different stages.
+const BASELINE_REQUISITIONS: Requisition[] = [
+  {
+    requisitionNumber: "REQ-WD-2026-1044",
+    requisitionDate: "2026-08-22",
+    requester: "Elena Perry",
+    company: "Life Time, Inc.",
+    requisitionType: "Non-Catalog",
+    supplier: "Cintas Fire Protection",
+    worktags: {
+      costCenter: "CC-4102 · Winter Park – Facilities",
+      spendCategory: "SC-INSPECTIONS · Safety & Compliance Inspections",
+      location: "Life Time Winter Park",
+    },
+    status: "Draft",
+    currency: "USD",
+    memo: "Monthly fire-safety inspection — sprinkler & extinguisher check.",
+    chainStage: "Requisition",
+    lines: [
+      { lineType: "Service", itemDescription: "Monthly fire-safety inspection", spendCategory: "Safety & Compliance Inspections", extendedAmount: 675.0 },
+    ],
+  },
+  {
+    requisitionNumber: "REQ-WD-2026-1042",
+    requisitionDate: "2026-08-18",
+    requester: "Elena Perry",
+    company: "Life Time, Inc.",
+    requisitionType: "Non-Catalog",
+    supplier: "Grainger Industrial Supply",
+    worktags: {
+      costCenter: "CC-4102 · Winter Park – Facilities",
+      spendCategory: "SC-REPAIRS-BLDG · Repairs & Maintenance – Building",
+      location: "Life Time Winter Park",
+    },
+    status: "In Progress",
+    currency: "USD",
+    memo: "Fitness-floor HVAC compressor failed; replacement + labor.",
+    chainStage: "Requisition",
+    lines: [
+      { lineType: "Service", itemDescription: "HVAC compressor replacement — labor", spendCategory: "Repairs & Maintenance – Building", extendedAmount: 1450.0 },
+      { lineType: "Goods", itemDescription: "5-ton compressor unit", spendCategory: "Repairs & Maintenance – Building", quantity: 1, unitOfMeasure: "Each", unitCost: 1850.0, extendedAmount: 1850.0 },
+    ],
+  },
+  {
+    requisitionNumber: "REQ-WD-2026-1039",
+    requisitionDate: "2026-08-12",
+    requester: "Sherri Fisher",
+    company: "Life Time, Inc.",
+    requisitionType: "Catalog",
+    supplier: "Lincoln Aquatics",
+    worktags: {
+      costCenter: "CC-4108 · Winter Park – Aquatics",
+      spendCategory: "SC-POOL-CHEM · Pool Chemicals & Supplies",
+      location: "Life Time Winter Park",
+    },
+    status: "Successfully Completed",
+    currency: "USD",
+    memo: "Monthly pool chemical restock.",
+    chainStage: "Received",
+    purchaseOrderNumber: "PO-WD-2026-2087",
+    lines: [
+      { lineType: "Goods", itemDescription: "Chlorine tablets (50 lb pail)", spendCategory: "Pool Chemicals & Supplies", quantity: 6, unitOfMeasure: "Pail", unitCost: 189.0, extendedAmount: 1134.0 },
+      { lineType: "Goods", itemDescription: "pH balancer (25 lb bag)", spendCategory: "Pool Chemicals & Supplies", quantity: 4, unitOfMeasure: "Bag", unitCost: 42.5, extendedAmount: 170.0 },
+    ],
+  },
+  {
+    requisitionNumber: "REQ-WD-2026-1035",
+    requisitionDate: "2026-08-04",
+    requester: "Elena Perry",
+    company: "Life Time, Inc.",
+    requisitionType: "Catalog",
+    supplier: "Grainger Industrial Supply",
+    worktags: {
+      costCenter: "CC-4101 · Winter Park – Housekeeping",
+      spendCategory: "SC-SUPPLIES-JAN · Janitorial & Cleaning Supplies",
+      location: "Life Time Winter Park",
+    },
+    status: "Closed",
+    currency: "USD",
+    memo: "Towels & cleaning supplies restock.",
+    chainStage: "Invoiced",
+    purchaseOrderNumber: "PO-WD-2026-2061",
+    lines: [
+      { lineType: "Goods", itemDescription: "Bath towels — bulk (case of 48)", spendCategory: "Janitorial & Cleaning Supplies", quantity: 8, unitOfMeasure: "Case", unitCost: 96.0, extendedAmount: 768.0 },
+      { lineType: "Goods", itemDescription: "All-purpose cleaner concentrate (gal)", spendCategory: "Janitorial & Cleaning Supplies", quantity: 12, unitOfMeasure: "Gallon", unitCost: 14.25, extendedAmount: 171.0 },
+    ],
+  },
+  {
+    requisitionNumber: "REQ-WD-2026-1031",
+    requisitionDate: "2026-07-30",
+    requester: "Bill Kelly",
+    company: "Life Time, Inc.",
+    requisitionType: "Non-Catalog",
+    supplier: "FastSigns",
+    worktags: {
+      costCenter: "CC-4102 · Winter Park – Facilities",
+      spendCategory: "SC-REPAIRS-BLDG · Repairs & Maintenance – Building",
+      location: "Life Time Winter Park",
+    },
+    status: "Sent Back",
+    currency: "USD",
+    memo: "Returned by AGM: attach the vendor quote and pick a Cost Center.",
+    chainStage: "Requisition",
+    lines: [
+      { lineType: "Service", itemDescription: "Locker-room wayfinding signage — replace 6 panels", spendCategory: "Repairs & Maintenance – Building", extendedAmount: 540.0 },
+    ],
+  },
 ];
 
 function initRequisitions(container: HTMLElement, demoMode: boolean): void {
   const cardListEl = container.querySelector<HTMLElement>("#reqCardList");
   const cardViewEl = container.querySelector<HTMLElement>("#reqCardView");
   const fullViewEl = container.querySelector<HTMLElement>("#reqFullView");
+  const detailViewEl = container.querySelector<HTMLElement>("#reqDetailView");
   const viewAllBtn = container.querySelector<HTMLElement>("#reqViewAllBtn");
   const backBtn = container.querySelector<HTMLButtonElement>("#reqBackBtn");
+  const detailBackBtn = container.querySelector<HTMLButtonElement>("#reqDetailBackBtn");
   const instrToggle = container.querySelector<HTMLElement>("#reqInstrToggle");
   const tabOpen = container.querySelector<HTMLButtonElement>("#reqTabOpen");
   const tabCompleted = container.querySelector<HTMLButtonElement>("#reqTabCompleted");
   const openListEl = container.querySelector<HTMLElement>("#reqOpenList");
   const completedListEl = container.querySelector<HTMLElement>("#reqCompletedList");
+  const cardMetaEl = container.querySelector<HTMLElement>("#reqCardMeta");
   if (!cardListEl || !cardViewEl || !fullViewEl) return;
 
-  cardListEl.innerHTML = "";
-  // Requisitions has no live backend (ServiceChannel/Workday aren't connected),
-  // so it's sample-only — shown when demo mode is on, hidden when off.
-  if (!demoMode) {
-    const note = document.createElement("div");
-    note.className = "ooo-meta";
-    note.textContent = "Connect ServiceChannel / Workday Procurement to populate work orders.";
-    cardListEl.appendChild(note);
-  }
-  (demoMode ? BASELINE_WORK_ORDERS : []).forEach((item) => {
-    const row = document.createElement("div");
-    row.className = "team-row";
-    row.innerHTML =
-      '<div class="team-row-avatar"></div><div class="team-row-body"><div class="team-row-name"></div><div class="team-row-meta"></div></div>';
-    row.querySelector(".team-row-avatar")!.textContent = item.sourceCode;
-    row.querySelector(".team-row-name")!.textContent = item.title;
-    row.querySelector(".team-row-meta")!.textContent = [item.source, item.meta].filter(Boolean).join(" · ");
-    if (item.action) {
-      const btn = document.createElement("button");
-      btn.className = "action-btn secondary small";
-      btn.textContent = item.action;
-      row.appendChild(btn);
-    }
-    cardListEl.appendChild(row);
-  });
+  const requisitions = demoMode ? BASELINE_REQUISITIONS : [];
+  const openReqs = requisitions.filter((r) => OPEN_STATUSES.includes(r.status));
+  const completedReqs = requisitions.filter((r) => !OPEN_STATUSES.includes(r.status));
 
-  viewAllBtn?.addEventListener("click", () => {
-    cardViewEl.style.display = "none";
-    fullViewEl.style.display = "";
-  });
-  backBtn?.addEventListener("click", () => {
-    fullViewEl.style.display = "none";
-    cardViewEl.style.display = "";
-  });
+  function showView(which: "card" | "full" | "detail") {
+    cardViewEl!.style.display = which === "card" ? "" : "none";
+    fullViewEl!.style.display = which === "full" ? "" : "none";
+    if (detailViewEl) detailViewEl.style.display = which === "detail" ? "" : "none";
+  }
+
+  // A single requisition summary row (used in the landing card and the tabbed
+  // Open/Completed lists) — click to open the Workday-style detail.
+  function buildReqRow(r: Requisition): HTMLElement {
+    const row = document.createElement("div");
+    row.className = "team-row req-row";
+    row.style.borderBottom = "1px solid var(--border)";
+    const body = document.createElement("div");
+    body.className = "team-row-body";
+    const nameEl = document.createElement("div");
+    nameEl.className = "team-row-name";
+    nameEl.textContent = r.requisitionNumber;
+    const metaEl = document.createElement("div");
+    metaEl.className = "team-row-meta";
+    const itemCount = r.lines.length;
+    metaEl.textContent = `${formatUsd(reqTotal(r))} · ${r.supplier} · ${formatReqDate(r.requisitionDate)} · ${itemCount} line${itemCount === 1 ? "" : "s"}`;
+    body.appendChild(nameEl);
+    body.appendChild(metaEl);
+    const pill = document.createElement("span");
+    pill.className = "cw-pill " + reqStatusPillClass(r.status);
+    pill.textContent = r.status;
+    row.appendChild(body);
+    row.appendChild(pill);
+    row.addEventListener("click", () => renderDetail(r));
+    return row;
+  }
+
+  function renderList(el: HTMLElement | null, reqs: Requisition[], emptyText: string) {
+    if (!el) return;
+    el.innerHTML = "";
+    if (!reqs.length) {
+      const empty = document.createElement("div");
+      empty.className = "ooo-meta";
+      empty.textContent = emptyText;
+      el.appendChild(empty);
+      return;
+    }
+    reqs.forEach((r) => el.appendChild(buildReqRow(r)));
+  }
+
+  // ── Detail view (Workday-style header + worktags + lines + chain) ──────────
+  function renderDetail(r: Requisition) {
+    const set = (sel: string, text: string) => {
+      const el = container.querySelector<HTMLElement>(sel);
+      if (el) el.textContent = text;
+    };
+    set("#reqDetailNumber", r.requisitionNumber);
+    const statusEl = container.querySelector<HTMLElement>("#reqDetailStatus");
+    if (statusEl) {
+      statusEl.className = "cw-pill " + reqStatusPillClass(r.status);
+      statusEl.textContent = r.status;
+    }
+
+    // Header meta grid.
+    const meta: Array<[string, string]> = [
+      ["Requester", r.requester],
+      ["Company", r.company],
+      ["Requisition Date", formatReqDate(r.requisitionDate)],
+      ["Type", r.requisitionType],
+      ["Supplier", r.supplier],
+      ["Total Amount", formatUsd(reqTotal(r))],
+    ];
+    if (r.purchaseOrderNumber) meta.push(["Purchase Order", r.purchaseOrderNumber]);
+    if (r.memo) meta.push(["Memo", r.memo]);
+    const metaWrap = container.querySelector<HTMLElement>("#reqDetailMeta");
+    if (metaWrap) {
+      metaWrap.innerHTML = "";
+      meta.forEach(([label, value]) => {
+        const item = document.createElement("div");
+        item.className = "req-meta-item";
+        const l = document.createElement("div");
+        l.className = "req-meta-label";
+        l.textContent = label;
+        const v = document.createElement("div");
+        v.className = "req-meta-value";
+        v.textContent = value;
+        item.appendChild(l);
+        item.appendChild(v);
+        metaWrap.appendChild(item);
+      });
+    }
+
+    // Worktags (Workday's dimensional accounting tags).
+    const wtWrap = container.querySelector<HTMLElement>("#reqDetailWorktags");
+    if (wtWrap) {
+      wtWrap.innerHTML = "";
+      const tags: Array<[string, string]> = [
+        ["Cost Center", r.worktags.costCenter],
+        ["Spend Category", r.worktags.spendCategory],
+        ["Location", r.worktags.location],
+      ];
+      tags.forEach(([key, val]) => {
+        const chip = document.createElement("span");
+        chip.className = "req-worktag";
+        const k = document.createElement("span");
+        k.className = "wt-key";
+        k.textContent = key;
+        const t = document.createElement("span");
+        t.textContent = val;
+        chip.appendChild(k);
+        chip.appendChild(t);
+        wtWrap.appendChild(chip);
+      });
+    }
+
+    // Lines (Goods vs Service).
+    const linesWrap = container.querySelector<HTMLElement>("#reqDetailLines");
+    if (linesWrap) {
+      linesWrap.innerHTML = "";
+      r.lines.forEach((line) => {
+        const item = document.createElement("div");
+        item.className = "req-line-item";
+        const top = document.createElement("div");
+        top.className = "req-line-top";
+        const title = document.createElement("div");
+        title.className = "req-line-title";
+        const typeBadge = document.createElement("span");
+        typeBadge.className = "req-line-type";
+        typeBadge.textContent = line.lineType;
+        title.appendChild(typeBadge);
+        title.appendChild(document.createTextNode(line.itemDescription));
+        const amount = document.createElement("div");
+        amount.className = "req-line-amount";
+        amount.textContent = formatUsd(line.extendedAmount);
+        top.appendChild(title);
+        top.appendChild(amount);
+        const sub = document.createElement("div");
+        sub.className = "req-line-sub";
+        const qtyPart =
+          line.quantity !== undefined && line.unitCost !== undefined
+            ? `${line.quantity} ${line.unitOfMeasure || "Each"} × ${formatUsd(line.unitCost)} · `
+            : "";
+        sub.textContent = `${qtyPart}Spend Category: ${line.spendCategory}`;
+        item.appendChild(top);
+        item.appendChild(sub);
+        linesWrap.appendChild(item);
+      });
+    }
+    set("#reqDetailTotal", formatUsd(reqTotal(r)));
+
+    // Procurement chain stepper — Requisition → PO Issued → Received → Invoiced.
+    const chainWrap = container.querySelector<HTMLElement>("#reqDetailChain");
+    if (chainWrap) {
+      chainWrap.innerHTML = "";
+      // "Denied"/"Canceled"/"Sent Back"/"Draft" haven't sourced a PO yet, so the
+      // chain stays at Requisition; approved ones advance per chainStage.
+      const currentIdx = REQ_CHAIN.indexOf(r.chainStage);
+      REQ_CHAIN.forEach((stage, i) => {
+        const step = document.createElement("div");
+        step.className = "req-step" + (i < currentIdx ? " done" : i === currentIdx ? " current" : "");
+        if (i > 0) {
+          const line = document.createElement("div");
+          line.className = "req-line" + (i <= currentIdx ? " done" : "");
+          step.appendChild(line);
+        }
+        const dot = document.createElement("div");
+        dot.className = "req-dot" + (i < currentIdx ? " done" : i === currentIdx ? " current" : "");
+        const lbl = document.createElement("div");
+        lbl.className = "req-steplbl";
+        lbl.textContent = stage;
+        step.appendChild(dot);
+        step.appendChild(lbl);
+        chainWrap.appendChild(step);
+      });
+    }
+
+    showView("detail");
+  }
+
+  // ── Landing card + tabbed lists ────────────────────────────────────────────
+  if (cardMetaEl) {
+    cardMetaEl.textContent = demoMode
+      ? `Workday Procurement · ${openReqs.length} open · ${completedReqs.length} completed`
+      : "Connect Workday Procurement to populate requisitions.";
+  }
+  // Landing shows the most recent few; full view has the complete tabbed list.
+  renderList(cardListEl, requisitions.slice(0, 4), "Connect Workday Procurement to populate requisitions.");
+  renderList(openListEl, openReqs, "No open requisitions.");
+  renderList(completedListEl, completedReqs, "No completed requisitions in the last 6 months.");
+  if (tabOpen) tabOpen.textContent = `Open (${openReqs.length})`;
+  if (tabCompleted) tabCompleted.textContent = `Completed (${completedReqs.length})`;
+
+  viewAllBtn?.addEventListener("click", () => showView("full"));
+  backBtn?.addEventListener("click", () => showView("card"));
+  detailBackBtn?.addEventListener("click", () => showView("full"));
 
   instrToggle?.addEventListener("click", () => {
     instrToggle.closest(".side-card")?.classList.toggle("collapsed");

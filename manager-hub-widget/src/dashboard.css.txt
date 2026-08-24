@@ -1017,8 +1017,71 @@
     z-index: 1;
   }
   .req-dot.done { background: var(--primary); border-color: var(--primary); }
-  .req-steplbl { font-size: 11px; color: var(--text-light); margin-top: 6px; }
-  .req-step.done .req-steplbl { color: var(--text); font-weight: 600; }
+  .req-dot.current { border-color: var(--primary); box-shadow: 0 0 0 3px var(--danger-soft); }
+  .req-steplbl { font-size: 11px; color: var(--text-light); margin-top: 6px; text-align: center; }
+  .req-step.done .req-steplbl,
+  .req-step.current .req-steplbl { color: var(--text); font-weight: 600; }
+
+  /* ============ REQUISITION DETAIL (Workday-style) ============ */
+  .req-row { cursor: pointer; }
+  .req-row:hover .team-row-name { color: var(--primary); text-decoration: underline; }
+
+  .req-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 18px;
+    margin-bottom: 12px;
+  }
+  .req-meta-item { display: flex; flex-direction: column; gap: 2px; }
+  .req-meta-label { font-size: 10.5px; letter-spacing: 0.4px; text-transform: uppercase; color: var(--text-light); }
+  .req-meta-value { font-size: 13px; font-weight: 600; color: var(--text); }
+
+  .req-worktags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .req-worktag {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    font-size: 11.5px;
+    padding: 4px 9px;
+    border-radius: 7px;
+    background: var(--bg-gray);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .req-worktag .wt-key { color: var(--text-light); font-weight: 700; font-size: 10px; letter-spacing: 0.3px; text-transform: uppercase; }
+
+  .req-line-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .req-line-item:last-child { border-bottom: none; }
+  .req-line-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .req-line-title { font-weight: 600; font-size: 13px; color: var(--text); }
+  .req-line-amount { font-weight: 700; font-size: 13px; color: var(--text); white-space: nowrap; }
+  .req-line-sub { font-size: 11.5px; color: var(--text-light); margin-top: 3px; }
+  .req-line-type {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: var(--bg-gray);
+    border: 1px solid var(--border);
+    color: var(--text-light);
+    margin-right: 6px;
+  }
+  .req-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 2px solid var(--border);
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--text);
+  }
 
   /* ============ PROMOTION LAUNCHER ============ */
   .promo-form { display: flex; flex-direction: column; gap: 8px; }
