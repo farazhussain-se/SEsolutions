@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="widget-name" content="LTU — New Manager Onboarding (Module 1)">
+    <meta name="widget-description" content="Single-module mini widget linked from Life Time University: Module 1 of New Manager Onboarding">
+    <title>Module 1: Welcome to the Life Time Way — Life Time University</title>
+    <style>
+        :root {
+            --lt-charcoal:   #313131;
+            --lt-cream:      #FBF7F2;
+            --lt-blue:       #3A6DAF;
+            --lt-blue-light: #3AA6EF;
+            --lt-red:        #DA0000;
+            --lt-gray-mid:   #707070;
+            --lt-gray-light: #E8E6E3;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: var(--lt-cream);
+            color: var(--lt-charcoal);
+            margin: 0;
+            padding: 0;
+        }
+
+        .wrapper {
+            max-width: 620px;
+            margin: 0 auto;
+            padding: 20px 20px 40px;
+        }
+
+        .source-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--lt-gray-mid);
+            margin-bottom: 16px;
+        }
+        .source-bar a { color: var(--lt-charcoal); text-decoration: none; }
+        .source-bar a:hover { color: var(--lt-blue); }
+        .source-badge {
+            background-color: var(--lt-blue);
+            color: white;
+            font-weight: 800;
+            font-size: 0.65rem;
+            letter-spacing: 0.5px;
+            padding: 2px 6px;
+            border-radius: 2px;
+        }
+
+        .badge-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+
+        .detail-category {
+            display: inline-block;
+            background: var(--lt-blue);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+
+        .required-badge {
+            display: inline-block;
+            background: var(--lt-red);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+
+        .detail-title { margin: 0 0 6px 0; font-size: 1.5rem; font-weight: 700; line-height: 1.25; }
+        .detail-subtitle { color: var(--lt-gray-mid); font-size: 0.88rem; margin-bottom: 4px; }
+        .detail-meta { color: var(--lt-gray-mid); font-size: 0.85rem; }
+
+        .custom-player-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            background-color: #000;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 16px 32px rgba(0,0,0,0.3);
+            margin: 18px 0 20px;
+        }
+        .player-background {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover; background-position: center; opacity: 0.85;
+        }
+        .player-gradient {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.95) 100%);
+        }
+        .player-logo-box {
+            position: absolute; top: 20px; left: 20px;
+            background-color: var(--lt-blue); color: white;
+            font-weight: 800; font-size: 0.9rem;
+            padding: 8px 12px; border-radius: 2px; letter-spacing: 1px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .player-text-overlay { position: absolute; bottom: 70px; left: 20px; color: white; z-index: 10; }
+        .player-brand-name { font-size: 1.2rem; font-weight: 700; display: block; }
+        .player-sub-name { font-size: 0.92rem; font-weight: 300; opacity: 0.85; }
+        .player-controls {
+            position: absolute; bottom: 18px; left: 18px; right: 18px; height: 44px;
+            background-color: rgba(0,0,0,0.88); display: flex; align-items: center;
+            padding: 0 14px; border-radius: 3px; backdrop-filter: blur(5px);
+        }
+        .control-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; padding: 0; margin-right: 14px; }
+        .control-btn svg { fill: white; width: 18px; height: 18px; }
+        .control-btn:hover svg { fill: var(--lt-blue-light); }
+        .progress-track { flex-grow: 1; height: 4px; background-color: rgba(255,255,255,0.2); border-radius: 2px; margin: 0 14px; }
+        .progress-fill-video { width: 0%; height: 100%; background-color: var(--lt-blue-light); border-radius: 2px; }
+        .time-display { color: white; font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+
+        .detail-desc { line-height: 1.6; font-size: 0.98rem; color: #333; margin: 0 0 20px 0; }
+
+        .complete-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            background: var(--lt-blue);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 13px 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .complete-btn:hover { background: #2f5a91; }
+        .complete-btn.done { background: #F7FAFD; color: var(--lt-blue); border: 1px solid var(--lt-blue); }
+        .complete-btn .check { display: none; }
+        .complete-btn.done .check { display: inline; }
+
+        .next-note {
+            margin-top: 16px;
+            font-size: 0.82rem;
+            color: var(--lt-gray-mid);
+            text-align: center;
+        }
+        .next-note a { color: var(--lt-blue); text-decoration: none; font-weight: 600; }
+        .next-note a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+
+        <div class="source-bar">
+            <span class="source-badge">LTU</span>
+            <a href="lifetime_university_learning_hub.html">&larr; Back to Life Time University</a>
+        </div>
+
+        <div class="badge-row">
+            <span class="detail-category">Leadership Onboarding</span>
+            <span class="required-badge">Required</span>
+        </div>
+
+        <div class="detail-subtitle">New Manager Onboarding &middot; Module 1 of 5</div>
+        <h1 class="detail-title">Welcome to the Life Time Way</h1>
+        <div class="detail-meta">15 min &middot; New Department Managers &amp; GMs</div>
+
+        <div class="custom-player-container">
+            <div class="player-background"></div>
+            <div class="player-gradient"></div>
+            <div class="player-logo-box">LTU</div>
+            <div class="player-text-overlay">
+                <span class="player-brand-name">Life Time</span>
+                <span class="player-sub-name">Welcome to the Life Time Way</span>
+            </div>
+            <div class="player-controls">
+                <button class="control-btn">
+                    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+                <div class="progress-track"><div class="progress-fill-video"></div></div>
+                <div class="time-display">00:00 / 15:00</div>
+            </div>
+        </div>
+
+        <p class="detail-desc">
+            Life Time's mission as the Healthy Way of Life Company, and what the Life Time Way standard means for
+            every manager — from daily walk-through expectations to how you represent the brand to your team and
+            members.
+        </p>
+
+        <button class="complete-btn" id="completeBtn">
+            <span class="label">Mark Module Complete</span>
+            <span class="check">&#10003; Completed</span>
+        </button>
+
+        <div class="next-note">Part of the required New Manager Onboarding path &middot; <a href="lifetime_university_learning_hub.html">see all 5 modules in Life Time University</a></div>
+
+    </div>
+
+    <script>
+        const btn = document.getElementById('completeBtn');
+        btn.addEventListener('click', () => {
+            const done = btn.classList.toggle('done');
+            btn.querySelector('.label').style.display = done ? 'none' : 'inline';
+            btn.querySelector('.check').style.display = done ? 'inline' : 'none';
+        });
+    </script>
+</body>
+</html>
