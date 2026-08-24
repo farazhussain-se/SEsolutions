@@ -1,4 +1,14 @@
 import { WidgetApi } from "@staffbase/widget-sdk";
+import {
+  Shift,
+  ShiftChangeRequest,
+  allLocations,
+  loadRoster,
+  loadShiftChangeRequests,
+  saveRoster,
+  saveShiftChangeRequests,
+  todayIso,
+} from "./shift-data";
 
 export interface DashboardOptions {
   container: HTMLElement;
@@ -106,6 +116,7 @@ export function initDashboard(opts: DashboardOptions): void {
   initPromotionLauncher(container, branchBase, apiToken, getUserId);
   initRequisitions(container, demoMode, branchBase, apiToken, widgetApi);
   initMyTasks(container, branchBase, apiToken, tasksInstallationId, widgetApi, demoMode);
+  initShiftRoster(container, branchBase, apiToken, getUserId, demoMode);
   applyViewerIdentity(container, widgetApi);
 }
 
@@ -2368,4 +2379,158 @@ function initPromotionLauncher(
     currentTitleEl.classList.remove("show");
     setTimeout(() => confirmEl.classList.remove("show"), 5000);
   });
+}
+
+// ── Shift Roster & Coverage ──────────────────────────────────────────────
+// Reads the roster + shift-change requests the standalone shift-roster-widget
+// writes to localStorage (same-origin shared data, no backend — see
+// shift-data.ts). Approving a request here writes the effect straight back
+// into that shared roster so the employee widget sees it too.
+
+function shiftTimeRange(s: Shift): string {
+  return `${s.start} – ${s.end}`;
+}
+
+function requestSummary(r: ShiftChangeRequest, shift: Shift | undefined): string {
+  const where = shift ? `${shift.location} · ${shiftTimeRange(shift)}` : "shift no longer on roster";
+  switch (r.type) {
+    case "Swap":
+      return `Swap · ${where}${r.targetEmployee ? ` ↔ ${r.targetEmployee}` : ""}`;
+    case "Coverage":
+      return `Needs coverage · ${where}`;
+    case "Call-Off":
+      return `Call-off · ${where}`;
+  }
+}
+
+function initShiftRoster(
+  container: HTMLElement,
+  branchBase: string,
+  apiToken: string,
+  getUserId: (name: string) => string | undefined,
+  demoMode: boolean
+): void {
+  const coverageList = container.querySelector<HTMLElement>("#shiftCoverageList");
+  const requestList = container.querySelector<HTMLElement>("#shiftRequestList");
+  const swapsSubtab = container.querySelector<HTMLElement>('.cw-subtab[data-subtab="timeoff"]');
+  if (!coverageList && !requestList) return;
+
+  let roster = loadRoster(demoMode);
+  let requests = loadShiftChangeRequests();
+
+  function renderCoverage(): void {
+    if (!coverageList) return;
+    coverageList.innerHTML = "";
+    const today = todayIso();
+    const todaysShifts = roster
+      .filter((s) => s.date === today && s.employeeName !== "Open Shift")
+      .sort((a, b) => a.location.localeCompare(b.location) || a.start.localeCompare(b.start));
+
+    if (todaysShifts.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "ooo-row";
+      empty.innerHTML = '<span class="ooo-meta">No shifts scheduled today.</span>';
+      coverageList.appendChild(empty);
+    } else {
+      todaysShifts.forEach((shift) => {
+        const row = document.createElement("div");
+        row.className = "ooo-row";
+        row.innerHTML =
+          '<div class="ooo-avatar"></div><span class="ooo-name"></span><span class="ooo-meta" style="margin-left:auto;"></span>';
+        row.querySelector(".ooo-avatar")!.textContent = shift.initials;
+        row.querySelector(".ooo-name")!.textContent = `${shift.location} · ${shift.employeeName}`;
+        row.querySelector(".ooo-meta")!.textContent = shiftTimeRange(shift);
+        coverageList.appendChild(row);
+      });
+    }
+
+    // Flag any location with a normal presence on the roster but nobody
+    // covering it today — the visible result of an approved call-off/coverage
+    // request that hasn't been re-staffed yet.
+    const staffedToday = new Set(todaysShifts.map((s) => s.location));
+    const everStaffed = new Set(roster.map((s) => s.location));
+    allLocations().forEach((loc) => {
+      if (everStaffed.has(loc) && !staffedToday.has(loc)) {
+        const gap = document.createElement("div");
+        gap.className = "ooo-row";
+        gap.innerHTML =
+          '<div class="ooo-avatar red">!</div><span class="ooo-name"></span><span class="ooo-meta" style="margin-left:auto;">Uncovered</span>';
+        gap.querySelector(".ooo-name")!.textContent = `${loc} · No coverage`;
+        coverageList.appendChild(gap);
+      }
+    });
+  }
+
+  function applyApproval(request: ShiftChangeRequest): void {
+    const shiftIdx = roster.findIndex((s) => s.id === request.shiftId);
+    if (shiftIdx === -1) return;
+    const shift = roster[shiftIdx];
+
+    if (request.type === "Swap" && request.targetEmployee) {
+      const targetShiftIdx = roster.findIndex(
+        (s) => s.date === shift.date && s.employeeName === request.targetEmployee
+      );
+      if (targetShiftIdx !== -1) {
+        const targetShift = roster[targetShiftIdx];
+        const swappedName = targetShift.employeeName;
+        const swappedInitials = targetShift.initials;
+        roster[targetShiftIdx] = { ...targetShift, employeeName: shift.employeeName, initials: shift.initials };
+        roster[shiftIdx] = { ...shift, employeeName: swappedName, initials: swappedInitials };
+      } else {
+        roster[shiftIdx] = { ...shift, employeeName: request.targetEmployee, initials: initialsOf(request.targetEmployee) };
+      }
+    } else {
+      // Coverage or Call-Off (or a Swap with no target picked): the shift
+      // opens up so it shows as an actionable gap on the coverage matrix.
+      roster[shiftIdx] = { ...shift, employeeName: "Open Shift", initials: "OS" };
+    }
+    saveRoster(roster);
+  }
+
+  function renderRequests(): void {
+    if (!requestList) return;
+    requestList.innerHTML = "";
+    const pending = requests.filter((r) => r.status === "Pending");
+
+    if (swapsSubtab) {
+      const staticCount = 3; // Martin Wolf, Fiona Travis, Steven Thompson (demo rows)
+      swapsSubtab.textContent = `Time-Off & Swaps · ${staticCount + pending.length}`;
+    }
+
+    pending.forEach((request) => {
+      const shift = roster.find((s) => s.id === request.shiftId);
+      const row = document.createElement("div");
+      row.className = "team-row";
+      row.innerHTML =
+        '<div class="team-row-avatar"></div>' +
+        '<div class="team-row-body"><div class="team-row-flag">Shift request</div><div class="team-row-name"></div><div class="team-row-meta"></div></div>' +
+        '<button class="action-btn small" data-action="approve">Approve</button>' +
+        '<button class="action-btn secondary small" data-action="deny">Deny</button>';
+      row.querySelector(".team-row-avatar")!.textContent = initialsOf(request.requestedBy);
+      row.querySelector(".team-row-name")!.textContent = request.requestedBy;
+      row.querySelector(".team-row-meta")!.textContent = requestSummary(request, shift);
+
+      row.querySelector('[data-action="approve"]')!.addEventListener("click", () => {
+        applyApproval(request);
+        request.status = "Approved";
+        saveShiftChangeRequests(requests);
+        const userId = getUserId(request.requestedBy);
+        if (userId && apiToken) {
+          sendNotification(branchBase, apiToken, userId, "Shift request approved", requestSummary(request, shift));
+        }
+        renderCoverage();
+        renderRequests();
+      });
+      row.querySelector('[data-action="deny"]')!.addEventListener("click", () => {
+        request.status = "Denied";
+        saveShiftChangeRequests(requests);
+        renderRequests();
+      });
+
+      requestList.appendChild(row);
+    });
+  }
+
+  renderCoverage();
+  renderRequests();
 }

@@ -95,6 +95,7 @@
               </div>
               <button class="action-btn secondary small">Review</button>
             </div>
+            <div id="shiftRequestList"></div>
           </div>
         </div>
       </div>
@@ -336,17 +337,19 @@
 
           <div class="coverage-widget workday-scope">
             <div class="coverage-widget-title">Today's Shift Coverage</div>
-            <div class="ooo-row">
-              <span class="ooo-name">Front Desk</span>
-              <span class="ooo-meta" style="margin-left:auto;">8:00 – 12:00</span>
-            </div>
-            <div class="ooo-row">
-              <span class="ooo-name">Pool Deck</span>
-              <span class="ooo-meta" style="margin-left:auto;">6:00 – 14:00</span>
-            </div>
-            <div class="ooo-row">
-              <span class="ooo-name">Group Fitness</span>
-              <span class="ooo-meta" style="margin-left:auto;">9:00 – 13:00</span>
+            <div id="shiftCoverageList">
+              <div class="ooo-row">
+                <span class="ooo-name">Front Desk</span>
+                <span class="ooo-meta" style="margin-left:auto;">8:00 – 12:00</span>
+              </div>
+              <div class="ooo-row">
+                <span class="ooo-name">Pool Deck</span>
+                <span class="ooo-meta" style="margin-left:auto;">6:00 – 14:00</span>
+              </div>
+              <div class="ooo-row">
+                <span class="ooo-name">Group Fitness</span>
+                <span class="ooo-meta" style="margin-left:auto;">9:00 – 13:00</span>
+              </div>
             </div>
           </div>
         </div>
