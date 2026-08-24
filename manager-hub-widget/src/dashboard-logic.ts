@@ -3,6 +3,7 @@ import {
   Shift,
   ShiftChangeRequest,
   allLocations,
+  isoDateOffset,
   loadRoster,
   loadShiftChangeRequests,
   saveRoster,
@@ -2408,6 +2409,26 @@ function requestSummary(r: ShiftChangeRequest, shift: Shift | undefined): string
   }
 }
 
+// A demo-mode baseline so a pending swap request is always visible in
+// Action Center → Time-Off & Swaps even before a real one has come in from
+// the shift-roster-widget — same "always populated" rule as
+// BASELINE_REQUISITIONS. shiftId targets Jordan's own Personal Training
+// shift 2 days out (matching OPEN_TRAINING_SHIFT_DAY_OFFSETS' seed pattern
+// in shift-data.ts), so approving it behaves exactly like a real one.
+function baselineShiftRequests(): ShiftChangeRequest[] {
+  return [
+    {
+      id: "baseline-jordan-swap",
+      shiftId: `jordan-blake-${isoDateOffset(2)}`,
+      requestedBy: "Jordan Blake",
+      type: "Swap",
+      reason: "Training certification exam that morning.",
+      status: "Pending",
+      submittedAt: new Date().toISOString(),
+    },
+  ];
+}
+
 function initShiftRoster(
   container: HTMLElement,
   branchBase: string,
@@ -2420,8 +2441,21 @@ function initShiftRoster(
   const swapsSubtab = container.querySelector<HTMLElement>('.cw-subtab[data-subtab="timeoff"]');
   if (!coverageList && !requestList) return;
 
+  // Loaded once per refresh, not just once at mount — the shift-roster-widget
+  // writes to this same localStorage from a separate widget instance (and
+  // possibly a separate tab/page), so a request submitted after this
+  // dashboard was already open would otherwise never appear until a full
+  // reload. Baseline entries are merged in by id so an approved/denied
+  // baseline doesn't get re-added as a duplicate on the next refresh.
+  function loadRequestsWithBaseline(): ShiftChangeRequest[] {
+    const stored = loadShiftChangeRequests();
+    if (!demoMode) return stored;
+    const storedIds = new Set(stored.map((r) => r.id));
+    return stored.concat(baselineShiftRequests().filter((r) => !storedIds.has(r.id)));
+  }
+
   let roster = loadRoster(demoMode);
-  let requests = loadShiftChangeRequests();
+  let requests = loadRequestsWithBaseline();
 
   function renderCoverage(): void {
     if (!coverageList) return;
@@ -2535,6 +2569,27 @@ function initShiftRoster(
       requestList.appendChild(row);
     });
   }
+
+  // Re-reads storage and re-renders — covers a request/pickup written by the
+  // shift-roster-widget after this dashboard was already mounted. A plain
+  // `storage` event only fires in *other* tabs of the same origin, so it's
+  // paired with a visibility check (catches switching back to this tab/app)
+  // and a short poll (catches the SPA-navigation case where this widget's
+  // DOM never actually reloads).
+  function refresh(): void {
+    roster = loadRoster(demoMode);
+    requests = loadRequestsWithBaseline();
+    renderCoverage();
+    renderRequests();
+  }
+
+  window.addEventListener("storage", (e) => {
+    if (!e.key || e.key.startsWith("lifetime-shift-roster:")) refresh();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") refresh();
+  });
+  setInterval(refresh, 15000);
 
   renderCoverage();
   renderRequests();

@@ -86,7 +86,7 @@ const SHIFT_TEMPLATES: { scheduleTag: Shift["scheduleTag"]; start: string; end: 
   { scheduleTag: "Close", start: "14:00", end: "22:00" },
 ];
 
-function isoDateOffset(days: number): string {
+export function isoDateOffset(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
