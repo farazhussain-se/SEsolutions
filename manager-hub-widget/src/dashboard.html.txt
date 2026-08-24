@@ -200,6 +200,10 @@
           </div>
           <div class="journey-header-actions">
             <span class="live-badge live" id="myTasksBadge" style="display:none;">Live</span>
+            <span class="training-link" id="myTasksOpenLink">
+              <span>Open in Tasks</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </span>
           </div>
         </div>
         <div class="scroll-list" id="myTasksList"></div>
@@ -231,6 +235,18 @@
             <div class="journey-header-actions">
               <span class="live-badge live" id="journeyProgressBadge" style="display:none;">Live</span>
             </div>
+          </div>
+          <div class="filter-bar">
+            <select class="policy-input" id="journeyTypeFilter">
+              <option value="">All Journeys</option>
+            </select>
+            <select class="policy-input" id="journeySortSelect">
+              <option value="name">Sort: Name</option>
+              <option value="behind">Sort: Most Behind</option>
+              <option value="journey">Sort: Journey</option>
+            </select>
+            <button class="filter-toggle-btn" id="journeyOverdueToggle" type="button">Overdue only</button>
+            <button class="filter-clear-btn" id="journeyFilterClearBtn" type="button">Clear all</button>
           </div>
           <div class="scroll-list" id="journeyProgressList"></div>
         </div>
@@ -265,11 +281,24 @@
             </div>
             <div class="journey-header-actions">
               <span class="live-badge live" id="tasksBadge" style="display:none;">Live</span>
+              <span class="training-link" id="tasksOpenLink">
+                <span>Open in Tasks</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </span>
             </div>
           </div>
-          <select class="policy-input" id="taskMemberFilter" style="margin-bottom:10px;">
-            <option value="">All Team Members</option>
-          </select>
+          <div class="filter-bar">
+            <select class="policy-input" id="taskMemberFilter">
+              <option value="">All Team Members</option>
+            </select>
+            <select class="policy-input" id="taskSortSelect">
+              <option value="name">Sort: Name</option>
+              <option value="priority">Sort: Priority</option>
+              <option value="dueDate">Sort: Due Date</option>
+            </select>
+            <button class="filter-toggle-btn" id="taskOverdueToggle" type="button">Overdue only</button>
+            <button class="filter-clear-btn" id="taskFilterClearBtn" type="button">Clear all</button>
+          </div>
           <div class="scroll-list" id="tasksList"></div>
         </div>
 

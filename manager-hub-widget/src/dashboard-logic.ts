@@ -12,6 +12,19 @@ export interface DashboardOptions {
 
 const DEFAULT_TASKS_INSTALLATION_ID = "6a57a000450b115cd8083c22";
 
+// The real Staffbase Tasks app's content page for this branch — distinct from
+// the Tasks *plugin installation* id used everywhere else in this file (that
+// one drives the /tasks/{id}/... API; this one is the browsable content node
+// a manager lands on in Staffbase itself). There's no documented per-task
+// deep link on this API, so every "open" affordance below points here rather
+// than claiming a precision it can't deliver — good enough to let a manager
+// actually open and edit the real task, which is the point.
+const MANAGER_TASKS_APP_URL = "https://lifetime-inc.staffbase.rocks/content/tasks/6a57a000450b115cd8083c23";
+
+function openManagerTasksApp(): void {
+  window.open(MANAGER_TASKS_APP_URL, "_blank", "noopener");
+}
+
 /** Calls the real Staffbase branch API directly from the browser — CORS is
  * open on these endpoints, and the token lives only in this widget's own
  * Studio configuration (entered once at install time), never in a separate
@@ -70,12 +83,18 @@ export function initDashboard(opts: DashboardOptions): void {
   wireSubTabs(container);
   wireChecklist(container);
   wireSetupLink(container);
-  wireMetricLinks(container);
+  wireOpenTasksLinks(container);
   checkTokenStatus(container, branchBase, apiToken);
   wireDiagnosticsButton(container, branchBase, apiToken, tasksInstallationId);
   runSdkDiagnostics(container, widgetApi, tasksInstallationId);
-  initJourneyProgress(container, branchBase, apiToken, tasksInstallationId);
-  const { getUserId } = initTeamTasksAndRoleChange(container, branchBase, apiToken, tasksInstallationId);
+  const { setOverdueFilterActive: setJourneyOverdueFilter } = initJourneyProgress(container, branchBase, apiToken, tasksInstallationId);
+  const { getUserId, setOverdueFilterActive: setTaskOverdueFilter } = initTeamTasksAndRoleChange(
+    container,
+    branchBase,
+    apiToken,
+    tasksInstallationId
+  );
+  wireMetricLinks(container, setTaskOverdueFilter, setJourneyOverdueFilter);
   initPromotionLauncher(container, branchBase, apiToken, getUserId);
   initRequisitions(container);
   initMyTasks(container, branchBase, apiToken, tasksInstallationId, widgetApi);
@@ -141,6 +160,15 @@ function activateSubTab(container: HTMLElement, group: string, subtab: string): 
   bar?.querySelector<HTMLElement>(`.cw-subtab[data-subtab="${subtab}"]`)?.click();
 }
 
+/** "Open in Tasks" header links on My Tasks and Team Tasks — jump straight
+ * to the real Staffbase Tasks app so a manager can open/edit a task for
+ * real, not just view it read-only in this widget. */
+function wireOpenTasksLinks(container: HTMLElement): void {
+  ["#myTasksOpenLink", "#tasksOpenLink"].forEach((sel) => {
+    container.querySelector<HTMLElement>(sel)?.addEventListener("click", openManagerTasksApp);
+  });
+}
+
 function wireChecklist(container: HTMLElement): void {
   container.querySelectorAll(".checklist-check").forEach((box) => {
     box.addEventListener("click", () => {
@@ -151,26 +179,28 @@ function wireChecklist(container: HTMLElement): void {
 
 /** The two top-of-dashboard metric cards (Overdue Team Tasks / Overdue
  * Journey Steps) jump straight to the Team Readiness tab, where the actual
- * overdue lists and their reminder actions live. */
-function wireMetricLinks(container: HTMLElement): void {
-  const open = (subtab: string) => {
+ * overdue lists live — and now also flip that tab's own "Overdue only"
+ * filter on, so the card's number and the list it lands on always agree. */
+function wireMetricLinks(container: HTMLElement, onTasksOverdue?: () => void, onJourneysOverdue?: () => void): void {
+  const open = (subtab: string, trigger?: () => void) => {
     container.querySelector<HTMLElement>('.cw-tab[data-tab="progress"]')?.click();
     activateSubTab(container, "progress", subtab);
+    trigger?.();
   };
   // Overdue Team Tasks → Team Tasks sub-tab; Overdue Journey Steps → Journeys.
-  const targets: Array<[string, string]> = [
-    ["#metricOverdueTasksCard", "tasks"],
-    ["#metricOverdueCard", "journeys"],
+  const targets: Array<[string, string, (() => void) | undefined]> = [
+    ["#metricOverdueTasksCard", "tasks", onTasksOverdue],
+    ["#metricOverdueCard", "journeys", onJourneysOverdue],
   ];
-  targets.forEach(([sel, subtab]) => {
+  targets.forEach(([sel, subtab, trigger]) => {
     const card = container.querySelector<HTMLElement>(sel);
     if (!card) return;
-    card.addEventListener("click", () => open(subtab));
+    card.addEventListener("click", () => open(subtab, trigger));
     card.addEventListener("keydown", (e) => {
       const key = (e as KeyboardEvent).key;
       if (key === "Enter" || key === " ") {
         e.preventDefault();
-        open(subtab);
+        open(subtab, trigger);
       }
     });
   });
@@ -650,7 +680,12 @@ function progressRing(completedSteps: number, totalSteps: number, done: boolean)
   );
 }
 
-function initJourneyProgress(container: HTMLElement, branchBase: string, apiToken: string, tasksInstallationId: string): void {
+function initJourneyProgress(
+  container: HTMLElement,
+  branchBase: string,
+  apiToken: string,
+  tasksInstallationId: string
+): { setOverdueFilterActive: () => void } {
   const metaEl = container.querySelector<HTMLElement>("#journeyProgressMeta");
   const badgeEl = container.querySelector<HTMLElement>("#journeyProgressBadge");
   const listEl = container.querySelector<HTMLElement>("#journeyProgressList");
@@ -658,7 +693,13 @@ function initJourneyProgress(container: HTMLElement, branchBase: string, apiToke
   const overdueListEl = container.querySelector<HTMLElement>("#overdueStepsList");
   const overdueCriticalEl = container.querySelector<HTMLElement>("#overdueStepsCritical");
   const metricOverdueEl = container.querySelector<HTMLElement>("#metricOverdueValue");
-  if (!metaEl || !badgeEl || !listEl || !overdueTitleEl || !overdueListEl) return;
+  const typeFilterEl = container.querySelector<HTMLSelectElement>("#journeyTypeFilter");
+  const sortSelectEl = container.querySelector<HTMLSelectElement>("#journeySortSelect");
+  const overdueToggleEl = container.querySelector<HTMLButtonElement>("#journeyOverdueToggle");
+  const clearBtnEl = container.querySelector<HTMLButtonElement>("#journeyFilterClearBtn");
+  if (!metaEl || !badgeEl || !listEl || !overdueTitleEl || !overdueListEl) {
+    return { setOverdueFilterActive: () => {} };
+  }
 
   function renderEmployeeList(entries: JourneyEmployeeEntry[]) {
     listEl!.innerHTML = "";
@@ -697,6 +738,83 @@ function initJourneyProgress(container: HTMLElement, branchBase: string, apiToke
   }
 
   let lastOverdue: JourneyEmployeeEntry[] = [];
+
+  // Filter/sort state for the "By Employee" list — independent of the
+  // Overdue Journey Steps panel below, which always shows the full overdue
+  // set regardless of what's selected here.
+  let allJourneyEmployees: JourneyEmployeeEntry[] = [];
+  let journeyTypeFilterValue = "";
+  let journeySortMode: "name" | "behind" | "journey" = "name";
+  let journeyOverdueOnly = false;
+
+  function populateJourneyTypeFilter(entries: JourneyEmployeeEntry[]) {
+    if (!typeFilterEl) return;
+    const previous = typeFilterEl.value;
+    typeFilterEl.innerHTML = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = "";
+    allOpt.textContent = "All Journeys";
+    typeFilterEl.appendChild(allOpt);
+    Array.from(new Set(entries.map((e) => e.journeyName)))
+      .sort((a, b) => a.localeCompare(b))
+      .forEach((journeyName) => {
+        const opt = document.createElement("option");
+        opt.value = journeyName;
+        opt.textContent = journeyName;
+        typeFilterEl!.appendChild(opt);
+      });
+    if (previous && entries.some((e) => e.journeyName === previous)) typeFilterEl.value = previous;
+  }
+
+  function sortJourneyEntries(entries: JourneyEmployeeEntry[], mode: typeof journeySortMode): JourneyEmployeeEntry[] {
+    const sorted = entries.slice();
+    if (mode === "name") {
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (mode === "behind") {
+      sorted.sort((a, b) => (b.completed ? -1 : b.daysOnStep || 0) - (a.completed ? -1 : a.daysOnStep || 0));
+    } else {
+      sorted.sort((a, b) => a.journeyName.localeCompare(b.journeyName) || a.name.localeCompare(b.name));
+    }
+    return sorted;
+  }
+
+  function applyJourneyFilters() {
+    let entries = allJourneyEmployees.slice();
+    if (journeyTypeFilterValue) entries = entries.filter((e) => e.journeyName === journeyTypeFilterValue);
+    if (journeyOverdueOnly) {
+      entries = entries.filter((e) => !e.completed && typeof e.daysOnStep === "number" && e.daysOnStep > OVERDUE_THRESHOLD_DAYS);
+    }
+    renderEmployeeList(sortJourneyEntries(entries, journeySortMode));
+  }
+
+  function setJourneyEmployees(entries: JourneyEmployeeEntry[]) {
+    allJourneyEmployees = entries;
+    populateJourneyTypeFilter(entries);
+    applyJourneyFilters();
+  }
+
+  typeFilterEl?.addEventListener("change", () => {
+    journeyTypeFilterValue = typeFilterEl.value;
+    applyJourneyFilters();
+  });
+  sortSelectEl?.addEventListener("change", () => {
+    journeySortMode = sortSelectEl.value as typeof journeySortMode;
+    applyJourneyFilters();
+  });
+  overdueToggleEl?.addEventListener("click", () => {
+    journeyOverdueOnly = !journeyOverdueOnly;
+    overdueToggleEl.classList.toggle("active", journeyOverdueOnly);
+    applyJourneyFilters();
+  });
+  clearBtnEl?.addEventListener("click", () => {
+    journeyTypeFilterValue = "";
+    journeySortMode = "name";
+    journeyOverdueOnly = false;
+    if (typeFilterEl) typeFilterEl.value = "";
+    if (sortSelectEl) sortSelectEl.value = "name";
+    overdueToggleEl?.classList.remove("active");
+    applyJourneyFilters();
+  });
 
   // A journey reminder is BOTH a real assigned task (so it lands in the
   // person's task list) AND a push notification — per the requirement that
@@ -802,7 +920,7 @@ function initJourneyProgress(container: HTMLElement, branchBase: string, apiToke
   function renderBaselineOnly() {
     metaEl!.textContent = `${BASELINE_EMPLOYEES.length} tracked`;
     badgeEl!.style.display = "none";
-    renderEmployeeList(BASELINE_EMPLOYEES);
+    setJourneyEmployees(BASELINE_EMPLOYEES);
     renderOverdueSteps(BASELINE_EMPLOYEES);
   }
 
@@ -821,7 +939,7 @@ function initJourneyProgress(container: HTMLElement, branchBase: string, apiToke
         } else {
           badgeEl!.style.display = "none";
         }
-        renderEmployeeList(combined);
+        setJourneyEmployees(combined);
         renderOverdueSteps(combined);
       })
       .catch(renderBaselineOnly);
@@ -850,12 +968,22 @@ function initJourneyProgress(container: HTMLElement, branchBase: string, apiToke
       .then((results) => done(results.some(Boolean)))
       .catch(() => done(false));
   });
+
+  return {
+    setOverdueFilterActive: () => {
+      journeyOverdueOnly = true;
+      overdueToggleEl?.classList.add("active");
+      applyJourneyFilters();
+    },
+  };
 }
 
 interface TaskItem {
   title: string;
   priority: string;
   status: string;
+  dueDate?: string;
+  daysOverdue?: number;
 }
 interface TaskGroup {
   name: string;
@@ -912,19 +1040,20 @@ async function fetchTeamTasksData(branchBase: string, apiToken: string, tasksIns
       groups[name] = [];
       order.push(name);
     }
-    groups[name].push({ title: t.title, priority: t.priority, status: t.status === "OPEN" ? "Open" : t.status });
+    let daysOverdue: number | undefined;
+    if (t.dueDate) {
+      const dueDt = new Date(t.dueDate);
+      if (dueDt < now) daysOverdue = Math.max(1, Math.floor((now.getTime() - dueDt.getTime()) / 86400000));
+    }
+    groups[name].push({ title: t.title, priority: t.priority, status: t.status === "OPEN" ? "Open" : t.status, dueDate: t.dueDate, daysOverdue });
     assignedCount++;
     if (user) {
       const profile = user.profile || {};
       const titleField = user.position || profile.position || profile.title || "Team Member";
       if (!roleChangeMembers.some((m) => m.userId === aid)) roleChangeMembers.push({ userId: aid, name, title: titleField });
     }
-    if (t.dueDate) {
-      const dueDt = new Date(t.dueDate);
-      if (dueDt < now) {
-        const daysOverdue = Math.max(1, Math.floor((now.getTime() - dueDt.getTime()) / 86400000));
-        overdueTasks.push({ userId: aid, name, title: t.title, dueDate: t.dueDate, daysOverdue });
-      }
+    if (daysOverdue !== undefined) {
+      overdueTasks.push({ userId: aid, name, title: t.title, dueDate: t.dueDate, daysOverdue });
     }
   });
 
@@ -942,7 +1071,7 @@ function initTeamTasksAndRoleChange(
   branchBase: string,
   apiToken: string,
   tasksInstallationId: string
-): { getUserId: (name: string) => string | undefined } {
+): { getUserId: (name: string) => string | undefined; setOverdueFilterActive: () => void } {
   const tasksMetaEl = container.querySelector<HTMLElement>("#tasksMeta");
   const tasksBadgeEl = container.querySelector<HTMLElement>("#tasksBadge");
   const tasksListEl = container.querySelector<HTMLElement>("#tasksList");
@@ -955,6 +1084,9 @@ function initTeamTasksAndRoleChange(
   const overdueTasksCriticalEl = container.querySelector<HTMLElement>("#overdueTasksCritical");
   const metricOverdueTasksEl = container.querySelector<HTMLElement>("#metricOverdueTasksValue");
   const taskMemberFilterEl = container.querySelector<HTMLSelectElement>("#taskMemberFilter");
+  const taskSortSelectEl = container.querySelector<HTMLSelectElement>("#taskSortSelect");
+  const taskOverdueToggleEl = container.querySelector<HTMLButtonElement>("#taskOverdueToggle");
+  const taskFilterClearBtnEl = container.querySelector<HTMLButtonElement>("#taskFilterClearBtn");
 
   let titleByName: Record<string, string> = {};
   let userIdByName: Record<string, string> = {};
@@ -1129,6 +1261,13 @@ function initTeamTasksAndRoleChange(
   function renderTaskGroups(groups: TaskGroup[]) {
     if (!tasksListEl) return;
     tasksListEl.innerHTML = "";
+    if (!groups.length) {
+      const empty = document.createElement("div");
+      empty.className = "ooo-meta";
+      empty.textContent = "No tasks match the current filters.";
+      tasksListEl.appendChild(empty);
+      return;
+    }
     groups.forEach((g) => {
       const group = document.createElement("div");
       group.className = "task-group";
@@ -1138,13 +1277,20 @@ function initTeamTasksAndRoleChange(
       group.appendChild(nameEl);
       g.tasks.forEach((t) => {
         const item = document.createElement("div");
-        item.className = "task-item";
+        item.className = "task-item clickable";
+        item.title = "Open in Staffbase Tasks";
         item.innerHTML = '<span class="task-item-title"></span><span class="cw-pill"></span>';
         item.querySelector(".task-item-title")!.textContent = t.title;
+        item.addEventListener("click", openManagerTasksApp);
         const pill = item.querySelector(".cw-pill")!;
-        const pc = priorityPillClass(t.priority);
-        if (pc) pill.classList.add(pc);
-        pill.textContent = t.status || "Open";
+        if (t.daysOverdue) {
+          pill.className = "cw-pill " + (t.daysOverdue >= CRITICAL_THRESHOLD_DAYS ? "required" : "warn");
+          pill.textContent = `${t.daysOverdue >= CRITICAL_THRESHOLD_DAYS ? "Critical" : "Past Due"} · ${t.daysOverdue}d`;
+        } else {
+          const pc = priorityPillClass(t.priority);
+          if (pc) pill.classList.add(pc);
+          pill.textContent = t.status || "Open";
+        }
         group.appendChild(item);
       });
       tasksListEl.appendChild(group);
@@ -1153,8 +1299,11 @@ function initTeamTasksAndRoleChange(
 
   // Lets a manager pull tasks for one team member at a time instead of
   // scrolling a flat list of everyone's — defaults to "All Team Members" so
-  // the existing at-a-glance view is never lost, just made drillable.
+  // the existing at-a-glance view is never lost, just made drillable. Sort
+  // and "Overdue only" layer on top of the member filter, same data flow.
   let allTaskGroups: TaskGroup[] = [];
+  let taskSortMode: "name" | "priority" | "dueDate" = "name";
+  let taskOverdueOnly = false;
 
   function populateTaskMemberFilter(groups: TaskGroup[]) {
     if (!taskMemberFilterEl) return;
@@ -1182,18 +1331,65 @@ function initTeamTasksAndRoleChange(
     }
   }
 
-  function applyTaskMemberFilter() {
-    const selected = taskMemberFilterEl?.value || "";
-    renderTaskGroups(selected ? allTaskGroups.filter((g) => g.name === selected) : allTaskGroups);
+  function priorityRank(p: string): number {
+    if (p === "Priority_1") return 0;
+    if (p === "Priority_2") return 1;
+    return 2;
+  }
+
+  function sortTasksWithinGroup(tasks: TaskItem[]): TaskItem[] {
+    const sorted = tasks.slice();
+    if (taskSortMode === "priority") {
+      sorted.sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority));
+    } else if (taskSortMode === "dueDate") {
+      sorted.sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      });
+    }
+    return sorted;
+  }
+
+  function applyTaskFilters() {
+    const selectedMember = taskMemberFilterEl?.value || "";
+    let groups = selectedMember ? allTaskGroups.filter((g) => g.name === selectedMember) : allTaskGroups.slice();
+
+    if (taskOverdueOnly) {
+      groups = groups.map((g) => ({ name: g.name, tasks: g.tasks.filter((t) => !!t.daysOverdue) })).filter((g) => g.tasks.length > 0);
+    }
+
+    groups = groups.map((g) => ({ name: g.name, tasks: sortTasksWithinGroup(g.tasks) }));
+    if (taskSortMode === "name") groups = groups.slice().sort((a, b) => a.name.localeCompare(b.name));
+
+    renderTaskGroups(groups);
   }
 
   function setTaskGroups(groups: TaskGroup[]) {
     allTaskGroups = groups;
     populateTaskMemberFilter(groups);
-    applyTaskMemberFilter();
+    applyTaskFilters();
   }
 
-  taskMemberFilterEl?.addEventListener("change", applyTaskMemberFilter);
+  taskMemberFilterEl?.addEventListener("change", applyTaskFilters);
+  taskSortSelectEl?.addEventListener("change", () => {
+    taskSortMode = (taskSortSelectEl.value as typeof taskSortMode) || "name";
+    applyTaskFilters();
+  });
+  taskOverdueToggleEl?.addEventListener("click", () => {
+    taskOverdueOnly = !taskOverdueOnly;
+    taskOverdueToggleEl.classList.toggle("active", taskOverdueOnly);
+    applyTaskFilters();
+  });
+  taskFilterClearBtnEl?.addEventListener("click", () => {
+    taskSortMode = "name";
+    taskOverdueOnly = false;
+    if (taskMemberFilterEl) taskMemberFilterEl.value = "";
+    if (taskSortSelectEl) taskSortSelectEl.value = "name";
+    taskOverdueToggleEl?.classList.remove("active");
+    applyTaskFilters();
+  });
 
   function renderBaselineOnly() {
     if (!tasksMetaEl || !tasksBadgeEl) return;
@@ -1232,7 +1428,14 @@ function initTeamTasksAndRoleChange(
       .catch(renderBaselineOnly);
   }
 
-  return { getUserId: (name: string) => userIdByName[name] };
+  return {
+    getUserId: (name: string) => userIdByName[name],
+    setOverdueFilterActive: () => {
+      taskOverdueOnly = true;
+      taskOverdueToggleEl?.classList.add("active");
+      applyTaskFilters();
+    },
+  };
 }
 
 interface WorkOrderItem {
@@ -1394,11 +1597,13 @@ function initMyTasks(
     }
     sorted.forEach((t) => {
       const item = document.createElement("div");
-      item.className = "task-item";
+      item.className = "task-item clickable";
+      item.title = "Open in Staffbase Tasks";
       item.style.padding = "8px 0";
       item.style.borderBottom = "1px solid var(--border)";
       item.innerHTML = '<span class="task-item-title"></span><span class="cw-pill"></span>';
       item.querySelector(".task-item-title")!.textContent = t.title;
+      item.addEventListener("click", openManagerTasksApp);
       const pill = item.querySelector(".cw-pill")!;
       if (t.daysOverdue) {
         pill.className = "cw-pill required";

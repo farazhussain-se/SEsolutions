@@ -774,6 +774,55 @@
   .journey-step-name { color: var(--text); font-weight: 600; }
   .journey-step-count { color: var(--text-light); font-weight: 700; white-space: nowrap; }
 
+  /* ============ FILTER BAR (member/type select + sort + overdue toggle + clear) ============ */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .filter-bar select.policy-input {
+    flex: 1 1 140px;
+    min-width: 120px;
+    padding: 8px 12px;
+    font-size: 12.5px;
+  }
+  .filter-toggle-btn {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    color: var(--text-light);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 7px 12px;
+    border-radius: 9px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+  .filter-toggle-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .filter-toggle-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+  .filter-clear-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-light);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 7px 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: all 0.15s ease;
+  }
+  .filter-clear-btn:hover { color: var(--primary); text-decoration-color: var(--primary); }
+
   /* ============ TEAM TASKS (grouped by assignee) ============ */
   .task-group { padding: 9px 0; border-bottom: 1px solid var(--border); }
   .task-group:last-child { border-bottom: none; }
@@ -788,6 +837,8 @@
     padding: 3px 0;
   }
   .task-item-title { flex: 1; }
+  .task-item.clickable { cursor: pointer; }
+  .task-item.clickable:hover .task-item-title { color: var(--primary); text-decoration: underline; }
 
   /* ============ COMPACT METRIC STRIP (iPad-friendly, slimmer) ============
      Horizontal icon + value + label so the always-on top strip takes about
