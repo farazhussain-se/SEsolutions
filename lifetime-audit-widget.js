@@ -1950,6 +1950,18 @@ const DEFAULT_BASE_URL = "https://app.staffbase.com/api";
 const DEFAULT_PRIMARY = "#1A1A1A"; // Life Time charcoal (override via config)
 const DEFAULT_ACCENT = "#B08D57";  // Life Time bronze/gold accent (override via config)
 const DEFAULT_THRESHOLD = "90";
+// Life Time: hybrid club source. The picker prefers live Tasks-plugin installations;
+// if none are visible (no token, or the Tasks app has no installations), it falls back
+// to these embedded clubs so the widget still runs as a self-contained demo. A club
+// whose id starts with DEMO_CLUB_PREFIX means "no real Tasks installation" → the submit
+// flow SIMULATES task creation (logs each step) instead of calling the API. Real clubs
+// (from the API) create tasks for real.
+const DEMO_CLUB_PREFIX = "demo:";
+const DEMO_CLUBS = [
+    { id: "demo:winter-park", title: "Life Time Winter Park" },
+    { id: "demo:plano", title: "Life Time Plano" },
+    { id: "demo:chanhassen-flagship", title: "Life Time Chanhassen Flagship" },
+];
 const DUMMY_QUESTIONS = [
     { id: "ARR-001", cat: "Arrival & Lobby", text: "Front desk staffed and member greeted within 10 seconds of entry", type: "pf", pts: 3, critical: false, task: true, passCriteria: "Member acknowledged within 10s", taskTitle: "Front desk greeting standard not met", taskRole: "Club Operations", taskPriority: "Medium", taskDue: 2 },
     { id: "ARR-002", cat: "Arrival & Lobby", text: "Lobby floors, glass, and seating are clean and free of clutter", type: "pf", pts: 2, critical: false, task: true, passCriteria: "No visible debris, smudges, or clutter", taskTitle: "Deep clean lobby area", taskRole: "Housekeeping", taskPriority: "Medium", taskDue: 1 },
@@ -3109,9 +3121,12 @@ const factory = (BaseBlockClass, widgetApi) => {
                             return (hasU && !!viewerId && a.userIds.includes(viewerId)) ||
                                 (hasG && a.groupIds.some((g) => viewerGroups.includes(g)));
                         };
-                        return [...byId.values()].filter(s => canSee(s.accessors))
+                        const live = [...byId.values()].filter(s => canSee(s.accessors))
                             .map(s => ({ id: s.id, title: s.title }))
                             .sort((a, b) => a.title.localeCompare(b.title));
+                        // Hybrid: real Tasks installations when present; otherwise the embedded
+                        // Life Time clubs so the demo still runs (submit will simulate — see DEMO_CLUB_PREFIX).
+                        return live.length ? live : DEMO_CLUBS.map(c => ({ id: c.id, title: c.title }));
                     });
                 }
                 // ── Data fetch ────────────────────────────────────────────────────
@@ -4251,6 +4266,9 @@ const factory = (BaseBlockClass, widgetApi) => {
                         const pct = sc.total > 0 && sc.answered > 0 ? Math.round((sc.earned / sc.total) * 100) : 0;
                         const passing = pct >= passThreshold;
                         const inst = installations.find(i => i.id === selectedInstId);
+                        // Hybrid: a fallback (embedded) club has no real Tasks installation, so
+                        // task creation is simulated (logged) instead of hitting the API.
+                        const demo = String(selectedInstId).startsWith(DEMO_CLUB_PREFIX);
                         const now = new Date();
                         const listName = `Audit — ${now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} ${now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
                         const totalOps = 1 + 1 + ft.length;
@@ -4269,14 +4287,23 @@ const factory = (BaseBlockClass, widgetApi) => {
                             sLog.scrollTop = sLog.scrollHeight;
                         }
                         try {
-                            setProgress(0, "Creating task list…");
-                            const listRes = yield fetch(`${baseUrl}/tasks/${selectedInstId}/lists`, Object.assign(Object.assign({ method: "POST" }, apiOpts()), { body: JSON.stringify({ name: listName, color: passing ? "#2E7D4A" : "#C41E3A" }) }));
-                            if (!listRes.ok)
-                                throw new Error(`List creation failed (${listRes.status})`);
-                            const listData = yield listRes.json();
-                            const listId = (_a = listData.id) !== null && _a !== void 0 ? _a : (_b = listData.data) === null || _b === void 0 ? void 0 : _b.id;
-                            if (!listId)
-                                throw new Error("No list ID in response");
+                            if (demo)
+                                logLine(`Demo mode — ${(inst === null || inst === void 0 ? void 0 : inst.title) || "club"} has no live Tasks app; task creation is simulated.`, "wd");
+                            setProgress(0, demo ? "Creating task list… (demo)" : "Creating task list…");
+                            let listId;
+                            if (demo) {
+                                yield new Promise(res => setTimeout(res, 220));
+                                listId = `demo-list-${Date.now()}`;
+                            }
+                            else {
+                                const listRes = yield fetch(`${baseUrl}/tasks/${selectedInstId}/lists`, Object.assign(Object.assign({ method: "POST" }, apiOpts()), { body: JSON.stringify({ name: listName, color: passing ? "#2E7D4A" : "#C41E3A" }) }));
+                                if (!listRes.ok)
+                                    throw new Error(`List creation failed (${listRes.status})`);
+                                const listData = yield listRes.json();
+                                listId = (_a = listData.id) !== null && _a !== void 0 ? _a : (_b = listData.data) === null || _b === void 0 ? void 0 : _b.id;
+                                if (!listId)
+                                    throw new Error("No list ID in response");
+                            }
                             done++;
                             logLine(`Created list: ${listName}`, "ok");
                             const catBreakdown = {};
@@ -4293,6 +4320,12 @@ const factory = (BaseBlockClass, widgetApi) => {
                                 taskCount: ft.length, categories: catBreakdown,
                             });
                             setProgress(done, "Creating audit summary task…");
+                            if (demo) {
+                                yield new Promise(res => setTimeout(res, 220));
+                                done++;
+                                logLine("Created audit summary task", "ok");
+                            }
+                            else {
                             const sysRes = yield fetch(`${baseUrl}/tasks/${selectedInstId}/task`, Object.assign(Object.assign({ method: "POST" }, apiOpts()), { body: JSON.stringify({
                                     title: `Audit — ${(inst === null || inst === void 0 ? void 0 : inst.title) || selectedInstId} — ${pct}% — ${passing ? "Passing" : "Failing"}`,
                                     description: `[type: audit-result]\n${blob}`,
@@ -4327,6 +4360,7 @@ const factory = (BaseBlockClass, widgetApi) => {
                             }
                             else
                                 logLine(`Warning: summary task failed (${sysRes.status})`, "err");
+                            }
                             // ── Life Time: simulated Workday facilities requisition ──────
                             // Demo-only. Drafts + "submits" a Facilities requisition and logs
                             // the steps; nothing leaves the browser. The requisition record is
@@ -4391,6 +4425,19 @@ const factory = (BaseBlockClass, widgetApi) => {
                                         body.assigneeIds = [...uids2];
                                     if (gids2.length)
                                         body.groupIds = [...gids2];
+                                    if (demo) {
+                                        // Simulated task creation — no real Tasks installation.
+                                        yield new Promise(res => setTimeout(res, 120));
+                                        const who = [
+                                            ...gids2.map(id => { var _a; return (_a = allGroups.find(g => g.id === id)) === null || _a === void 0 ? void 0 : _a.name; }),
+                                            ...uids2.map(id => { var _a; return (_a = allUsers.find(u => u.id === id)) === null || _a === void 0 ? void 0 : _a.name; }),
+                                        ].filter(Boolean).join(", ");
+                                        logLine(`✓ ${q.taskTitle || q.text}${who ? ` → ${who}` : ""}`, "ok");
+                                        const files = taskFiles[q.id] || [];
+                                        if (files.length)
+                                            logLine(`  ↳ ${files.length} photo${files.length > 1 ? "s" : ""} (demo — not uploaded)`, "ok");
+                                    }
+                                    else {
                                     const r = yield fetch(`${baseUrl}/tasks/${selectedInstId}/task`, Object.assign(Object.assign({ method: "POST" }, apiOpts()), { body: JSON.stringify(body) }));
                                     if (r.ok) {
                                         logLine(`✓ ${q.taskTitle || q.text}`, "ok");
@@ -4421,6 +4468,7 @@ const factory = (BaseBlockClass, widgetApi) => {
                                     }
                                     else
                                         logLine(`✗ ${q.taskTitle || q.text} (${r.status})`, "err");
+                                    }
                                 }
                                 catch (_) {
                                     logLine(`✗ ${q.taskTitle || q.text} (network error)`, "err");
@@ -4438,7 +4486,7 @@ const factory = (BaseBlockClass, widgetApi) => {
                                 yield new Promise(res => setTimeout(res, 50));
                             }
                             setProgress(totalOps, "Done!");
-                            showBanner("success", tr("auditSubmittedMsg").replace("{name}", listName).replace("{n}", String(ft.length + 1)));
+                            showBanner("success", tr("auditSubmittedMsg").replace("{name}", listName).replace("{n}", String(ft.length + 1)) + (demo ? " (demo — tasks simulated; no live Tasks app for this club)" : ""));
                         }
                         catch (e) {
                             showBanner("error", `Submission failed: ${e.message}`);
