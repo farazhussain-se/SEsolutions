@@ -104,7 +104,7 @@ export function initDashboard(opts: DashboardOptions): void {
   );
   wireMetricLinks(container, setTaskOverdueFilter, setJourneyOverdueFilter);
   initPromotionLauncher(container, branchBase, apiToken, getUserId);
-  initRequisitions(container, demoMode);
+  initRequisitions(container, demoMode, branchBase, apiToken, widgetApi);
   initMyTasks(container, branchBase, apiToken, tasksInstallationId, widgetApi, demoMode);
   applyViewerIdentity(container, widgetApi);
 }
@@ -135,7 +135,11 @@ function applySBBrand(): void {
 }
 
 function wireTabs(container: HTMLElement): void {
-  const tabs = Array.from(container.querySelectorAll<HTMLElement>(".cw-tab"));
+  // Only the top-level header tabs carry a data-tab. Other `.cw-tab`-styled
+  // buttons (e.g. the Requisitions Open/Completed toggle) reuse the class for
+  // its look but must NOT be wired here — otherwise clicking them switches to
+  // a nonexistent `view-undefined` and blanks the whole dashboard.
+  const tabs = Array.from(container.querySelectorAll<HTMLElement>(".cw-tab[data-tab]"));
   const views = Array.from(container.querySelectorAll<HTMLElement>(".view"));
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
@@ -1518,12 +1522,81 @@ interface Requisition {
   lines: RequisitionLine[];
   chainStage: ChainStage;
   purchaseOrderNumber?: string;
+  assignedTeam?: string; // routing target, e.g. "Club Facility Specialists & Engineers"
 }
 
 const REQ_CHAIN: ChainStage[] = ["Requisition", "PO Issued", "Received", "Invoiced"];
 
 // Open vs Completed buckets by Workday status.
 const OPEN_STATUSES: ReqStatus[] = ["Draft", "In Progress", "Sent Back"];
+
+// Real Workday requisition types (the requester picks one at creation).
+const REQ_TYPES = ["Non-Catalog", "Catalog", "Delegated – Standard PO", "Non-Delegated – Standard PO", "Services / Deliverables"];
+
+// Facilities Operations routing target — the same real Life Time group the
+// audit widget routes facility-ops tasks to (matched by title at runtime).
+const FACOPS_GROUP_TITLE = "Club Facility Specialists & Engineers";
+
+// Option lists for the create form — Worktag values keep Workday vocabulary.
+const REQ_COST_CENTERS = [
+  "CC-4102 · Winter Park – Facilities",
+  "CC-4101 · Winter Park – Housekeeping",
+  "CC-4108 · Winter Park – Aquatics",
+  "CC-4110 · Winter Park – Fitness Floor",
+  "CC-4120 · Winter Park – LifeCafe",
+];
+const REQ_SPEND_CATEGORIES = [
+  "SC-REPAIRS-BLDG · Repairs & Maintenance – Building",
+  "SC-REPAIRS-EQUIP · Repairs & Maintenance – Equipment",
+  "SC-INSPECTIONS · Safety & Compliance Inspections",
+  "SC-POOL-CHEM · Pool Chemicals & Supplies",
+  "SC-SUPPLIES-JAN · Janitorial & Cleaning Supplies",
+  "SC-SUPPLIES-OFFICE · Office & Admin Supplies",
+];
+const REQ_LOCATIONS = ["Life Time Winter Park", "Life Time Centennial", "Life Time Chanhassen Flagship"];
+
+// localStorage: requisitions the manager creates in-widget persist across
+// reloads (no live Workday backend), same pattern as role changes.
+const REQUISITION_STORAGE_KEY = "lifetime-manager-hub:requisitions";
+
+function loadStoredRequisitions(): Requisition[] {
+  try {
+    const arr = JSON.parse(localStorage.getItem(REQUISITION_STORAGE_KEY) || "[]");
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredRequisition(req: Requisition): void {
+  try {
+    const list = loadStoredRequisitions();
+    list.unshift(req);
+    localStorage.setItem(REQUISITION_STORAGE_KEY, JSON.stringify(list.slice(0, 30)));
+  } catch {
+    // localStorage unavailable — the req still shows this session, just won't persist
+  }
+}
+
+// Resolve a Staffbase group id by its display title (best-effort), so a
+// requisition pushed to Facilities Operations can actually notify that group.
+// Mirrors how the audit widget looks groups up: /groups then match by title.
+async function resolveGroupIdByTitle(branchBase: string, apiToken: string, title: string): Promise<string | null> {
+  try {
+    const res = await staffbaseFetch(branchBase, apiToken, "/groups?limit=200");
+    if (!res.ok) return null;
+    const data = await res.json();
+    const want = title.trim().toLowerCase();
+    const match = (data.data || []).find((g: any) => {
+      const loc = g.config?.localization?.en_US || {};
+      const name = (loc.title || loc.name || g.name || "").trim().toLowerCase();
+      return name === want;
+    });
+    return match?.id || null;
+  } catch {
+    return null;
+  }
+}
 
 function reqStatusPillClass(status: ReqStatus): string {
   switch (status) {
@@ -1664,12 +1737,20 @@ const BASELINE_REQUISITIONS: Requisition[] = [
   },
 ];
 
-function initRequisitions(container: HTMLElement, demoMode: boolean): void {
+function initRequisitions(
+  container: HTMLElement,
+  demoMode: boolean,
+  branchBase: string,
+  apiToken: string,
+  widgetApi: WidgetApi
+): void {
   const cardListEl = container.querySelector<HTMLElement>("#reqCardList");
   const cardViewEl = container.querySelector<HTMLElement>("#reqCardView");
   const fullViewEl = container.querySelector<HTMLElement>("#reqFullView");
   const detailViewEl = container.querySelector<HTMLElement>("#reqDetailView");
+  const createViewEl = container.querySelector<HTMLElement>("#reqCreateView");
   const viewAllBtn = container.querySelector<HTMLElement>("#reqViewAllBtn");
+  const newBtn = container.querySelector<HTMLButtonElement>("#reqNewBtn");
   const backBtn = container.querySelector<HTMLButtonElement>("#reqBackBtn");
   const detailBackBtn = container.querySelector<HTMLButtonElement>("#reqDetailBackBtn");
   const instrToggle = container.querySelector<HTMLElement>("#reqInstrToggle");
@@ -1680,14 +1761,15 @@ function initRequisitions(container: HTMLElement, demoMode: boolean): void {
   const cardMetaEl = container.querySelector<HTMLElement>("#reqCardMeta");
   if (!cardListEl || !cardViewEl || !fullViewEl) return;
 
-  const requisitions = demoMode ? BASELINE_REQUISITIONS : [];
-  const openReqs = requisitions.filter((r) => OPEN_STATUSES.includes(r.status));
-  const completedReqs = requisitions.filter((r) => !OPEN_STATUSES.includes(r.status));
+  // Manager-created requisitions (persisted) always show; sample requisitions
+  // only when demo mode is on. Created ones sort to the top (most recent first).
+  let requisitions: Requisition[] = loadStoredRequisitions().concat(demoMode ? BASELINE_REQUISITIONS : []);
 
-  function showView(which: "card" | "full" | "detail") {
+  function showView(which: "card" | "full" | "detail" | "create") {
     cardViewEl!.style.display = which === "card" ? "" : "none";
     fullViewEl!.style.display = which === "full" ? "" : "none";
     if (detailViewEl) detailViewEl.style.display = which === "detail" ? "" : "none";
+    if (createViewEl) createViewEl.style.display = which === "create" ? "" : "none";
   }
 
   // A single requisition summary row (used in the landing card and the tabbed
@@ -1751,6 +1833,7 @@ function initRequisitions(container: HTMLElement, demoMode: boolean): void {
       ["Supplier", r.supplier],
       ["Total Amount", formatUsd(reqTotal(r))],
     ];
+    if (r.assignedTeam) meta.push(["Routed To", r.assignedTeam]);
     if (r.purchaseOrderNumber) meta.push(["Purchase Order", r.purchaseOrderNumber]);
     if (r.memo) meta.push(["Memo", r.memo]);
     const metaWrap = container.querySelector<HTMLElement>("#reqDetailMeta");
@@ -1859,21 +1942,28 @@ function initRequisitions(container: HTMLElement, demoMode: boolean): void {
   }
 
   // ── Landing card + tabbed lists ────────────────────────────────────────────
-  if (cardMetaEl) {
-    cardMetaEl.textContent = demoMode
-      ? `Workday Procurement · ${openReqs.length} open · ${completedReqs.length} completed`
-      : "Connect Workday Procurement to populate requisitions.";
+  // Re-rendered after a new requisition is created, so the new one appears
+  // immediately without a reload.
+  function refresh() {
+    const openReqs = requisitions.filter((r) => OPEN_STATUSES.includes(r.status));
+    const completedReqs = requisitions.filter((r) => !OPEN_STATUSES.includes(r.status));
+    if (cardMetaEl) {
+      cardMetaEl.textContent = requisitions.length
+        ? `Workday Procurement · ${openReqs.length} open · ${completedReqs.length} completed`
+        : "Connect Workday Procurement to populate requisitions.";
+    }
+    renderList(cardListEl, requisitions.slice(0, 4), "No requisitions yet — create one to get started.");
+    renderList(openListEl, openReqs, "No open requisitions.");
+    renderList(completedListEl, completedReqs, "No completed requisitions in the last 6 months.");
+    if (tabOpen) tabOpen.textContent = `Open (${openReqs.length})`;
+    if (tabCompleted) tabCompleted.textContent = `Completed (${completedReqs.length})`;
   }
-  // Landing shows the most recent few; full view has the complete tabbed list.
-  renderList(cardListEl, requisitions.slice(0, 4), "Connect Workday Procurement to populate requisitions.");
-  renderList(openListEl, openReqs, "No open requisitions.");
-  renderList(completedListEl, completedReqs, "No completed requisitions in the last 6 months.");
-  if (tabOpen) tabOpen.textContent = `Open (${openReqs.length})`;
-  if (tabCompleted) tabCompleted.textContent = `Completed (${completedReqs.length})`;
+  refresh();
 
   viewAllBtn?.addEventListener("click", () => showView("full"));
   backBtn?.addEventListener("click", () => showView("card"));
   detailBackBtn?.addEventListener("click", () => showView("full"));
+  newBtn?.addEventListener("click", () => showView("create"));
 
   instrToggle?.addEventListener("click", () => {
     instrToggle.closest(".side-card")?.classList.toggle("collapsed");
@@ -1890,6 +1980,156 @@ function initRequisitions(container: HTMLElement, demoMode: boolean): void {
     tabOpen?.classList.remove("active");
     if (openListEl) openListEl.style.display = "none";
     if (completedListEl) completedListEl.style.display = "";
+  });
+
+  // ── Create requisition + push to FacOps ────────────────────────────────────
+  initReqCreateForm(container, {
+    onSubmit: (req) => {
+      saveStoredRequisition(req);
+      requisitions = loadStoredRequisitions().concat(demoMode ? BASELINE_REQUISITIONS : []);
+      refresh();
+    },
+    branchBase,
+    apiToken,
+    widgetApi,
+    onDone: () => showView("card"),
+  });
+}
+
+interface ReqCreateHandlers {
+  onSubmit: (req: Requisition) => void;
+  onDone: () => void;
+  branchBase: string;
+  apiToken: string;
+  widgetApi: WidgetApi;
+}
+
+/** Wires the "New Requisition" form: populates the Workday-vocab selects,
+ * builds a Requisition on submit, routes it to Facilities Operations (with a
+ * best-effort group notification when a token is configured), and hands it
+ * back to the list. */
+function initReqCreateForm(container: HTMLElement, h: ReqCreateHandlers): void {
+  const form = container.querySelector<HTMLElement>("#reqCreateView");
+  if (!form) return;
+  const typeSel = container.querySelector<HTMLSelectElement>("#reqNewType");
+  const supplierInput = container.querySelector<HTMLInputElement>("#reqNewSupplier");
+  const ccSel = container.querySelector<HTMLSelectElement>("#reqNewCostCenter");
+  const scSel = container.querySelector<HTMLSelectElement>("#reqNewSpendCategory");
+  const locSel = container.querySelector<HTMLSelectElement>("#reqNewLocation");
+  const lineTypeSel = container.querySelector<HTMLSelectElement>("#reqNewLineType");
+  const descInput = container.querySelector<HTMLInputElement>("#reqNewDesc");
+  const amountInput = container.querySelector<HTMLInputElement>("#reqNewAmount");
+  const memoInput = container.querySelector<HTMLInputElement>("#reqNewMemo");
+  const facopsChk = container.querySelector<HTMLInputElement>("#reqNewFacops");
+  const submitBtn = container.querySelector<HTMLButtonElement>("#reqNewSubmit");
+  const cancelBtn = container.querySelector<HTMLButtonElement>("#reqNewCancel");
+  const confirmEl = container.querySelector<HTMLElement>("#reqNewConfirm");
+
+  function fill(sel: HTMLSelectElement | null, options: string[]) {
+    if (!sel) return;
+    sel.innerHTML = "";
+    options.forEach((o) => {
+      const opt = document.createElement("option");
+      opt.value = o;
+      opt.textContent = o;
+      sel.appendChild(opt);
+    });
+  }
+  fill(typeSel, REQ_TYPES);
+  fill(ccSel, REQ_COST_CENTERS);
+  fill(scSel, REQ_SPEND_CATEGORIES);
+  fill(locSel, REQ_LOCATIONS);
+
+  // Requester defaults to the signed-in manager.
+  let requesterName = "Elena Perry";
+  h.widgetApi
+    .getUserInformation()
+    .then((u) => {
+      const n = `${u.firstName || ""} ${u.lastName || ""}`.trim();
+      if (n) requesterName = n;
+    })
+    .catch(() => {});
+
+  cancelBtn?.addEventListener("click", () => {
+    if (confirmEl) confirmEl.classList.remove("show");
+    h.onDone();
+  });
+
+  submitBtn?.addEventListener("click", () => {
+    const desc = (descInput?.value || "").trim();
+    const amount = parseFloat(amountInput?.value || "");
+    if (!desc || !Number.isFinite(amount) || amount <= 0) {
+      if (descInput && !desc) descInput.focus();
+      else amountInput?.focus();
+      return;
+    }
+    const lineType = (lineTypeSel?.value as "Goods" | "Service") || "Service";
+    const spendCategory = scSel?.value || REQ_SPEND_CATEGORIES[0];
+    // Spend category display on the line is the human part after the "·".
+    const scLabel = spendCategory.includes("·") ? spendCategory.split("·").slice(1).join("·").trim() : spendCategory;
+    const seq = Math.floor(1000 + Math.random() * 9000);
+    const routeToFacops = facopsChk ? facopsChk.checked : true;
+
+    const req: Requisition = {
+      requisitionNumber: `REQ-WD-${new Date().getFullYear()}-${seq}`,
+      requisitionDate: new Date().toISOString().slice(0, 10),
+      requester: requesterName,
+      company: "Life Time, Inc.",
+      requisitionType: typeSel?.value || REQ_TYPES[0],
+      supplier: (supplierInput?.value || "").trim() || "TBD Supplier",
+      worktags: {
+        costCenter: ccSel?.value || REQ_COST_CENTERS[0],
+        spendCategory,
+        location: locSel?.value || REQ_LOCATIONS[0],
+      },
+      status: "In Progress",
+      currency: "USD",
+      memo: (memoInput?.value || "").trim() || undefined,
+      chainStage: "Requisition",
+      assignedTeam: routeToFacops ? FACOPS_GROUP_TITLE : undefined,
+      lines: [
+        {
+          lineType,
+          itemDescription: desc,
+          spendCategory: scLabel,
+          extendedAmount: Math.round(amount * 100) / 100,
+          ...(lineType === "Goods" ? { quantity: 1, unitOfMeasure: "Each", unitCost: Math.round(amount * 100) / 100 } : {}),
+        },
+      ],
+    };
+
+    // Push to FacOps: best-effort notify the real group when a token exists.
+    if (routeToFacops && h.apiToken) {
+      resolveGroupIdByTitle(h.branchBase, h.apiToken, FACOPS_GROUP_TITLE).then((gid) => {
+        if (gid) {
+          sendNotification(
+            h.branchBase,
+            h.apiToken,
+            gid,
+            "New requisition routed",
+            `${req.requisitionNumber}: ${desc} (${formatUsd(req.lines[0].extendedAmount)}) submitted to Facilities Operations by ${requesterName}.`
+          );
+        }
+      });
+    }
+
+    h.onSubmit(req);
+
+    // Reset the form for next time, show a confirmation, then return to list.
+    if (confirmEl) {
+      confirmEl.textContent = routeToFacops
+        ? `${req.requisitionNumber} submitted and routed to Facilities Operations.`
+        : `${req.requisitionNumber} submitted.`;
+      confirmEl.classList.add("show");
+    }
+    if (descInput) descInput.value = "";
+    if (amountInput) amountInput.value = "";
+    if (memoInput) memoInput.value = "";
+    if (supplierInput) supplierInput.value = "";
+    setTimeout(() => {
+      if (confirmEl) confirmEl.classList.remove("show");
+      h.onDone();
+    }, 1600);
   });
 }
 

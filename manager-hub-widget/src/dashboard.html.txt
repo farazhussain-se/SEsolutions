@@ -404,6 +404,81 @@
             </div>
           </div>
           <div id="reqCardList"></div>
+          <button class="action-btn" id="reqNewBtn" type="button" style="margin-top:14px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:5px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Requisition
+          </button>
+        </div>
+      </div>
+
+      <!-- Create requisition -->
+      <div id="reqCreateView" style="display:none;">
+        <button class="ghost-btn" id="reqNewCancel" style="margin-bottom:12px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span>Requisitions</span>
+        </button>
+
+        <div class="side-card">
+          <h3>
+            <span class="accent-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </span>
+            <span>New Purchase Requisition</span>
+          </h3>
+          <div class="req-form">
+            <label class="req-field">
+              <span class="req-field-label">Requisition Type</span>
+              <select class="policy-input" id="reqNewType"></select>
+            </label>
+            <label class="req-field">
+              <span class="req-field-label">Supplier</span>
+              <input class="policy-input" id="reqNewSupplier" placeholder="e.g. Grainger Industrial Supply">
+            </label>
+            <div class="req-field-row">
+              <label class="req-field">
+                <span class="req-field-label">Cost Center</span>
+                <select class="policy-input" id="reqNewCostCenter"></select>
+              </label>
+              <label class="req-field">
+                <span class="req-field-label">Location</span>
+                <select class="policy-input" id="reqNewLocation"></select>
+              </label>
+            </div>
+            <label class="req-field">
+              <span class="req-field-label">Spend Category</span>
+              <select class="policy-input" id="reqNewSpendCategory"></select>
+            </label>
+            <div class="req-field-row">
+              <label class="req-field" style="flex:0 0 120px;">
+                <span class="req-field-label">Line Type</span>
+                <select class="policy-input" id="reqNewLineType">
+                  <option value="Service">Service</option>
+                  <option value="Goods">Goods</option>
+                </select>
+              </label>
+              <label class="req-field">
+                <span class="req-field-label">Item / Service Description</span>
+                <input class="policy-input" id="reqNewDesc" placeholder="e.g. Replace fitness-floor HVAC compressor">
+              </label>
+              <label class="req-field" style="flex:0 0 130px;">
+                <span class="req-field-label">Amount (USD)</span>
+                <input class="policy-input" id="reqNewAmount" type="number" min="0" step="0.01" placeholder="0.00">
+              </label>
+            </div>
+            <label class="req-field">
+              <span class="req-field-label">Memo</span>
+              <input class="policy-input" id="reqNewMemo" placeholder="Optional note for approvers">
+            </label>
+            <label class="req-facops-toggle">
+              <input type="checkbox" id="reqNewFacops" checked>
+              <span>Push to Facilities Operations (route &amp; notify the FacOps group)</span>
+            </label>
+            <button class="action-btn" id="reqNewSubmit" type="button">Submit &amp; Push to FacOps</button>
+            <div class="promo-confirm" id="reqNewConfirm">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Submitted.</span>
+            </div>
+          </div>
         </div>
       </div>
 

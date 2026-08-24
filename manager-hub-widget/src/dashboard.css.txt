@@ -1083,6 +1083,25 @@
     color: var(--text);
   }
 
+  /* ============ NEW REQUISITION FORM ============ */
+  .req-form { display: flex; flex-direction: column; gap: 12px; }
+  .req-field { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
+  .req-field-label { font-size: 11px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; color: var(--text-light); }
+  .req-field-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .req-facops-toggle {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--bg-gray);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 13px;
+    cursor: pointer;
+  }
+  .req-facops-toggle input { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
+
   /* ============ PROMOTION LAUNCHER ============ */
   .promo-form { display: flex; flex-direction: column; gap: 8px; }
   select.policy-input { appearance: none; cursor: pointer; }
