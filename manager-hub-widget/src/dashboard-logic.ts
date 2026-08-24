@@ -346,7 +346,7 @@ const CRITICAL_THRESHOLD_DAYS = 6;
 // few names are shared with other panels (Alicia Ford, Sam Whitfield) on
 // purpose, to read as one continuous employee story across the dashboard
 // rather than disconnected demo fixtures.
-const BASELINE_EMPLOYEES: JourneyEmployeeEntry[] = [
+const BASELINE_EMPLOYEES_TEMPLATE: JourneyEmployeeEntry[] = [
   // New Hire - Pre Onboarding
   { name: "Jamie Cole", initials: "JC", journeyName: "New Hire - Pre Onboarding", stepIndex: 2, stepName: "~1 Week Out – Paperwork & Compliance", totalSteps: 4, completed: false, daysOnStep: 4 },
   { name: "Priya Shah", initials: "PS", journeyName: "New Hire - Pre Onboarding", stepIndex: 4, stepName: null, totalSteps: 4, completed: true, daysOnStep: 0 },
@@ -385,6 +385,35 @@ const BASELINE_EMPLOYEES: JourneyEmployeeEntry[] = [
   // Offboarding & Asset Reclamation
   { name: "Patricia Yoon", initials: "PY", journeyName: "Offboarding & Asset Reclamation", stepIndex: 3, stepName: "Final Payroll Calculated", totalSteps: 4, completed: false, daysOnStep: 2 },
 ];
+
+// Real journeys vary widely in length (confirmed live: 4 and 5 steps seen
+// on this branch already, and nothing caps it at 4) — the template above
+// defaults most entries to 4 for readability, so this gives each distinct
+// journey a random length between 3 and 7 steps instead, and rescales each
+// employee's step index proportionally so their relative progress still
+// makes sense. Computed once at module load (fresh spread each time the
+// widget mounts), not per render.
+const JOURNEY_STEP_MIN = 3;
+const JOURNEY_STEP_MAX = 7;
+
+function randomizeJourneyStepCounts(employees: JourneyEmployeeEntry[]): JourneyEmployeeEntry[] {
+  const totalsByJourney = new Map<string, number>();
+  const span = JOURNEY_STEP_MAX - JOURNEY_STEP_MIN + 1;
+  employees.forEach((e) => {
+    if (!totalsByJourney.has(e.journeyName)) {
+      totalsByJourney.set(e.journeyName, JOURNEY_STEP_MIN + Math.floor(Math.random() * span));
+    }
+  });
+  return employees.map((e) => {
+    const newTotal = totalsByJourney.get(e.journeyName)!;
+    if (e.completed) return { ...e, totalSteps: newTotal, stepIndex: newTotal };
+    const ratio = e.totalSteps > 0 ? e.stepIndex / e.totalSteps : 0;
+    const newStepIndex = Math.min(newTotal - 1, Math.max(0, Math.round(ratio * newTotal)));
+    return { ...e, totalSteps: newTotal, stepIndex: newStepIndex };
+  });
+}
+
+const BASELINE_EMPLOYEES: JourneyEmployeeEntry[] = randomizeJourneyStepCounts(BASELINE_EMPLOYEES_TEMPLATE);
 
 /** Client-side port of what used to be the backend's /api/journeys/employees:
  * lists every journey installation on the branch (not just onboarding),

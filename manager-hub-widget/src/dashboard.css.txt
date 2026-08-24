@@ -19,7 +19,9 @@
     --bg-gray: #F3EEE3;
     --hub-bg: #F6F1E6;
     --border: #E7DFCF;
-    --radius: 14px;
+    --radius: 16px;
+    --header-glass-bg: rgba(242, 237, 230, 0.55);
+    --header-glass-border: rgba(255, 255, 255, 0.45);
   }
   @media (prefers-color-scheme: dark) {
     .hub {
@@ -35,6 +37,8 @@
       --bg-gray: #201D19;
       --hub-bg: #1C1916;
       --border: #3C362D;
+      --header-glass-bg: rgba(28, 25, 22, 0.55);
+      --header-glass-border: rgba(255, 255, 255, 0.08);
     }
   }
 
@@ -84,17 +88,31 @@
     padding: 16px;
   }
 
-  /* ============ HEADER ============ */
+  /* ============ HEADER ============
+     Frosted-glass treatment adapted from the lifetime.life scrolled-nav
+     styling (translucent cream, blur + saturate, soft rounded corners) so
+     the widget's own chrome echoes the brand site rather than sitting as a
+     flat card. Nav-like text (title/subtitle/tabs/viewer name) picks up the
+     brand's LT Sans typeface where the host page has it loaded, falling
+     back to the existing system-font stack everywhere else. */
   .cw-header {
-    background: transparent;
-    border-bottom: 1px solid var(--border);
+    background: var(--header-glass-bg);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--header-glass-border);
+    border-radius: var(--radius);
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.1);
     padding: 18px 22px 20px;
+    margin-bottom: 4px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: relative;
     flex-wrap: wrap;
     gap: 14px;
+    font-family: "LT Sans", LTSans, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    letter-spacing: 0.5px;
+    transition: background-color 0.4s ease-out, box-shadow 0.4s ease-out;
   }
 
   .header-left {
@@ -122,7 +140,7 @@
     color: var(--text);
     font-weight: 800;
     font-size: 19px;
-    letter-spacing: 0.8px;
+    letter-spacing: 1px;
     line-height: 1.1;
   }
 
@@ -201,7 +219,7 @@
   .cw-metric {
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: var(--radius);
     padding: 18px 20px 20px;
     color: var(--text);
     position: relative;
