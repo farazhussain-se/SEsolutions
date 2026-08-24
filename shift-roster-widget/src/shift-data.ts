@@ -19,7 +19,7 @@ import { WidgetApi } from "widget-sdk";
 // same no-backend-needed pattern the manager hub already uses for
 // requisitions and role changes.
 
-export type ShiftLocation = "Front Desk" | "Pool Deck" | "Group Fitness" | "Fitness Floor" | "LifeCafe" | "Housekeeping";
+export type ShiftLocation = "Front Desk" | "Pool Deck" | "Group Fitness" | "Fitness Floor" | "LifeCafe" | "Housekeeping" | "Personal Training";
 
 export interface Shift {
   id: string;
@@ -58,6 +58,7 @@ const COST_CENTERS_BY_LOCATION: Record<ShiftLocation, string> = {
   "Fitness Floor": "CC-4110 · Winter Park – Fitness Floor",
   LifeCafe: "CC-4120 · Winter Park – LifeCafe",
   Housekeeping: "CC-4101 · Winter Park – Housekeeping",
+  "Personal Training": "CC-4112 · Winter Park – Personal Training",
 };
 
 // Same Winter Park roster referenced by the manager hub's Journeys/Tasks
@@ -74,7 +75,20 @@ const ROSTER_NAMES: { name: string; initials: string; position: string; location
   { name: "Owen Park", initials: "OP", position: "Housekeeping Associate", location: "Housekeeping" },
   { name: "Felicia Grant", initials: "FG", position: "Group Fitness Instructor", location: "Group Fitness" },
   { name: "Trevor Nash", initials: "TN", position: "Fitness Floor Attendant", location: "Fitness Floor" },
+  { name: "Jordan Blake", initials: "JB", position: "Assistant Trainer", location: "Personal Training" },
 ];
+
+// This widget's featured/default demo persona — the roster still models the
+// whole Winter Park team, but when no real logged-in user matches a roster
+// name, the widget centers on Jordan (Assistant Trainer) rather than
+// whichever name happens to be first in the list above.
+const FEATURED_EMPLOYEE = "Jordan Blake";
+
+// Extra Personal Training shifts left unstaffed on the baseline roster —
+// e.g. another trainer's slot that opened up — so Jordan always has real
+// open shifts on his own floor to consider picking up, not just his own
+// assigned schedule.
+const OPEN_TRAINING_SHIFT_DAY_OFFSETS = [2, 5];
 
 const SHIFT_TEMPLATES: { scheduleTag: Shift["scheduleTag"]; start: string; end: string }[] = [
   { scheduleTag: "Open", start: "06:00", end: "14:00" },
@@ -114,6 +128,24 @@ function buildBaselineRoster(): Shift[] {
       });
     });
   }
+
+  OPEN_TRAINING_SHIFT_DAY_OFFSETS.forEach((dayOffset) => {
+    const date = isoDateOffset(dayOffset);
+    const template = SHIFT_TEMPLATES[dayOffset % SHIFT_TEMPLATES.length];
+    shifts.push({
+      id: `open-personal-training-${date}`,
+      employeeName: "Open Shift",
+      initials: "OS",
+      date,
+      position: "Assistant Trainer",
+      location: "Personal Training",
+      costCenter: COST_CENTERS_BY_LOCATION["Personal Training"],
+      scheduleTag: template.scheduleTag,
+      start: template.start,
+      end: template.end,
+    });
+  });
+
   return shifts;
 }
 
@@ -163,10 +195,33 @@ export function knownRosterNames(): string[] {
   return ROSTER_NAMES.map((p) => p.name);
 }
 
+export function featuredEmployeeName(): string {
+  return FEATURED_EMPLOYEE;
+}
+
 export function shiftsForEmployee(shifts: Shift[], employeeName: string): Shift[] {
   return shifts
     .filter((s) => s.employeeName === employeeName)
     .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// Unstaffed shifts on the employee's own floor (same location as their most
+// recent assigned shift, falling back to their home position on the roster)
+// — the "shifts they could pick up" list. Excludes shifts already claimed.
+export function openShiftsForEmployee(shifts: Shift[], employeeName: string): Shift[] {
+  const mine = shiftsForEmployee(shifts, employeeName);
+  const home = ROSTER_NAMES.find((p) => p.name === employeeName);
+  const location = mine[0]?.location || home?.location;
+  if (!location) return [];
+  return shifts
+    .filter((s) => s.employeeName === "Open Shift" && s.location === location)
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// Claims an open shift for an employee — no approval needed since nobody
+// currently owns it. Returns a new roster array; caller persists it.
+export function pickUpShift(shifts: Shift[], shiftId: string, employeeName: string, initials: string): Shift[] {
+  return shifts.map((s) => (s.id === shiftId ? { ...s, employeeName, initials } : s));
 }
 
 export function formatShiftDate(iso: string): string {

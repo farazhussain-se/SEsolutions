@@ -17,11 +17,15 @@ import {
   Shift,
   ShiftChangeRequest,
   ShiftChangeType,
+  featuredEmployeeName,
   formatShiftDate,
   knownRosterNames,
   loadRoster,
   loadShiftChangeRequests,
   notifyManagerOfShiftRequest,
+  openShiftsForEmployee,
+  pickUpShift,
+  saveRoster,
   saveShiftChangeRequest,
   shiftsForEmployee,
 } from "./shift-data";
@@ -52,6 +56,9 @@ const css = `
   .sr-shift-loc { font-size: 14px; font-weight: 700; color: var(--text, #111); }
   .sr-shift-meta { font-size: 12px; color: var(--text-light, #8A8072); margin-top: 2px; }
   .sr-shift-tag { flex-shrink: 0; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 8px; border-radius: 6px; background: var(--bg-gray, #F3EEE3); color: var(--text, #444); }
+  .sr-open-shift { border-color: var(--warning, #C9902F); border-style: dashed; }
+  .sr-pickup-btn { flex-shrink: 0; background: var(--warning, #C9902F); color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  .sr-pickup-btn:hover { opacity: 0.9; }
   .sr-empty-state { background: var(--bg-gray, #f7f7f7); border-radius: 14px; padding: 30px 24px; text-align: center; color: var(--text-light, #8A8072); font-size: 13px; }
   .sr-lower { padding: 4px 24px 24px; }
   .sr-section-title { font-size: 15px; font-weight: 700; color: var(--text, #111); margin: 20px 0 12px; }
@@ -79,7 +86,7 @@ const css = `
 
 export const ShiftRosterWidget = ({ widgetApi, apitoken, managername }: ShiftRosterWidgetProps): ReactElement => {
   const [user, setUser] = useState<SBUserProfile | null>(null);
-  const [roster] = useState<Shift[]>(() => loadRoster());
+  const [roster, setRoster] = useState<Shift[]>(() => loadRoster());
   const [requests, setRequests] = useState<ShiftChangeRequest[]>(() => loadShiftChangeRequests());
   const [showForm, setShowForm] = useState(false);
   const [selectedShiftId, setSelectedShiftId] = useState("");
@@ -87,6 +94,7 @@ export const ShiftRosterWidget = ({ widgetApi, apitoken, managername }: ShiftRos
   const [targetEmployee, setTargetEmployee] = useState("");
   const [reason, setReason] = useState("");
   const [notifyStatus, setNotifyStatus] = useState<"idle" | "sent" | "skipped">("idle");
+  const [pickupStatus, setPickupStatus] = useState<"idle" | "sent" | "skipped">("idle");
 
   useEffect(() => {
     widgetApi
@@ -96,21 +104,40 @@ export const ShiftRosterWidget = ({ widgetApi, apitoken, managername }: ShiftRos
   }, [widgetApi]);
 
   // Real logged-in users are matched against the seed roster by name where
-  // possible; anyone else still sees the roster's first employee's shifts so
-  // the widget never renders empty during a demo walkthrough.
+  // possible; anyone else sees this widget's featured persona, Jordan Blake
+  // (Assistant Trainer), rather than whichever name happens to be first on
+  // the roster — this is the widget's demo focus.
   const employeeName = useMemo(() => {
     const fullName = user ? `${user.firstName} ${user.lastName}`.trim() : "";
     const known = knownRosterNames();
     if (known.includes(fullName)) return fullName;
-    return known[0];
+    return featuredEmployeeName();
   }, [user]);
 
+  const employeePosition = useMemo(() => {
+    const mine = shiftsForEmployee(roster, employeeName);
+    return mine[0]?.position || "";
+  }, [roster, employeeName]);
+
   const myShifts = useMemo(() => shiftsForEmployee(roster, employeeName), [roster, employeeName]);
+  const openShifts = useMemo(() => openShiftsForEmployee(roster, employeeName), [roster, employeeName]);
   const otherEmployees = useMemo(() => knownRosterNames().filter((n) => n !== employeeName), [employeeName]);
   const myRequests = useMemo(
     () => requests.filter((r) => r.requestedBy === employeeName),
     [requests, employeeName],
   );
+
+  const pickUp = (shift: Shift): void => {
+    const initials = myShifts[0]?.initials || employeeName.slice(0, 2).toUpperCase();
+    const updated = pickUpShift(roster, shift.id, employeeName, initials);
+    setRoster(updated);
+    saveRoster(updated);
+
+    const message = `${employeeName} picked up an open ${shift.location} shift on ${formatShiftDate(shift.date)} (${shift.start}–${shift.end}).`;
+    notifyManagerOfShiftRequest(widgetApi, apitoken, managername, message).then((sent) => {
+      setPickupStatus(sent ? "sent" : "skipped");
+    });
+  };
 
   const openForm = (shiftId: string): void => {
     setSelectedShiftId(shiftId);
@@ -162,7 +189,10 @@ export const ShiftRosterWidget = ({ widgetApi, apitoken, managername }: ShiftRos
 
       <div className="sr-inner">
         <h2>This Week's Shifts</h2>
-        <p className="sr-greeting">Hi, {user ? user.firstName : "…"}</p>
+        <p className="sr-greeting">
+          Hi, {user ? user.firstName : "…"}
+          {employeePosition ? ` · ${employeePosition}` : ""}
+        </p>
 
         {myShifts.length === 0 ? (
           <div className="sr-empty-state">No shifts scheduled this week.</div>
@@ -181,6 +211,35 @@ export const ShiftRosterWidget = ({ widgetApi, apitoken, managername }: ShiftRos
               </div>
             ))}
           </div>
+        )}
+
+        {openShifts.length > 0 && (
+          <>
+            <div className="sr-section-title">Shifts You Could Pick Up</div>
+            {pickupStatus !== "idle" && (
+              <div className="sr-notify-hint">
+                {pickupStatus === "sent"
+                  ? `${managername || "Your manager"} was notified ✓`
+                  : "Shift claimed — configure the API token to notify your manager automatically"}
+              </div>
+            )}
+            <div className="sr-shift-list">
+              {openShifts.map((shift) => (
+                <div className="sr-shift-item sr-open-shift" key={shift.id}>
+                  <div className="sr-shift-date">{formatShiftDate(shift.date)}</div>
+                  <div className="sr-shift-main">
+                    <div className="sr-shift-loc">{shift.location} · {shift.position}</div>
+                    <div className="sr-shift-meta">
+                      {shift.start} – {shift.end} · Currently unstaffed
+                    </div>
+                  </div>
+                  <button className="sr-pickup-btn" onClick={() => pickUp(shift)}>
+                    Pick Up
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

@@ -19,7 +19,7 @@
 // Types here are a deliberate duplicate of shift-roster-widget/src/shift-data.ts
 // rather than a shared package — the two widgets are independent deployables.
 
-export type ShiftLocation = "Front Desk" | "Pool Deck" | "Group Fitness" | "Fitness Floor" | "LifeCafe" | "Housekeeping";
+export type ShiftLocation = "Front Desk" | "Pool Deck" | "Group Fitness" | "Fitness Floor" | "LifeCafe" | "Housekeeping" | "Personal Training";
 
 export interface Shift {
   id: string;
@@ -58,6 +58,7 @@ const COST_CENTERS_BY_LOCATION: Record<ShiftLocation, string> = {
   "Fitness Floor": "CC-4110 · Winter Park – Fitness Floor",
   LifeCafe: "CC-4120 · Winter Park – LifeCafe",
   Housekeeping: "CC-4101 · Winter Park – Housekeeping",
+  "Personal Training": "CC-4112 · Winter Park – Personal Training",
 };
 
 // Identical seed roster to shift-roster-widget, so the coverage matrix here
@@ -73,7 +74,10 @@ const ROSTER_NAMES: { name: string; initials: string; position: string; location
   { name: "Owen Park", initials: "OP", position: "Housekeeping Associate", location: "Housekeeping" },
   { name: "Felicia Grant", initials: "FG", position: "Group Fitness Instructor", location: "Group Fitness" },
   { name: "Trevor Nash", initials: "TN", position: "Fitness Floor Attendant", location: "Fitness Floor" },
+  { name: "Jordan Blake", initials: "JB", position: "Assistant Trainer", location: "Personal Training" },
 ];
+
+const OPEN_TRAINING_SHIFT_DAY_OFFSETS = [2, 5];
 
 const SHIFT_TEMPLATES: { scheduleTag: Shift["scheduleTag"]; start: string; end: string }[] = [
   { scheduleTag: "Open", start: "06:00", end: "14:00" },
@@ -109,6 +113,24 @@ function buildBaselineRoster(): Shift[] {
       });
     });
   }
+
+  OPEN_TRAINING_SHIFT_DAY_OFFSETS.forEach((dayOffset) => {
+    const date = isoDateOffset(dayOffset);
+    const template = SHIFT_TEMPLATES[dayOffset % SHIFT_TEMPLATES.length];
+    shifts.push({
+      id: `open-personal-training-${date}`,
+      employeeName: "Open Shift",
+      initials: "OS",
+      date,
+      position: "Assistant Trainer",
+      location: "Personal Training",
+      costCenter: COST_CENTERS_BY_LOCATION["Personal Training"],
+      scheduleTag: template.scheduleTag,
+      start: template.start,
+      end: template.end,
+    });
+  });
+
   return shifts;
 }
 
@@ -157,7 +179,7 @@ export function saveShiftChangeRequests(requests: ShiftChangeRequest[]): void {
 }
 
 export function allLocations(): ShiftLocation[] {
-  return ["Front Desk", "Pool Deck", "Group Fitness", "Fitness Floor", "LifeCafe", "Housekeeping"];
+  return ["Front Desk", "Pool Deck", "Group Fitness", "Fitness Floor", "LifeCafe", "Housekeeping", "Personal Training"];
 }
 
 export function todayIso(): string {
