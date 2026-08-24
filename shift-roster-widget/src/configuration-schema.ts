@@ -19,11 +19,29 @@ import { JSONSchema7 } from "json-schema";
  * see https://rjsf-team.github.io/react-jsonschema-form/docs/ for documentation
  */
 export const configurationSchema: JSONSchema7 = {
-  properties: {},
+  properties: {
+    apitoken: {
+      type: "string",
+      title: "Staffbase API Token",
+    },
+    managername: {
+      type: "string",
+      title: "Manager to notify",
+      default: "Elena Perry",
+    },
+  },
 };
 
 /**
  * schema to add more customization to the form's look and feel
  * @see https://rjsf-team.github.io/react-jsonschema-form/docs/api-reference/uiSchema
  */
-export const uiSchema: UiSchema = {};
+export const uiSchema: UiSchema = {
+  apitoken: {
+    "ui:widget": "password",
+    "ui:help": "One-time setup — paste the same Branch API token used on the Manager Hub widget, so a submitted shift request can notify the manager directly.",
+  },
+  managername: {
+    "ui:help": "Full name of the manager to notify when an employee submits a shift-change request.",
+  },
+};

@@ -11,6 +11,8 @@
  * limitations under the License.
  */
 
+import { WidgetApi } from "widget-sdk";
+
 // Shared data contract with the Lifetime Manager Hub widget's "Roster &
 // Leave" tab. Both widgets run on the same Staffbase branch origin, so
 // localStorage under these keys acts as a common data store between them —
@@ -172,4 +174,47 @@ export function formatShiftDate(iso: string): string {
   return Number.isNaN(d.getTime())
     ? iso
     : d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+
+// Notifies the manager directly via the real Staffbase Branch Notifications
+// API when an employee submits a shift-change request — same
+// staffbaseFetch/sendNotification pattern the Manager Hub widget uses for
+// role-change and FacOps notifications, just called from this widget's own
+// Studio-configured token since the two widgets are independent deployables.
+// Best-effort: with no token configured, or if the manager can't be
+// resolved by name, this silently no-ops (the request itself still saves).
+export async function notifyManagerOfShiftRequest(
+  widgetApi: WidgetApi,
+  apiToken: string | undefined,
+  managerName: string | undefined,
+  message: string
+): Promise<boolean> {
+  if (!apiToken || !managerName) return false;
+  try {
+    const branch = widgetApi.getBranchInformation();
+    const branchBase = (branch?.webUrl || "").replace(/\/$/, "") + "/api";
+    if (!branchBase) return false;
+
+    const want = managerName.trim().toLowerCase();
+    const list = await widgetApi.getUserList({ filter: managerName });
+    const manager = (list?.data || []).find(
+      (u) => `${u.firstName || ""} ${u.lastName || ""}`.trim().toLowerCase() === want
+    );
+    if (!manager?.id) return false;
+
+    const res = await fetch(`${branchBase}/branch/notifications`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Basic " + apiToken,
+      },
+      body: JSON.stringify({
+        accessorIds: [manager.id],
+        content: { en_US: { text: message } },
+      }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }

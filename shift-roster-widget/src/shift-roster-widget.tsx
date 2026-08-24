@@ -21,6 +21,7 @@ import {
   knownRosterNames,
   loadRoster,
   loadShiftChangeRequests,
+  notifyManagerOfShiftRequest,
   saveShiftChangeRequest,
   shiftsForEmployee,
 } from "./shift-data";
@@ -28,6 +29,8 @@ import {
 export interface ShiftRosterWidgetProps {
   contentLanguage: string;
   widgetApi: WidgetApi;
+  apitoken?: string;
+  managername?: string;
 }
 
 const CHANGE_TYPES: ShiftChangeType[] = ["Swap", "Coverage", "Call-Off"];
@@ -60,6 +63,7 @@ const css = `
   .sr-req-status.pending { color: var(--warning, #a06600); background: #fdf1dc; }
   .sr-req-status.approved { color: var(--success, #2f6a34); background: #e4efe5; }
   .sr-req-status.denied { color: var(--danger, #B8492F); background: var(--danger-soft, #F3E3DA); }
+  .sr-notify-hint { font-size: 12px; color: var(--text-light, #8A8072); margin-bottom: 10px; }
   .sr-request-btn { width: 100%; margin-top: 14px; background: var(--primary, #2E2A24); color: #fff; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
   .sr-request-btn:hover { opacity: 0.9; }
   .sr-form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text, #333); margin: 14px 0 6px; }
@@ -73,7 +77,7 @@ const css = `
   .sr-cancel-link:hover { color: var(--text, #444); }
 `;
 
-export const ShiftRosterWidget = ({ widgetApi }: ShiftRosterWidgetProps): ReactElement => {
+export const ShiftRosterWidget = ({ widgetApi, apitoken, managername }: ShiftRosterWidgetProps): ReactElement => {
   const [user, setUser] = useState<SBUserProfile | null>(null);
   const [roster] = useState<Shift[]>(() => loadRoster());
   const [requests, setRequests] = useState<ShiftChangeRequest[]>(() => loadShiftChangeRequests());
@@ -82,6 +86,7 @@ export const ShiftRosterWidget = ({ widgetApi }: ShiftRosterWidgetProps): ReactE
   const [changeType, setChangeType] = useState<ShiftChangeType>("Swap");
   const [targetEmployee, setTargetEmployee] = useState("");
   const [reason, setReason] = useState("");
+  const [notifyStatus, setNotifyStatus] = useState<"idle" | "sent" | "skipped">("idle");
 
   useEffect(() => {
     widgetApi
@@ -112,6 +117,7 @@ export const ShiftRosterWidget = ({ widgetApi }: ShiftRosterWidgetProps): ReactE
     setChangeType("Swap");
     setTargetEmployee("");
     setReason("");
+    setNotifyStatus("idle");
     setShowForm(true);
   };
 
@@ -119,6 +125,7 @@ export const ShiftRosterWidget = ({ widgetApi }: ShiftRosterWidgetProps): ReactE
     event.preventDefault();
     if (!selectedShiftId || !reason) return;
 
+    const shift = myShifts.find((s) => s.id === selectedShiftId);
     const request: ShiftChangeRequest = {
       id: `${selectedShiftId}-${Date.now()}`,
       shiftId: selectedShiftId,
@@ -133,6 +140,12 @@ export const ShiftRosterWidget = ({ widgetApi }: ShiftRosterWidgetProps): ReactE
     saveShiftChangeRequest(request);
     setRequests((prev) => [request, ...prev]);
     setShowForm(false);
+
+    const where = shift ? `${shift.location} · ${formatShiftDate(shift.date)}` : "a shift";
+    const message = `${employeeName} requested a ${changeType.toLowerCase()} for ${where}: ${reason}`;
+    notifyManagerOfShiftRequest(widgetApi, apitoken, managername, message).then((sent) => {
+      setNotifyStatus(sent ? "sent" : "skipped");
+    });
   };
 
   return (
@@ -261,6 +274,13 @@ export const ShiftRosterWidget = ({ widgetApi }: ShiftRosterWidgetProps): ReactE
         {myRequests.length > 0 && (
           <>
             <div className="sr-section-title">Your Requests</div>
+            {notifyStatus !== "idle" && (
+              <div className="sr-notify-hint">
+                {notifyStatus === "sent"
+                  ? `${managername || "Your manager"} was notified ✓`
+                  : "Saved — configure the API token to notify your manager automatically"}
+              </div>
+            )}
             {myRequests.map((r) => (
               <div className="sr-req-item" key={r.id}>
                 <div className="sr-req-type">
