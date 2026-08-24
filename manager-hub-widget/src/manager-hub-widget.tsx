@@ -48,7 +48,7 @@ export const ManagerHubWidget = ({ widgetApi, apitoken, demomode }: ManagerHubWi
       container: containerRef.current,
       widgetApi,
       branchBase,
-      apiToken: apitoken || "",
+      apiToken: (apitoken || "").trim(),
       demoMode,
     });
     // Re-runs if apitoken or demoMode changes (e.g. Studio config updated) —

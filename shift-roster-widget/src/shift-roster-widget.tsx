@@ -14,6 +14,7 @@
 import React, { FormEvent, ReactElement, useEffect, useMemo, useState } from "react";
 import { SBUserProfile, WidgetApi } from "widget-sdk";
 import {
+  NotifyOutcome,
   Shift,
   ShiftChangeRequest,
   ShiftChangeType,
@@ -25,6 +26,7 @@ import {
   notifyManagerOfShiftRequest,
   openShiftsForEmployee,
   pickUpShift,
+  resetShiftData,
   saveRoster,
   saveShiftChangeRequest,
   shiftsForEmployee,
@@ -39,11 +41,26 @@ export interface ShiftRosterWidgetProps {
 
 const CHANGE_TYPES: ShiftChangeType[] = ["Swap", "Coverage", "Call-Off"];
 
+function notifyHintText(outcome: NotifyOutcome, managername: string | undefined): string {
+  switch (outcome) {
+    case "sent":
+      return `${managername || "Your manager"} was notified ✓`;
+    case "no-token":
+      return "Saved — add the Staffbase API token in this widget's Studio settings to notify your manager automatically.";
+    case "manager-not-found":
+      return `Saved — couldn't find "${managername}" in Staffbase. Check the "Manager to notify" name matches their profile exactly.`;
+    case "request-failed":
+      return "Saved — the notification couldn't be sent. Double-check the API token was copied correctly.";
+  }
+}
+
 const css = `
   .sr-widget { width: 100%; max-width: 460px; background: var(--bg, #fff); border: 1px solid var(--border, #e0e0e0); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text, #2B2620); }
   .sr-widget * { box-sizing: border-box; }
   .sr-brand { display: flex; align-items: center; gap: 8px; padding: 14px 24px; border-bottom: 1px solid var(--border, #f0f0f0); }
-  .sr-wordmark { font-size: 16px; font-weight: 800; color: var(--primary, #2E2A24); letter-spacing: -0.01em; }
+  .sr-wordmark { font-size: 16px; font-weight: 800; color: var(--primary, #2E2A24); letter-spacing: -0.01em; flex-grow: 1; }
+  .sr-reset-link { flex-shrink: 0; background: none; border: none; padding: 4px; font-size: 12px; color: var(--text-light, #8A8072); cursor: pointer; text-decoration: underline; }
+  .sr-reset-link:hover { color: var(--text, #444); }
   .sr-inner { padding: 24px 24px 4px; }
   .sr-inner h2 { font-size: 21px; font-weight: 800; color: var(--text, #111); margin: 0 0 4px; }
   .sr-greeting { font-size: 13px; color: var(--text-light, #8A8072); margin: 0 0 18px; }
@@ -56,8 +73,8 @@ const css = `
   .sr-shift-loc { font-size: 14px; font-weight: 700; color: var(--text, #111); }
   .sr-shift-meta { font-size: 12px; color: var(--text-light, #8A8072); margin-top: 2px; }
   .sr-shift-tag { flex-shrink: 0; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 8px; border-radius: 6px; background: var(--bg-gray, #F3EEE3); color: var(--text, #444); }
-  .sr-open-shift { border-color: var(--warning, #C9902F); border-style: dashed; }
-  .sr-pickup-btn { flex-shrink: 0; background: var(--warning, #C9902F); color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  .sr-open-shift { flex-direction: column; align-items: stretch; gap: 10px; border-color: var(--warning, #C9902F); border-style: dashed; }
+  .sr-pickup-btn { width: 100%; background: var(--warning, #C9902F); color: #fff; border: none; border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
   .sr-pickup-btn:hover { opacity: 0.9; }
   .sr-empty-state { background: var(--bg-gray, #f7f7f7); border-radius: 14px; padding: 30px 24px; text-align: center; color: var(--text-light, #8A8072); font-size: 13px; }
   .sr-lower { padding: 4px 24px 24px; }
@@ -93,8 +110,8 @@ export const ShiftRosterWidget = ({ widgetApi, apitoken, managername }: ShiftRos
   const [changeType, setChangeType] = useState<ShiftChangeType>("Swap");
   const [targetEmployee, setTargetEmployee] = useState("");
   const [reason, setReason] = useState("");
-  const [notifyStatus, setNotifyStatus] = useState<"idle" | "sent" | "skipped">("idle");
-  const [pickupStatus, setPickupStatus] = useState<"idle" | "sent" | "skipped">("idle");
+  const [notifyStatus, setNotifyStatus] = useState<NotifyOutcome | "idle">("idle");
+  const [pickupStatus, setPickupStatus] = useState<NotifyOutcome | "idle">("idle");
 
   useEffect(() => {
     widgetApi
@@ -134,9 +151,16 @@ export const ShiftRosterWidget = ({ widgetApi, apitoken, managername }: ShiftRos
     saveRoster(updated);
 
     const message = `${employeeName} picked up an open ${shift.location} shift on ${formatShiftDate(shift.date)} (${shift.start}–${shift.end}).`;
-    notifyManagerOfShiftRequest(widgetApi, apitoken, managername, message).then((sent) => {
-      setPickupStatus(sent ? "sent" : "skipped");
-    });
+    notifyManagerOfShiftRequest(widgetApi, apitoken, managername, message).then(setPickupStatus);
+  };
+
+  const resetDemoData = (): void => {
+    resetShiftData();
+    setRoster(loadRoster());
+    setRequests(loadShiftChangeRequests());
+    setShowForm(false);
+    setNotifyStatus("idle");
+    setPickupStatus("idle");
   };
 
   const openForm = (shiftId: string): void => {
@@ -170,9 +194,7 @@ export const ShiftRosterWidget = ({ widgetApi, apitoken, managername }: ShiftRos
 
     const where = shift ? `${shift.location} · ${formatShiftDate(shift.date)}` : "a shift";
     const message = `${employeeName} requested a ${changeType.toLowerCase()} for ${where}: ${reason}`;
-    notifyManagerOfShiftRequest(widgetApi, apitoken, managername, message).then((sent) => {
-      setNotifyStatus(sent ? "sent" : "skipped");
-    });
+    notifyManagerOfShiftRequest(widgetApi, apitoken, managername, message).then(setNotifyStatus);
   };
 
   return (
@@ -185,6 +207,9 @@ export const ShiftRosterWidget = ({ widgetApi, apitoken, managername }: ShiftRos
           <path d="M12 7v5l3 3" />
         </svg>
         <span className="sr-wordmark">My Shift Roster</span>
+        <button className="sr-reset-link" onClick={resetDemoData} type="button">
+          Reset shifts
+        </button>
       </div>
 
       <div className="sr-inner">
@@ -217,23 +242,18 @@ export const ShiftRosterWidget = ({ widgetApi, apitoken, managername }: ShiftRos
           <>
             <div className="sr-section-title">Shifts You Could Pick Up</div>
             {pickupStatus !== "idle" && (
-              <div className="sr-notify-hint">
-                {pickupStatus === "sent"
-                  ? `${managername || "Your manager"} was notified ✓`
-                  : "Shift claimed — configure the API token to notify your manager automatically"}
-              </div>
+              <div className="sr-notify-hint">{notifyHintText(pickupStatus, managername)}</div>
             )}
             <div className="sr-shift-list">
               {openShifts.map((shift) => (
                 <div className="sr-shift-item sr-open-shift" key={shift.id}>
-                  <div className="sr-shift-date">{formatShiftDate(shift.date)}</div>
                   <div className="sr-shift-main">
-                    <div className="sr-shift-loc">{shift.location} · {shift.position}</div>
+                    <div className="sr-shift-loc">{formatShiftDate(shift.date)} · {shift.location}</div>
                     <div className="sr-shift-meta">
-                      {shift.start} – {shift.end} · Currently unstaffed
+                      {shift.start} – {shift.end} · {shift.position} · Currently unstaffed
                     </div>
                   </div>
-                  <button className="sr-pickup-btn" onClick={() => pickUp(shift)}>
+                  <button className="sr-pickup-btn" onClick={() => pickUp(shift)} type="button">
                     Pick Up
                   </button>
                 </div>
@@ -334,11 +354,7 @@ export const ShiftRosterWidget = ({ widgetApi, apitoken, managername }: ShiftRos
           <>
             <div className="sr-section-title">Your Requests</div>
             {notifyStatus !== "idle" && (
-              <div className="sr-notify-hint">
-                {notifyStatus === "sent"
-                  ? `${managername || "Your manager"} was notified ✓`
-                  : "Saved — configure the API token to notify your manager automatically"}
-              </div>
+              <div className="sr-notify-hint">{notifyHintText(notifyStatus, managername)}</div>
             )}
             {myRequests.map((r) => (
               <div className="sr-req-item" key={r.id}>

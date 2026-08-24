@@ -45,7 +45,12 @@ function openManagerTasksApp(): void {
  * backend or tunnel. */
 function staffbaseFetch(branchBase: string, apiToken: string, path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
-  headers.set("Authorization", "Basic " + apiToken);
+  // Trim defensively — Studio's config field (and especially copy/paste on
+  // mobile) can pick up a trailing space or newline invisibly, which
+  // silently breaks the Basic-auth header and makes every call 401 even
+  // though the token itself is correct. Seen live: diagnostics failing
+  // right after "re-pasting the same token" with no visible difference.
+  headers.set("Authorization", "Basic " + apiToken.trim());
   return fetch(`${branchBase}${path}`, { ...init, headers });
 }
 
@@ -334,31 +339,31 @@ function wireDiagnosticsButton(container: HTMLElement, branchBase: string, apiTo
 
     const results: DiagnosticResult[] = [];
 
-    async function check(label: string, fn: () => Promise<boolean>) {
+    // Captures the HTTP status (or network-error message) on failure so a
+    // "Fail" in this list is actually debuggable — e.g. distinguishing a
+    // rejected token (401) from a CORS/network block, which look identical
+    // as a bare boolean.
+    async function check(label: string, fn: () => Promise<Response>) {
       try {
-        results.push({ label, ok: await fn() });
+        const res = await fn();
+        results.push({ label, ok: res.ok, detail: res.ok ? undefined : `HTTP ${res.status}` });
       } catch (e: any) {
-        results.push({ label, ok: false, detail: e?.message });
+        results.push({ label, ok: false, detail: e?.message || "network error" });
       }
     }
 
-    await check("Token authenticates (GET /branch)", async () => (await staffbaseFetch(branchBase, apiToken, "/branch")).ok);
-    await check("Journeys reachable", async () => (await staffbaseFetch(branchBase, apiToken, "/branch/installations?limit=1")).ok);
-    await check(
-      "Tasks reachable",
-      async () =>
-        (
-          await staffbaseFetch(
-            branchBase,
-            apiToken,
-            `/tasks/${tasksInstallationId}/task/search?updateDateFrom=2020-01-01T00:00:00.000Z&status=OPEN&limit=1`
-          )
-        ).ok
+    await check("Token authenticates (GET /branch)", () => staffbaseFetch(branchBase, apiToken, "/branch"));
+    await check("Journeys reachable", () => staffbaseFetch(branchBase, apiToken, "/branch/installations?limit=1"));
+    await check("Tasks reachable", () =>
+      staffbaseFetch(
+        branchBase,
+        apiToken,
+        `/tasks/${tasksInstallationId}/task/search?updateDateFrom=2020-01-01T00:00:00.000Z&status=OPEN&limit=1`
+      )
     );
-    await check("Notifications endpoint reachable", async () => {
-      const r = await staffbaseFetch(branchBase, apiToken, "/branch/notifications", { method: "OPTIONS" });
-      return r.ok;
-    });
+    await check("Notifications endpoint reachable", () =>
+      staffbaseFetch(branchBase, apiToken, "/branch/notifications", { method: "OPTIONS" })
+    );
 
     resultsEl.innerHTML = "";
     results.forEach((r) => {

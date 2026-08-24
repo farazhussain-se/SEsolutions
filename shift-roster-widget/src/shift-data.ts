@@ -231,45 +231,65 @@ export function formatShiftDate(iso: string): string {
     : d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 }
 
+export type NotifyOutcome = "sent" | "no-token" | "manager-not-found" | "request-failed";
+
 // Notifies the manager directly via the real Staffbase Branch Notifications
 // API when an employee submits a shift-change request — same
 // staffbaseFetch/sendNotification pattern the Manager Hub widget uses for
 // role-change and FacOps notifications, just called from this widget's own
-// Studio-configured token since the two widgets are independent deployables.
-// Best-effort: with no token configured, or if the manager can't be
-// resolved by name, this silently no-ops (the request itself still saves).
+// Studio-configured token since the two widgets are independent deployables
+// (each block instance in Studio needs its own token pasted in — it isn't
+// shared automatically from the Manager Hub widget's config).
+//
+// Resolves the manager's user id via a direct GET /users call with the
+// branch token, matching by name client-side — the same pattern
+// manager-hub-widget uses to resolve a group id by title (see
+// resolveGroupIdByTitle) — rather than widgetApi.getUserList(), whose
+// `filter` query syntax isn't documented and isn't guaranteed to do a plain
+// name match against the live API.
 export async function notifyManagerOfShiftRequest(
   widgetApi: WidgetApi,
   apiToken: string | undefined,
   managerName: string | undefined,
   message: string
-): Promise<boolean> {
-  if (!apiToken || !managerName) return false;
+): Promise<NotifyOutcome> {
+  const token = apiToken?.trim();
+  const name = managerName?.trim();
+  if (!token || !name) return "no-token";
   try {
     const branch = widgetApi.getBranchInformation();
     const branchBase = (branch?.webUrl || "").replace(/\/$/, "") + "/api";
-    if (!branchBase) return false;
+    if (!branchBase) return "no-token";
+    const authHeader = { Authorization: "Basic " + token };
 
-    const want = managerName.trim().toLowerCase();
-    const list = await widgetApi.getUserList({ filter: managerName });
-    const manager = (list?.data || []).find(
-      (u) => `${u.firstName || ""} ${u.lastName || ""}`.trim().toLowerCase() === want
+    const usersRes = await fetch(`${branchBase}/users?limit=200`, { headers: authHeader });
+    if (!usersRes.ok) return "request-failed";
+    const usersData = await usersRes.json();
+    const want = name.toLowerCase();
+    const manager = (usersData?.data || []).find(
+      (u: any) => `${u.firstName || ""} ${u.lastName || ""}`.trim().toLowerCase() === want
     );
-    if (!manager?.id) return false;
+    if (!manager?.id) return "manager-not-found";
 
     const res = await fetch(`${branchBase}/branch/notifications`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Basic " + apiToken,
-      },
+      headers: { "Content-Type": "application/json", ...authHeader },
       body: JSON.stringify({
         accessorIds: [manager.id],
         content: { en_US: { text: message } },
       }),
     });
-    return res.ok;
+    return res.ok ? "sent" : "request-failed";
   } catch {
-    return false;
+    return "request-failed";
+  }
+}
+
+export function resetShiftData(): void {
+  try {
+    localStorage.removeItem(ROSTER_KEY);
+    localStorage.removeItem(REQUESTS_KEY);
+  } catch {
+    // localStorage unavailable — nothing to reset
   }
 }
