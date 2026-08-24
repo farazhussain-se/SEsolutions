@@ -17,11 +17,11 @@
     </div>
     <div class="cw-tabs">
       <button class="cw-tab active" data-tab="action">Action Center</button>
+      <button class="cw-tab" data-tab="mytasks">My Tasks</button>
       <button class="cw-tab" data-tab="progress">Team Readiness</button>
       <button class="cw-tab" data-tab="roster">Roster &amp; Leave</button>
-      <button class="cw-tab" data-tab="requisitions">Requisitions</button>
       <button class="cw-tab" data-tab="talent">Talent Mobility</button>
-      <button class="cw-tab" data-tab="setup">Setup</button>
+      <button class="cw-tab" data-tab="requisitions">Requisitions</button>
     </div>
     <div class="header-user">
       <div class="header-user-avatar" id="headerUserAvatar">EP</div>
@@ -33,7 +33,7 @@
   </div>
 
   <!-- METRICS -->
-  <div class="metrics" style="grid-template-columns: repeat(2, 1fr);">
+  <div class="metrics compact" style="grid-template-columns: repeat(2, 1fr);">
     <div class="cw-metric metric-link" id="metricOverdueTasksCard" role="button" tabindex="0" title="View overdue team tasks">
       <div class="metric-icon rust">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -59,203 +59,242 @@
 
     <!-- ============ ACTION CENTER ============ -->
     <div class="view active" id="view-action">
-      <div class="panel-title">Time-Off &amp; Shift Swap · 3</div>
-
-      <div class="side-card workday-scope">
-        <div class="team-row">
-          <div class="team-row-avatar">MW</div>
-          <div class="team-row-body">
-            <div class="team-row-name">Martin Wolf</div>
-            <div class="team-row-meta">Time off · Aug 19 – Aug 23</div>
-          </div>
-          <button class="action-btn small">Approve</button>
-        </div>
-        <div class="team-row">
-          <div class="team-row-avatar">FT</div>
-          <div class="team-row-body">
-            <div class="team-row-name">Fiona Travis</div>
-            <div class="team-row-meta">Time off · Aug 24 – Aug 28</div>
-          </div>
-          <button class="action-btn small">Approve</button>
-        </div>
-        <div class="team-row">
-          <div class="team-row-avatar">ST</div>
-          <div class="team-row-body">
-            <div class="team-row-flag">OT Flag</div>
-            <div class="team-row-name">Steven Thompson</div>
-            <div class="team-row-meta">Shift swap · Sat AM ↔ Sun PM</div>
-          </div>
-          <button class="action-btn secondary small">Review</button>
-        </div>
+      <div class="cw-subtabs" data-subtabs="action">
+        <button class="cw-subtab active" data-subtab="timeoff">Time-Off &amp; Swaps · 3</button>
+        <button class="cw-subtab" data-subtab="pay">Pay · 3</button>
+        <button class="cw-subtab" data-subtab="status">Status Changes · 1</button>
+        <button class="cw-subtab" data-subtab="hr">HR Tickets · 3</button>
       </div>
 
-      <div class="panel-title spaced">Pay Discrepancy Log · 3</div>
-
-      <div class="side-card workday-scope">
-        <div class="team-row">
-          <div class="team-row-avatar">DM</div>
-          <div class="team-row-body">
-            <div class="team-row-flag">Missing Punch</div>
-            <div class="team-row-name">Devon Marks</div>
-            <div class="team-row-meta">Aug 12 · PM Shift</div>
-          </div>
-          <button class="action-btn secondary small">Resolve</button>
-        </div>
-        <div class="team-row">
-          <div class="team-row-avatar">AF</div>
-          <div class="team-row-body">
-            <div class="team-row-flag">Timecard Discrepancy</div>
-            <div class="team-row-name">Alicia Ford</div>
-            <div class="team-row-meta">32.5 hrs recorded · 35 hrs reported</div>
-          </div>
-          <button class="action-btn secondary small">Resolve</button>
-        </div>
-        <div class="team-row">
-          <div class="team-row-avatar">MW</div>
-          <div class="team-row-body">
-            <div class="team-row-flag">Missing Punch</div>
-            <div class="team-row-name">Marcus Webb</div>
-            <div class="team-row-meta">Aug 14 · AM Shift</div>
-          </div>
-          <button class="action-btn secondary small">Resolve</button>
-        </div>
-      </div>
-
-      <div class="panel-title spaced">Status Change Approvals · 1</div>
-
-      <div class="side-card workday-scope">
-        <div id="transactionList">
-          <div class="team-row">
-            <div class="team-row-avatar">MS</div>
-            <div class="team-row-body">
-              <div class="team-row-name">Miranda Smith</div>
-              <div class="team-row-meta">Front Desk Associate → Shift Lead · +$1.50/hr</div>
+      <!-- Time-Off & Shift Swap -->
+      <div class="subview active" data-subgroup="action" data-subview="timeoff">
+        <div class="side-card workday-scope">
+          <div class="scroll-list">
+            <div class="team-row">
+              <div class="team-row-avatar">MW</div>
+              <div class="team-row-body">
+                <div class="team-row-name">Martin Wolf</div>
+                <div class="team-row-meta">Time off · Aug 19 – Aug 23</div>
+              </div>
+              <button class="action-btn small">Approve</button>
             </div>
-            <button class="action-btn secondary small">View</button>
+            <div class="team-row">
+              <div class="team-row-avatar">FT</div>
+              <div class="team-row-body">
+                <div class="team-row-name">Fiona Travis</div>
+                <div class="team-row-meta">Time off · Aug 24 – Aug 28</div>
+              </div>
+              <button class="action-btn small">Approve</button>
+            </div>
+            <div class="team-row">
+              <div class="team-row-avatar">ST</div>
+              <div class="team-row-body">
+                <div class="team-row-flag">OT Flag</div>
+                <div class="team-row-name">Steven Thompson</div>
+                <div class="team-row-meta">Shift swap · Sat AM ↔ Sun PM</div>
+              </div>
+              <button class="action-btn secondary small">Review</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="panel-title spaced">HR Tickets · 3</div>
+      <!-- Pay Discrepancy Log -->
+      <div class="subview" data-subgroup="action" data-subview="pay">
+        <div class="side-card workday-scope">
+          <div class="scroll-list">
+            <div class="team-row">
+              <div class="team-row-avatar">DM</div>
+              <div class="team-row-body">
+                <div class="team-row-flag">Missing Punch</div>
+                <div class="team-row-name">Devon Marks</div>
+                <div class="team-row-meta">Aug 12 · PM Shift</div>
+              </div>
+              <button class="action-btn secondary small">Resolve</button>
+            </div>
+            <div class="team-row">
+              <div class="team-row-avatar">AF</div>
+              <div class="team-row-body">
+                <div class="team-row-flag">Timecard Discrepancy</div>
+                <div class="team-row-name">Alicia Ford</div>
+                <div class="team-row-meta">32.5 hrs recorded · 35 hrs reported</div>
+              </div>
+              <button class="action-btn secondary small">Resolve</button>
+            </div>
+            <div class="team-row">
+              <div class="team-row-avatar">MW</div>
+              <div class="team-row-body">
+                <div class="team-row-flag">Missing Punch</div>
+                <div class="team-row-name">Marcus Webb</div>
+                <div class="team-row-meta">Aug 14 · AM Shift</div>
+              </div>
+              <button class="action-btn secondary small">Resolve</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <div class="side-card">
-        <div class="team-row">
-          <div class="team-row-avatar">HR</div>
-          <div class="team-row-body">
-            <div class="team-row-flag">Open</div>
-            <div class="team-row-name">PTO carryover for transferred TM</div>
-            <div class="team-row-meta">Submitted 3h ago</div>
+      <!-- Status Change Approvals -->
+      <div class="subview" data-subgroup="action" data-subview="status">
+        <div class="side-card workday-scope">
+          <div class="scroll-list" id="transactionList">
+            <div class="team-row">
+              <div class="team-row-avatar">MS</div>
+              <div class="team-row-body">
+                <div class="team-row-name">Miranda Smith</div>
+                <div class="team-row-meta">Front Desk Associate → Shift Lead · +$1.50/hr</div>
+              </div>
+              <button class="action-btn secondary small">View</button>
+            </div>
           </div>
-          <button class="action-btn secondary small">View</button>
         </div>
-        <div class="team-row">
-          <div class="team-row-avatar">HR</div>
-          <div class="team-row-body">
-            <div class="team-row-name">Overtime approval limit question</div>
-            <div class="team-row-meta">In Progress · submitted yesterday</div>
+      </div>
+
+      <!-- HR Tickets -->
+      <div class="subview" data-subgroup="action" data-subview="hr">
+        <div class="side-card">
+          <div class="scroll-list">
+            <div class="team-row">
+              <div class="team-row-avatar">HR</div>
+              <div class="team-row-body">
+                <div class="team-row-flag">Open</div>
+                <div class="team-row-name">PTO carryover for transferred TM</div>
+                <div class="team-row-meta">Submitted 3h ago</div>
+              </div>
+              <button class="action-btn secondary small">View</button>
+            </div>
+            <div class="team-row">
+              <div class="team-row-avatar">HR</div>
+              <div class="team-row-body">
+                <div class="team-row-name">Overtime approval limit question</div>
+                <div class="team-row-meta">In Progress · submitted yesterday</div>
+              </div>
+              <button class="action-btn secondary small">View</button>
+            </div>
+            <div class="team-row">
+              <div class="team-row-avatar">HR</div>
+              <div class="team-row-body">
+                <div class="team-row-name">Attendance policy — final warning</div>
+                <div class="team-row-meta">Resolved · submitted 2 days ago</div>
+              </div>
+              <button class="action-btn secondary small">View</button>
+            </div>
           </div>
-          <button class="action-btn secondary small">View</button>
-        </div>
-        <div class="team-row">
-          <div class="team-row-avatar">HR</div>
-          <div class="team-row-body">
-            <div class="team-row-name">Attendance policy — final warning</div>
-            <div class="team-row-meta">Resolved · submitted 2 days ago</div>
-          </div>
-          <button class="action-btn secondary small">View</button>
         </div>
       </div>
     </div>
 
-    <!-- ============ TEAM PROGRESS ============ -->
-    <div class="view" id="view-progress">
-      <div class="layout">
-        <div>
-          <div class="panel-title">Journey Progress</div>
-
-          <div class="side-card">
-            <h3>
-              <span class="accent-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
-                </svg>
-              </span>
-              <span>By Employee</span>
-            </h3>
-            <div class="journey-tracker-header" style="margin-bottom:10px;">
-              <div>
-                <div class="journey-meta" id="journeyProgressMeta">Loading…</div>
-              </div>
-              <div class="journey-header-actions">
-                <span class="live-badge live" id="journeyProgressBadge" style="display:none;">Live</span>
-              </div>
-            </div>
-            <div id="journeyProgressList"></div>
+    <!-- ============ MY TASKS (viewer's own assigned tasks, live) ============ -->
+    <div class="view" id="view-mytasks">
+      <div class="panel-title">My Tasks</div>
+      <div class="side-card">
+        <h3>
+          <span class="accent-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </span>
+          <span id="myTasksHeading">Assigned to me</span>
+        </h3>
+        <div class="journey-tracker-header" style="margin-bottom:10px;">
+          <div>
+            <div class="journey-meta" id="myTasksMeta">Loading…</div>
           </div>
-
-          <div class="side-card">
-            <h3>
-              <span class="accent-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-              </span>
-              <span>Team Tasks</span>
-            </h3>
-            <div class="journey-tracker-header" style="margin-bottom:10px;">
-              <div>
-                <div class="journey-meta" id="tasksMeta">Loading…</div>
-              </div>
-              <div class="journey-header-actions">
-                <span class="live-badge live" id="tasksBadge" style="display:none;">Live</span>
-              </div>
-            </div>
-            <select class="policy-input" id="taskMemberFilter" style="margin-bottom:10px;">
-              <option value="">All Team Members</option>
-            </select>
-            <div id="tasksList"></div>
-          </div>
-
-          <div class="side-card accent danger">
-            <h3 style="justify-content:space-between;">
-              <span style="display:flex; align-items:center; gap:8px;">
-                <span class="accent-icon danger">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                </span>
-                <span id="overdueStepsTitle">Overdue Journey Steps</span>
-              </span>
-              <span class="cw-pill required" id="overdueStepsCritical" style="display:none;"></span>
-            </h3>
-            <div id="overdueStepsList"></div>
-            <button class="ghost-btn" id="sendRemindersBtn" style="margin-top:10px;">Remind All — Task + Notification</button>
+          <div class="journey-header-actions">
+            <span class="live-badge live" id="myTasksBadge" style="display:none;">Live</span>
           </div>
         </div>
+        <div class="scroll-list" id="myTasksList"></div>
+      </div>
+    </div>
 
-        <!-- RIGHT: Overdue Team Tasks -->
-        <div>
-          <div class="panel-title">Overdue Team Tasks</div>
+    <!-- ============ TEAM READINESS ============ -->
+    <div class="view" id="view-progress">
+      <div class="cw-subtabs" data-subtabs="progress">
+        <button class="cw-subtab active" data-subtab="journeys">Journeys</button>
+        <button class="cw-subtab" data-subtab="tasks">Team Tasks</button>
+      </div>
 
-          <div class="side-card accent danger">
-            <h3 style="justify-content:space-between;">
-              <span style="display:flex; align-items:center; gap:8px;">
-                <span class="accent-icon danger">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                  </svg>
-                </span>
-                <span>Past Due</span>
-              </span>
-              <span class="cw-pill required" id="overdueTasksCritical" style="display:none;"></span>
-            </h3>
-            <div class="journey-tracker-header" style="margin-bottom:10px;">
-              <div>
-                <div class="journey-meta" id="overdueTasksMeta">Loading…</div>
-              </div>
-              <div class="journey-header-actions">
-                <span class="live-badge live" id="overdueTasksBadge" style="display:none;">Live</span>
-              </div>
+      <!-- Journeys sub-tab -->
+      <div class="subview active" data-subgroup="progress" data-subview="journeys">
+        <div class="side-card">
+          <h3>
+            <span class="accent-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+              </svg>
+            </span>
+            <span>By Employee</span>
+          </h3>
+          <div class="journey-tracker-header" style="margin-bottom:10px;">
+            <div>
+              <div class="journey-meta" id="journeyProgressMeta">Loading…</div>
             </div>
-            <div id="overdueTasksList"></div>
-            <button class="ghost-btn" id="sendTaskRemindersBtn" style="margin-top:10px;">Remind All — Notification</button>
+            <div class="journey-header-actions">
+              <span class="live-badge live" id="journeyProgressBadge" style="display:none;">Live</span>
+            </div>
           </div>
+          <div class="scroll-list" id="journeyProgressList"></div>
+        </div>
+
+        <div class="side-card accent danger">
+          <h3 style="justify-content:space-between;">
+            <span style="display:flex; align-items:center; gap:8px;">
+              <span class="accent-icon danger">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </span>
+              <span id="overdueStepsTitle">Overdue Journey Steps</span>
+            </span>
+            <span class="cw-pill required" id="overdueStepsCritical" style="display:none;"></span>
+          </h3>
+          <div class="scroll-list sm" id="overdueStepsList"></div>
+          <button class="ghost-btn" id="sendRemindersBtn" style="margin-top:10px;">Remind All — Task + Notification</button>
+        </div>
+      </div>
+
+      <!-- Team Tasks sub-tab -->
+      <div class="subview" data-subgroup="progress" data-subview="tasks">
+        <div class="side-card">
+          <h3>
+            <span class="accent-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </span>
+            <span>Team Tasks</span>
+          </h3>
+          <div class="journey-tracker-header" style="margin-bottom:10px;">
+            <div>
+              <div class="journey-meta" id="tasksMeta">Loading…</div>
+            </div>
+            <div class="journey-header-actions">
+              <span class="live-badge live" id="tasksBadge" style="display:none;">Live</span>
+            </div>
+          </div>
+          <select class="policy-input" id="taskMemberFilter" style="margin-bottom:10px;">
+            <option value="">All Team Members</option>
+          </select>
+          <div class="scroll-list" id="tasksList"></div>
+        </div>
+
+        <div class="side-card accent danger">
+          <h3 style="justify-content:space-between;">
+            <span style="display:flex; align-items:center; gap:8px;">
+              <span class="accent-icon danger">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+              </span>
+              <span>Past Due</span>
+            </span>
+            <span class="cw-pill required" id="overdueTasksCritical" style="display:none;"></span>
+          </h3>
+          <div class="journey-tracker-header" style="margin-bottom:10px;">
+            <div>
+              <div class="journey-meta" id="overdueTasksMeta">Loading…</div>
+            </div>
+            <div class="journey-header-actions">
+              <span class="live-badge live" id="overdueTasksBadge" style="display:none;">Live</span>
+            </div>
+          </div>
+          <div class="scroll-list sm" id="overdueTasksList"></div>
+          <button class="ghost-btn" id="sendTaskRemindersBtn" style="margin-top:10px;">Remind All — Notification</button>
         </div>
       </div>
     </div>
@@ -534,16 +573,11 @@
       </div>
     </div>
 
-    <!-- STATUS BAR -->
+    <!-- STATUS BAR: setup is now just a small gear, bottom-left -->
     <div class="cw-status">
-      <a class="status-link" href="#" id="statusSetupLink" style="color:var(--text-light); font-weight:600;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <span>Manage Connections</span>
-      </a>
-      <a class="status-link" href="#">
-        <span>Activity Log</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      </a>
+      <button class="gear-btn" id="statusSetupLink" type="button" aria-label="Setup &amp; connections" title="Setup &amp; connections">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
     </div>
 
   </div>

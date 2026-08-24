@@ -67,9 +67,9 @@ export function initDashboard(opts: DashboardOptions): void {
 
   applySBBrand();
   wireTabs(container);
+  wireSubTabs(container);
   wireChecklist(container);
   wireSetupLink(container);
-  wireCollapsibleCards(container);
   wireMetricLinks(container);
   checkTokenStatus(container, branchBase, apiToken);
   wireDiagnosticsButton(container, branchBase, apiToken, tasksInstallationId);
@@ -78,6 +78,7 @@ export function initDashboard(opts: DashboardOptions): void {
   const { getUserId } = initTeamTasksAndRoleChange(container, branchBase, apiToken, tasksInstallationId);
   initPromotionLauncher(container, branchBase, apiToken, getUserId);
   initRequisitions(container);
+  initMyTasks(container, branchBase, apiToken, tasksInstallationId, widgetApi);
   applyViewerIdentity(container, widgetApi);
 }
 
@@ -113,6 +114,33 @@ function wireTabs(container: HTMLElement): void {
   });
 }
 
+/** Generic sub-tab wiring: any `.cw-subtabs[data-subtabs=GROUP]` bar toggles
+ * the `.subview[data-subgroup=GROUP][data-subview=NAME]` panels that share
+ * its group. Multiple independent groups (Action Center, Team Readiness) can
+ * coexist. */
+function wireSubTabs(container: HTMLElement): void {
+  container.querySelectorAll<HTMLElement>(".cw-subtabs").forEach((bar) => {
+    const group = bar.dataset.subtabs;
+    const btns = Array.from(bar.querySelectorAll<HTMLElement>(".cw-subtab"));
+    const panels = Array.from(container.querySelectorAll<HTMLElement>(`.subview[data-subgroup="${group}"]`));
+    btns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = btn.dataset.subtab;
+        btns.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        panels.forEach((p) => p.classList.toggle("active", p.dataset.subview === target));
+      });
+    });
+  });
+}
+
+/** Programmatically switch a sub-tab group (used when a metric card deep-links
+ * into a specific Team Readiness sub-tab). */
+function activateSubTab(container: HTMLElement, group: string, subtab: string): void {
+  const bar = container.querySelector<HTMLElement>(`.cw-subtabs[data-subtabs="${group}"]`);
+  bar?.querySelector<HTMLElement>(`.cw-subtab[data-subtab="${subtab}"]`)?.click();
+}
+
 function wireChecklist(container: HTMLElement): void {
   container.querySelectorAll(".checklist-check").forEach((box) => {
     box.addEventListener("click", () => {
@@ -121,49 +149,42 @@ function wireChecklist(container: HTMLElement): void {
   });
 }
 
-const COLLAPSE_CHEVRON_SVG =
-  '<span class="collapse-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>';
-
-/** Makes the Team Readiness panels collapsible by clicking their header —
- * scoped to that tab rather than every side-card dashboard-wide. */
-function wireCollapsibleCards(container: HTMLElement): void {
-  const scope = container.querySelector<HTMLElement>("#view-progress");
-  if (!scope) return;
-  scope.querySelectorAll<HTMLElement>(".side-card").forEach((card) => {
-    const header = card.querySelector<HTMLElement>("h3");
-    if (!header) return;
-    header.insertAdjacentHTML("beforeend", COLLAPSE_CHEVRON_SVG);
-    header.style.cursor = "pointer";
-    header.addEventListener("click", () => {
-      card.classList.toggle("collapsed");
-    });
-  });
-}
-
 /** The two top-of-dashboard metric cards (Overdue Team Tasks / Overdue
  * Journey Steps) jump straight to the Team Readiness tab, where the actual
  * overdue lists and their reminder actions live. */
 function wireMetricLinks(container: HTMLElement): void {
-  const openProgress = () => container.querySelector<HTMLElement>('.cw-tab[data-tab="progress"]')?.click();
-  ["#metricOverdueTasksCard", "#metricOverdueCard"].forEach((sel) => {
+  const open = (subtab: string) => {
+    container.querySelector<HTMLElement>('.cw-tab[data-tab="progress"]')?.click();
+    activateSubTab(container, "progress", subtab);
+  };
+  // Overdue Team Tasks → Team Tasks sub-tab; Overdue Journey Steps → Journeys.
+  const targets: Array<[string, string]> = [
+    ["#metricOverdueTasksCard", "tasks"],
+    ["#metricOverdueCard", "journeys"],
+  ];
+  targets.forEach(([sel, subtab]) => {
     const card = container.querySelector<HTMLElement>(sel);
     if (!card) return;
-    card.addEventListener("click", openProgress);
+    card.addEventListener("click", () => open(subtab));
     card.addEventListener("keydown", (e) => {
       const key = (e as KeyboardEvent).key;
       if (key === "Enter" || key === " ") {
         e.preventDefault();
-        openProgress();
+        open(subtab);
       }
     });
   });
 }
 
+/** Setup no longer has a top-level tab — a small gear in the status bar
+ * reveals the Setup view directly (and clears the active top tab, since none
+ * corresponds to it). Any subsequent top-tab click restores normal nav. */
 function wireSetupLink(container: HTMLElement): void {
-  const statusSetupLink = container.querySelector<HTMLAnchorElement>("#statusSetupLink");
-  statusSetupLink?.addEventListener("click", (e) => {
+  const gear = container.querySelector<HTMLElement>("#statusSetupLink");
+  gear?.addEventListener("click", (e) => {
     e.preventDefault();
-    container.querySelector<HTMLElement>('.cw-tab[data-tab="setup"]')?.click();
+    container.querySelectorAll<HTMLElement>(".cw-tab").forEach((t) => t.classList.remove("active"));
+    container.querySelectorAll<HTMLElement>(".view").forEach((v) => v.classList.toggle("active", v.id === "view-setup"));
   });
 }
 
@@ -1289,6 +1310,151 @@ function initRequisitions(container: HTMLElement): void {
     if (openListEl) openListEl.style.display = "none";
     if (completedListEl) completedListEl.style.display = "";
   });
+}
+
+interface MyTaskEntry {
+  title: string;
+  priority: string;
+  status: string;
+  dueDate?: string;
+  daysOverdue?: number;
+}
+
+// Elena's own manager tasks — baseline until a token is configured and the
+// viewer's real assigned tasks resolve from the Tasks API.
+const BASELINE_MY_TASKS: MyTaskEntry[] = [
+  { title: "Complete quarterly club safety walkthrough", priority: "Priority_1", status: "Open", daysOverdue: 2 },
+  { title: "Approve Q3 group fitness class schedule", priority: "Priority_2", status: "Open" },
+  { title: "Review onboarding readiness for Jordan Edwards", priority: "Priority_3", status: "Open" },
+  { title: "Submit monthly labor-cost variance summary", priority: "Priority_2", status: "Open" },
+];
+
+/** Tasks assigned to the signed-in manager. The Tasks API has no server-side
+ * assignee filter, so this fetches open tasks and keeps the ones whose
+ * assigneeIds include the viewer's own user id (from widgetApi). */
+async function fetchMyTasks(branchBase: string, apiToken: string, tasksInstallationId: string, userId: string): Promise<MyTaskEntry[]> {
+  const url = `/tasks/${tasksInstallationId}/task/search?updateDateFrom=2020-01-01T00:00:00.000Z&status=OPEN&limit=50`;
+  const res = await staffbaseFetch(branchBase, apiToken, url);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const data = await res.json();
+  const entries: any[] = data.entries || [];
+  const now = new Date();
+  return entries
+    .filter((t) => (t.assigneeIds || []).includes(userId))
+    .map((t) => {
+      let daysOverdue: number | undefined;
+      if (t.dueDate) {
+        const d = new Date(t.dueDate);
+        if (d < now) daysOverdue = Math.max(1, Math.floor((now.getTime() - d.getTime()) / 86400000));
+      }
+      return { title: t.title, priority: t.priority, status: t.status === "OPEN" ? "Open" : t.status, dueDate: t.dueDate, daysOverdue };
+    });
+}
+
+function myTaskPriorityRank(p: string): number {
+  if (p === "Priority_1") return 0;
+  if (p === "Priority_2") return 1;
+  return 2;
+}
+
+function initMyTasks(
+  container: HTMLElement,
+  branchBase: string,
+  apiToken: string,
+  tasksInstallationId: string,
+  widgetApi: WidgetApi
+): void {
+  const metaEl = container.querySelector<HTMLElement>("#myTasksMeta");
+  const badgeEl = container.querySelector<HTMLElement>("#myTasksBadge");
+  const listEl = container.querySelector<HTMLElement>("#myTasksList");
+  const headingEl = container.querySelector<HTMLElement>("#myTasksHeading");
+  if (!metaEl || !listEl) return;
+
+  function render(tasks: MyTaskEntry[]) {
+    // Overdue first, then by priority, then keep insertion order.
+    const sorted = tasks
+      .map((t, i) => ({ t, i }))
+      .sort((a, b) => {
+        const ao = a.t.daysOverdue ? 1 : 0;
+        const bo = b.t.daysOverdue ? 1 : 0;
+        if (ao !== bo) return bo - ao;
+        if (ao && bo) return (b.t.daysOverdue || 0) - (a.t.daysOverdue || 0);
+        const pr = myTaskPriorityRank(a.t.priority) - myTaskPriorityRank(b.t.priority);
+        return pr !== 0 ? pr : a.i - b.i;
+      })
+      .map((x) => x.t);
+
+    listEl!.innerHTML = "";
+    if (!sorted.length) {
+      const empty = document.createElement("div");
+      empty.className = "ooo-meta";
+      empty.textContent = "No open tasks assigned to you right now.";
+      listEl!.appendChild(empty);
+      return;
+    }
+    sorted.forEach((t) => {
+      const item = document.createElement("div");
+      item.className = "task-item";
+      item.style.padding = "8px 0";
+      item.style.borderBottom = "1px solid var(--border)";
+      item.innerHTML = '<span class="task-item-title"></span><span class="cw-pill"></span>';
+      item.querySelector(".task-item-title")!.textContent = t.title;
+      const pill = item.querySelector(".cw-pill")!;
+      if (t.daysOverdue) {
+        pill.className = "cw-pill required";
+        pill.textContent = `Past Due · ${t.daysOverdue}d`;
+      } else if (t.priority === "Priority_1") {
+        pill.className = "cw-pill required";
+        pill.textContent = "Priority 1";
+      } else if (t.priority === "Priority_2") {
+        pill.className = "cw-pill warn";
+        pill.textContent = "Priority 2";
+      } else {
+        pill.className = "cw-pill";
+        pill.textContent = "Open";
+      }
+      listEl!.appendChild(item);
+    });
+  }
+
+  function renderBaseline() {
+    metaEl!.textContent = `${BASELINE_MY_TASKS.length} open tasks`;
+    if (badgeEl) badgeEl.style.display = "none";
+    render(BASELINE_MY_TASKS);
+  }
+
+  if (!apiToken) {
+    renderBaseline();
+    return;
+  }
+
+  widgetApi
+    .getUserInformation()
+    .then((user) => {
+      const uid = (user as { id?: string }).id;
+      if (headingEl && user.firstName) headingEl.textContent = `Assigned to ${user.firstName}`;
+      if (!uid) {
+        renderBaseline();
+        return;
+      }
+      fetchMyTasks(branchBase, apiToken, tasksInstallationId, uid)
+        .then((mine) => {
+          if (!mine.length) {
+            renderBaseline();
+            return;
+          }
+          const overdue = mine.filter((t) => t.daysOverdue).length;
+          metaEl!.textContent = `${mine.length} open task${mine.length === 1 ? "" : "s"}${overdue ? ` · ${overdue} past due` : ""}`;
+          if (badgeEl) {
+            badgeEl.style.display = "";
+            badgeEl.className = "live-badge live";
+            badgeEl.textContent = "Live";
+          }
+          render(mine);
+        })
+        .catch(renderBaseline);
+    })
+    .catch(renderBaseline);
 }
 
 const ROLE_CHANGE_STORAGE_KEY = "lifetime-manager-hub:role-changes";
