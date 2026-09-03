@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CarMax — My Shift</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: transparent;
+  width: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+.widget {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0, 30, 80, 0.10);
+}
+
+/* HEADER — CarMax navy with gold accent */
+.header {
+  background: linear-gradient(135deg, #00529F, #003c78);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 3px solid #FFD520;
+}
+.header-title { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: 0.2px; }
+.header-sub   { font-size: 11px; color: #bcd8ff; margin-top: 2px; font-weight: 500; }
+.live-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255, 213, 32, 0.18);
+  border: 1px solid #FFD520;
+  border-radius: 14px; padding: 4px 11px;
+  font-size: 10px; font-weight: 800; color: #FFD520; letter-spacing: 0.5px;
+}
+.live-dot {
+  width: 8px; height: 8px;
+  background: #FFD520; border-radius: 50%;
+  animation: pulse 1.4s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* location strip */
+.loc-strip {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 18px;
+  background: #f0f4fb;
+  border-bottom: 1px solid #e3e9f3;
+  font-size: 11px;
+}
+.loc-label { color: #57606a; font-weight: 600; }
+.loc-value { color: #00529F; font-weight: 800; }
+
+/* MAIN — single advisor shift card */
+.main { padding: 16px; }
+
+.advisor-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f6f8fa;
+  border-radius: 10px;
+  padding: 14px 16px;
+  border-left: 5px solid #d0d7de;
+  transition: background 0.2s;
+}
+.advisor-card.on-shift { border-left-color: #1a9e3f; background: #dafbe1; }
+.advisor-card.upcoming { border-left-color: #FFD520; background: #fff8dc; }
+.advisor-card.off      { border-left-color: #8c959f; background: #f0f2f5; }
+
+.advisor-name { font-size: 16px; font-weight: 800; color: #1b1f24; }
+.advisor-role { font-size: 12px; color: #57606a; margin-top: 2px; }
+.advisor-time { font-size: 12px; color: #57606a; margin-top: 6px; font-variant-numeric: tabular-nums; }
+
+.status-badge {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.4px;
+  padding: 4px 10px; border-radius: 10px;
+  color: #fff; white-space: nowrap;
+}
+.status-badge.on-badge  { background: #1a9e3f; }
+.status-badge.up-badge  { background: #d18f00; }
+.status-badge.off-badge { background: #8c959f; }
+
+/* FOOTER */
+.footer {
+  background: #f6f8fa;
+  border-top: 1px solid #e8ecf0;
+  padding: 8px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-src   { font-size: 10px; color: #8c959f; font-weight: 600; }
+.footer-clock { font-size: 12px; font-weight: 800; color: #00529F; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 380px) {
+  .header-title { font-size: 15px; }
+  .advisor-name { font-size: 15px; }
+}
+</style>
+</head>
+<body>
+<div class="widget">
+
+  <div class="header">
+    <div>
+      <div class="header-title">My Shift</div>
+      <div class="header-sub" id="header-date">—</div>
+    </div>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  </div>
+
+  <div class="loc-strip">
+    <span class="loc-label">Southeast Region · Service Center</span>
+    <span class="loc-value">Atlanta, GA</span>
+  </div>
+
+  <div class="main">
+    <div class="advisor-card" id="advisor-card">
+      <div>
+        <div class="advisor-name">Patrick Reyes</div>
+        <div class="advisor-role">Service Advisor</div>
+        <div class="advisor-time" id="advisor-time">08:00 AM – 04:30 PM</div>
+      </div>
+      <div class="status-badge" id="status-badge"></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-src">CarMax · Service Operations</div>
+    <div class="footer-clock" id="footer-clock"></div>
+  </div>
+
+</div>
+<script>
+// Patrick's shift window (24hr decimal hours)
+const SHIFT_START = 8.0;   // 08:00 AM
+const SHIFT_END   = 16.5;  // 04:30 PM
+const SHIFT_LABEL  = '08:00 AM – 04:30 PM';
+
+function getStatus(now) {
+  const h = now.getHours() + now.getMinutes() / 60;
+  if (h >= SHIFT_START && h < SHIFT_END) return 'on';
+  if (h < SHIFT_START) return 'upcoming';
+  return 'off';
+}
+
+function render() {
+  const now = new Date();
+  const status = getStatus(now);
+
+  const card = document.getElementById('advisor-card');
+  card.classList.remove('on-shift', 'upcoming', 'off');
+
+  const badge = document.getElementById('status-badge');
+  badge.classList.remove('on-badge', 'up-badge', 'off-badge');
+
+  if (status === 'on') {
+    card.classList.add('on-shift');
+    badge.classList.add('on-badge');
+    badge.textContent = '● ON SHIFT';
+  } else if (status === 'upcoming') {
+    card.classList.add('upcoming');
+    badge.classList.add('up-badge');
+    badge.textContent = '▶ UPCOMING';
+  } else {
+    card.classList.add('off');
+    badge.classList.add('off-badge');
+    badge.textContent = 'OFF DUTY';
+  }
+
+  document.getElementById('advisor-time').textContent = SHIFT_LABEL;
+}
+
+function tick() {
+  const now = new Date();
+  document.getElementById('footer-clock').textContent =
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('header-date').textContent =
+    now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+
+render();
+tick();
+setInterval(tick, 1000);
+setInterval(render, 60 * 1000);
+</script>
+</body>
+</html>
