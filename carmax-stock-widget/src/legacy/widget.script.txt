@@ -1,0 +1,122 @@
+// Executed via `new Function("root", "instanceId", "defaultTicker", ...)`.
+// `root` is this widget instance's own DOM node, so lookups are scoped to it
+// (multiple instances on the same page each get independent controls).
+// CarMax brand colors (navy + gold) — used for the chart line/fill so the
+// graph itself reads as CarMax regardless of the host's --sb-brand theme.
+var CARMAX_NAVY = '#00529F';
+var CARMAX_GOLD = '#FFD520';
+
+var tickerInput = root.querySelector('#csw-tickerInput');
+var btnLoad = root.querySelector('#csw-btnLoad');
+var rangeGroup = root.querySelector('#csw-rangeGroup');
+var tvContainer = root.querySelector('#csw-tv-container');
+
+var currentTicker = (defaultTicker || 'KMX').trim().toUpperCase().replace(/[^A-Z0-9.:]/g, '') || 'KMX';
+var currentRange = '1D';
+tickerInput.value = currentTicker;
+tickerInput.placeholder = currentTicker;
+
+var RANGE_MAP = {
+    '1D':  { range: '1D',  interval: '5' },
+    '5D':  { range: '5D',  interval: '15' },
+    '1M':  { range: '1M',  interval: 'D' },
+    '3M':  { range: '3M',  interval: 'D' },
+    '12M': { range: '12M', interval: 'W' },
+    'ALL': { range: 'ALL', interval: 'M' },
+};
+
+function applySBBrand() {
+    var sb = getComputedStyle(document.documentElement).getPropertyValue('--sb-brand').trim();
+    if (sb) {
+        root.style.setProperty('--primary', sb);
+        return;
+    }
+    try {
+        sb = window.parent.getComputedStyle(window.parent.document.documentElement)
+                .getPropertyValue('--sb-brand').trim();
+        if (sb) root.style.setProperty('--primary', sb);
+    } catch (e) { /* cross-origin, ignore */ }
+}
+
+function renderChart() {
+    tvContainer.innerHTML = '<div class="csw-tv-placeholder">Loading</div>';
+    var inner = document.createElement('div');
+    inner.id = 'csw-tv-' + instanceId + '-' + Date.now();
+    inner.style.cssText = 'width:100%;height:100%;';
+
+    // Small delay so the loading placeholder is visible before TradingView takes over
+    setTimeout(function() {
+        tvContainer.innerHTML = '';
+        tvContainer.appendChild(inner);
+        var dark = !window.matchMedia || window.matchMedia('(prefers-color-scheme: dark)').matches || !window.matchMedia('(prefers-color-scheme: light)').matches;
+        // Simple area line instead of candles/bars, with volume and the
+        // technical legend hidden — a plain-language view any employee can
+        // read at a glance, not a trading terminal.
+        // eslint-disable-next-line no-undef
+        new TradingView.widget({
+            autosize: true,
+            symbol: currentTicker,
+            interval: RANGE_MAP[currentRange].interval,
+            range: RANGE_MAP[currentRange].range,
+            timezone: 'Etc/UTC',
+            theme: dark ? 'dark' : 'light',
+            style: '3',
+            locale: 'en',
+            toolbar_bg: dark ? '#0a0a0a' : '#f8fafc',
+            enable_publishing: false,
+            allow_symbol_change: false,
+            hide_top_toolbar: true,
+            hide_legend: true,
+            hide_side_toolbar: true,
+            hide_volume: true,
+            withdateranges: false,
+            save_image: false,
+            container_id: inner.id,
+            overrides: {
+                'mainSeriesProperties.areaStyle.linecolor': CARMAX_GOLD,
+                'mainSeriesProperties.areaStyle.linewidth': 2,
+                'mainSeriesProperties.areaStyle.color1': dark ? 'rgba(0,82,159,0.45)' : 'rgba(0,82,159,0.25)',
+                'mainSeriesProperties.areaStyle.color2': dark ? 'rgba(0,82,159,0.03)' : 'rgba(0,82,159,0.02)',
+                'paneProperties.background': dark ? '#000000' : '#ffffff',
+                'paneProperties.backgroundType': 'solid',
+                'scalesProperties.textColor': dark ? '#94a3b8' : '#64748b',
+            },
+        });
+    }, 80);
+}
+
+function loadTicker() {
+    var raw = (tickerInput.value || currentTicker).trim().toUpperCase().replace(/[^A-Z0-9.:]/g, '');
+    currentTicker = raw || currentTicker;
+    tickerInput.value = currentTicker;
+    renderChart();
+}
+
+btnLoad.addEventListener('click', loadTicker);
+
+tickerInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') loadTicker();
+});
+
+rangeGroup.addEventListener('click', function(e) {
+    var btn = e.target.closest('.csw-range-btn');
+    if (!btn) return;
+    rangeGroup.querySelectorAll('.csw-range-btn').forEach(function(b) { b.classList.remove('csw-active'); });
+    btn.classList.add('csw-active');
+    currentRange = btn.dataset.range;
+    renderChart();
+});
+
+var darkModeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+if (darkModeQuery) {
+    darkModeQuery.addEventListener('change', renderChart);
+}
+
+applySBBrand();
+renderChart();
+
+// Returned to the React effect so it can tear down the persistent
+// media-query listener when this widget instance unmounts.
+return function cleanup() {
+    if (darkModeQuery) darkModeQuery.removeEventListener('change', renderChart);
+};

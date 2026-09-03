@@ -1,0 +1,247 @@
+/* Dark by default — light override only when system is explicitly light */
+.csw-root {
+    /* CarMax brand: navy + gold. --sb-brand still wins if the host sets it. */
+    --primary: var(--sb-brand, #2E86D6);
+    --secondary: #FFD520;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --text: #f1f5f9;
+    --text-light: #94a3b8;
+    --text-muted: #4b5563;
+    --bg: #000000;
+    --bg-controls: #0a0a0a;
+    --bg-input: #141414;
+    --border: #1c1c1c;
+    --border-subtle: #111111;
+    --shadow: 0 1px 3px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4);
+    --radius-pill: 9999px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+@media (prefers-color-scheme: light) {
+    .csw-root {
+        --primary: var(--sb-brand, #00529F);
+        --secondary: #FFD520;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --text: #0f172a;
+        --text-light: #64748b;
+        --text-muted: #94a3b8;
+        --bg: #ffffff;
+        --bg-controls: #f8fafc;
+        --bg-input: #f1f5f9;
+        --border: #e2e8f0;
+        --border-subtle: #f1f5f9;
+        --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    }
+}
+
+.csw-root * { box-sizing: border-box; }
+
+.csw-widget {
+    width: 100%;
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--text);
+    overflow: visible;
+}
+
+.csw-widget::before {
+    content: '';
+    display: block;
+    height: 3px;
+    flex-shrink: 0;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+}
+
+/* ── Controls bar ── */
+.csw-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    background: var(--bg-controls);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    height: 46px;
+}
+
+/* Ticker search pill */
+.csw-ticker-field {
+    display: flex;
+    align-items: center;
+    background: var(--bg-input);
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-pill);
+    padding: 0 6px 0 14px;
+    gap: 4px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    height: 32px;
+}
+
+.csw-ticker-field:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.csw-ticker-input {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+    font-size: 13px;
+    font-weight: 700;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    width: 80px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    caret-color: var(--primary);
+}
+
+.csw-ticker-input::placeholder {
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+.csw-btn-go {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity 0.12s, transform 0.1s;
+    padding: 0;
+}
+
+.csw-btn-go:hover { opacity: 0.88; transform: scale(1.07); }
+.csw-btn-go:active { transform: scale(0.95); }
+
+.csw-btn-go svg {
+    width: 11px;
+    height: 11px;
+    fill: #fff;
+    margin-left: 1px; /* optical center for play triangle */
+}
+
+/* Divider */
+.csw-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    flex-shrink: 0;
+}
+
+/* Range pills */
+.csw-range-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--bg-input);
+    border-radius: var(--radius-pill);
+    padding: 3px;
+    height: 32px;
+}
+
+.csw-range-btn {
+    padding: 0 11px;
+    height: 26px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: var(--radius-pill);
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.03em;
+    transition: background 0.14s, color 0.14s, box-shadow 0.14s;
+    white-space: nowrap;
+}
+
+.csw-range-btn:hover:not(.csw-active) {
+    color: var(--text);
+    background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+
+.csw-range-btn.csw-active {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 1px 4px color-mix(in srgb, var(--primary) 40%, transparent), inset 0 -2px 0 var(--secondary);
+}
+
+/* Live badge */
+.csw-live-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.csw-live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: csw-pulse 2s ease-in-out infinite;
+}
+
+@keyframes csw-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* Chart area */
+.csw-chart-area {
+    flex: 1;
+    position: relative;
+    overflow: visible;
+    min-height: 0;
+}
+
+.csw-tv-container {
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+}
+
+.csw-tv-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    gap: 8px;
+}
+
+.csw-tv-placeholder::before {
+    content: '';
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: csw-spin 0.7s linear infinite;
+}
+
+@keyframes csw-spin {
+    to { transform: rotate(360deg); }
+}

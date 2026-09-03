@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="widget-name" content="CarMax Stock (KMX)">
+<meta name="widget-description" content="Simplified, brand-colored live stock chart for CarMax (KMX) — no candles/volume clutter, readable by any employee.">
+<meta name="widget-tags" content="Finance, Reports & Dashboards">
+<title>CarMax Stock — KMX</title>
+
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: #05070a;
+    }
+
+    /* CarMax brand: navy + gold. --sb-brand still wins if a host sets it. */
+    .csw-root {
+        --primary: var(--sb-brand, #2E86D6);
+        --secondary: #FFD520;
+        --success: #34d399;
+        --text: #f1f5f9;
+        --text-light: #94a3b8;
+        --text-muted: #4b5563;
+        --bg: #000000;
+        --bg-controls: #0a0a0a;
+        --bg-input: #141414;
+        --border: #1c1c1c;
+        --radius-pill: 9999px;
+        width: 100%;
+        max-width: 640px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+    @media (prefers-color-scheme: light) {
+        .csw-root {
+            --primary: var(--sb-brand, #00529F);
+            --secondary: #FFD520;
+            --success: #10b981;
+            --text: #0f172a;
+            --text-light: #64748b;
+            --text-muted: #94a3b8;
+            --bg: #ffffff;
+            --bg-controls: #f8fafc;
+            --bg-input: #f1f5f9;
+            --border: #e2e8f0;
+        }
+    }
+
+    .csw-root * { box-sizing: border-box; }
+
+    .csw-widget {
+        width: 100%;
+        height: 320px;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        color: var(--text);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 12px 34px rgba(0,0,0,0.35);
+    }
+
+    .csw-widget::before {
+        content: '';
+        display: block;
+        height: 3px;
+        flex-shrink: 0;
+        background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    /* ── Controls bar ── */
+    .csw-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px;
+        background: var(--bg-controls);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+        height: 46px;
+    }
+
+    .csw-ticker-field {
+        display: flex;
+        align-items: center;
+        background: var(--bg-input);
+        border: 1.5px solid transparent;
+        border-radius: var(--radius-pill);
+        padding: 0 6px 0 14px;
+        gap: 4px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        height: 32px;
+    }
+
+    .csw-ticker-field:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+    }
+
+    .csw-ticker-input {
+        font-family: "SF Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+        font-size: 13px;
+        font-weight: 700;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text);
+        width: 80px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        caret-color: var(--primary);
+    }
+
+    .csw-ticker-input::placeholder {
+        color: var(--text-muted);
+        font-weight: 500;
+        letter-spacing: 0.02em;
+    }
+
+    .csw-btn-go {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: opacity 0.12s, transform 0.1s;
+        padding: 0;
+    }
+
+    .csw-btn-go:hover { opacity: 0.88; transform: scale(1.07); }
+    .csw-btn-go:active { transform: scale(0.95); }
+
+    .csw-btn-go svg {
+        width: 11px;
+        height: 11px;
+        fill: #fff;
+        margin-left: 1px;
+    }
+
+    .csw-sep {
+        width: 1px;
+        height: 20px;
+        background: var(--border);
+        flex-shrink: 0;
+    }
+
+    .csw-range-group {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        background: var(--bg-input);
+        border-radius: var(--radius-pill);
+        padding: 3px;
+        height: 32px;
+    }
+
+    .csw-range-btn {
+        padding: 0 11px;
+        height: 26px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: var(--radius-pill);
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-family: inherit;
+        letter-spacing: 0.03em;
+        transition: background 0.14s, color 0.14s, box-shadow 0.14s;
+        white-space: nowrap;
+    }
+
+    .csw-range-btn:hover:not(.csw-active) {
+        color: var(--text);
+        background: color-mix(in srgb, var(--text) 6%, transparent);
+    }
+
+    .csw-range-btn.csw-active {
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 1px 4px color-mix(in srgb, var(--primary) 40%, transparent), inset 0 -2px 0 var(--secondary);
+    }
+
+    .csw-live-badge {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+
+    .csw-live-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--success);
+        animation: csw-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes csw-pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .csw-chart-area {
+        flex: 1;
+        position: relative;
+        overflow: visible;
+        min-height: 0;
+    }
+
+    .csw-tv-container {
+        position: absolute;
+        inset: 0;
+        overflow: visible;
+    }
+
+    .csw-tv-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: var(--text-muted);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        gap: 8px;
+    }
+
+    .csw-tv-placeholder::before {
+        content: '';
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--border);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: csw-spin 0.7s linear infinite;
+    }
+
+    @keyframes csw-spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="csw-root">
+    <div class="csw-widget">
+        <div class="csw-controls">
+            <div class="csw-ticker-field">
+                <input id="csw-tickerInput" class="csw-ticker-input" type="text" value="KMX" maxlength="12" placeholder="KMX" autocomplete="off" spellcheck="false" />
+                <button class="csw-btn-go" id="csw-btnLoad" aria-label="Load ticker">
+                    <svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg>
+                </button>
+            </div>
+
+            <div class="csw-sep"></div>
+
+            <div class="csw-range-group" id="csw-rangeGroup">
+                <button class="csw-range-btn csw-active" data-range="1D">1D</button>
+                <button class="csw-range-btn" data-range="5D">1W</button>
+                <button class="csw-range-btn" data-range="1M">1M</button>
+                <button class="csw-range-btn" data-range="3M">3M</button>
+                <button class="csw-range-btn" data-range="12M">1Y</button>
+                <button class="csw-range-btn" data-range="ALL">ALL</button>
+            </div>
+
+            <div class="csw-live-badge">
+                <span class="csw-live-dot"></span>
+                Live
+            </div>
+        </div>
+
+        <div class="csw-chart-area">
+            <div id="csw-tv-container" class="csw-tv-container">
+                <div class="csw-tv-placeholder">Loading</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://s3.tradingview.com/tv.js"></script>
+<script>
+    // CarMax brand colors — the chart line/fill always renders in these,
+    // regardless of the host page's own theme.
+    var CARMAX_NAVY = '#00529F';
+    var CARMAX_GOLD = '#FFD520';
+
+    var root = document.querySelector('.csw-root');
+    var tickerInput = document.getElementById('csw-tickerInput');
+    var btnLoad = document.getElementById('csw-btnLoad');
+    var rangeGroup = document.getElementById('csw-rangeGroup');
+    var tvContainer = document.getElementById('csw-tv-container');
+
+    var currentTicker = 'KMX';
+    var currentRange = '1D';
+
+    var RANGE_MAP = {
+        '1D':  { range: '1D',  interval: '5' },
+        '5D':  { range: '5D',  interval: '15' },
+        '1M':  { range: '1M',  interval: 'D' },
+        '3M':  { range: '3M',  interval: 'D' },
+        '12M': { range: '12M', interval: 'W' },
+        'ALL': { range: 'ALL', interval: 'M' },
+    };
+
+    function applySBBrand() {
+        var sb = getComputedStyle(document.documentElement).getPropertyValue('--sb-brand').trim();
+        if (sb) {
+            root.style.setProperty('--primary', sb);
+            return;
+        }
+        try {
+            sb = window.parent.getComputedStyle(window.parent.document.documentElement)
+                    .getPropertyValue('--sb-brand').trim();
+            if (sb) root.style.setProperty('--primary', sb);
+        } catch (e) { /* cross-origin, ignore */ }
+    }
+
+    function renderChart() {
+        tvContainer.innerHTML = '<div class="csw-tv-placeholder">Loading</div>';
+        var inner = document.createElement('div');
+        inner.id = 'csw-tv-' + Date.now();
+        inner.style.cssText = 'width:100%;height:100%;';
+
+        // Small delay so the loading placeholder is visible before TradingView takes over
+        setTimeout(function() {
+            tvContainer.innerHTML = '';
+            tvContainer.appendChild(inner);
+            var dark = !window.matchMedia || window.matchMedia('(prefers-color-scheme: dark)').matches || !window.matchMedia('(prefers-color-scheme: light)').matches;
+            // Simple area line instead of candles/bars, with volume and the
+            // technical legend hidden — readable by any employee at a glance.
+            // eslint-disable-next-line no-undef
+            new TradingView.widget({
+                autosize: true,
+                symbol: currentTicker,
+                interval: RANGE_MAP[currentRange].interval,
+                range: RANGE_MAP[currentRange].range,
+                timezone: 'Etc/UTC',
+                theme: dark ? 'dark' : 'light',
+                style: '3',
+                locale: 'en',
+                toolbar_bg: dark ? '#0a0a0a' : '#f8fafc',
+                enable_publishing: false,
+                allow_symbol_change: false,
+                hide_top_toolbar: true,
+                hide_legend: true,
+                hide_side_toolbar: true,
+                hide_volume: true,
+                withdateranges: false,
+                save_image: false,
+                container_id: inner.id,
+                overrides: {
+                    'mainSeriesProperties.areaStyle.linecolor': CARMAX_GOLD,
+                    'mainSeriesProperties.areaStyle.linewidth': 2,
+                    'mainSeriesProperties.areaStyle.color1': dark ? 'rgba(0,82,159,0.45)' : 'rgba(0,82,159,0.25)',
+                    'mainSeriesProperties.areaStyle.color2': dark ? 'rgba(0,82,159,0.03)' : 'rgba(0,82,159,0.02)',
+                    'paneProperties.background': dark ? '#000000' : '#ffffff',
+                    'paneProperties.backgroundType': 'solid',
+                    'scalesProperties.textColor': dark ? '#94a3b8' : '#64748b',
+                },
+            });
+        }, 80);
+    }
+
+    function loadTicker() {
+        var raw = (tickerInput.value || currentTicker).trim().toUpperCase().replace(/[^A-Z0-9.:]/g, '');
+        currentTicker = raw || currentTicker;
+        tickerInput.value = currentTicker;
+        renderChart();
+    }
+
+    btnLoad.addEventListener('click', loadTicker);
+
+    tickerInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') loadTicker();
+    });
+
+    rangeGroup.addEventListener('click', function(e) {
+        var btn = e.target.closest('.csw-range-btn');
+        if (!btn) return;
+        rangeGroup.querySelectorAll('.csw-range-btn').forEach(function(b) { b.classList.remove('csw-active'); });
+        btn.classList.add('csw-active');
+        currentRange = btn.dataset.range;
+        renderChart();
+    });
+
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderChart);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        applySBBrand();
+        renderChart();
+    });
+</script>
+
+</body>
+</html>

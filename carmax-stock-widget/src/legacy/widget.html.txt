@@ -1,0 +1,32 @@
+<div class="csw-widget">
+    <div class="csw-controls">
+        <div class="csw-ticker-field">
+            <input id="csw-tickerInput" class="csw-ticker-input" type="text" value="" maxlength="12" placeholder="KMX" autocomplete="off" spellcheck="false" />
+            <button class="csw-btn-go" id="csw-btnLoad" aria-label="Load ticker">
+                <svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg>
+            </button>
+        </div>
+
+        <div class="csw-sep"></div>
+
+        <div class="csw-range-group" id="csw-rangeGroup">
+            <button class="csw-range-btn csw-active" data-range="1D">1D</button>
+            <button class="csw-range-btn" data-range="5D">1W</button>
+            <button class="csw-range-btn" data-range="1M">1M</button>
+            <button class="csw-range-btn" data-range="3M">3M</button>
+            <button class="csw-range-btn" data-range="12M">1Y</button>
+            <button class="csw-range-btn" data-range="ALL">ALL</button>
+        </div>
+
+        <div class="csw-live-badge">
+            <span class="csw-live-dot"></span>
+            Live
+        </div>
+    </div>
+
+    <div class="csw-chart-area">
+        <div id="csw-tv-container" class="csw-tv-container">
+            <div class="csw-tv-placeholder">Loading</div>
+        </div>
+    </div>
+</div>
