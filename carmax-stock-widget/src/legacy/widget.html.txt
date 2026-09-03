@@ -20,7 +20,7 @@
 
         <div class="csw-live-badge">
             <span class="csw-live-dot"></span>
-            Live
+            <span class="csw-live-label">Live</span>
         </div>
     </div>
 

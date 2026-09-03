@@ -52,11 +52,21 @@
         }
     }
 
+    .csw-root {
+        display: block;
+        /* Establishes a sizing context so descendants can react to the
+           widget's own box rather than the viewport — useful once this
+           is embedded in a narrower column instead of previewed alone. */
+        container-type: inline-size;
+        container-name: csw;
+    }
+
     .csw-root * { box-sizing: border-box; }
 
     .csw-widget {
         width: 100%;
-        height: 320px;
+        height: 320px; /* fallback for browsers without container query units */
+        height: clamp(220px, 46cqw, 380px);
         display: flex;
         flex-direction: column;
         background: var(--bg);
@@ -77,18 +87,21 @@
     /* ── Controls bar ── */
     .csw-controls {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 10px;
-        padding: 0 14px;
+        gap: 6px 10px;
+        padding: 8px 14px;
         background: var(--bg-controls);
         border-bottom: 1px solid var(--border);
         flex-shrink: 0;
-        height: 46px;
+        min-height: 46px;
     }
 
     .csw-ticker-field {
         display: flex;
         align-items: center;
+        flex: 0 1 auto;
+        min-width: 0;
         background: var(--bg-input);
         border: 1.5px solid transparent;
         border-radius: var(--radius-pill);
@@ -111,7 +124,9 @@
         border: none;
         outline: none;
         color: var(--text);
-        width: 80px;
+        width: 80px; /* fallback for browsers without container query units */
+        width: clamp(52px, 22cqi, 80px);
+        min-width: 0;
         text-transform: uppercase;
         letter-spacing: 0.06em;
         caret-color: var(--primary);
@@ -159,7 +174,10 @@
     .csw-range-group {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 2px;
+        flex: 1 1 auto;
+        min-width: 0;
         background: var(--bg-input);
         border-radius: var(--radius-pill);
         padding: 3px;
@@ -167,9 +185,9 @@
     }
 
     .csw-range-btn {
-        padding: 0 11px;
+        padding: 0 clamp(5px, 2.6cqi, 11px);
         height: 26px;
-        font-size: 11px;
+        font-size: clamp(9px, 2.4cqi, 11px);
         font-weight: 600;
         border-radius: var(--radius-pill);
         border: none;
@@ -212,11 +230,19 @@
         border-radius: 50%;
         background: var(--success);
         animation: csw-pulse 2s ease-in-out infinite;
+        flex-shrink: 0;
     }
 
     @keyframes csw-pulse {
         0%, 100% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* Narrow embeds: drop the separator and the "Live" wordmark, keep
+       the pulsing dot — controls stay usable without wrapping further. */
+    @container csw (max-width: 300px) {
+        .csw-sep { display: none; }
+        .csw-live-label { display: none; }
     }
 
     .csw-chart-area {
@@ -284,7 +310,7 @@
 
             <div class="csw-live-badge">
                 <span class="csw-live-dot"></span>
-                Live
+                <span class="csw-live-label">Live</span>
             </div>
         </div>
 
