@@ -15,7 +15,7 @@ html, body {
 
 .widget {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   margin: 0 auto;
   background: #ffffff;
   border-radius: 14px;
@@ -59,8 +59,14 @@ html, body {
 .loc-label { color: #57606a; font-weight: 600; }
 .loc-value { color: #00529F; font-weight: 800; }
 
-/* MAIN — single advisor shift card */
-.main { padding: 16px; }
+/* MAIN — today's shift card */
+.main { padding: 16px 16px 4px; }
+
+.section-label {
+  font-size: 11px; font-weight: 800; color: #57606a;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin: 4px 0 8px 2px;
+}
 
 .advisor-card {
   display: flex;
@@ -71,6 +77,7 @@ html, body {
   padding: 14px 16px;
   border-left: 5px solid #d0d7de;
   transition: background 0.2s;
+  margin-bottom: 16px;
 }
 .advisor-card.on-shift { border-left-color: #1a9e3f; background: #dafbe1; }
 .advisor-card.upcoming { border-left-color: #FFD520; background: #fff8dc; }
@@ -89,6 +96,40 @@ html, body {
 .status-badge.up-badge  { background: #d18f00; }
 .status-badge.off-badge { background: #8c959f; }
 
+/* UPCOMING SHIFTS list */
+.upcoming-list { padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
+
+.shift-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f6f8fa;
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e8ecf0;
+  gap: 10px;
+}
+.shift-row.swapped { opacity: 0.65; }
+
+.shift-day   { font-size: 12px; font-weight: 800; color: #1b1f24; width: 62px; flex-shrink: 0; }
+.shift-info  { flex: 1; min-width: 0; }
+.shift-slot  { font-size: 12px; font-weight: 700; color: #1b1f24; }
+.shift-bay   { font-size: 11px; color: #57606a; margin-top: 1px; }
+
+.swap-btn {
+  font-size: 11px; font-weight: 800; color: #00529F;
+  background: #e8f0fc; border: 1px solid #c7dcf7;
+  border-radius: 8px; padding: 6px 10px;
+  cursor: pointer; white-space: nowrap;
+  transition: background 0.15s;
+}
+.swap-btn:hover { background: #d6e6fb; }
+.swap-pill {
+  font-size: 10px; font-weight: 800; color: #d18f00;
+  background: #fff3d6; border: 1px solid #ffe2a1;
+  border-radius: 8px; padding: 6px 10px; white-space: nowrap;
+}
+
 /* FOOTER */
 .footer {
   background: #f6f8fa;
@@ -97,9 +138,41 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: 16px;
 }
 .footer-src   { font-size: 10px; color: #8c959f; font-weight: 600; }
 .footer-clock { font-size: 12px; font-weight: 800; color: #00529F; font-variant-numeric: tabular-nums; }
+
+/* SWAP MODAL */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0, 20, 50, 0.45);
+  align-items: center; justify-content: center;
+  padding: 20px; z-index: 50;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: #fff; width: 100%; max-width: 340px;
+  border-radius: 14px; padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+.modal-title { font-size: 15px; font-weight: 800; color: #1b1f24; margin-bottom: 4px; }
+.modal-sub { font-size: 12px; color: #57606a; margin-bottom: 14px; }
+.modal-label { font-size: 11px; font-weight: 700; color: #57606a; margin-bottom: 6px; display: block; }
+.modal-select {
+  width: 100%; padding: 10px; border-radius: 8px;
+  border: 1px solid #d0d7de; font-size: 13px; margin-bottom: 16px;
+  color: #1b1f24; background: #fff;
+}
+.modal-actions { display: flex; gap: 8px; }
+.modal-btn {
+  flex: 1; padding: 10px; border-radius: 8px; border: none;
+  font-size: 13px; font-weight: 800; cursor: pointer;
+}
+.modal-btn.cancel { background: #f0f2f5; color: #57606a; }
+.modal-btn.confirm { background: #00529F; color: #fff; }
+.modal-btn.confirm:hover { background: #003c78; }
 
 @media (max-width: 380px) {
   .header-title { font-size: 15px; }
@@ -124,6 +197,7 @@ html, body {
   </div>
 
   <div class="main">
+    <div class="section-label">Today</div>
     <div class="advisor-card" id="advisor-card">
       <div>
         <div class="advisor-name">Patrick Reyes</div>
@@ -132,7 +206,10 @@ html, body {
       </div>
       <div class="status-badge" id="status-badge"></div>
     </div>
+    <div class="section-label">Upcoming</div>
   </div>
+
+  <div class="upcoming-list" id="upcoming-list"></div>
 
   <div class="footer">
     <div class="footer-src">CarMax · Service Operations</div>
@@ -140,6 +217,25 @@ html, body {
   </div>
 
 </div>
+
+<div class="modal-overlay" id="swap-modal">
+  <div class="modal-box">
+    <div class="modal-title">Request Shift Swap</div>
+    <div class="modal-sub" id="modal-sub">—</div>
+    <label class="modal-label">Swap with colleague</label>
+    <select class="modal-select" id="colleague-select">
+      <option>Maria Chen</option>
+      <option>Devon Brooks</option>
+      <option>Alicia Ward</option>
+      <option>Sam Patel</option>
+    </select>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeSwapModal()">Cancel</button>
+      <button class="modal-btn confirm" onclick="confirmSwap()">Send Request</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // Patrick's shift window (24hr decimal hours)
 const SHIFT_START = 8.0;   // 08:00 AM
@@ -153,7 +249,7 @@ function getStatus(now) {
   return 'off';
 }
 
-function render() {
+function renderToday() {
   const now = new Date();
   const status = getStatus(now);
 
@@ -180,6 +276,66 @@ function render() {
   document.getElementById('advisor-time').textContent = SHIFT_LABEL;
 }
 
+// --- Upcoming shifts (next 4 workdays, anchored to today) ---
+const now0 = new Date();
+const daysFromNow = n => { const d = new Date(now0); d.setDate(d.getDate() + n); return d; };
+const dayFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+const UPCOMING = [
+  { offset: 1, time: '08:00 AM – 04:30 PM', bay: 'Write-Up Desk' },
+  { offset: 2, time: '10:00 AM – 06:30 PM', bay: 'Service Bay 3' },
+  { offset: 4, time: '08:00 AM – 04:30 PM', bay: 'Write-Up Desk' },
+  { offset: 5, time: '10:00 AM – 06:30 PM', bay: 'Service Bay 5' },
+];
+
+function renderUpcoming() {
+  const list = document.getElementById('upcoming-list');
+  list.innerHTML = '';
+  UPCOMING.forEach((shift, i) => {
+    const row = document.createElement('div');
+    row.className = 'shift-row';
+    row.id = 'shift-row-' + i;
+    row.innerHTML = `
+      <div class="shift-day">${dayFmt.format(daysFromNow(shift.offset))}</div>
+      <div class="shift-info">
+        <div class="shift-slot">${shift.time}</div>
+        <div class="shift-bay">${shift.bay}</div>
+      </div>
+      <button class="swap-btn" onclick="openSwapModal(${i})">Request Swap</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+// --- Swap modal ---
+let activeSwapIndex = null;
+
+function openSwapModal(i) {
+  activeSwapIndex = i;
+  const shift = UPCOMING[i];
+  document.getElementById('modal-sub').textContent =
+    `${dayFmt.format(daysFromNow(shift.offset))} · ${shift.time} · ${shift.bay}`;
+  document.getElementById('swap-modal').classList.add('open');
+}
+
+function closeSwapModal() {
+  document.getElementById('swap-modal').classList.remove('open');
+  activeSwapIndex = null;
+}
+
+function confirmSwap() {
+  if (activeSwapIndex === null) return;
+  const colleague = document.getElementById('colleague-select').value;
+  const row = document.getElementById('shift-row-' + activeSwapIndex);
+  row.classList.add('swapped');
+  const btn = row.querySelector('.swap-btn');
+  const pill = document.createElement('div');
+  pill.className = 'swap-pill';
+  pill.textContent = 'Pending: ' + colleague;
+  btn.replaceWith(pill);
+  closeSwapModal();
+}
+
 function tick() {
   const now = new Date();
   document.getElementById('footer-clock').textContent =
@@ -188,10 +344,11 @@ function tick() {
     now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 }
 
-render();
+renderToday();
+renderUpcoming();
 tick();
 setInterval(tick, 1000);
-setInterval(render, 60 * 1000);
+setInterval(renderToday, 60 * 1000);
 </script>
 </body>
 </html>
