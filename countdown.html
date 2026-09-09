@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>123Dentist Countdown</title>
+<style>
+  :root{ --cw-brand:#002436; --cw-accent:#1f9fd6; --cw-ink:#0d1b24; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ background:transparent; font-family:'Inter','Helvetica Neue',Arial,sans-serif; color:var(--cw-ink); }
+  .cw-wrap{ display:flex; flex-direction:column; align-items:center; gap:18px; padding:12px 8px; }
+  .cw-lead{ font-size:15px; letter-spacing:.02em; color:#4a5b66; text-align:center; }
+  .cw-countdown{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+  .cw-unit{ background:var(--cw-brand); color:#fff; border-radius:16px; min-width:104px; padding:20px 10px 14px;
+            display:flex; flex-direction:column; align-items:center; box-shadow:0 14px 30px rgba(0,36,54,.18); }
+  .cw-num{ font-size:52px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+  .cw-label{ margin-top:8px; font-size:12px; text-transform:uppercase; letter-spacing:.12em; opacity:.85; }
+  .cw-sep{ align-self:center; font-size:40px; font-weight:800; color:var(--cw-brand); opacity:.35; }
+  .cw-expired{ font-size:30px; font-weight:800; color:var(--cw-brand); text-align:center; padding:24px; }
+  @media(max-width:560px){ .cw-unit{ min-width:70px; padding:14px 6px 10px; border-radius:12px; } .cw-num{ font-size:34px; } .cw-sep{ display:none; } .cw-countdown{ gap:8px; } }
+</style>
+</head>
+<body>
+  <div class="cw-wrap">
+    <div class="cw-lead" id="cw-lead">The countdown to February 2027 is on.</div>
+    <div class="cw-countdown" id="cw-countdown" aria-live="polite"></div>
+  </div>
+<script>
+(function(){
+  var qs = new URLSearchParams(location.search);
+  // config via URL params (swappable without re-hosting)
+  var target = qs.get('target') || '2027-02-03T09:00:00-05:00';   // default: Feb 3, 2027, 9:00 AM ET
+  var brand  = qs.get('brand');   // e.g. %23002436
+  var accent = qs.get('accent');
+  var lead   = qs.get('lead');
+  var done   = qs.get('done') || "It's here — the reveal is live.";
+  if(brand && /^#([0-9a-fA-F]{3,8})$/.test(brand)) document.documentElement.style.setProperty('--cw-brand', brand);
+  if(accent && /^#([0-9a-fA-F]{3,8})$/.test(accent)) document.documentElement.style.setProperty('--cw-accent', accent);
+  if(lead) document.getElementById('cw-lead').textContent = lead;
+  var end = new Date(target).getTime();
+  var box = document.getElementById('cw-countdown');
+  var units = [['d','Days'],['h','Hours'],['m','Minutes'],['s','Seconds']];
+  function render(){
+    var now = Date.now(), diff = end - now;
+    if(isNaN(end)){ box.innerHTML = '<div class="cw-expired">Set a target date</div>'; return; }
+    if(diff <= 0){ box.innerHTML = '<div class="cw-expired">'+done+'</div>'; document.getElementById('cw-lead').style.display='none'; clearInterval(t); return; }
+    var d = Math.floor(diff/86400000);
+    var h = Math.floor(diff%86400000/3600000);
+    var m = Math.floor(diff%3600000/60000);
+    var s = Math.floor(diff%60000/1000);
+    var vals = {d:d,h:h,m:m,s:s};
+    var html = '';
+    units.forEach(function(u,i){
+      html += '<div class="cw-unit cw-'+u[0]+'"><span class="cw-num">'+String(vals[u[0]]).padStart(2,'0')+'</span><span class="cw-label">'+u[1]+'</span></div>';
+      if(i<units.length-1) html += '<span class="cw-sep">:</span>';
+    });
+    box.innerHTML = html;
+  }
+  render();
+  var t = setInterval(render, 1000);
+})();
+</script>
+</body>
+</html>
