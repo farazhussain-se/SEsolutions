@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="widget-name" content="Shift Hub — Fitness Coach">
+<meta name="widget-description" content="Mobile shift widget for a fitness coach: clock in/out, upcoming floor shifts and PT sessions, an open-shift marketplace with pick-up and conflict validation, plus swap, drop and time-change requests with approval status.">
+<meta name="widget-tags" content="Scheduling, Operations, HR Data">
+<title>Crunch Fitness — My Shifts</title>
+<style>
+:root {
+  --primary: var(--sb-brand, #111111);
+  --accent: #FFE300;
+  --accent-deep: #E4C500;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --text: #1f2937;
+  --text-light: #6b7280;
+  --bg: #ffffff;
+  --bg-gray: #f9fafb;
+  --border: #e5e7eb;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: var(--sb-brand, #f3f4f6);
+    --accent: #FFE300;
+    --accent-deep: #FFE300;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --text: #f3f4f6;
+    --text-light: #9ca3af;
+    --bg: #1f2937;
+    --bg-gray: #111827;
+    --border: #374151;
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: transparent;
+  width: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+.cw-widget {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  background: var(--bg);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+}
+
+/* HEADER — black with signature yellow rule */
+.cw-header {
+  background: #111111;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 4px solid var(--accent);
+}
+.cw-header-title { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: 0.2px; }
+.cw-header-sub { font-size: 11px; color: #b8b8b8; margin-top: 2px; font-weight: 500; }
+.cw-live-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255, 227, 0, 0.16);
+  border: 1px solid var(--accent);
+  border-radius: 14px; padding: 4px 11px;
+  font-size: 10px; font-weight: 800; color: var(--accent); letter-spacing: 0.5px;
+}
+.cw-live-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: cw-pulse 1.4s infinite; }
+@keyframes cw-pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* club strip */
+.cw-loc-strip {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 18px;
+  background: var(--bg-gray);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+.cw-loc-label { color: var(--text-light); font-weight: 600; }
+.cw-loc-value { color: var(--text); font-weight: 800; }
+
+/* CLOCK CARD */
+.cw-clock-card {
+  margin: 14px 16px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-gray);
+  overflow: hidden;
+}
+.cw-clock-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+}
+.cw-clock-head-left { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; color: var(--text); }
+.cw-clock-link { font-size: 11px; font-weight: 700; color: var(--text-light); cursor: pointer; }
+.cw-clock-link:hover { color: var(--text); }
+.cw-clock-body { padding: 12px 14px 14px; text-align: center; }
+.cw-clock-date { font-size: 12px; color: var(--text-light); font-weight: 600; }
+.cw-clock-time { font-size: 30px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; margin: 2px 0; }
+.cw-clock-tz { font-size: 11px; color: var(--text-light); }
+.cw-clock-actions { display: flex; gap: 8px; margin-top: 12px; }
+.cw-clock-btn {
+  flex: 1; padding: 10px 6px; border-radius: 9px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text);
+  font-size: 11px; font-weight: 800; letter-spacing: 0.3px; cursor: pointer;
+  transition: background .15s, border-color .15s, opacity .15s;
+}
+.cw-clock-btn.cw-primary { background: var(--accent); border-color: var(--accent-deep); color: #111; }
+.cw-clock-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.cw-clock-btn:not(:disabled):hover { border-color: var(--text-light); }
+.cw-clock-status {
+  margin-top: 10px; font-size: 11px; font-weight: 700;
+  color: var(--text-light); min-height: 14px;
+}
+.cw-clock-status.cw-in { color: var(--success); }
+
+/* TABS */
+.cw-tabs { display: flex; gap: 4px; padding: 14px 16px 0; }
+.cw-tab {
+  flex: 1; padding: 8px 4px; text-align: center; cursor: pointer;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.2px;
+  color: var(--text-light); border-bottom: 3px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.cw-tab.cw-active { color: var(--text); border-bottom-color: var(--accent); }
+.cw-tab-count {
+  display: inline-block; min-width: 16px; margin-left: 4px; padding: 0 4px;
+  background: var(--border); color: var(--text); border-radius: 8px;
+  font-size: 9px; line-height: 15px;
+}
+.cw-tab.cw-active .cw-tab-count { background: var(--accent); color: #111; }
+
+.cw-panel { display: none; padding: 12px 16px 0; }
+.cw-panel.cw-active { display: block; }
+
+.cw-section-label {
+  font-size: 11px; font-weight: 800; color: var(--text-light);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin: 2px 0 8px 2px;
+}
+
+/* ERROR / INFO BANNER */
+.cw-banner {
+  display: none; align-items: flex-start; gap: 8px;
+  border-radius: 9px; padding: 9px 10px; margin-bottom: 10px;
+  font-size: 11px; font-weight: 600; line-height: 1.35;
+}
+.cw-banner.cw-show { display: flex; }
+.cw-banner.cw-error { background: rgba(239,68,68,.12); border: 1px solid var(--danger); color: var(--danger); }
+.cw-banner.cw-ok { background: rgba(16,185,129,.12); border: 1px solid var(--success); color: var(--success); }
+.cw-banner-x { margin-left: auto; cursor: pointer; font-weight: 800; opacity: .7; }
+.cw-banner-x:hover { opacity: 1; }
+
+/* SHIFT ROWS */
+.cw-list { display: flex; flex-direction: column; gap: 8px; }
+.cw-shift-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-gray);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border);
+  border-radius: 10px; padding: 10px 12px;
+}
+.cw-shift-row.cw-now { border-left-color: var(--success); }
+.cw-shift-row.cw-pending { border-left-color: var(--warning); opacity: .8; }
+.cw-shift-row.cw-open { border-left-color: var(--accent); }
+.cw-shift-day { font-size: 12px; font-weight: 800; color: var(--text); width: 58px; flex-shrink: 0; line-height: 1.3; }
+.cw-shift-info { flex: 1; min-width: 0; }
+.cw-shift-slot { font-size: 12px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.cw-shift-hours { color: var(--text-light); font-weight: 600; }
+.cw-shift-meta { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+.cw-shift-actions { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+
+.cw-btn {
+  font-size: 10px; font-weight: 800; letter-spacing: .2px;
+  border-radius: 8px; padding: 6px 9px; cursor: pointer; white-space: nowrap;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text);
+  transition: background .15s, border-color .15s;
+}
+.cw-btn:hover { border-color: var(--text-light); }
+.cw-btn.cw-yellow { background: var(--accent); border-color: var(--accent-deep); color: #111; }
+.cw-btn.cw-quiet { background: transparent; color: var(--text-light); }
+
+.cw-pill {
+  font-size: 9px; font-weight: 800; letter-spacing: .3px;
+  border-radius: 8px; padding: 5px 8px; white-space: nowrap; text-align: center;
+}
+.cw-pill.cw-p-warning { background: rgba(245,158,11,.15); border: 1px solid var(--warning); color: var(--warning); }
+.cw-pill.cw-p-success { background: rgba(16,185,129,.15); border: 1px solid var(--success); color: var(--success); }
+
+.cw-empty {
+  text-align: center; font-size: 12px; color: var(--text-light);
+  padding: 22px 10px; font-weight: 600;
+}
+
+/* FOOTER */
+.cw-footer {
+  background: var(--bg-gray);
+  border-top: 1px solid var(--border);
+  padding: 9px 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 16px;
+}
+.cw-footer-src { font-size: 10px; color: var(--text-light); font-weight: 600; }
+.cw-footer-hours { font-size: 11px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+
+/* MODALS */
+.cw-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.5);
+  align-items: center; justify-content: center; padding: 20px; z-index: 50;
+}
+.cw-modal-overlay.cw-open { display: flex; }
+.cw-modal-box {
+  background: var(--bg); width: 100%; max-width: 340px;
+  border-radius: 14px; padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.3);
+}
+.cw-modal-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.cw-modal-sub { font-size: 12px; color: var(--text-light); margin-bottom: 14px; }
+.cw-modal-label { font-size: 11px; font-weight: 700; color: var(--text-light); margin-bottom: 6px; display: block; }
+.cw-modal-select, .cw-modal-input {
+  width: 100%; padding: 10px; border-radius: 8px;
+  border: 1px solid var(--border); font-size: 13px; margin-bottom: 14px;
+  color: var(--text); background: var(--bg); font-family: inherit;
+}
+.cw-modal-row { display: flex; gap: 8px; }
+.cw-modal-row > div { flex: 1; }
+.cw-modal-actions { display: flex; gap: 8px; margin-top: 2px; }
+.cw-modal-btn {
+  flex: 1; padding: 10px; border-radius: 8px; border: none;
+  font-size: 13px; font-weight: 800; cursor: pointer;
+}
+.cw-modal-btn.cw-cancel { background: var(--bg-gray); color: var(--text-light); border: 1px solid var(--border); }
+.cw-modal-btn.cw-confirm { background: var(--accent); color: #111; }
+
+@media (max-width: 380px) {
+  .cw-header-title { font-size: 15px; }
+  .cw-clock-time { font-size: 26px; }
+  .cw-shift-day { width: 52px; }
+}
+</style>
+</head>
+<body>
+<div class="cw-widget">
+
+  <div class="cw-header">
+    <div>
+      <div class="cw-header-title">My Shifts</div>
+      <div class="cw-header-sub" id="cw-header-date">—</div>
+    </div>
+    <div class="cw-live-badge"><div class="cw-live-dot"></div>LIVE</div>
+  </div>
+
+  <div class="cw-loc-strip">
+    <span class="cw-loc-label">Lauren · Personal Trainer</span>
+    <span class="cw-loc-value">Austin, TX</span>
+  </div>
+
+  <!-- CLOCK -->
+  <div class="cw-clock-card">
+    <div class="cw-clock-head">
+      <div class="cw-clock-head-left">🕐 Clock</div>
+      <div class="cw-clock-link" onclick="cwGoTab('mine')">View Schedule</div>
+    </div>
+    <div class="cw-clock-body">
+      <div class="cw-clock-date" id="cw-clock-date">—</div>
+      <div class="cw-clock-time" id="cw-clock-time">—</div>
+      <div class="cw-clock-tz">[ Central ]</div>
+      <div class="cw-clock-actions">
+        <button class="cw-clock-btn cw-primary" id="cw-clock-in" onclick="cwClockIn()">CLOCK IN</button>
+        <button class="cw-clock-btn" id="cw-clock-out" onclick="cwClockOut()" disabled>CLOCK OUT</button>
+        <button class="cw-clock-btn" onclick="cwGoTab('open')">PICK UP SHIFT</button>
+      </div>
+      <div class="cw-clock-status" id="cw-clock-status">Not clocked in</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="cw-tabs">
+    <div class="cw-tab cw-active" data-tab="mine" onclick="cwGoTab('mine')">My Shifts<span class="cw-tab-count" id="cw-count-mine">0</span></div>
+    <div class="cw-tab" data-tab="open" onclick="cwGoTab('open')">Open Shifts<span class="cw-tab-count" id="cw-count-open">0</span></div>
+    <div class="cw-tab" data-tab="req" onclick="cwGoTab('req')">Requests<span class="cw-tab-count" id="cw-count-req">0</span></div>
+  </div>
+
+  <div class="cw-panel cw-active" id="cw-panel-mine">
+    <div class="cw-banner" id="cw-banner-mine"></div>
+    <div class="cw-section-label">Next 7 days</div>
+    <div class="cw-list" id="cw-list-mine"></div>
+  </div>
+
+  <div class="cw-panel" id="cw-panel-open">
+    <div class="cw-banner" id="cw-banner-open"></div>
+    <div class="cw-section-label">Available to claim · Undefeated Tribe clubs</div>
+    <div class="cw-list" id="cw-list-open"></div>
+  </div>
+
+  <div class="cw-panel" id="cw-panel-req">
+    <div class="cw-banner" id="cw-banner-req"></div>
+    <div class="cw-section-label">Swaps, drops &amp; pick-ups</div>
+    <div class="cw-list" id="cw-list-req"></div>
+  </div>
+
+  <div class="cw-footer">
+    <div class="cw-footer-src">Crunch Fitness · Undefeated Tribe</div>
+    <div class="cw-footer-hours" id="cw-footer-hours">—</div>
+  </div>
+</div>
+
+<!-- SWAP MODAL -->
+<div class="cw-modal-overlay" id="cw-swap-modal">
+  <div class="cw-modal-box">
+    <div class="cw-modal-title">Request Shift Swap</div>
+    <div class="cw-modal-sub" id="cw-swap-sub">—</div>
+    <label class="cw-modal-label">Swap with coach</label>
+    <select class="cw-modal-select" id="cw-swap-colleague">
+      <option>Marcus Boyle</option>
+      <option>Priya Raghavan</option>
+      <option>Tyler Nguyen</option>
+      <option>Jasmine Ortiz</option>
+    </select>
+    <label class="cw-modal-label">Note for the club manager (optional)</label>
+    <input class="cw-modal-input" id="cw-swap-note" placeholder="e.g. Cert renewal course that morning"/>
+    <div class="cw-modal-actions">
+      <button class="cw-modal-btn cw-cancel" onclick="cwCloseModal('cw-swap-modal')">Cancel</button>
+      <button class="cw-modal-btn cw-confirm" onclick="cwConfirmSwap()">Send Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT TIME MODAL -->
+<div class="cw-modal-overlay" id="cw-edit-modal">
+  <div class="cw-modal-box">
+    <div class="cw-modal-title">Update Shift Times</div>
+    <div class="cw-modal-sub" id="cw-edit-sub">—</div>
+    <div class="cw-modal-row">
+      <div>
+        <label class="cw-modal-label">Start</label>
+        <input type="time" class="cw-modal-input" id="cw-edit-start"/>
+      </div>
+      <div>
+        <label class="cw-modal-label">End</label>
+        <input type="time" class="cw-modal-input" id="cw-edit-end"/>
+      </div>
+    </div>
+    <div class="cw-modal-actions">
+      <button class="cw-modal-btn cw-cancel" onclick="cwCloseModal('cw-edit-modal')">Cancel</button>
+      <button class="cw-modal-btn cw-confirm" onclick="cwConfirmEdit()">Submit Change</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Staffbase brand inheritance ---------- */
+function applySBBrand() {
+  try {
+    var root = document.documentElement;
+    var v = getComputedStyle(root).getPropertyValue('--sb-brand').trim();
+    if (!v && window.parent && window.parent !== window) {
+      try { v = getComputedStyle(window.parent.document.documentElement).getPropertyValue('--sb-brand').trim(); } catch (e) {}
+    }
+    if (v) root.style.setProperty('--primary', v);
+  } catch (e) {}
+}
+
+/* ---------- date helpers — every date anchored to runtime ---------- */
+const CW_NOW = new Date();
+const daysFromNow = n => { const d = new Date(CW_NOW); d.setDate(d.getDate() + n); d.setHours(0,0,0,0); return d; };
+const LANG = 'en-US';
+const dayFmt = new Intl.DateTimeFormat(LANG, { weekday: 'short', day: 'numeric' });
+const longDayFmt = new Intl.DateTimeFormat(LANG, { weekday: 'long', month: 'long', day: 'numeric' });
+const shortDayFmt = new Intl.DateTimeFormat(LANG, { weekday: 'short', month: 'short', day: 'numeric' });
+const timeFmt = new Intl.DateTimeFormat(LANG, { hour: 'numeric', minute: '2-digit' });
+
+const hhmm = h => {
+  const d = new Date(CW_NOW);
+  d.setHours(Math.floor(h), Math.round((h % 1) * 60), 0, 0);
+  return timeFmt.format(d);
+};
+const slot = s => hhmm(s.start) + ' – ' + hhmm(s.end);
+const hoursOf = s => s.end - s.start;
+
+/* ---------- mock data ---------- */
+let uid = 100;
+const CLUB = 'Sunset Valley Club';
+
+let myShifts = [
+  { id: ++uid, offset: 0, start: 6,    end: 11.5, role: 'Floor Coach + 3 PT sessions',  club: CLUB,           state: 'scheduled' },
+  { id: ++uid, offset: 1, start: 9,    end: 15,   role: 'PT Block · 4 clients',         club: CLUB,           state: 'scheduled' },
+  { id: ++uid, offset: 2, start: 16.5, end: 21,   role: 'Ride45 + Floor Coach',         club: CLUB,           state: 'scheduled' },
+  { id: ++uid, offset: 4, start: 6,    end: 11.5, role: 'Floor Coach',                  club: CLUB,           state: 'scheduled' },
+  { id: ++uid, offset: 5, start: 8,    end: 12.5, role: 'HIITZone + New Member Intros', club: 'Tech Ridge Club', state: 'scheduled' }
+];
+
+let openShifts = [
+  { id: ++uid, offset: 2, start: 6,  end: 10, role: 'Floor Coach (cover)',     club: 'Tech Ridge Club',  posted: 'Marcus Boyle' },
+  { id: ++uid, offset: 3, start: 17, end: 21, role: 'Ride45 x2 + Floor',       club: CLUB,               posted: 'Club Manager' },
+  { id: ++uid, offset: 5, start: 13, end: 17, role: 'PT Block · open clients', club: CLUB,               posted: 'Priya Raghavan' },
+  { id: ++uid, offset: 6, start: 8,  end: 12, role: 'Bootcamp + Floor Coach',  club: 'Round Rock Club',  posted: 'Club Manager' }
+];
+
+let requests = [];
+
+/* ---------- banners ---------- */
+function banner(panel, type, msg) {
+  const el = document.getElementById('cw-banner-' + panel);
+  el.className = 'cw-banner cw-show cw-' + type;
+  el.innerHTML = '<span>' + (type === 'error' ? '⚠️' : '✅') + '</span><span>' + msg +
+    '</span><span class="cw-banner-x" onclick="this.parentNode.classList.remove(\'cw-show\')">✕</span>';
+}
+function clearBanner(panel) { document.getElementById('cw-banner-' + panel).classList.remove('cw-show'); }
+
+/* ---------- rendering ---------- */
+function dayCell(offset) {
+  if (offset === 0) return '<div class="cw-shift-day">Today</div>';
+  if (offset === 1) return '<div class="cw-shift-day">Tomorrow</div>';
+  return '<div class="cw-shift-day">' + dayFmt.format(daysFromNow(offset)) + '</div>';
+}
+
+function isLiveNow(s) {
+  if (s.offset !== 0) return false;
+  const now = new Date();
+  const h = now.getHours() + now.getMinutes() / 60;
+  return h >= s.start && h < s.end;
+}
+
+function renderMine() {
+  const list = document.getElementById('cw-list-mine');
+  list.innerHTML = '';
+  const sorted = myShifts.slice().sort((a, b) => a.offset - b.offset || a.start - b.start);
+  if (!sorted.length) { list.innerHTML = '<div class="cw-empty">No shifts scheduled this week.</div>'; return; }
+  sorted.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'cw-shift-row' + (isLiveNow(s) ? ' cw-now' : '') + (s.state !== 'scheduled' ? ' cw-pending' : '');
+    let actions;
+    if (s.state === 'swap-pending')      actions = '<div class="cw-pill cw-p-warning">SWAP SENT</div>';
+    else if (s.state === 'drop-pending') actions = '<div class="cw-pill cw-p-warning">DROP SENT</div>';
+    else if (s.state === 'edit-pending') actions = '<div class="cw-pill cw-p-warning">CHANGE SENT</div>';
+    else actions =
+        '<button class="cw-btn cw-yellow" onclick="cwOpenSwap(' + s.id + ')">Swap</button>' +
+        '<button class="cw-btn" onclick="cwOpenEdit(' + s.id + ')">Edit time</button>' +
+        '<button class="cw-btn cw-quiet" onclick="cwDrop(' + s.id + ')">Drop</button>';
+    row.innerHTML = dayCell(s.offset) +
+      '<div class="cw-shift-info">' +
+        '<div class="cw-shift-slot">' + slot(s) + ' <span class="cw-shift-hours">[' + hoursOf(s).toFixed(2) + ']</span></div>' +
+        '<div class="cw-shift-meta">' + s.role + '</div>' +
+        '<div class="cw-shift-meta">📍 ' + s.club + '</div>' +
+      '</div>' +
+      '<div class="cw-shift-actions">' + actions + '</div>';
+    list.appendChild(row);
+  });
+}
+
+function renderOpen() {
+  const list = document.getElementById('cw-list-open');
+  list.innerHTML = '';
+  if (!openShifts.length) { list.innerHTML = '<div class="cw-empty">No open shifts posted right now.</div>'; return; }
+  openShifts.slice().sort((a, b) => a.offset - b.offset || a.start - b.start).forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'cw-shift-row cw-open';
+    row.innerHTML = dayCell(s.offset) +
+      '<div class="cw-shift-info">' +
+        '<div class="cw-shift-slot">' + slot(s) + ' <span class="cw-shift-hours">[' + hoursOf(s).toFixed(2) + ']</span></div>' +
+        '<div class="cw-shift-meta">' + s.role + '</div>' +
+        '<div class="cw-shift-meta">📍 ' + s.club + ' · posted by ' + s.posted + '</div>' +
+      '</div>' +
+      '<div class="cw-shift-actions"><button class="cw-btn cw-yellow" onclick="cwPickUp(' + s.id + ')">Pick up</button></div>';
+    list.appendChild(row);
+  });
+}
+
+function renderReq() {
+  const list = document.getElementById('cw-list-req');
+  list.innerHTML = '';
+  if (!requests.length) { list.innerHTML = '<div class="cw-empty">Nothing pending. Requests you send land here.</div>'; return; }
+  requests.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'cw-shift-row' + (r.status === 'approved' ? '' : ' cw-pending');
+    const pill = r.status === 'approved'
+      ? '<div class="cw-pill cw-p-success">APPROVED</div>'
+      : '<div class="cw-pill cw-p-warning">PENDING</div>';
+    row.innerHTML =
+      '<div class="cw-shift-info">' +
+        '<div class="cw-shift-slot">' + r.title + '</div>' +
+        '<div class="cw-shift-meta">' + r.detail + '</div>' +
+        '<div class="cw-shift-meta">Submitted ' + r.at + (r.note ? ' · “' + r.note + '”' : '') + '</div>' +
+      '</div>' +
+      '<div class="cw-shift-actions">' + pill + '</div>';
+    list.appendChild(row);
+  });
+}
+
+function renderCounts() {
+  document.getElementById('cw-count-mine').textContent = myShifts.length;
+  document.getElementById('cw-count-open').textContent = openShifts.length;
+  document.getElementById('cw-count-req').textContent = requests.length;
+  const total = myShifts.filter(s => s.state !== 'drop-pending').reduce((a, s) => a + hoursOf(s), 0);
+  document.getElementById('cw-footer-hours').textContent = 'Week total: ' + total.toFixed(2) + ' hrs';
+}
+
+function renderAll() { renderMine(); renderOpen(); renderReq(); renderCounts(); }
+
+/* ---------- tabs ---------- */
+function cwGoTab(tab) {
+  document.querySelectorAll('.cw-tab').forEach(t => t.classList.toggle('cw-active', t.dataset.tab === tab));
+  document.querySelectorAll('.cw-panel').forEach(p => p.classList.toggle('cw-active', p.id === 'cw-panel-' + tab));
+}
+
+/* ---------- clock in / out ---------- */
+let clockedInAt = null;
+function cwClockIn() {
+  clockedInAt = new Date();
+  document.getElementById('cw-clock-in').disabled = true;
+  document.getElementById('cw-clock-in').classList.remove('cw-primary');
+  document.getElementById('cw-clock-out').disabled = false;
+  document.getElementById('cw-clock-out').classList.add('cw-primary');
+  const st = document.getElementById('cw-clock-status');
+  st.className = 'cw-clock-status cw-in';
+  st.textContent = 'On the clock since ' + timeFmt.format(clockedInAt);
+}
+function cwClockOut() {
+  if (!clockedInAt) return;
+  const mins = Math.max(1, Math.round((new Date() - clockedInAt) / 60000));
+  clockedInAt = null;
+  document.getElementById('cw-clock-in').disabled = false;
+  document.getElementById('cw-clock-in').classList.add('cw-primary');
+  document.getElementById('cw-clock-out').disabled = true;
+  document.getElementById('cw-clock-out').classList.remove('cw-primary');
+  const st = document.getElementById('cw-clock-status');
+  st.className = 'cw-clock-status';
+  st.textContent = 'Clocked out · ' + mins + ' min logged today';
+}
+
+/* ---------- swap ---------- */
+let activeShiftId = null;
+
+function cwOpenSwap(id) {
+  const s = myShifts.find(x => x.id === id);
+  if (!s) return;
+  activeShiftId = id;
+  document.getElementById('cw-swap-sub').textContent = shortDayFmt.format(daysFromNow(s.offset)) + ' · ' + slot(s) + ' · ' + s.role;
+  document.getElementById('cw-swap-note').value = '';
+  document.getElementById('cw-swap-modal').classList.add('cw-open');
+}
+
+function cwConfirmSwap() {
+  const s = myShifts.find(x => x.id === activeShiftId);
+  if (!s) return;
+  const coach = document.getElementById('cw-swap-colleague').value;
+  const note = document.getElementById('cw-swap-note').value.trim();
+  s.state = 'swap-pending';
+  requests.unshift({
+    title: 'Swap · ' + shortDayFmt.format(daysFromNow(s.offset)),
+    detail: slot(s) + ' → ' + coach + ' · ' + s.role,
+    at: nowStamp(), note: note, status: 'pending'
+  });
+  cwCloseModal('cw-swap-modal');
+  renderAll();
+  banner('mine', 'ok', 'Swap request sent to ' + coach + '. Your club manager approves it.');
+}
+
+/* ---------- drop ---------- */
+function cwDrop(id) {
+  const s = myShifts.find(x => x.id === id);
+  if (!s) return;
+  s.state = 'drop-pending';
+  openShifts.push({ id: ++uid, offset: s.offset, start: s.start, end: s.end, role: s.role + ' (cover)', club: s.club, posted: 'Lauren' });
+  requests.unshift({
+    title: 'Drop · ' + shortDayFmt.format(daysFromNow(s.offset)),
+    detail: slot(s) + ' released to the open-shift board',
+    at: nowStamp(), note: '', status: 'pending'
+  });
+  renderAll();
+  banner('mine', 'ok', 'Shift released. It is now on the open-shift board for other coaches.');
+}
+
+/* ---------- edit times ---------- */
+function toInput(h) {
+  const hh = String(Math.floor(h)).padStart(2, '0');
+  const mm = String(Math.round((h % 1) * 60)).padStart(2, '0');
+  return hh + ':' + mm;
+}
+function fromInput(v) { const p = v.split(':'); return Number(p[0]) + Number(p[1]) / 60; }
+
+function cwOpenEdit(id) {
+  const s = myShifts.find(x => x.id === id);
+  if (!s) return;
+  activeShiftId = id;
+  document.getElementById('cw-edit-sub').textContent = shortDayFmt.format(daysFromNow(s.offset)) + ' · ' + s.role;
+  document.getElementById('cw-edit-start').value = toInput(s.start);
+  document.getElementById('cw-edit-end').value = toInput(s.end);
+  document.getElementById('cw-edit-modal').classList.add('cw-open');
+}
+
+function cwConfirmEdit() {
+  const s = myShifts.find(x => x.id === activeShiftId);
+  if (!s) return;
+  const startRaw = document.getElementById('cw-edit-start').value;
+  const endRaw = document.getElementById('cw-edit-end').value;
+  if (!startRaw || !endRaw) return;
+  const start = fromInput(startRaw), end = fromInput(endRaw);
+  if (end <= start) {
+    cwCloseModal('cw-edit-modal');
+    banner('mine', 'error', 'End time must be after the start time.');
+    return;
+  }
+  const before = slot(s);
+  s.start = start; s.end = end; s.state = 'edit-pending';
+  requests.unshift({
+    title: 'Time change · ' + shortDayFmt.format(daysFromNow(s.offset)),
+    detail: before + ' → ' + slot(s),
+    at: nowStamp(), note: '', status: 'pending'
+  });
+  cwCloseModal('cw-edit-modal');
+  renderAll();
+  banner('mine', 'ok', 'Time change submitted for approval.');
+}
+
+/* ---------- pick up an open shift (with conflict validation) ---------- */
+function cwPickUp(id) {
+  const o = openShifts.find(x => x.id === id);
+  if (!o) return;
+
+  const clash = myShifts.find(s => s.offset === o.offset && s.state !== 'drop-pending' && o.start < s.end && s.start < o.end);
+  if (clash) {
+    banner('open', 'error', 'This shift overlaps one you are already scheduled for on ' +
+      shortDayFmt.format(daysFromNow(o.offset)) + ' (' + slot(clash) + '). Drop or swap that shift first.');
+    return;
+  }
+
+  const dayHours = myShifts.filter(s => s.offset === o.offset && s.state !== 'drop-pending').reduce((a, s) => a + hoursOf(s), 0);
+  const overtime = dayHours + hoursOf(o) > 10;
+
+  openShifts = openShifts.filter(x => x.id !== id);
+  myShifts.push({ id: o.id, offset: o.offset, start: o.start, end: o.end, role: o.role, club: o.club, state: 'scheduled' });
+  requests.unshift({
+    title: 'Pick-up · ' + shortDayFmt.format(daysFromNow(o.offset)),
+    detail: slot(o) + ' · ' + o.role + ' · ' + o.club,
+    at: nowStamp(), note: overtime ? 'Over 10 hrs that day — manager approval needed' : '',
+    status: overtime ? 'pending' : 'approved'
+  });
+  renderAll();
+  if (overtime) {
+    banner('open', 'error', 'Claimed, but this puts you over 10 hours on ' +
+      shortDayFmt.format(daysFromNow(o.offset)) + ' — it needs club manager approval.');
+  } else {
+    banner('open', 'ok', 'Shift claimed and added to your schedule.');
+  }
+}
+
+/* ---------- misc ---------- */
+function cwCloseModal(id) { document.getElementById(id).classList.remove('cw-open'); }
+function nowStamp() {
+  return new Intl.DateTimeFormat(LANG, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date());
+}
+
+function tick() {
+  const n = new Date();
+  document.getElementById('cw-clock-time').textContent =
+    new Intl.DateTimeFormat(LANG, { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(n);
+  document.getElementById('cw-clock-date').textContent = longDayFmt.format(n);
+  document.getElementById('cw-header-date').textContent = longDayFmt.format(n);
+}
+
+function init() {
+  applySBBrand();
+  renderAll();
+  tick();
+  setInterval(tick, 1000);
+  setInterval(renderMine, 60 * 1000);
+}
+init();
+</script>
+
+<!-- Widget usage counter — see CLAUDE.md -->
+<script>(function(){try{if(location.search.indexOf('preview=1')!==-1)return;var n=location.pathname.split('/').pop();if(!n||n==='index.html')return;var url='https://widget-counter.klauejohann.workers.dev/bump/'+encodeURIComponent(n);if(navigator.sendBeacon)navigator.sendBeacon(url);else fetch(url,{method:'POST',keepalive:true}).catch(function(){});var k='widgetCounts',c=JSON.parse(localStorage.getItem(k)||'{}');c[n]=(c[n]||0)+1;localStorage.setItem(k,JSON.stringify(c));}catch(e){}})();</script>
+</body>
+</html>
