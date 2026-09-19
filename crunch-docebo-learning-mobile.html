@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="widget-name" content="Docebo Learning (Club Manager)">
-    <meta name="widget-description" content="Responsive Docebo LMS dashboard for a fitness club manager: certification and compliance courses, a team compliance roster with nudge and assign actions, notifications, and a gamification profile with team leaderboard.">
-    <meta name="widget-tags" content="Learning, Reports &amp; Dashboards, Docebo">
-    <title>Docebo Learning — Club Manager</title>
+    <meta name="widget-name" content="Docebo Learning (Mobile)">
+    <meta name="widget-description" content="Mobile-first Docebo LMS widget for a club manager's own learning: a compliance-at-a-glance strip, required and recommended courses, bottom-sheet course details, full-screen notifications and a gamification profile.">
+    <meta name="widget-tags" content="Learning, HR Data, Docebo">
+    <title>Docebo Learning — My Learning</title>
     <style>
         :root {
             --docebo-blue: #1F3C88;
@@ -378,7 +378,7 @@
             cursor: pointer;
         }
 
-        .cw-btn:hover { background-color: #162f6d; }
+        .cw-btn:active { background-color: #162f6d; }
 
         /* Notification Panel — fixed right drawer */
         .notif-panel {
@@ -682,58 +682,6 @@
         svg { width: 24px; height: 24px; fill: #999; }
         .cw-brand-fill { fill: var(--docebo-blue); }
 
-        /* --- Team compliance (manager view) --- */
-        .cw-team-stats { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
-        .cw-team-stat {
-            flex: 1; min-width: 110px; padding: 14px 16px; border-radius: 10px;
-            background: var(--bg-light); border-left: 4px solid #ccc;
-        }
-        .cw-team-stat.ontrack { border-left-color: #1a9e3f; }
-        .cw-team-stat.atrisk  { border-left-color: #E8A400; }
-        .cw-team-stat.overdue { border-left-color: #D93025; }
-        .cw-team-stat-val { font-size: 24px; font-weight: 700; color: var(--text-dark); }
-        .cw-team-stat-lbl { font-size: 12px; color: var(--text-grey); margin-top: 2px; }
-
-        .cw-team-list { display: flex; flex-direction: column; gap: 10px; }
-        .cw-team-row {
-            display: flex; align-items: center; gap: 14px;
-            padding: 14px 16px; border: 1px solid #eee; border-left: 4px solid #ddd;
-            border-radius: 10px; background: var(--white);
-        }
-        .cw-team-row.ontrack { border-left-color: #1a9e3f; }
-        .cw-team-row.atrisk  { border-left-color: #E8A400; }
-        .cw-team-row.overdue { border-left-color: #D93025; }
-        .cw-team-avatar {
-            width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
-            background-size: cover; background-position: center; background-color: #eee;
-        }
-        .cw-team-info { flex: 1; min-width: 0; }
-        .cw-team-name { font-size: 15px; font-weight: 600; color: var(--text-dark); }
-        .cw-team-role { font-size: 12px; color: var(--text-grey); margin-top: 1px; }
-        .cw-team-chips { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
-        .cw-chip {
-            font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px; white-space: nowrap;
-        }
-        .cw-chip.ok { background: #E6F4EA; color: #1a7f37; }
-        .cw-chip.warn { background: #FEF3CD; color: #8a6100; }
-        .cw-chip.danger { background: #FCE8E6; color: #B3261E; }
-
-        .cw-team-progress { width: 150px; flex-shrink: 0; }
-        .cw-team-bar { height: 6px; border-radius: 3px; background: #eceff3; overflow: hidden; }
-        .cw-team-bar-fill { height: 100%; border-radius: 3px; background: var(--docebo-blue); }
-        .cw-team-bar-fill.atrisk { background: #E8A400; }
-        .cw-team-bar-fill.overdue { background: #D93025; }
-        .cw-team-pct { font-size: 11px; color: var(--text-grey); margin-top: 5px; }
-
-        .cw-team-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
-        .cw-team-btn {
-            font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 8px;
-            border: 1px solid #dcdfe4; background: var(--white); color: var(--text-dark); cursor: pointer;
-            white-space: nowrap; min-width: 92px;
-        }
-        .cw-team-btn.primary { background: var(--docebo-blue); border-color: var(--docebo-blue); color: #fff; }
-        .cw-team-btn.done { background: #E6F4EA; border-color: #b7e0c3; color: #1a7f37; cursor: default; }
-
         /* club chip in header */
         .cw-club-chip {
             font-size: 12px; font-weight: 600; color: var(--text-grey);
@@ -742,11 +690,149 @@
         .brand-yellow-rule { height: 3px; background: var(--crunch-yellow); }
 
         @media (max-width: 720px) {
-            .cw-team-row { flex-wrap: wrap; }
-            .cw-team-progress { width: 100%; order: 4; }
-            .cw-team-actions { flex-direction: row; }
             .cw-club-chip { display: none; }
         }
+
+        /* ============================================================
+           MOBILE OPTIMISATION — overrides the desktop layout above.
+           The widget is built for a phone-width Staffbase container.
+           ============================================================ */
+        body { background-color: #f0f2f5; }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 0;
+            border-radius: 0;
+            overflow-x: hidden;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            padding: 12px 16px;
+            background: var(--white);
+        }
+        .brand { font-size: 15px; gap: 7px; }
+        .brand-icon { width: 26px; height: 26px; font-size: 15px; }
+        .cw-club-chip { display: none; }
+        .bell-btn, .cw-avatar { min-width: 40px; min-height: 40px; }
+        .cw-avatar { width: 36px; height: 36px; }
+
+        /* club context line under the header rule */
+        .cw-club-line {
+            padding: 7px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-grey);
+            background: var(--docebo-blue-light);
+            border-bottom: 1px solid #e6e9f2;
+        }
+
+        /* my-progress strip */
+        .cw-mystats {
+            display: flex;
+            gap: 8px;
+            padding: 14px 16px 4px;
+        }
+        .cw-mystat {
+            flex: 1;
+            min-height: 62px;
+            padding: 10px 6px;
+            border: 1px solid #e6e9f2;
+            border-radius: 12px;
+            background: var(--white);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            cursor: pointer;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .cw-mystat:active { background: var(--bg-light); }
+        .cw-mystat.alert { border-color: #f3c0bb; background: #FCE8E6; }
+        .cw-mystat.warn  { border-color: #f2dda0; background: #FEF3CD; }
+        .cw-mystat-val { font-size: 20px; font-weight: 700; color: var(--text-dark); line-height: 1.1; }
+        .cw-mystat-lbl { font-size: 10.5px; font-weight: 600; color: var(--text-grey); text-align: center; line-height: 1.2; }
+
+        /* tabs fill the width and are thumb-sized */
+        .tabs { padding: 10px 16px 0; }
+        .cw-tab-btn {
+            flex: 1;
+            margin-right: 0;
+            padding: 12px 0;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .content-area { padding: 0 16px 24px; }
+
+        .section-header { margin-bottom: 14px; }
+        .section-title { font-size: 17px; }
+        .cw-filter-btn { padding: 8px 14px; font-size: 13px; }
+        .cw-filter-option { padding: 12px 16px; font-size: 14px; }
+
+        /* two cards per row on a phone, one on very narrow screens */
+        .course-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 340px) { .course-grid { grid-template-columns: 1fr; } }
+
+        .card-img-wrap { height: 96px; margin-bottom: 8px; }
+        .card-title { font-size: 13.5px; line-height: 1.3; }
+        .card-meta { font-size: 11px; }
+        .card-due { font-size: 11px; }
+        .cw-status-badge { font-size: 9.5px; padding: 3px 7px; }
+        .course-card { -webkit-tap-highlight-color: transparent; }
+        .course-card:active { transform: scale(0.985); }
+
+        /* course details as a bottom sheet */
+        .modal-content {
+            top: auto;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            border-radius: 18px 18px 0 0;
+            transform: translateY(100%);
+            opacity: 1;
+        }
+        @media (min-width: 481px) {
+            .modal-content { left: 50%; margin-left: -240px; }
+        }
+        .modal-active .modal-content { transform: translateY(0); opacity: 1; }
+        .modal-content::before {
+            content: '';
+            display: block;
+            width: 38px;
+            height: 4px;
+            border-radius: 2px;
+            background: #d8dce3;
+            margin: 8px auto 0;
+            flex-shrink: 0;
+        }
+        .modal-header { padding: 12px 18px; }
+        .modal-scroll { padding: 0 18px 8px; }
+        .hero-img { height: 150px; }
+        .detail-title { font-size: 19px; }
+        .cta-container { padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); }
+        .cw-btn { padding: 16px; font-size: 16px; }
+
+        /* panels take the whole screen on a phone */
+        .notif-panel, .profile-panel {
+            width: 100%;
+            max-width: 480px;
+            right: 0;
+            left: auto;
+        }
+        @media (min-width: 481px) {
+            .notif-panel, .profile-panel { left: 50%; margin-left: -240px; right: auto; }
+        }
+        .notif-header, .profile-header { padding-top: calc(14px + env(safe-area-inset-top)); }
+        .notif-back-btn, .profile-back-btn { min-width: 40px; min-height: 40px; }
     </style>
 </head>
 <body>
@@ -768,12 +854,14 @@
             </div>
         </header>
         <div class="brand-yellow-rule"></div>
+        <div class="cw-club-line" data-i18n="clubLabel">Sunset Valley Club · Austin, TX</div>
 
         <div class="tabs">
             <button class="cw-tab-btn active" onclick="switchTab('learnings')" data-i18n="tabLearnings">Learning</button>
-            <button class="cw-tab-btn" onclick="switchTab('team')" data-i18n="tabTeam">My Team</button>
             <button class="cw-tab-btn" onclick="switchTab('recommended')" data-i18n="tabRecommended">Recommended</button>
         </div>
+
+        <div class="cw-mystats" id="cw-mystats"></div>
 
         <div class="content-area" id="main-content"></div>
 
@@ -861,8 +949,8 @@
         // — Translations —
         const T = {
             de: {
-                tabLearnings: "Schulungen", tabRecommended: "Empfohlen", tabTeam: "Mein Team",
-                myLearnings: "Meine Schulungen", recommendedForYou: "Für dich empfohlen", teamTitle: "Team-Compliance",
+                tabLearnings: "Schulungen", tabRecommended: "Empfohlen",
+                myLearnings: "Meine Schulungen", recommendedForYou: "Für dich empfohlen",
                 filter: "Filter", filterAll: "Alle", filterUpcoming: "Bevorstehend", filterInprogress: "In Bearbeitung", filterOverdue: "Überfällig", filterCompleted: "Abgeschlossen",
                 myProfile: "Mein Profil",
                 profileRole: "Clubleiterin · Sunset Valley, Austin",
@@ -878,15 +966,12 @@
                 online: "Online", eventType: "Veranstaltung", video: "Video",
                 curriculum: "Lernpfad", material: "Material",
                 overdue: "Überfällig",
-                teamOnTrack: "Auf Kurs", teamAtRisk: "Gefährdet", teamOverdue: "Überfällig",
-                teamComplete: "abgeschlossen", nudge: "Erinnern", nudged: "Erinnert", assign: "Zuweisen", assigned: "Zugewiesen",
-                certExpiresIn: "Zertifikat läuft in {n} Tagen ab", certExpired: "Zertifikat abgelaufen",
-                overdueCourses: "{n} überfällig", allClear: "Alles erledigt",
-                teamSummary: "Clubbereitschaft", clubLabel: "Sunset Valley Club · Austin, TX"
+                reqOpen: "Pflicht offen", dueThisWeek: "Diese Woche fällig", certsCurrent: "Zertifikate gültig", myProgress: "Mein Lernstand",
+                clubLabel: "Sunset Valley Club · Austin, TX"
             },
             fr: {
-                tabLearnings: "Formations", tabRecommended: "Recommandé", tabTeam: "Mon équipe",
-                myLearnings: "Mes formations", recommendedForYou: "Recommandé pour vous", teamTitle: "Conformité de l'équipe",
+                tabLearnings: "Formations", tabRecommended: "Recommandé",
+                myLearnings: "Mes formations", recommendedForYou: "Recommandé pour vous",
                 filter: "Filtrer", filterAll: "Tout", filterUpcoming: "À venir", filterInprogress: "En cours", filterOverdue: "En retard", filterCompleted: "Terminé",
                 myProfile: "Mon profil",
                 profileRole: "Directrice de club · Sunset Valley, Austin",
@@ -902,15 +987,12 @@
                 online: "En ligne", eventType: "Événement", video: "Vidéo",
                 curriculum: "Parcours", material: "Support",
                 overdue: "En retard",
-                teamOnTrack: "Dans les temps", teamAtRisk: "À risque", teamOverdue: "En retard",
-                teamComplete: "terminé", nudge: "Relancer", nudged: "Relancé", assign: "Assigner", assigned: "Assigné",
-                certExpiresIn: "Certificat expire dans {n} jours", certExpired: "Certificat expiré",
-                overdueCourses: "{n} en retard", allClear: "Tout est à jour",
-                teamSummary: "Préparation du club", clubLabel: "Club Sunset Valley · Austin, TX"
+                reqOpen: "Obligatoires ouverts", dueThisWeek: "Dû cette semaine", certsCurrent: "Certificats valides", myProgress: "Ma progression",
+                clubLabel: "Club Sunset Valley · Austin, TX"
             },
             es: {
-                tabLearnings: "Formación", tabRecommended: "Recomendado", tabTeam: "Mi equipo",
-                myLearnings: "Mi formación", recommendedForYou: "Recomendado para ti", teamTitle: "Cumplimiento del equipo",
+                tabLearnings: "Formación", tabRecommended: "Recomendado",
+                myLearnings: "Mi formación", recommendedForYou: "Recomendado para ti",
                 filter: "Filtrar", filterAll: "Todo", filterUpcoming: "Próximo", filterInprogress: "En curso", filterOverdue: "Vencido", filterCompleted: "Completado",
                 myProfile: "Mi perfil",
                 profileRole: "Gerente del club · Sunset Valley, Austin",
@@ -926,15 +1008,12 @@
                 online: "En línea", eventType: "Evento", video: "Vídeo",
                 curriculum: "Itinerario", material: "Material",
                 overdue: "Vencido",
-                teamOnTrack: "Al día", teamAtRisk: "En riesgo", teamOverdue: "Vencido",
-                teamComplete: "completado", nudge: "Recordar", nudged: "Recordado", assign: "Asignar", assigned: "Asignado",
-                certExpiresIn: "El certificado vence en {n} días", certExpired: "Certificado vencido",
-                overdueCourses: "{n} vencidos", allClear: "Todo al día",
-                teamSummary: "Preparación del club", clubLabel: "Club Sunset Valley · Austin, TX"
+                reqOpen: "Obligatorios abiertos", dueThisWeek: "Vence esta semana", certsCurrent: "Certificados vigentes", myProgress: "Mi progreso",
+                clubLabel: "Club Sunset Valley · Austin, TX"
             },
             ja: {
-                tabLearnings: "研修", tabRecommended: "おすすめ", tabTeam: "マイチーム",
-                myLearnings: "マイ研修", recommendedForYou: "あなたへのおすすめ", teamTitle: "チームのコンプライアンス",
+                tabLearnings: "研修", tabRecommended: "おすすめ",
+                myLearnings: "マイ研修", recommendedForYou: "あなたへのおすすめ",
                 filter: "フィルター", filterAll: "すべて", filterUpcoming: "予定", filterInprogress: "進行中", filterOverdue: "期限超過", filterCompleted: "完了",
                 myProfile: "マイプロフィール",
                 profileRole: "クラブマネージャー · サンセットバレー（オースティン）",
@@ -950,15 +1029,12 @@
                 online: "オンライン", eventType: "イベント", video: "動画",
                 curriculum: "カリキュラム", material: "教材",
                 overdue: "期限超過",
-                teamOnTrack: "順調", teamAtRisk: "要注意", teamOverdue: "期限超過",
-                teamComplete: "完了", nudge: "リマインド", nudged: "送信済み", assign: "割り当て", assigned: "割当済み",
-                certExpiresIn: "認定証は{n}日後に失効", certExpired: "認定証が失効",
-                overdueCourses: "{n}件が期限超過", allClear: "対応不要",
-                teamSummary: "クラブの準備状況", clubLabel: "サンセットバレークラブ · オースティン（TX）"
+                reqOpen: "必須の未完了", dueThisWeek: "今週が期限", certsCurrent: "有効な認定証", myProgress: "私の学習状況",
+                clubLabel: "サンセットバレークラブ · オースティン（TX）"
             },
             'en-GB': {
-                tabLearnings: "Learning", tabRecommended: "Recommended", tabTeam: "My Team",
-                myLearnings: "My Learning", recommendedForYou: "Recommended for you", teamTitle: "Team compliance",
+                tabLearnings: "Learning", tabRecommended: "Recommended",
+                myLearnings: "My Learning", recommendedForYou: "Recommended for you",
                 filter: "Filter", filterAll: "All", filterUpcoming: "Upcoming", filterInprogress: "In Progress", filterOverdue: "Overdue", filterCompleted: "Completed",
                 myProfile: "My Profile",
                 profileRole: "Club Manager · Sunset Valley, Austin",
@@ -974,15 +1050,12 @@
                 online: "Online", eventType: "Event", video: "Video",
                 curriculum: "Learning Plan", material: "Material",
                 overdue: "Overdue",
-                teamOnTrack: "On track", teamAtRisk: "At risk", teamOverdue: "Overdue",
-                teamComplete: "complete", nudge: "Nudge", nudged: "Nudged", assign: "Assign", assigned: "Assigned",
-                certExpiresIn: "Certification expires in {n} days", certExpired: "Certification expired",
-                overdueCourses: "{n} overdue", allClear: "All clear",
-                teamSummary: "Club readiness", clubLabel: "Sunset Valley Club · Austin, TX"
+                reqOpen: "Required open", dueThisWeek: "Due this week", certsCurrent: "Certifications current", myProgress: "My progress",
+                clubLabel: "Sunset Valley Club · Austin, TX"
             },
             'en-US': {
-                tabLearnings: "Learning", tabRecommended: "Recommended", tabTeam: "My Team",
-                myLearnings: "My Learning", recommendedForYou: "Recommended for you", teamTitle: "Team compliance",
+                tabLearnings: "Learning", tabRecommended: "Recommended",
+                myLearnings: "My Learning", recommendedForYou: "Recommended for you",
                 filter: "Filter", filterAll: "All", filterUpcoming: "Upcoming", filterInprogress: "In Progress", filterOverdue: "Overdue", filterCompleted: "Completed",
                 myProfile: "My Profile",
                 profileRole: "Club Manager · Sunset Valley, Austin",
@@ -998,11 +1071,8 @@
                 online: "Online", eventType: "Event", video: "Video",
                 curriculum: "Learning Plan", material: "Material",
                 overdue: "Overdue",
-                teamOnTrack: "On track", teamAtRisk: "At risk", teamOverdue: "Overdue",
-                teamComplete: "complete", nudge: "Nudge", nudged: "Nudged", assign: "Assign", assigned: "Assigned",
-                certExpiresIn: "Certification expires in {n} days", certExpired: "Certification expired",
-                overdueCourses: "{n} overdue", allClear: "All clear",
-                teamSummary: "Club readiness", clubLabel: "Sunset Valley Club · Austin, TX"
+                reqOpen: "Required open", dueThisWeek: "Due this week", certsCurrent: "Certifications current", myProgress: "My progress",
+                clubLabel: "Sunset Valley Club · Austin, TX"
             }
         };
         const t = T[LANG];
@@ -1160,20 +1230,6 @@
                 time: '2 hours ago', timeDe: "Vor 2 Stunden", timeFr: "Il y a 2 heures", timeEs: "Hace 2 horas", timeJa: "2時間前"
             },
             {
-                id: 'n2', type: 'team', unread: true, courseId: null,
-                title: 'Team alert: 3 coaches have overdue training',
-                titleDe: "Team-Hinweis: 3 Coaches mit überfälligen Schulungen",
-                titleFr: "Alerte équipe : 3 coachs ont des formations en retard",
-                titleEs: "Alerta de equipo: 3 entrenadores con formación vencida",
-                titleJa: "チーム通知：3名のコーチが研修期限を超過",
-                desc: 'Marcus, Jasmine and Andre are behind on required training. Open My Team to nudge them.',
-                descDe: "Marcus, Jasmine und Andre sind mit Pflichtschulungen im Rückstand. Öffnen Sie „Mein Team“, um sie zu erinnern.",
-                descFr: "Marcus, Jasmine et Andre sont en retard sur les formations obligatoires. Ouvrez « Mon équipe » pour les relancer.",
-                descEs: "Marcus, Jasmine y Andre están atrasados en la formación obligatoria. Abre «Mi equipo» para recordárselo.",
-                descJa: "Marcus、Jasmine、Andre が必須研修で遅れています。「マイチーム」からリマインドできます。",
-                time: '4 hours ago', timeDe: "Vor 4 Stunden", timeFr: "Il y a 4 heures", timeEs: "Hace 4 horas", timeJa: "4時間前"
-            },
-            {
                 id: 'n3', type: 'reminder', unread: true, courseId: 4,
                 title: 'Due soon: Harassment Prevention for Managers (TX)',
                 titleDe: "Bald fällig: Prävention von Belästigung für Führungskräfte (TX)",
@@ -1298,14 +1354,7 @@
         }
 
         function openNotification(nId) {
-            const _n = notifications.find(x => x.id === nId);
-            if (_n && _n.courseId === null) {
-                _n.unread = false;
-                renderNotifications();
-                toggleNotifications();
-                switchTab('team');
-                return;
-            }
+
             const notif = notifications.find(n => n.id === nId);
             if (!notif) return;
             notif.unread = false;
@@ -1349,7 +1398,7 @@
                 image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&q=80&w=300",
                 status: "In progress", type: "Online",
                 duration: "1.5 hr", durationDe: "1,5 Std.", durationFr: "1 h 30", durationEs: "1,5 h", durationJa: "1.5時間",
-                dueDate: dueIn(4),
+                dueDate: dueIn(4), dueOffsetDays: 4,
                 description: "How the No Judgments promise shows up in how you coach, hire, and handle member conflict at the club.",
                 descriptionDe: "Wie sich das „No Judgments“-Versprechen im Coaching, bei Einstellungen und im Umgang mit Mitgliederkonflikten zeigt.",
                 descriptionFr: "Comment la promesse « No Judgments » se traduit dans le coaching, le recrutement et la gestion des conflits avec les membres.",
@@ -1368,7 +1417,7 @@
                 image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&q=80&w=300",
                 status: "In progress", type: "Curriculum",
                 duration: "3 hr", durationDe: "3 Std.", durationFr: "3 h", durationEs: "3 h", durationJa: "3時間",
-                dueDate: dueIn(9),
+                dueDate: dueIn(9), dueOffsetDays: 9,
                 description: "Build, schedule, and coach a PT team: session targets, floor coverage, 1:1s, and trainer development plans.",
                 descriptionDe: "Ein PT-Team aufbauen, einsetzen und coachen: Sitzungsziele, Flächenabdeckung, 1:1-Gespräche und Entwicklungspläne.",
                 descriptionFr: "Constituer, planifier et coacher une équipe de coaching : objectifs de séances, couverture de la salle, entretiens individuels et plans de développement.",
@@ -1387,7 +1436,7 @@
                 image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300",
                 status: "Required", type: "Online",
                 duration: "1 hr", durationDe: "1 Std.", durationFr: "1 h", durationEs: "1 h", durationJa: "1時間",
-                dueDate: dueIn(5),
+                dueDate: dueIn(5), dueOffsetDays: 5,
                 description: "State-mandated annual training on recognising, reporting, and preventing harassment in the workplace.",
                 descriptionDe: "Gesetzlich vorgeschriebene Jahresschulung zum Erkennen, Melden und Verhindern von Belästigung am Arbeitsplatz.",
                 descriptionFr: "Formation annuelle obligatoire : reconnaître, signaler et prévenir le harcèlement au travail.",
@@ -1425,7 +1474,7 @@
                 image: "https://images.unsplash.com/photo-1522898467493-49726bf28798?auto=format&fit=crop&q=80&w=300",
                 status: null, type: "Video",
                 duration: "35 min", durationDe: "35 Min.", durationFr: "35 min", durationEs: "35 min", durationJa: "35分",
-                dueDate: dueIn(11),
+                dueDate: dueIn(11), dueOffsetDays: 11,
                 description: "Spot at-risk members early and run a cancellation conversation that ends in a save, not a sale pitch.",
                 descriptionDe: "Abwanderungsgefährdete Mitglieder früh erkennen und Kündigungsgespräche führen, die halten statt zu verkaufen.",
                 descriptionFr: "Repérer tôt les membres à risque et mener un entretien de résiliation qui aboutit à une rétention, pas à un argumentaire.",
@@ -1444,7 +1493,7 @@
                 image: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?auto=format&fit=crop&q=80&w=300",
                 status: null, type: "Curriculum",
                 duration: "2 hr", durationDe: "2 Std.", durationFr: "2 h", durationEs: "2 h", durationJa: "2時間",
-                dueDate: dueIn(14),
+                dueDate: dueIn(14), dueOffsetDays: 14,
                 description: "Approve timecards, manage overtime, and keep shift changes inside labor rules and Undefeated Tribe policy.",
                 descriptionDe: "Zeitkarten freigeben, Überstunden steuern und Schichtwechsel innerhalb der Arbeitsregeln und der Tribe-Richtlinien halten.",
                 descriptionFr: "Valider les pointages, gérer les heures supplémentaires et respecter la réglementation lors des changements de poste.",
@@ -1485,7 +1534,7 @@
                 image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=300",
                 status: "New", type: "Video",
                 duration: "40 min", durationDe: "40 Min.", durationFr: "40 min", durationEs: "40 min", durationJa: "40分",
-                dueDate: dueIn(21),
+                dueDate: dueIn(21), dueOffsetDays: 21,
                 description: "Run weekly 1:1s that change behaviour: give specific feedback, set one goal, and follow up the next week.",
                 descriptionDe: "Wöchentliche 1:1s, die Verhalten verändern: konkretes Feedback, ein Ziel und Nachverfolgung in der Folgewoche.",
                 descriptionFr: "Des entretiens hebdomadaires qui changent les comportements : retour précis, un objectif, suivi la semaine suivante.",
@@ -1504,7 +1553,7 @@
                 image: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&q=80&w=300",
                 status: "New", type: "Online",
                 duration: "1.5 hr", durationDe: "1,5 Std.", durationFr: "1 h 30", durationEs: "1,5 h", durationJa: "1.5時間",
-                dueDate: dueIn(24),
+                dueDate: dueIn(24), dueOffsetDays: 24,
                 description: "The tour-to-join journey: qualifying walk-ins, presenting tiers, and closing without discounting the club.",
                 descriptionDe: "Von der Tour zum Abschluss: Interessenten qualifizieren, Tarife präsentieren und ohne Rabatte abschließen.",
                 descriptionFr: "Du tour de visite à l'adhésion : qualifier les visiteurs, présenter les formules et conclure sans brader.",
@@ -1523,7 +1572,7 @@
                 image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=300",
                 status: "New", type: "Curriculum",
                 duration: "2.5 hr", durationDe: "2,5 Std.", durationFr: "2 h 30", durationEs: "2,5 h", durationJa: "2.5時間",
-                dueDate: dueIn(28),
+                dueDate: dueIn(28), dueOffsetDays: 28,
                 description: "Turn new-member intros into paid PT packages, and keep trainer calendars full through the slow months.",
                 descriptionDe: "Aus Einführungsterminen bezahlte PT-Pakete machen und Trainerkalender auch in schwachen Monaten füllen.",
                 descriptionFr: "Transformer les séances découverte en forfaits payants et remplir les agendas des coachs même en creux de saison.",
@@ -1542,7 +1591,7 @@
                 image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=300",
                 status: null, type: "Online",
                 duration: "2 hr", durationDe: "2 Std.", durationFr: "2 h", durationEs: "2 h", durationJa: "2時間",
-                dueDate: dueIn(30),
+                dueDate: dueIn(30), dueOffsetDays: 30,
                 description: "What coaches can and cannot advise on, plus habit-based guidance that stays inside scope of practice.",
                 descriptionDe: "Worüber Coaches beraten dürfen – und worüber nicht – plus gewohnheitsbasierte Begleitung im zulässigen Rahmen.",
                 descriptionFr: "Ce qu'un coach peut ou non conseiller, et un accompagnement par les habitudes qui respecte le cadre légal.",
@@ -1580,7 +1629,7 @@
                 image: "https://images.unsplash.com/photo-1594737625785-a6cbdabd333c?auto=format&fit=crop&q=80&w=300",
                 status: null, type: "Video",
                 duration: "1 hr", durationDe: "1 Std.", durationFr: "1 h", durationEs: "1 h", durationJa: "1時間",
-                dueDate: dueIn(35),
+                dueDate: dueIn(35), dueOffsetDays: 35,
                 description: "Adapt programming for beginners, larger bodies, older members, and members returning from injury.",
                 descriptionDe: "Training anpassen für Einsteiger, größere Körper, ältere Mitglieder und Rückkehrer nach Verletzungen.",
                 descriptionFr: "Adapter la programmation aux débutants, aux corps plus larges, aux seniors et aux retours de blessure.",
@@ -1594,114 +1643,33 @@
             }
         ];
 
-        // --- TEAM COMPLIANCE DATA (manager view) ---
-        const teamData = [
-            {
-                id: 't1', name: 'Priya', avatar: 'https://i.pravatar.cc/100?img=32',
-                role: 'Group Fitness Lead', roleDe: 'Leitung Kursbereich', roleFr: 'Responsable cours collectifs', roleEs: 'Responsable de fitness en grupo', roleJa: 'グループフィットネス責任者',
-                progress: 100, overdue: 0, certDays: 240
-            },
-            {
-                id: 't2', name: 'Lauren', avatar: 'https://i.pravatar.cc/100?img=45',
-                role: 'Personal Trainer', roleDe: 'Personal Trainerin', roleFr: 'Coach personnelle', roleEs: 'Entrenadora personal', roleJa: 'パーソナルトレーナー',
-                progress: 92, overdue: 0, certDays: 21
-            },
-            {
-                id: 't3', name: 'Tyler', avatar: 'https://i.pravatar.cc/100?img=15',
-                role: 'Personal Trainer', roleDe: 'Personal Trainer', roleFr: 'Coach personnel', roleEs: 'Entrenador personal', roleJa: 'パーソナルトレーナー',
-                progress: 78, overdue: 0, certDays: 95
-            },
-            {
-                id: 't4', name: 'Marcus', avatar: 'https://i.pravatar.cc/100?img=12',
-                role: 'Floor Coach', roleDe: 'Coach Trainingsfläche', roleFr: 'Coach en salle', roleEs: 'Entrenador de sala', roleJa: 'フロアコーチ',
-                progress: 64, overdue: 2, certDays: 12
-            },
-            {
-                id: 't5', name: 'Andre', avatar: 'https://i.pravatar.cc/100?img=53',
-                role: 'Kids Crunch Attendant', roleDe: 'Kinderbetreuung', roleFr: 'Animateur espace enfants', roleEs: 'Monitor de zona infantil', roleJa: 'キッズエリア担当',
-                progress: 58, overdue: 1, certDays: -4
-            },
-            {
-                id: 't6', name: 'Jasmine', avatar: 'https://i.pravatar.cc/100?img=25',
-                role: 'Front Desk', roleDe: 'Empfang', roleFr: 'Accueil', roleEs: 'Recepción', roleJa: 'フロントデスク',
-                progress: 45, overdue: 3, certDays: 60
-            }
-        ];
-
-        const nudged = {};
-        const assignedTo = {};
-
-        function teamState(m) {
-            if (m.overdue > 0 || m.certDays < 0) return 'overdue';
-            if (m.progress < 80 || m.certDays <= 30) return 'atrisk';
-            return 'ontrack';
-        }
-
-        function nudgeMember(id) {
-            nudged[id] = true;
-            renderTeamInto();
-        }
-
-        function assignMember(id) {
-            assignedTo[id] = true;
-            renderTeamInto();
-        }
-
-        function renderTeam() {
-            const counts = { ontrack: 0, atrisk: 0, overdue: 0 };
-            teamData.forEach(m => counts[teamState(m)]++);
-
-            let html = `
-                <div class="section-header">
-                    <div class="section-title">${t.teamTitle}</div>
-                    <div style="font-size:13px;color:var(--text-grey);">${t.clubLabel}</div>
-                </div>
-                <div class="cw-team-stats">
-                    <div class="cw-team-stat ontrack"><div class="cw-team-stat-val">${counts.ontrack}</div><div class="cw-team-stat-lbl">${t.teamOnTrack}</div></div>
-                    <div class="cw-team-stat atrisk"><div class="cw-team-stat-val">${counts.atrisk}</div><div class="cw-team-stat-lbl">${t.teamAtRisk}</div></div>
-                    <div class="cw-team-stat overdue"><div class="cw-team-stat-val">${counts.overdue}</div><div class="cw-team-stat-lbl">${t.teamOverdue}</div></div>
-                </div>
-                <div class="cw-team-list">
+        // --- MY PROGRESS STRIP (mobile glance) ---
+        function renderMyStats() {
+            const open = myLearningsData.filter(c => c.status !== 'Completed' && (c.status === 'Required' || c.overdueDays)).length;
+            const soon = myLearningsData.filter(c => c.status !== 'Completed' && typeof c.dueOffsetDays === 'number' && c.dueOffsetDays <= 7).length;
+            const certs = profileData.certificates;
+            const el = document.getElementById('cw-mystats');
+            el.innerHTML = `
+                <button class="cw-mystat ${open ? 'alert' : ''}" onclick="statFilter('reqopen')">
+                    <span class="cw-mystat-val">${open}</span>
+                    <span class="cw-mystat-lbl">${t.reqOpen}</span>
+                </button>
+                <button class="cw-mystat ${soon ? 'warn' : ''}" onclick="statFilter('dueweek')">
+                    <span class="cw-mystat-val">${soon}</span>
+                    <span class="cw-mystat-lbl">${t.dueThisWeek}</span>
+                </button>
+                <button class="cw-mystat" onclick="toggleProfile()">
+                    <span class="cw-mystat-val">${certs}</span>
+                    <span class="cw-mystat-lbl">${t.certsCurrent}</span>
+                </button>
             `;
-
-            teamData.forEach(m => {
-                const state = teamState(m);
-                let chips = '';
-                if (m.overdue > 0) chips += `<span class="cw-chip danger">${t.overdueCourses.replace('{n}', m.overdue)}</span>`;
-                if (m.certDays < 0) chips += `<span class="cw-chip danger">${t.certExpired}</span>`;
-                else if (m.certDays <= 30) chips += `<span class="cw-chip warn">${t.certExpiresIn.replace('{n}', m.certDays)}</span>`;
-                if (!chips) chips = `<span class="cw-chip ok">${t.allClear}</span>`;
-
-                const nudgeBtn = nudged[m.id]
-                    ? `<button class="cw-team-btn done" disabled>✓ ${t.nudged}</button>`
-                    : `<button class="cw-team-btn primary" onclick="nudgeMember('${m.id}')">${t.nudge}</button>`;
-                const assignBtn = assignedTo[m.id]
-                    ? `<button class="cw-team-btn done" disabled>✓ ${t.assigned}</button>`
-                    : `<button class="cw-team-btn" onclick="assignMember('${m.id}')">${t.assign}</button>`;
-
-                html += `
-                    <div class="cw-team-row ${state}">
-                        <div class="cw-team-avatar" style="background-image:url('${m.avatar}')"></div>
-                        <div class="cw-team-info">
-                            <div class="cw-team-name">${m.name}</div>
-                            <div class="cw-team-role">${loc(m, 'role')}</div>
-                            <div class="cw-team-chips">${chips}</div>
-                        </div>
-                        <div class="cw-team-progress">
-                            <div class="cw-team-bar"><div class="cw-team-bar-fill ${state}" style="width:${m.progress}%"></div></div>
-                            <div class="cw-team-pct">${m.progress}% ${t.teamComplete}</div>
-                        </div>
-                        <div class="cw-team-actions">${nudgeBtn}${assignBtn}</div>
-                    </div>
-                `;
-            });
-
-            html += `</div>`;
-            return html;
         }
 
-        function renderTeamInto() {
-            document.getElementById('main-content').innerHTML = renderTeam();
+        function statFilter(f) {
+            if (currentTab !== 'learnings') switchTab('learnings');
+            setFilter(f);
+            const el = document.getElementById('main-content');
+            if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         // --- RENDER LOGIC ---
@@ -1727,6 +1695,8 @@
 
         function applyFilter(data) {
             if (currentFilter === 'all') return data;
+            if (currentFilter === 'reqopen') return data.filter(c => c.status !== 'Completed' && (c.status === 'Required' || c.overdueDays));
+            if (currentFilter === 'dueweek') return data.filter(c => c.status !== 'Completed' && typeof c.dueOffsetDays === 'number' && c.dueOffsetDays <= 7);
             if (currentFilter === 'upcoming') return data.filter(c => !c.overdueDays && c.status !== 'In progress' && c.status !== 'Completed');
             if (currentFilter === 'inprogress') return data.filter(c => c.status === 'In progress' && !c.overdueDays);
             if (currentFilter === 'overdue') return data.filter(c => !!c.overdueDays);
@@ -1737,7 +1707,7 @@
         function renderGrid(data, title) {
             const statusMap = { 'Required': t.required, 'In progress': t.inProgress, 'New': t.newLabel, 'Completed': t.completed };
             const typeMap = { 'Online': t.online, 'Event': t.eventType, 'Video': t.video, 'Curriculum': t.curriculum, 'Material': t.material };
-            const filterKeys = { all: 'filterAll', upcoming: 'filterUpcoming', inprogress: 'filterInprogress', overdue: 'filterOverdue', completed: 'filterCompleted' };
+            const filterKeys = { all: 'filterAll', upcoming: 'filterUpcoming', inprogress: 'filterInprogress', overdue: 'filterOverdue', completed: 'filterCompleted', reqopen: 'reqOpen', dueweek: 'dueThisWeek' };
             const filterOptions = ['all', 'upcoming', 'inprogress', 'overdue', 'completed'];
             const filtered = applyFilter(data);
 
@@ -1801,7 +1771,7 @@
 
         let currentTab = 'learnings';
 
-        const TAB_INDEX = { learnings: 0, team: 1, recommended: 2 };
+        const TAB_INDEX = { learnings: 0, recommended: 1 };
 
         function switchTab(tabName) {
             currentTab = tabName;
@@ -1812,20 +1782,18 @@
             const container = document.getElementById('main-content');
             if (tabName === 'learnings') {
                 container.innerHTML = renderGrid(myLearningsData, t.myLearnings);
-            } else if (tabName === 'team') {
-                container.innerHTML = renderTeam();
             } else {
                 container.innerHTML = renderGrid(recommendedData, t.recommendedForYou);
             }
+            renderMyStats();
         }
 
         function setFilter(f) {
             currentFilter = f;
+            if (document.getElementById('cw-mystats')) renderMyStats();
             filterOpen = false;
             const container = document.getElementById('main-content');
-            if (currentTab === 'team') {
-                container.innerHTML = renderTeam();
-            } else if (currentTab === 'learnings') {
+            if (currentTab === 'learnings') {
                 container.innerHTML = renderGrid(myLearningsData, t.myLearnings);
             } else {
                 container.innerHTML = renderGrid(recommendedData, t.recommendedForYou);
@@ -1885,6 +1853,7 @@
 
         // Initialize
         switchTab('learnings');
+        renderMyStats();
         renderNotifications();
         applyTranslations();
 
