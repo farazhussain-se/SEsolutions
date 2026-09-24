@@ -30,9 +30,10 @@ to read the **menu structure**, never the page content.
 ## Layout
 
 ```
-server.js                 Express: widget bundle + /api/tree + /api/pdf
-public/fh.page-pdf.js     the custom widget (vanilla JS, no build step)
-.env                      BASE_URL / AUTH / BRANCH_ID for the tenant
+fh.page-pdf.js            the custom widget (vanilla JS, no build step)
+shared/document.js        print CSS + document assembly, shared by both renderers
+worker/src/worker.js      Cloudflare Worker renderer (Browser Rendering)
+server/server.js          Node renderer (drives a locally installed Chrome)
 ```
 
 ## Hosting
@@ -47,12 +48,41 @@ https://farazhussain-se.github.io/SEsolutions/page-pdf-widget/fh.page-pdf.js
 
 That is the URL to paste into Studio → Settings → Extensions → Custom Widgets.
 
-**`server/` needs a real Chrome**, so it cannot run on Pages. Run it anywhere that gives you
-a process and a stable HTTPS hostname, then put that hostname in each widget instance's
-**PDF service URL** setting. When the bundle is loaded from a `github.io` host the widget
-deliberately refuses to guess a backend and tells you to set it.
+**The renderer needs a real Chrome**, so it cannot run on Pages. There are two builds of it,
+sharing the same print-document code in `shared/document.js`:
 
-## Running the renderer
+| Build | Runs on | Use when |
+| --- | --- | --- |
+| `worker/` | Cloudflare Workers + Browser Rendering | the long-term home — free tier, no spin-down, no card |
+| `server/` | any Node host with Chrome installed | local development, or a box you already own |
+
+Either way, put the renderer's hostname into each widget instance's **PDF service URL**
+setting. When the bundle is loaded from a `github.io` host the widget deliberately refuses to
+guess a backend and tells you to set it.
+
+### Deploying the Worker
+
+```bash
+cd worker
+npm install
+npx wrangler login
+npx wrangler secret put SB_BASE_URL     # https://<tenant>/api
+npx wrangler secret put SB_AUTH         # Basic <base64 api token>
+npx wrangler deploy
+```
+
+`npm run check` builds it offline with no account, which is a useful sanity check first.
+
+The Workers **free** plan gives 10 minutes of browser time a day — an export costs roughly
+4–7 seconds, so about 100 exports — with 3 concurrent browsers and one new browser every 20
+seconds. The Worker reconnects to an idle browser session instead of launching a fresh one,
+so back-to-back exports do not trip that launch limit.
+
+Free Workers also cap a request at 50 subrequests. Menu walking is the only thing that fans
+out, so it runs on a budget of 40 and reports `truncated: true` rather than failing outright
+once a menu tree gets too large for one request.
+
+### Running the Node renderer locally
 
 
 ```bash
