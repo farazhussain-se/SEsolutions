@@ -478,15 +478,27 @@
               "No PDF service configured. Set this widget's “PDF service URL” to the renderer."
             );
 
-          /* 1. ask the backend which pages belong to this export */
+          /* 1. ask the backend which pages belong to this export.
+             The tree lookup needs an API token for *this* tenant. When the
+             renderer is pointed at a different one — or has no token at all —
+             fall back to exporting the page we are standing on, which needs
+             nothing but the browser. */
           say("Working out what to include…");
-          var treeRes = await fetch(
-            a.backend + "/api/tree?menuId=" + menuId + "&scope=" + a.scope,
-            { headers: { Accept: "application/json" } }
-          );
-          if (!treeRes.ok) throw new Error("PDF service unreachable (" + treeRes.status + ").");
-          var tree = await treeRes.json();
-          var pages = tree.pages || [{ menuId: menuId, title: document.title }];
+          var tree = null;
+          try {
+            var treeRes = await fetch(
+              a.backend + "/api/tree?menuId=" + menuId + "&scope=" + a.scope,
+              { headers: { Accept: "application/json" } }
+            );
+            if (treeRes.ok) tree = await treeRes.json();
+          } catch (e) {
+            /* renderer unreachable is caught below by the /api/pdf call */
+          }
+          var pages =
+            (tree && tree.pages) || [{ menuId: menuId, title: document.title }];
+          if (!tree && a.scope === "experience") {
+            say("Only this page — the service cannot read this tenant's menu.");
+          }
 
           /* 2. capture each page in the user's own authenticated session */
           var sections = [];
@@ -515,7 +527,7 @@
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              title: tree.title || document.title,
+              title: (tree && tree.title) || document.title,
               origin: location.origin,
               orientation: a.orientation,
               sections: sections,
@@ -525,7 +537,7 @@
           var blob = await res.blob();
 
           var name =
-            (a.filename || tree.title || document.title || "page")
+            (a.filename || (tree && tree.title) || document.title || "page")
               .replace(/[^\w\s.-]+/g, "")
               .trim()
               .replace(/\s+/g, "-") + ".pdf";
