@@ -1,0 +1,10 @@
+{
+  "name": "staffbase-page-pdf",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Staffbase custom widget + backend that exports a page (and its extended experience) to PDF",
+  "author": "Faraz Hussain <faraz.hussain@staffbase.com>",
+  "type": "module",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.19.2", "puppeteer": "^23.0.0" }
+}
