@@ -258,6 +258,34 @@
     return p;
   }
 
+  /* On paper there is nothing to click, so everything collapsed has to be
+     opened or its content simply never appears in the export. */
+  function expandCollapsed(clone) {
+    clone.querySelectorAll("details").forEach(function (d) {
+      d.setAttribute("open", "");
+    });
+    clone.querySelectorAll('[aria-expanded="false"]').forEach(function (el) {
+      el.setAttribute("aria-expanded", "true");
+      var id = el.getAttribute("aria-controls");
+      if (id) {
+        var panel = clone.querySelector("#" + CSS.escape(id));
+        if (panel) {
+          panel.removeAttribute("hidden");
+          panel.style.display = "block";
+        }
+      }
+    });
+    clone.querySelectorAll("[hidden]").forEach(function (el) {
+      el.removeAttribute("hidden");
+    });
+    /* the expand/collapse carets mean nothing once everything is open */
+    clone
+      .querySelectorAll('[data-testid="caret-up-icon"],[data-testid="caret-down-icon"]')
+      .forEach(function (el) {
+        el.remove();
+      });
+  }
+
   /* Clean a cloned subtree and inline its media. */
   async function sanitise(clone, onProgress) {
     SKIP_SELECTORS.forEach(function (sel) {
@@ -335,13 +363,14 @@
     var bgs = [].slice.call(clone.querySelectorAll('[style*="url("]'));
     for (var k = 0; k < bgs.length; k++) {
       var el = bgs[k];
-      var m = /url\((["']?)([^"')]+)\1\)/.exec(el.getAttribute("style") || "");
-      if (!m) continue;
-      var d = await toDataUri(m[2]);
-      el.setAttribute(
-        "style",
-        el.getAttribute("style").replace(m[0], 'url("' + d + '")')
-      );
+      var style = el.getAttribute("style") || "";
+      var urls = style.match(/url\((["']?)[^"')]+\1\)/g) || [];
+      for (var u = 0; u < urls.length; u++) {
+        var raw = urls[u].replace(/^url\((["']?)/, "").replace(/(["']?)\)$/, "");
+        var data = await toDataUri(raw);
+        style = style.replace(urls[u], 'url("' + data + '")');
+      }
+      el.setAttribute("style", style);
     }
     return clone;
   }
@@ -357,6 +386,26 @@
     for (var i = 0; i < root.children.length; i++) {
       wrapper.appendChild(root.children[i].cloneNode(true));
     }
+
+    /* Backgrounds set from a stylesheet (hero images, mostly) are invisible to
+       a markup-only copy, so read them off the live elements and pin them onto
+       the clone as inline styles. The clone is a faithful deep copy taken a
+       moment ago, so the two walks line up index for index. */
+    var live = root.querySelectorAll("*");
+    var copy = wrapper.querySelectorAll("*");
+    if (live.length === copy.length) {
+      for (var b = 0; b < live.length; b++) {
+        var bg = win.getComputedStyle(live[b]).backgroundImage;
+        if (!bg || bg === "none" || bg.indexOf("url(") === -1) continue;
+        if (/url\(/.test(copy[b].getAttribute("style") || "")) continue;
+        copy[b].setAttribute(
+          "style",
+          (copy[b].getAttribute("style") || "") + ";background-image:" + bg
+        );
+      }
+    }
+
+    expandCollapsed(wrapper);
     await sanitise(wrapper, onProgress);
 
     var css = [rootVariables(win, doc), documentCss(doc), adoptedCss(root)].join("\n");
