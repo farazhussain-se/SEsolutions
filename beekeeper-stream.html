@@ -186,6 +186,31 @@
             font-size: 0.85rem; opacity: 0; pointer-events: none; transition: opacity 0.2s;
         }
         .cw-toast.show { opacity: 1; }
+
+        /* Mobile / touch */
+        html { -webkit-text-size-adjust: 100%; }
+        button, .cw-tab { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        .cw-wrap { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+        .cw-post-text, .cw-post-title, .cw-comment-text { overflow-wrap: anywhere; }
+        .cw-post-stats { flex-wrap: wrap; row-gap: 6px; }
+        @media (pointer: coarse), (max-width: 600px) {
+            .cw-action, .cw-icon-btn { width: 44px; height: 44px; }
+            .cw-tab { padding: 14px 12px; }
+            .cw-comment-like, .cw-send { min-height: 44px; padding: 0 8px; }
+            .cw-btn { min-height: 44px; }
+            .cw-search input, .cw-composer-form input, .cw-composer-form textarea, .cw-comment-form input, .cw-composer-fake { font-size: 16px; }
+            .cw-composer-fake { min-height: 44px; }
+            .cw-comment-form input { min-height: 44px; }
+        }
+        @media (max-width: 600px) {
+            .cw-wrap { padding-top: 8px; padding-left: max(0px, env(safe-area-inset-left)); padding-right: max(0px, env(safe-area-inset-right)); }
+            .cw-header, .cw-composer, .cw-post { border-radius: 0; border-left: 0; border-right: 0; }
+            .cw-media { height: 120px; margin-left: 12px; margin-right: 12px; }
+            .cw-post-head, .cw-post-body, .cw-post-stats, .cw-comments { padding-left: 12px; padding-right: 12px; }
+            .cw-post-stats { gap: 8px; }
+            .cw-seen { order: 5; flex-basis: 100%; }
+            .cw-spacer { flex: 1; }
+        }
     </style>
 </head>
 <body>
@@ -494,7 +519,7 @@ function postHTML(p) {
     ${p.icon && !p.mine ? `<div class="cw-media" style="background:${p.mediaBg}">${p.icon}</div>` : ''}
     <div class="cw-post-stats">
       <span>${esc(tr('likes', { n: likeCount }))}</span><span>·</span><span>${esc(tr('commentCount', { n: p.comments.length }))}</span>
-      <span class="cw-spacer"></span><span>${esc(tr('seenBy', { n: new Intl.NumberFormat(LOCALE).format(p.seen + (liked ? 1 : 0)) }))}</span>
+      <span class="cw-spacer"></span><span class="cw-seen">${esc(tr('seenBy', { n: new Intl.NumberFormat(LOCALE).format(p.seen + (liked ? 1 : 0)) }))}</span>
       <button class="cw-action" data-toggle="${p.id}" aria-label="${esc(t.comments)}" title="${esc(t.comments)}"><svg viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 011 1v11a1 1 0 01-1 1H8l-4 4V5a1 1 0 011-1z"/></svg></button>
       <button class="cw-action${liked ? ' liked' : ''}" data-like="${p.id}" aria-label="${esc(t.like)}" title="${esc(t.like)}"><svg viewBox="0 0 24 24"><path d="M2 10h4v11H2zM8 21h9.4a2 2 0 001.9-1.4l2.5-7.5A2 2 0 0019.9 9H14l1-4.5a1.5 1.5 0 00-.4-1.4L13.5 2 8 8.5V21z"/></svg></button>
     </div>
