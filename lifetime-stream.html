@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Staffbase brand color via ?brand= URL param (sb-brand-url-param) -->
+<script>(function(){try{var b=new URLSearchParams(location.search).get('brand');if(b&&/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(b)){document.documentElement.style.setProperty('--sb-brand',b);}}catch(e){}})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="widget-name" content="Life Time Club Stream">
+    <meta name="widget-description" content="Life Time-branded club team-communication stream with posts, likes, comments and a stream switcher">
+    <meta name="widget-tags" content="Communications">
+    <title>Life Time Club Stream</title>
+    <style>
+        :root {
+            --primary: var(--sb-brand, #5277AB);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text: #343434;
+            --text-light: #6b7280;
+            --bg: #ffffff;
+            --bg-gray: #fbf7f2;
+            --border: #e6dfd5;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: var(--sb-brand, #8aa6cf);
+                --success: #34d399;
+                --warning: #fbbf24;
+                --danger: #f87171;
+                --text: #f3f4f6;
+                --text-light: #9ca3af;
+                --bg: #1f2937;
+                --bg-gray: #111827;
+                --border: #374151;
+            }
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-gray);
+            color: var(--text);
+            font-size: 15px;
+            line-height: 1.45;
+        }
+        button { font: inherit; color: inherit; cursor: pointer; }
+        .cw-wrap { max-width: 720px; margin: 0 auto; padding: 12px; }
+
+        /* Stream header */
+        .cw-header {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .cw-header-top { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+        .cw-stream-icon {
+            width: 44px; height: 44px; border-radius: 10px; flex: none;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; background: color-mix(in srgb, var(--primary) 14%, var(--bg));
+        }
+        .cw-header-text { flex: 1; min-width: 0; }
+        .cw-stream-name { font-size: 1.2rem; font-weight: 600; margin: 0; font-family: "LT Serif", Georgia, "Times New Roman", serif; }
+        .cw-stream-meta { font-size: 0.8rem; color: var(--text-light); }
+        .cw-icon-btn {
+            background: none; border: 0; width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; color: var(--text-light);
+        }
+        .cw-icon-btn:hover { background: var(--bg-gray); color: var(--text); }
+        .cw-search {
+            display: none; padding: 0 16px 12px;
+        }
+        .cw-search.open { display: block; }
+        .cw-search input {
+            width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--bg-gray); color: var(--text); font: inherit;
+        }
+        .cw-tabs {
+            display: flex; gap: 4px; padding: 0 12px; overflow-x: auto; border-top: 1px solid var(--border);
+            scrollbar-width: none;
+        }
+        .cw-tabs::-webkit-scrollbar { display: none; }
+        .cw-tab {
+            background: none; border: 0; padding: 11px 12px; white-space: nowrap;
+            font-size: 0.9rem; font-weight: 600; color: var(--text-light);
+            border-bottom: 3px solid transparent; display: flex; align-items: center; gap: 6px;
+        }
+        .cw-tab:hover { color: var(--text); }
+        .cw-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .cw-tab-count {
+            background: var(--primary); color: #fff; border-radius: 10px;
+            font-size: 0.68rem; padding: 1px 6px; min-width: 18px; text-align: center;
+        }
+
+        /* Composer */
+        .cw-composer {
+            background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+            padding: 12px 16px; margin-bottom: 12px;
+        }
+        .cw-composer-row { display: flex; align-items: center; gap: 10px; }
+        .cw-composer-fake {
+            flex: 1; text-align: left; background: var(--bg-gray); border: 1px solid var(--border);
+            border-radius: 20px; padding: 9px 14px; color: var(--text-light);
+        }
+        .cw-composer-form { display: none; margin-top: 10px; }
+        .cw-composer.open .cw-composer-form { display: block; }
+        .cw-composer.open .cw-composer-fake { display: none; }
+        .cw-composer-form input, .cw-composer-form textarea {
+            width: 100%; border: 1px solid var(--border); background: var(--bg-gray); color: var(--text);
+            border-radius: 8px; padding: 9px 12px; font: inherit; margin-bottom: 8px; resize: vertical;
+        }
+        .cw-composer-actions { display: flex; justify-content: flex-end; gap: 8px; }
+        .cw-btn {
+            border: 1px solid var(--border); background: var(--bg); border-radius: 8px;
+            padding: 8px 16px; font-weight: 600;
+        }
+        .cw-btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .cw-btn:disabled { opacity: 0.45; cursor: default; }
+
+        /* Avatars */
+        .cw-avatar {
+            width: 40px; height: 40px; border-radius: 50%; flex: none;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 700; font-size: 0.9rem;
+        }
+        .cw-avatar.sm { width: 32px; height: 32px; font-size: 0.75rem; }
+
+        /* Posts */
+        .cw-post {
+            background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+            margin-bottom: 12px; overflow: hidden;
+        }
+        .cw-post.pinned { border-color: color-mix(in srgb, var(--primary) 55%, var(--border)); }
+        .cw-pin-banner {
+            background: color-mix(in srgb, var(--primary) 12%, var(--bg)); color: var(--primary);
+            font-size: 0.75rem; font-weight: 700; padding: 5px 16px; text-transform: uppercase; letter-spacing: 0.4px;
+        }
+        .cw-post-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px 0; }
+        .cw-author { font-weight: 700; }
+        .cw-author-role { color: var(--text-light); font-weight: 400; }
+        .cw-time { font-size: 0.78rem; color: var(--text-light); }
+        .cw-post-body { padding: 10px 16px 0; }
+        .cw-post-title { font-size: 1.15rem; font-weight: 600; margin: 0 0 6px; font-family: "LT Serif", Georgia, "Times New Roman", serif; }
+        .cw-post-text { margin: 0; white-space: pre-line; }
+        .cw-media {
+            margin: 12px 16px 0; border-radius: 10px; height: 150px;
+            display: flex; align-items: center; justify-content: center; font-size: 56px;
+        }
+        .cw-post-stats {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            font-size: 0.8rem; color: var(--text-light);
+        }
+        .cw-spacer { flex: 1; }
+        .cw-action {
+            border: 0; width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--bg-gray); color: var(--text-light);
+        }
+        .cw-action:hover { color: var(--text); }
+        .cw-action.liked { background: var(--primary); color: #fff; }
+        .cw-action svg { width: 18px; height: 18px; fill: currentColor; }
+
+        /* Comments */
+        .cw-comments { background: var(--bg-gray); border-top: 1px solid var(--border); padding: 10px 16px 12px; }
+        .cw-comments-label { font-size: 0.75rem; font-weight: 700; color: var(--text-light); margin-bottom: 8px; text-transform: uppercase; }
+        .cw-comment { display: flex; gap: 10px; margin-bottom: 10px; }
+        .cw-comment-bubble { flex: 1; min-width: 0; }
+        .cw-comment-name { font-weight: 700; font-size: 0.85rem; }
+        .cw-comment-text { font-size: 0.9rem; word-wrap: break-word; }
+        .cw-comment-meta { font-size: 0.75rem; color: var(--text-light); display: flex; gap: 10px; align-items: center; }
+        .cw-comment-like { background: none; border: 0; padding: 0; font-size: 0.75rem; color: var(--text-light); font-weight: 600; }
+        .cw-comment-like.liked { color: var(--primary); }
+        .cw-comment-form { display: flex; gap: 8px; align-items: center; }
+        .cw-comment-form input {
+            flex: 1; border: 1px solid var(--border); background: var(--bg); color: var(--text);
+            border-radius: 20px; padding: 8px 14px; font: inherit;
+        }
+        .cw-send { border: 0; background: none; color: var(--primary); font-weight: 700; }
+        .cw-send:disabled { color: var(--text-light); cursor: default; }
+        .cw-empty { text-align: center; color: var(--text-light); padding: 40px 12px; }
+        .cw-toast {
+            position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+            background: var(--text); color: var(--bg); padding: 9px 16px; border-radius: 20px;
+            font-size: 0.85rem; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+        }
+        .cw-toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+<div class="cw-wrap">
+    <div class="cw-header">
+        <div class="cw-header-top">
+            <div class="cw-stream-icon" id="streamIcon">📰</div>
+            <div class="cw-header-text">
+                <h1 class="cw-stream-name" id="streamName"></h1>
+                <div class="cw-stream-meta" id="streamMeta"></div>
+            </div>
+            <button class="cw-icon-btn" id="searchBtn" data-i18n-title="search" title="Search" aria-label="Search">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            </button>
+        </div>
+        <div class="cw-search" id="searchBox"><input type="search" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search posts"></div>
+        <div class="cw-tabs" id="tabs" role="tablist"></div>
+    </div>
+
+    <div class="cw-composer" id="composer">
+        <div class="cw-composer-row">
+            <div class="cw-avatar sm" id="meAvatar"></div>
+            <button class="cw-composer-fake" id="composerOpen" data-i18n="writePost">Write a post…</button>
+        </div>
+        <div class="cw-composer-form">
+            <input type="text" id="newTitle" data-i18n-placeholder="titlePlaceholder" placeholder="Title">
+            <textarea id="newText" rows="3" data-i18n-placeholder="messagePlaceholder" placeholder="What do you want to share with the team?"></textarea>
+            <div class="cw-composer-actions">
+                <button class="cw-btn" id="composerCancel" data-i18n="cancel">Cancel</button>
+                <button class="cw-btn primary" id="composerPost" data-i18n="post" disabled>Post</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="feed"></div>
+</div>
+<div class="cw-toast" id="toast"></div>
+
+<script>
+// — Language detection —
+const LANG = (() => {
+  const l = navigator.language || '';
+  if (l.startsWith('de')) return 'de';
+  if (l.startsWith('fr')) return 'fr';
+  if (l.startsWith('es')) return 'es';
+  if (l.startsWith('ja')) return 'ja';
+  if (l === 'en-GB')      return 'en-GB';
+  return 'en-US';
+})();
+document.documentElement.lang = LANG;
+const LOCALE = { 'de': 'de-DE', 'fr': 'fr-FR', 'es': 'es-ES', 'ja': 'ja-JP', 'en-GB': 'en-GB', 'en-US': 'en-US' }[LANG];
+
+// — Translations —
+const T = {
+  de: {
+    search: "Suchen", searchPlaceholder: "Beiträge durchsuchen", writePost: "Beitrag schreiben…",
+    titlePlaceholder: "Titel", messagePlaceholder: "Was möchtest du mit dem Team teilen?",
+    cancel: "Abbrechen", post: "Posten", pinned: "Angepinnt", members: "${n} Mitglieder",
+    like: "Gefällt mir", likes: "${n} Gefällt mir", comments: "Kommentare", commentCount: "${n} Kommentare",
+    seenBy: "Gesehen von ${n}", writeComment: "Kommentar schreiben…", send: "Senden", reply: "Gefällt mir",
+    noPosts: "Keine Beiträge gefunden.", posted: "Beitrag veröffentlicht.", now: "Gerade eben", you: "Du"
+  },
+  fr: {
+    search: "Rechercher", searchPlaceholder: "Rechercher des publications", writePost: "Écrire une publication…",
+    titlePlaceholder: "Titre", messagePlaceholder: "Que voulez-vous partager avec l'équipe ?",
+    cancel: "Annuler", post: "Publier", pinned: "Épinglé", members: "${n} membres",
+    like: "J'aime", likes: "${n} J'aime", comments: "Commentaires", commentCount: "${n} commentaires",
+    seenBy: "Vu par ${n}", writeComment: "Écrire un commentaire…", send: "Envoyer", reply: "J'aime",
+    noPosts: "Aucune publication trouvée.", posted: "Publication envoyée.", now: "À l'instant", you: "Vous"
+  },
+  es: {
+    search: "Buscar", searchPlaceholder: "Buscar publicaciones", writePost: "Escribir una publicación…",
+    titlePlaceholder: "Título", messagePlaceholder: "¿Qué quieres compartir con el equipo?",
+    cancel: "Cancelar", post: "Publicar", pinned: "Fijado", members: "${n} miembros",
+    like: "Me gusta", likes: "${n} Me gusta", comments: "Comentarios", commentCount: "${n} comentarios",
+    seenBy: "Visto por ${n}", writeComment: "Escribe un comentario…", send: "Enviar", reply: "Me gusta",
+    noPosts: "No se encontraron publicaciones.", posted: "Publicación enviada.", now: "Ahora mismo", you: "Tú"
+  },
+  ja: {
+    search: "検索", searchPlaceholder: "投稿を検索", writePost: "投稿を書く…",
+    titlePlaceholder: "タイトル", messagePlaceholder: "チームに共有したいことを入力してください",
+    cancel: "キャンセル", post: "投稿", pinned: "固定", members: "メンバー${n}人",
+    like: "いいね", likes: "いいね ${n}件", comments: "コメント", commentCount: "コメント${n}件",
+    seenBy: "${n}人が確認済み", writeComment: "コメントを書く…", send: "送信", reply: "いいね",
+    noPosts: "投稿が見つかりません。", posted: "投稿しました。", now: "たった今", you: "あなた"
+  },
+  'en-GB': {
+    search: "Search", searchPlaceholder: "Search posts", writePost: "Write a post…",
+    titlePlaceholder: "Title", messagePlaceholder: "What do you want to share with the team?",
+    cancel: "Cancel", post: "Post", pinned: "Pinned", members: "${n} members",
+    like: "Like", likes: "${n} likes", comments: "Comments", commentCount: "${n} comments",
+    seenBy: "Seen by ${n}", writeComment: "Write a comment…", send: "Send", reply: "Like",
+    noPosts: "No posts found.", posted: "Post published.", now: "Just now", you: "You"
+  },
+  'en-US': {
+    search: "Search", searchPlaceholder: "Search posts", writePost: "Write a post…",
+    titlePlaceholder: "Title", messagePlaceholder: "What do you want to share with the team?",
+    cancel: "Cancel", post: "Post", pinned: "Pinned", members: "${n} members",
+    like: "Like", likes: "${n} likes", comments: "Comments", commentCount: "${n} comments",
+    seenBy: "Seen by ${n}", writeComment: "Write a comment…", send: "Send", reply: "Like",
+    noPosts: "No posts found.", posted: "Post published.", now: "Just now", you: "You"
+  }
+};
+const t = T[LANG];
+
+function tr(key, vars = {}) {
+  let s = t[key] || key;
+  for (const [k, v] of Object.entries(vars)) s = s.replace('${' + k + '}', v);
+  return s;
+}
+
+const LANG_SUFFIX = { 'de': 'De', 'fr': 'Fr', 'es': 'Es', 'ja': 'Ja', 'en-GB': '', 'en-US': '' };
+function loc(obj, key) {
+  const suffix = LANG_SUFFIX[LANG] || '';
+  return (suffix ? obj[key + suffix] : undefined) || obj[key];
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.dataset.i18n; if (t[k]) el.textContent = t[k]; });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const k = el.dataset.i18nPlaceholder; if (t[k]) el.placeholder = t[k]; });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { const k = el.dataset.i18nTitle; if (t[k]) { el.title = t[k]; el.setAttribute('aria-label', t[k]); } });
+}
+
+// — Runtime-anchored dates —
+const now = new Date();
+const minutesAgo = n => new Date(now.getTime() - n * 60000);
+const hoursAgo = n => minutesAgo(n * 60);
+const daysAgo = n => { const d = new Date(now); d.setDate(d.getDate() - n); return d; };
+const rtf = new Intl.RelativeTimeFormat(LOCALE, { numeric: 'auto' });
+const dateFmt = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short' });
+function timeAgo(d) {
+  const mins = Math.round((now - d) / 60000);
+  if (mins < 1) return t.now;
+  if (mins < 60) return rtf.format(-mins, 'minute');
+  if (mins < 60 * 24) return rtf.format(-Math.round(mins / 60), 'hour');
+  if (mins < 60 * 24 * 6) return rtf.format(-Math.round(mins / 1440), 'day');
+  return dateFmt.format(d);
+}
+
+// — Data —
+const ME = { name: 'Maya', color: '#5277AB' };
+const PEOPLE = {
+  Nicole:  { role: 'HR', roleDe: 'Personal', roleFr: 'RH', roleEs: 'RR. HH.', roleJa: '人事', color: '#5277AB' },
+  Marcus:  { role: 'Safety Lead', roleDe: 'Sicherheitsbeauftragter', roleFr: 'Responsable sécurité', roleEs: 'Responsable de seguridad', roleJa: '安全責任者', color: '#ef4444' },
+  Ron:     { role: 'Site Supervisor', roleDe: 'Schichtleiter', roleFr: 'Chef de site', roleEs: 'Supervisor de planta', roleJa: '現場監督', color: '#f59e0b' },
+  Ruby:    { role: 'Operations', roleDe: 'Betrieb', roleFr: 'Exploitation', roleEs: 'Operaciones', roleJa: 'オペレーション', color: '#10b981' },
+  Todd:    { role: 'Warehouse', roleDe: 'Lager', roleFr: 'Entrepôt', roleEs: 'Almacén', roleJa: '倉庫', color: '#3b82f6' },
+  Fiona:   { role: 'Team Lead', roleDe: 'Teamleiterin', roleFr: "Chef d'équipe", roleEs: 'Jefa de equipo', roleJa: 'チームリーダー', color: '#ec4899' },
+  Joel:    { role: 'Maintenance', roleDe: 'Instandhaltung', roleFr: 'Maintenance', roleEs: 'Mantenimiento', roleJa: '保守', color: '#6366f1' },
+  Kelsey:  { role: '', color: '#14b8a6' },
+  Henry:   { role: '', color: '#a16207' },
+  Elisa:   { role: '', color: '#be185d' },
+  Frank:   { role: '', color: '#0369a1' },
+  Anne:    { role: '', color: '#7c3aed' },
+  Miranda: { role: '', color: '#b45309' },
+  Martin:  { role: '', color: '#047857' },
+  Maya:    ME
+};
+
+const STREAMS = [
+  { id: 'news', icon: '🏛️', name: 'Club News', nameDe: 'Club-News', nameFr: 'Nouvelles des clubs', nameEs: 'Noticias de los clubes', nameJa: 'クラブニュース', members: 41250 },
+  { id: 'safety', icon: '🏊', name: 'Safety & Operations', nameDe: 'Sicherheit & Betrieb', nameFr: 'Sécurité et opérations', nameEs: 'Seguridad y operaciones', nameJa: '安全・運営', members: 18930 },
+  { id: 'hr', icon: '🤝', name: 'People & Benefits', nameDe: 'Personal & Leistungen', nameFr: 'Personnel et avantages', nameEs: 'Personas y beneficios', nameJa: '人事・福利厚生', members: 41250 },
+  { id: 'break', icon: '💪', name: 'Team Room', nameDe: 'Teamraum', nameFr: "Salle de l'équipe", nameEs: 'Sala del equipo', nameJa: 'チームルーム', members: 12470 }
+];
+
+const POSTS = [
+  { id: 1, stream: 'news', author: 'Nicole', when: hoursAgo(2), pinned: true, seen: 9842, likes: 612, icon: '🌅', mediaBg: 'linear-gradient(135deg,#5277AB,#343434)',
+    title: 'Club Updates for This Month', titleDe: 'Club-Updates für diesen Monat', titleFr: 'Nouvelles des clubs ce mois-ci', titleEs: 'Novedades de los clubes este mes', titleJa: '今月のクラブからのお知らせ',
+    text: "Hi team, here is what is happening across our clubs:\n\n1. Member satisfaction hit a record high. Thank you for the daily care you bring to every visit!\n2. Please complete your aquatics and first-aid recertification this month.\n3. Don't forget the all-club town hall next Friday.\n\nQuestions? Just reply to this message.",
+    textDe: "Hallo Team, das passiert gerade in unseren Clubs:\n\n1. Die Mitgliederzufriedenheit hat einen Rekordwert erreicht. Danke für eure tägliche Sorgfalt bei jedem Besuch!\n2. Bitte schließt diesen Monat eure Rezertifizierung in Aquatics und Erster Hilfe ab.\n3. Vergesst nicht die clubübergreifende Town Hall nächsten Freitag.\n\nFragen? Antwortet einfach auf diese Nachricht.",
+    textFr: "Bonjour à tous, voici ce qui se passe dans nos clubs :\n\n1. La satisfaction des membres a atteint un niveau record. Merci pour le soin que vous apportez à chaque visite !\n2. Merci de renouveler votre certification en natation et en premiers secours ce mois-ci.\n3. N'oubliez pas la réunion générale de tous les clubs vendredi prochain.\n\nDes questions ? Répondez simplement à ce message.",
+    textEs: "Hola equipo, esto es lo que ocurre en nuestros clubes:\n\n1. La satisfacción de los socios alcanzó un récord. ¡Gracias por el cuidado diario en cada visita!\n2. Por favor, completad este mes la recertificación de acuática y primeros auxilios.\n3. No olvidéis la reunión general de todos los clubes el próximo viernes.\n\n¿Dudas? Responded a este mensaje.",
+    textJa: "チームの皆さん、各クラブの最新情報です。\n\n1. 会員満足度が過去最高を記録しました。毎日の丁寧な対応に感謝します！\n2. 今月中にアクアティクスと応急手当の資格更新を完了してください。\n3. 来週金曜日の全クラブ合同タウンホールをお忘れなく。\n\nご質問はこのメッセージに返信してください。",
+    comments: [
+      { who: 'Todd', text: 'Where can I find the recertification schedule?', textDe: 'Wo finde ich den Rezertifizierungsplan?', textFr: 'Où trouver le calendrier de recertification ?', textEs: '¿Dónde encuentro el calendario de recertificación?', textJa: '資格更新のスケジュールはどこで確認できますか？', when: minutesAgo(70), likes: 2 },
+      { who: 'Nicole', text: "It's pinned at the top of Safety & Operations. Your club's sessions are listed by date.", textDe: 'Der Plan ist oben in „Sicherheit & Betrieb" angepinnt. Die Termine eures Clubs sind nach Datum sortiert.', textFr: "Il est épinglé en haut de « Sécurité et opérations ». Les séances de votre club sont classées par date.", textEs: 'Está fijado arriba en «Seguridad y operaciones». Las sesiones de tu club están ordenadas por fecha.', textJa: '「安全・運営」の先頭に固定されています。お近くのクラブのセッションは日付順に並んでいます。', when: minutesAgo(52), likes: 4 }
+    ] },
+  { id: 2, stream: 'news', author: 'Ruby', when: hoursAgo(26), seen: 7611, likes: 334, icon: '🧘', mediaBg: 'linear-gradient(135deg,#a8b8d0,#5277AB)',
+    title: 'New group fitness schedule starts Monday', titleDe: 'Neuer Gruppenfitness-Plan ab Montag', titleFr: 'Nouvel horaire des cours collectifs dès lundi', titleEs: 'Nuevo horario de clases grupales desde el lunes', titleJa: '月曜からグループフィットネスの新スケジュール',
+    text: 'Early-morning and evening classes are expanding. Check with your studio lead for your updated instructor rotation.',
+    textDe: 'Früh- und Abendkurse werden ausgebaut. Fragt eure Studioleitung nach der aktualisierten Trainerrotation.',
+    textFr: "Les cours tôt le matin et en soirée sont étendus. Demandez la nouvelle rotation des instructeurs à votre responsable de studio.",
+    textEs: 'Se amplían las clases de primera hora y de la tarde. Consulta a tu responsable de estudio la nueva rotación de instructores.',
+    textJa: '早朝・夜のクラスが拡大します。更新されたインストラクターのローテーションはスタジオリーダーに確認してください。',
+    comments: [
+      { who: 'Frank', text: 'Does this change the weekend rotation too?', textDe: 'Ändert sich auch die Wochenendrotation?', textFr: 'Cela change-t-il aussi la rotation du week-end ?', textEs: '¿Cambia también la rotación del fin de semana?', textJa: '週末のローテーションも変わりますか？', when: hoursAgo(20), likes: 1 }
+    ] },
+  { id: 3, stream: 'news', author: 'Nicole', when: daysAgo(4), seen: 8954, likes: 788, icon: '🏆', mediaBg: 'linear-gradient(135deg,#343434,#5277AB)',
+    title: 'Congratulations to our Club Team of the Quarter', titleDe: 'Glückwunsch an unser Club-Team des Quartals', titleFr: "Bravo à l'équipe de club du trimestre", titleEs: 'Felicidades al equipo del club del trimestre', titleJa: '今四半期のベストクラブチームにおめでとう',
+    text: 'The Kids Academy team earned the highest family-experience score all quarter. Thank you for showing what great teamwork looks like!',
+    textDe: 'Das Kids-Academy-Team hat das ganze Quartal die höchste Familienzufriedenheit erreicht. Danke für euren Teamgeist!',
+    textFr: "L'équipe Kids Academy a obtenu le meilleur score d'expérience familiale du trimestre. Merci pour cet esprit d'équipe !",
+    textEs: 'El equipo de Kids Academy logró la mejor puntuación de experiencia familiar del trimestre. ¡Gracias por vuestro trabajo en equipo!',
+    textJa: 'キッズアカデミーのチームが四半期を通じて最高のファミリー体験スコアを獲得しました。素晴らしいチームワークをありがとう！',
+    comments: [] },
+
+  { id: 4, stream: 'safety', author: 'Marcus', when: hoursAgo(5), pinned: true, seen: 7702, likes: 247, icon: '🏊', mediaBg: 'linear-gradient(135deg,#38bdf8,#5277AB)',
+    title: 'Lifeguard stand rotation: log every 4 hours', titleDe: 'Rettungsschwimmer-Rotation: alle 4 Stunden dokumentieren', titleFr: 'Rotation des sauveteurs : à consigner toutes les 4 heures', titleEs: 'Rotación de socorristas: registrar cada 4 horas', titleJa: 'ライフガードの交代：4時間ごとに記録',
+    text: 'Please log each stand rotation in the daily checklist. Corporate pulls the completion report monthly.\n\nRemember: eyes on the water, whistle at every blind spot.',
+    textDe: 'Bitte tragt jede Rotation in die tägliche Checkliste ein. Die Zentrale zieht monatlich den Abschlussbericht.\n\nDenkt daran: Blick aufs Wasser, Pfeife an jedem toten Winkel.',
+    textFr: "Merci de consigner chaque rotation dans la liste de contrôle quotidienne. Le siège extrait le rapport de conformité chaque mois.\n\nN'oubliez pas : regard sur l'eau, coup de sifflet à chaque angle mort.",
+    textEs: 'Registra cada rotación en la lista de control diaria. La central extrae el informe de cumplimiento cada mes.\n\nRecuerda: vista en el agua y silbato en cada punto ciego.',
+    textJa: '各交代を毎日のチェックリストに記録してください。本社が毎月、完了レポートを集計します。\n\n目は水面に、死角ではホイッスルを。',
+    comments: [
+      { who: 'Joel', text: 'Done for the morning shift. The checklist works great on my phone.', textDe: 'Frühschicht erledigt. Die Checkliste funktioniert super auf dem Handy.', textFr: "Fait pour l'équipe du matin. La liste fonctionne très bien sur mon téléphone.", textEs: 'Hecho el turno de mañana. La lista funciona genial en el móvil.', textJa: '早番分は完了しました。チェックリストはスマホで快適です。', when: hoursAgo(3), likes: 6 },
+      { who: 'Henry', text: 'Can the Kids Academy opening check go in the same list?', textDe: 'Kann die Öffnungskontrolle der Kids Academy in dieselbe Liste?', textFr: "Le contrôle d'ouverture de Kids Academy peut-il figurer dans la même liste ?", textEs: '¿Puede ir la revisión de apertura de Kids Academy en la misma lista?', textJa: 'キッズアカデミーの開館前チェックも同じリストに入れられますか？', when: hoursAgo(2), likes: 0 }
+    ] },
+  { id: 5, stream: 'safety', author: 'Ron', when: daysAgo(2), seen: 5530, likes: 129, icon: '🧯', mediaBg: 'linear-gradient(135deg,#ef4444,#7f1d1d)',
+    title: 'Emergency drill: Wednesday, 10:30', titleDe: 'Notfallübung: Mittwoch, 10:30 Uhr', titleFr: "Exercice d'urgence : mercredi, 10 h 30", titleEs: 'Simulacro de emergencia: miércoles, 10:30', titleJa: '緊急訓練：水曜10時30分',
+    text: 'Please know your nearest exit and assembly point. Club managers will do a headcount at the front entrance.',
+    textDe: 'Bitte merkt euch den nächsten Ausgang und den Sammelplatz. Die Clubleitung zählt am Haupteingang durch.',
+    textFr: "Repérez votre sortie et votre point de rassemblement. Les directeurs de club feront l'appel à l'entrée principale.",
+    textEs: 'Conoce tu salida más cercana y tu punto de reunión. Los gerentes del club harán el recuento en la entrada principal.',
+    textJa: '最寄りの出口と集合場所を確認してください。クラブマネージャーが正面入口で人数確認を行います。',
+    comments: [] },
+
+  { id: 6, stream: 'hr', author: 'Nicole', when: hoursAgo(8), seen: 6466, likes: 222, icon: '📅', mediaBg: 'linear-gradient(135deg,#5277AB,#343434)',
+    title: 'Open enrollment closes in two weeks', titleDe: 'Die Anmeldephase endet in zwei Wochen', titleFr: "L'inscription se termine dans deux semaines", titleEs: 'La inscripción termina en dos semanas', titleJa: '登録受付は2週間後に終了',
+    text: 'Review your benefits and make any changes before the deadline. Your Workday inbox shows any open tasks. Drop-in help runs every Tuesday at your club.',
+    textDe: 'Prüft eure Leistungen und nehmt Änderungen vor Fristende vor. Offene Aufgaben seht ihr im Workday-Posteingang. Jeden Dienstag gibt es offene Sprechstunden in eurem Club.',
+    textFr: "Vérifiez vos avantages et modifiez-les avant la date limite. Votre boîte Workday affiche les tâches en attente. Une permanence d'aide a lieu chaque mardi dans votre club.",
+    textEs: 'Revisa tus beneficios y haz cambios antes de la fecha límite. Tu bandeja de Workday muestra las tareas pendientes. Cada martes hay ayuda presencial en tu club.',
+    textJa: '期限までに福利厚生の内容を確認・変更してください。未完了のタスクはWorkdayの受信箱に表示されます。毎週火曜に各クラブでサポート窓口を開きます。',
+    comments: [
+      { who: 'Elisa', text: 'Can I change my dependents after the deadline?', textDe: 'Kann ich Angehörige nach der Frist noch ändern?', textFr: 'Puis-je modifier mes personnes à charge après la date limite ?', textEs: '¿Puedo cambiar a mis dependientes después de la fecha límite?', textJa: '期限後に扶養家族を変更できますか？', when: hoursAgo(6), likes: 1 }
+    ] },
+
+  { id: 7, stream: 'break', author: 'Fiona', when: hoursAgo(4), seen: 3318, likes: 141, icon: '🥗', mediaBg: 'linear-gradient(135deg,#a3b18a,#588157)',
+    title: 'Friday team lunch: salad bar or grain bowls?', titleDe: 'Teamessen am Freitag: Salatbar oder Bowls?', titleFr: "Déjeuner d'équipe vendredi : buffet de salades ou bowls ?", titleEs: 'Comida de equipo del viernes: ¿ensaladas o bowls?', titleJa: '金曜のチームランチ：サラダバー？ボウル？',
+    text: 'Lunch is on us this week! Vote by commenting 🥗 or 🍚 below.',
+    textDe: 'Diese Woche geht das Essen auf uns! Stimmt ab, indem ihr 🥗 oder 🍚 kommentiert.',
+    textFr: "Cette semaine, c'est nous qui régalons ! Votez en commentant 🥗 ou 🍚.",
+    textEs: '¡Esta semana invitamos nosotros! Vota comentando 🥗 o 🍚 abajo.',
+    textJa: '今週のランチは会社持ちです！ 🥗 か 🍚 をコメントして投票してください。',
+    comments: [
+      { who: 'Todd', text: '🍚 all day', when: hoursAgo(3), likes: 3 },
+      { who: 'Anne', text: '🥗 (extra avocado, please)', when: hoursAgo(3), likes: 5 },
+      { who: 'Martin', text: '🍚', when: hoursAgo(2), likes: 1 }
+    ] },
+  { id: 8, stream: 'break', author: 'Miranda', when: daysAgo(3), seen: 2276, likes: 257, icon: '📸', mediaBg: 'linear-gradient(135deg,#fbf7f2,#a8b8d0)',
+    title: 'Photo of the week', titleDe: 'Foto der Woche', titleFr: 'Photo de la semaine', titleEs: 'Foto de la semana', titleJa: '今週の一枚',
+    text: 'Sunrise over the outdoor pool before the early shift. Share yours in the comments!',
+    textDe: 'Sonnenaufgang über dem Außenpool vor der Frühschicht. Teilt eure Bilder in den Kommentaren!',
+    textFr: "Lever de soleil sur la piscine extérieure avant l'équipe du matin. Partagez les vôtres en commentaire !",
+    textEs: 'Amanecer sobre la piscina exterior antes del turno de mañana. ¡Comparte las tuyas en los comentarios!',
+    textJa: '早番前の屋外プールに昇る朝日。皆さんの写真もコメントで共有してください！',
+    comments: [] }
+];
+
+// — State —
+const state = { stream: 'news', query: '', openComments: new Set([1]), liked: new Set(), commentLiked: new Set() };
+POSTS.forEach(p => p.comments.forEach((c, i) => { c.id = p.id + '-' + i; }));
+
+// — Helpers —
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const initials = n => n.slice(0, 1).toUpperCase();
+const person = n => PEOPLE[n] || { role: '', color: '#6b7280' };
+const avatar = (n, sm) => `<div class="cw-avatar${sm ? ' sm' : ''}" style="background:${person(n).color}">${esc(initials(n))}</div>`;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+// — Rendering —
+function renderTabs() {
+  document.getElementById('tabs').innerHTML = STREAMS.map(s => {
+    const n = POSTS.filter(p => p.stream === s.id).length;
+    return `<button class="cw-tab${s.id === state.stream ? ' active' : ''}" role="tab" data-stream="${s.id}">${esc(loc(s, 'name'))}<span class="cw-tab-count">${n}</span></button>`;
+  }).join('');
+}
+
+function renderHeader() {
+  const s = STREAMS.find(x => x.id === state.stream);
+  document.getElementById('streamIcon').textContent = s.icon;
+  document.getElementById('streamName').textContent = loc(s, 'name');
+  document.getElementById('streamMeta').textContent = tr('members', { n: new Intl.NumberFormat(LOCALE).format(s.members) });
+}
+
+function commentHTML(c) {
+  const liked = state.commentLiked.has(c.id);
+  const likeCount = (c.likes || 0) + (liked ? 1 : 0);
+  return `<div class="cw-comment">${avatar(c.who, true)}
+    <div class="cw-comment-bubble">
+      <div class="cw-comment-name">${esc(c.who)}</div>
+      <div class="cw-comment-text">${esc(c.mine ? c.text : loc(c, 'text'))}</div>
+      <div class="cw-comment-meta"><span>${esc(c.mine ? t.now : timeAgo(c.when))}</span>
+        <button class="cw-comment-like${liked ? ' liked' : ''}" data-clike="${c.id}">${esc(t.reply)}${likeCount ? ' · ' + likeCount : ''}</button></div>
+    </div></div>`;
+}
+
+function postHTML(p) {
+  const liked = state.liked.has(p.id);
+  const likeCount = p.likes + (liked ? 1 : 0);
+  const open = state.openComments.has(p.id);
+  const pe = person(p.author);
+  const role = pe.role ? ` <span class="cw-author-role">(${esc(loc(pe, 'role'))})</span>` : '';
+  const title = p.mine ? p.title : loc(p, 'title');
+  const text = p.mine ? p.text : loc(p, 'text');
+  return `<article class="cw-post${p.pinned ? ' pinned' : ''}" data-id="${p.id}">
+    ${p.pinned ? `<div class="cw-pin-banner">📌 ${esc(t.pinned)}</div>` : ''}
+    <div class="cw-post-head">${avatar(p.author)}
+      <div><div class="cw-author">${esc(p.author)}${role}</div><div class="cw-time">${esc(p.mine ? t.now : timeAgo(p.when))}</div></div></div>
+    <div class="cw-post-body">${title ? `<h2 class="cw-post-title">${esc(title)}</h2>` : ''}<p class="cw-post-text">${esc(text)}</p></div>
+    ${p.icon && !p.mine ? `<div class="cw-media" style="background:${p.mediaBg}">${p.icon}</div>` : ''}
+    <div class="cw-post-stats">
+      <span>${esc(tr('likes', { n: likeCount }))}</span><span>·</span><span>${esc(tr('commentCount', { n: p.comments.length }))}</span>
+      <span class="cw-spacer"></span><span>${esc(tr('seenBy', { n: new Intl.NumberFormat(LOCALE).format(p.seen + (liked ? 1 : 0)) }))}</span>
+      <button class="cw-action" data-toggle="${p.id}" aria-label="${esc(t.comments)}" title="${esc(t.comments)}"><svg viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 011 1v11a1 1 0 01-1 1H8l-4 4V5a1 1 0 011-1z"/></svg></button>
+      <button class="cw-action${liked ? ' liked' : ''}" data-like="${p.id}" aria-label="${esc(t.like)}" title="${esc(t.like)}"><svg viewBox="0 0 24 24"><path d="M2 10h4v11H2zM8 21h9.4a2 2 0 001.9-1.4l2.5-7.5A2 2 0 0019.9 9H14l1-4.5a1.5 1.5 0 00-.4-1.4L13.5 2 8 8.5V21z"/></svg></button>
+    </div>
+    ${open ? `<div class="cw-comments">
+      ${p.comments.length ? `<div class="cw-comments-label">${esc(t.comments)}</div>${p.comments.map(commentHTML).join('')}` : ''}
+      <div class="cw-comment-form"><input type="text" data-cinput="${p.id}" placeholder="${esc(t.writeComment)}"><button class="cw-send" data-csend="${p.id}" disabled>${esc(t.send)}</button></div>
+    </div>` : ''}
+  </article>`;
+}
+
+function renderFeed() {
+  const q = state.query.trim().toLowerCase();
+  const list = POSTS.filter(p => p.stream === state.stream)
+    .filter(p => !q || (loc(p, 'title') + ' ' + loc(p, 'text')).toLowerCase().includes(q) || (p.mine && (p.title + p.text).toLowerCase().includes(q)))
+    .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.when - a.when);
+  document.getElementById('feed').innerHTML = list.length ? list.map(postHTML).join('') : `<div class="cw-empty">${esc(t.noPosts)}</div>`;
+}
+
+function render() { renderTabs(); renderHeader(); renderFeed(); }
+
+// — Events —
+document.getElementById('tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-stream]'); if (!b) return;
+  state.stream = b.dataset.stream; render();
+});
+
+document.getElementById('searchBtn').addEventListener('click', () => {
+  const box = document.getElementById('searchBox');
+  box.classList.toggle('open');
+  if (box.classList.contains('open')) document.getElementById('searchInput').focus();
+  else { state.query = ''; document.getElementById('searchInput').value = ''; renderFeed(); }
+});
+document.getElementById('searchInput').addEventListener('input', e => { state.query = e.target.value; renderFeed(); });
+
+document.getElementById('feed').addEventListener('click', e => {
+  const like = e.target.closest('[data-like]');
+  if (like) { const id = +like.dataset.like; state.liked.has(id) ? state.liked.delete(id) : state.liked.add(id); renderFeed(); return; }
+  const tog = e.target.closest('[data-toggle]');
+  if (tog) { const id = +tog.dataset.toggle; state.openComments.has(id) ? state.openComments.delete(id) : state.openComments.add(id); renderFeed(); return; }
+  const cl = e.target.closest('[data-clike]');
+  if (cl) { const id = cl.dataset.clike; state.commentLiked.has(id) ? state.commentLiked.delete(id) : state.commentLiked.add(id); renderFeed(); return; }
+  const send = e.target.closest('[data-csend]');
+  if (send) addComment(+send.dataset.csend);
+});
+
+document.getElementById('feed').addEventListener('input', e => {
+  const inp = e.target.closest('[data-cinput]'); if (!inp) return;
+  inp.parentElement.querySelector('[data-csend]').disabled = !inp.value.trim();
+});
+document.getElementById('feed').addEventListener('keydown', e => {
+  const inp = e.target.closest('[data-cinput]');
+  if (inp && e.key === 'Enter' && inp.value.trim()) addComment(+inp.dataset.cinput);
+});
+
+function addComment(postId) {
+  const inp = document.querySelector(`[data-cinput="${postId}"]`);
+  const text = inp && inp.value.trim(); if (!text) return;
+  const p = POSTS.find(x => x.id === postId);
+  p.comments.push({ id: postId + '-' + p.comments.length, who: ME.name, text, mine: true, when: new Date(), likes: 0 });
+  renderFeed();
+  const again = document.querySelector(`[data-cinput="${postId}"]`); if (again) again.focus();
+}
+
+// Composer
+const composer = document.getElementById('composer');
+const newTitle = document.getElementById('newTitle'), newText = document.getElementById('newText'), postBtn = document.getElementById('composerPost');
+const resetComposer = () => { composer.classList.remove('open'); newTitle.value = ''; newText.value = ''; postBtn.disabled = true; };
+document.getElementById('composerOpen').addEventListener('click', () => { composer.classList.add('open'); newText.focus(); });
+document.getElementById('composerCancel').addEventListener('click', resetComposer);
+[newTitle, newText].forEach(el => el.addEventListener('input', () => { postBtn.disabled = !newText.value.trim(); }));
+postBtn.addEventListener('click', () => {
+  if (!newText.value.trim()) return;
+  POSTS.push({ id: Date.now(), stream: state.stream, author: ME.name, when: new Date(), mine: true, seen: 1, likes: 0,
+    title: newTitle.value.trim(), text: newText.value.trim(), comments: [] });
+  resetComposer(); renderFeed(); toast(t.posted);
+});
+
+// — Init —
+function init() {
+  applyTranslations();
+  const me = document.getElementById('meAvatar');
+  me.textContent = initials(ME.name); me.style.background = ME.color;
+  render();
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+<!-- Widget usage counter — see CLAUDE.md -->
+<script>(function(){try{if(location.search.indexOf('preview=1')!==-1)return;var n=location.pathname.split('/').pop();if(!n||n==='index.html')return;var url='https://widget-counter.klauejohann.workers.dev/bump/'+encodeURIComponent(n);if(navigator.sendBeacon)navigator.sendBeacon(url);else fetch(url,{method:'POST',keepalive:true}).catch(function(){});var k='widgetCounts',c=JSON.parse(localStorage.getItem(k)||'{}');c[n]=(c[n]||0)+1;localStorage.setItem(k,JSON.stringify(c));}catch(e){}})();</script>
+</body>
+</html>
