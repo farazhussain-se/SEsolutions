@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="widget-name" content="Kerzner Payslip">
+<meta name="widget-description" content="Hold-to-reveal payslip summary for the Kerzner intranet quick links.">
+<meta name="widget-tags" content="HR, Payroll, Kerzner">
+<title>My Payslip</title>
+<style>
+    :root {
+        --primary: #81191F;
+        --primary-dark: #5e1216;
+        --ink: #2a2423;
+        --ink-light: #7a716e;
+        --bg-gray: #f7f5f3;
+        --border: #e9e3e0;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: transparent;
+        display: flex;
+        justify-content: center;
+    }
+    .payslip-container {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(42,36,35,0.10);
+        max-width: 420px;
+        width: 100%;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+    .payslip-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: #fff;
+        padding: 22px 24px;
+        text-align: center;
+    }
+    .wordmark {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 15px;
+        letter-spacing: 1.5px;
+        text-transform: lowercase;
+        opacity: 0.9;
+        margin-bottom: 10px;
+    }
+    .payslip-header h2 { font-size: 22px; font-weight: 600; margin: 0 0 8px; }
+    .employee-info { font-size: 13px; opacity: 0.92; line-height: 1.6; }
+    .payslip-content { padding: 20px 24px; position: relative; transition: filter 0.3s ease; }
+    .payslip-content.blurred { filter: blur(9px); pointer-events: none; }
+    .reveal-overlay {
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(255,255,255,0.92); z-index: 10; transition: opacity 0.3s ease;
+    }
+    .reveal-overlay.hidden { opacity: 0; pointer-events: none; }
+    .reveal-button {
+        background: var(--primary); color: #fff; border: none;
+        padding: 12px 22px; border-radius: 6px; font-size: 13px; font-weight: 600;
+        cursor: pointer; user-select: none; transition: background 0.2s ease;
+    }
+    .reveal-button:active { background: var(--primary-dark); }
+    .section-title {
+        font-size: 12px; font-weight: 700; color: var(--primary);
+        margin: 18px 0 10px; text-transform: uppercase; letter-spacing: 0.6px;
+    }
+    .section-title:first-child { margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 14px; }
+    table th { background: var(--bg-gray); color: var(--ink); padding: 9px 10px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--border); }
+    table td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+    table tr:last-child td { border-bottom: none; }
+    .amount { text-align: right; font-weight: 500; color: var(--primary); }
+    .summary-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-label { font-weight: 500; color: var(--ink); }
+    .summary-value { font-weight: 700; color: var(--primary); }
+    .footer {
+        background: var(--bg-gray); padding: 14px 24px; font-size: 11px; color: var(--ink-light);
+        border-top: 1px solid var(--border); text-align: center;
+    }
+    .footer-label { display: block; margin-bottom: 5px; font-weight: 600; color: var(--ink); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+class PayslipComponent {
+    constructor() {
+        this.revealed = false;
+        this.render();
+    }
+    render() {
+        const r = this.revealed;
+        document.getElementById('app').innerHTML = `
+            <div class="payslip-container">
+                <div class="payslip-header">
+                    <div class="wordmark">kerzner</div>
+                    <h2>My Payslip</h2>
+                    <div class="employee-info">
+                        <strong>Amara Okafor</strong> &middot; Atlantis Dubai<br>
+                        Pay Period: 16 Sep &ndash; 30 Sep 2026
+                    </div>
+                </div>
+                <div class="payslip-content ${r ? '' : 'blurred'}">
+                    <div class="section-title">Summary</div>
+                    <div class="summary-row"><span class="summary-label">Gross Pay (YTD)</span><span class="summary-value">AED 112,400</span></div>
+                    <div class="summary-row"><span class="summary-label">Deductions (YTD)</span><span class="summary-value">AED 9,850</span></div>
+                    <div class="summary-row"><span class="summary-label">Net Pay (YTD)</span><span class="summary-value">AED 102,550</span></div>
+                    <div class="section-title">Earnings</div>
+                    <table>
+                        <thead><tr><th>Description</th><th class="amount">Amount</th></tr></thead>
+                        <tbody>
+                            <tr><td>Base Salary</td><td class="amount">AED 8,200</td></tr>
+                            <tr><td>Service Charge Share</td><td class="amount">AED 1,150</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="section-title">Deductions</div>
+                    <table>
+                        <thead><tr><th>Description</th><th class="amount">Amount</th></tr></thead>
+                        <tbody>
+                            <tr><td>Health Insurance</td><td class="amount">AED 320</td></tr>
+                            <tr><td>Pension Contribution</td><td class="amount">AED 410</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="reveal-overlay ${r ? 'hidden' : ''}">
+                    <button class="reveal-button" id="revealBtn">Hold to reveal payslip</button>
+                </div>
+                <div class="footer">
+                    <span class="footer-label">Direct Deposit</span>
+                    <span>Emirates NBD Account &bull;&bull;&bull;&bull;7731</span>
+                </div>
+            </div>
+        `;
+        const btn = document.getElementById('revealBtn');
+        const show = () => { this.revealed = true; this.render(); };
+        const hide = () => { this.revealed = false; this.render(); };
+        btn.addEventListener('mousedown', show);
+        btn.addEventListener('mouseup', hide);
+        btn.addEventListener('mouseleave', hide);
+        btn.addEventListener('touchstart', show);
+        btn.addEventListener('touchend', hide);
+    }
+}
+new PayslipComponent();
+</script>
+</body>
+</html>

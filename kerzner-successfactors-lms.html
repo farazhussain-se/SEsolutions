@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="widget-name" content="SuccessFactors Learning (Kerzner Academy)">
+<meta name="widget-description" content="Placeholder SAP SuccessFactors LMS widget for Kerzner Academy / Atlantis Learning pages &mdash; course progress, assigned learning, and certifications.">
+<meta name="widget-tags" content="Learning, SuccessFactors, Kerzner">
+<title>SuccessFactors Learning</title>
+<style>
+    :root {
+        --sf-blue: #0a6ed1; --sf-blue-dark: #0854a0; --sf-blue-bg: #eaf3fc;
+        --kerzner: #81191F;
+        --ink: #2a2423; --ink-light: #7a716e; --bg-gray: #f7f5f3; --border: #e9e3e0;
+        --success: #2f7a4f; --success-bg: #ecf6ef;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: transparent; padding: 20px; display: flex; justify-content: center; }
+    .card { background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 4px 20px rgba(42,36,35,0.10); max-width: 460px; width: 100%; overflow: hidden; }
+    .ribbon { background: var(--kerzner); color: #fff; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 6px 24px; }
+    .header { background: linear-gradient(135deg, var(--sf-blue) 0%, var(--sf-blue-dark) 100%); color: #fff; padding: 18px 24px; display: flex; align-items: center; gap: 12px; }
+    .sf-mark { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+    .header h2 { font-size: 17px; font-weight: 600; margin: 0 0 2px; }
+    .header p { font-size: 11.5px; margin: 0; opacity: 0.9; }
+    .progress-summary { display: flex; gap: 10px; padding: 16px 24px 4px; }
+    .ptile { flex: 1; background: var(--bg-gray); border-radius: 8px; padding: 10px; text-align: center; }
+    .ptile .num { font-size: 19px; font-weight: 700; color: var(--sf-blue); }
+    .ptile .label { font-size: 10.5px; color: var(--ink-light); margin-top: 2px; }
+    .section-title { font-size: 11.5px; font-weight: 700; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.5px; padding: 16px 24px 6px; }
+    .course { padding: 10px 24px; display: flex; flex-direction: column; gap: 6px; }
+    .course-top { display: flex; justify-content: space-between; align-items: baseline; }
+    .course-top h4 { font-size: 13px; color: var(--ink); margin: 0; }
+    .course-pct { font-size: 11.5px; font-weight: 700; color: var(--sf-blue); }
+    .bar-track { height: 6px; border-radius: 4px; background: var(--bg-gray); overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--sf-blue); border-radius: 4px; }
+    .cert-row { display: flex; align-items: center; gap: 12px; padding: 10px 24px; }
+    .cert-icon { width: 30px; height: 30px; border-radius: 50%; background: var(--success-bg); color: var(--success); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .cert-text h4 { margin: 0 0 2px; font-size: 12.5px; color: var(--ink); }
+    .cert-text p { margin: 0; font-size: 10.5px; color: var(--ink-light); }
+    .footer { background: var(--bg-gray); padding: 12px 24px 16px; font-size: 10.5px; color: var(--ink-light); border-top: 1px solid var(--border); text-align: center; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="card">
+    <div class="ribbon">kerzner academy</div>
+    <div class="header">
+        <div class="sf-mark">SF</div>
+        <div>
+            <h2>SuccessFactors Learning</h2>
+            <p>Amara Okafor &middot; Atlantis Dubai</p>
+        </div>
+    </div>
+    <div class="progress-summary">
+        <div class="ptile"><div class="num">3</div><div class="label">In progress</div></div>
+        <div class="ptile"><div class="num">11</div><div class="label">Completed</div></div>
+        <div class="ptile"><div class="num">2</div><div class="label">Due this month</div></div>
+    </div>
+    <div class="section-title">Assigned Learning</div>
+    <div class="course">
+        <div class="course-top"><h4>Guest Recovery &amp; Service Excellence</h4><span class="course-pct">80%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:80%"></div></div>
+    </div>
+    <div class="course">
+        <div class="course-top"><h4>Fire Safety &amp; Evacuation Refresher</h4><span class="course-pct">45%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:45%"></div></div>
+    </div>
+    <div class="course">
+        <div class="course-top"><h4>Leading with Inclusion</h4><span class="course-pct">10%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:10%"></div></div>
+    </div>
+    <div class="section-title">Certifications</div>
+    <div class="cert-row">
+        <div class="cert-icon">&#10003;</div>
+        <div class="cert-text"><h4>Food Safety Level 2</h4><p>Issued Mar 2026 &middot; Valid until Mar 2028</p></div>
+    </div>
+    <div class="cert-row">
+        <div class="cert-icon">&#10003;</div>
+        <div class="cert-text"><h4>Kerzner Academy &mdash; Service Foundations</h4><p>Issued Jan 2026</p></div>
+    </div>
+    <div class="footer">SAP SuccessFactors Learning &middot; synced nightly with Kerzner Academy</div>
+</div>
+</body>
+</html>
