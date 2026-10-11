@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="widget-name" content="Kerzner My Benefits">
+<meta name="widget-description" content="Benefits summary card for the Kerzner intranet quick links.">
+<meta name="widget-tags" content="HR, Benefits, Kerzner">
+<title>My Benefits</title>
+<style>
+    :root { --primary: #81191F; --primary-dark: #5e1216; --ink: #2a2423; --ink-light: #7a716e; --bg-gray: #f7f5f3; --border: #e9e3e0; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: transparent; display: flex; justify-content: center; }
+    .card { background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 4px 20px rgba(42,36,35,0.10); max-width: 420px; width: 100%; overflow: hidden; }
+    .header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: #fff; padding: 22px 24px; }
+    .wordmark { font-family: Georgia, 'Times New Roman', serif; font-size: 14px; letter-spacing: 1.5px; opacity: 0.9; margin-bottom: 8px; }
+    .header h2 { font-size: 21px; font-weight: 600; margin: 0 0 4px; }
+    .header p { font-size: 12px; margin: 0; opacity: 0.9; }
+    .list { padding: 8px 10px; }
+    .item { display: flex; align-items: center; gap: 14px; padding: 13px 14px; border-radius: 8px; }
+    .item:hover { background: var(--bg-gray); }
+    .icon-wrap {
+        width: 38px; height: 38px; border-radius: 9px; background: var(--bg-gray);
+        display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+        color: var(--primary);
+    }
+    .item-text h4 { margin: 0 0 2px; font-size: 13.5px; color: var(--ink); }
+    .item-text p { margin: 0; font-size: 11.5px; color: var(--ink-light); }
+    .item-status { margin-left: auto; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+    .status-active { color: #2f7a4f; background: #ecf6ef; }
+    .status-review { color: #9c6b0a; background: #fcf3e3; }
+    .footer { background: var(--bg-gray); padding: 12px 24px; font-size: 11px; color: var(--ink-light); border-top: 1px solid var(--border); text-align: center; }
+</style>
+</head>
+<body>
+<div class="card">
+    <div class="header">
+        <div class="wordmark">kerzner</div>
+        <h2>My Benefits</h2>
+        <p>Atlantis Dubai &middot; Front of House</p>
+    </div>
+    <div class="list">
+        <div class="item">
+            <div class="icon-wrap">&#9877;</div>
+            <div class="item-text"><h4>Health Insurance</h4><p>Daman Premium Plan &middot; Family covered</p></div>
+            <div class="item-status status-active">Active</div>
+        </div>
+        <div class="item">
+            <div class="icon-wrap">&#127974;</div>
+            <div class="item-text"><h4>Staff Accommodation</h4><p>Marina Residences, Room 4B</p></div>
+            <div class="item-status status-active">Active</div>
+        </div>
+        <div class="item">
+            <div class="icon-wrap">&#9992;</div>
+            <div class="item-text"><h4>Annual Flight Allowance</h4><p>1 round trip &middot; booked via Yatra</p></div>
+            <div class="item-status status-active">Active</div>
+        </div>
+        <div class="item">
+            <div class="icon-wrap">&#127942;</div>
+            <div class="item-text"><h4>Wellness &amp; Mental Health</h4><p>Enrolled this quarter</p></div>
+            <div class="item-status status-active">Active</div>
+        </div>
+        <div class="item">
+            <div class="icon-wrap">&#128176;</div>
+            <div class="item-text"><h4>End of Service Gratuity</h4><p>Projection update pending payroll sync</p></div>
+            <div class="item-status status-review">Updating</div>
+        </div>
+    </div>
+    <div class="footer">Benefits data refreshed nightly</div>
+</div>
+</body>
+</html>
