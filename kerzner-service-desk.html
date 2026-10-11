@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="widget-name" content="Kerzner Service Desk">
+<meta name="widget-description" content="IT/property service desk ticket list + new-ticket mockup for the Kerzner intranet quick links.">
+<meta name="widget-tags" content="Operations, ServiceNow, Kerzner">
+<title>Service Desk</title>
+<style>
+    :root { --primary: #81191F; --primary-dark: #5e1216; --ink: #2a2423; --ink-light: #7a716e; --bg-gray: #f7f5f3; --border: #e9e3e0; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: transparent; display: flex; justify-content: center; }
+    .card { background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 4px 20px rgba(42,36,35,0.10); max-width: 440px; width: 100%; overflow: hidden; }
+    .header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: #fff; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+    .header-text .wordmark { font-family: Georgia, 'Times New Roman', serif; font-size: 13px; letter-spacing: 1.5px; opacity: 0.9; margin-bottom: 6px; }
+    .header-text h2 { font-size: 19px; font-weight: 600; margin: 0; }
+    .new-ticket-btn { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 7px 13px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .tabs { display: flex; gap: 6px; padding: 14px 24px 0; }
+    .tab { font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 20px; color: var(--ink-light); cursor: pointer; }
+    .tab.active { background: var(--bg-gray); color: var(--primary); }
+    .list { padding: 10px 14px 6px; }
+    .ticket { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border-radius: 8px; }
+    .ticket:hover { background: var(--bg-gray); }
+    .ticket-icon { width: 34px; height: 34px; border-radius: 8px; background: var(--bg-gray); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .ticket-body h4 { margin: 0 0 3px; font-size: 13px; color: var(--ink); }
+    .ticket-body p { margin: 0; font-size: 11px; color: var(--ink-light); }
+    .ticket-right { margin-left: auto; text-align: right; flex-shrink: 0; }
+    .ticket-id { font-size: 10.5px; color: var(--ink-light); }
+    .ticket-status { display: inline-block; margin-top: 4px; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+    .status-open { color: #9c6b0a; background: #fcf3e3; }
+    .status-progress { color: #1d5fa8; background: #e8f1fb; }
+    .status-closed { color: #2f7a4f; background: #ecf6ef; }
+    .footer { background: var(--bg-gray); padding: 12px 24px; font-size: 11px; color: var(--ink-light); border-top: 1px solid var(--border); text-align: center; }
+</style>
+</head>
+<body>
+<div class="card">
+    <div class="header">
+        <div class="header-text">
+            <div class="wordmark">kerzner</div>
+            <h2>Service Desk</h2>
+        </div>
+        <button class="new-ticket-btn">+ New Ticket</button>
+    </div>
+    <div class="tabs">
+        <div class="tab active">My Tickets</div>
+        <div class="tab">Property IT</div>
+        <div class="tab">Facilities</div>
+    </div>
+    <div class="list">
+        <div class="ticket">
+            <div class="ticket-icon">&#128187;</div>
+            <div class="ticket-body"><h4>PMS terminal frozen &ndash; Front Desk 3</h4><p>Opened by you &middot; Atlantis Dubai</p></div>
+            <div class="ticket-right"><div class="ticket-id">#KZ-10482</div><div class="ticket-status status-progress">In Progress</div></div>
+        </div>
+        <div class="ticket">
+            <div class="ticket-icon">&#128268;</div>
+            <div class="ticket-body"><h4>AC unit noise &ndash; Back of House B2</h4><p>Opened by you &middot; Facilities</p></div>
+            <div class="ticket-right"><div class="ticket-id">#KZ-10465</div><div class="ticket-status status-open">Open</div></div>
+        </div>
+        <div class="ticket">
+            <div class="ticket-icon">&#128273;</div>
+            <div class="ticket-body"><h4>Key card re-issue request</h4><p>Opened by you &middot; Security</p></div>
+            <div class="ticket-right"><div class="ticket-id">#KZ-10410</div><div class="ticket-status status-closed">Resolved</div></div>
+        </div>
+    </div>
+    <div class="footer">Powered by ServiceNow &middot; Kerzner IT</div>
+</div>
+</body>
+</html>
