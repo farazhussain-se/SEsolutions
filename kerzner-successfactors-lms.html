@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="widget-name" content="SuccessFactors Learning (Headless API Widget)">
-<meta name="widget-description" content="Simulates the headless SAP SuccessFactors Learning pattern: a native-looking 'My Learning Assignments' list rendered from the Learning Plan OData API (UserTodoLearningItems), with Launch handing off to an embedded content player.">
+<meta name="widget-description" content="Learning assignments list: due-date groups, required learning, course details and a launch-into-course player.">
 <meta name="widget-tags" content="Learning, SuccessFactors, Kerzner">
 <title>My Learning Assignments</title>
 <style>
@@ -56,14 +56,11 @@
     .hrow { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; }
     .hrow .st { font-weight: 700; }
     .st.ok { color: var(--ok); } .st.fail { color: var(--required); }
-    .apibar { background: #0B1D2E; color: #9FD0FF; font-family: ui-monospace, Menlo, monospace; font-size: 10.5px; padding: 7px 16px; display: flex; justify-content: space-between; gap: 10px; }
-    .apibar b { color: #fff; font-weight: 600; }
     .overlay { display: none; position: fixed; inset: 0; background: rgba(13,20,30,.55); z-index: 20; padding: 12px; }
     .overlay.show { display: flex; }
     .player { margin: auto; width: 100%; max-width: 560px; background: #fff; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; max-height: 100%; }
     .player-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #354A5F; color: #fff; font-size: 13px; }
     .player-bar button { background: none; border: 0; color: #fff; font-size: 18px; cursor: pointer; }
-    .player-url { font-family: ui-monospace, Menlo, monospace; font-size: 10px; padding: 6px 14px; background: var(--bg); color: var(--ink-light); border-bottom: 1px solid var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .slide { padding: 28px 24px; min-height: 230px; }
     .slide h3 { font-size: 18px; margin-bottom: 10px; }
     .slide p { line-height: 1.55; color: var(--ink-light); margin-bottom: 10px; }
@@ -112,17 +109,11 @@
         <div class="hrow"><span>Food Safety Level 2</span><span class="st ok">&#10003; Completed</span></div>
         <div class="hrow"><span>Responsible Alcohol Service</span><span class="st fail">&#10005; Expired</span></div>
     </div>
-
-    <div class="apibar">
-        <span><b>GET</b> /learning/odatav4/learningPlan/v1/UserTodoLearningItems?$filter=criteria/includeDeeplink eq true</span>
-        <span id="apiState">200 OK</span>
-    </div>
 </div>
 
 <div class="overlay" id="overlay">
     <div class="player">
         <div class="player-bar"><span id="pTitle">Course</span><button id="pClose" aria-label="Close">&times;</button></div>
-        <div class="player-url" id="pUrl"></div>
         <div class="slide" id="slide"></div>
         <div class="player-foot">
             <button class="pbtn ghost" id="pPrev">Back</button>
@@ -140,11 +131,12 @@
 
     // Simulated response of UserTodoLearningItems (anchored to today's date)
     var items = [
-        { id: 'KZ-FS-210', title: 'Fire Safety & Evacuation Refresher', type: 'COURSE', rev: '3.1', due: d(-3), required: true, status: 'Not started', icon: '☢', hrs: 1.5, delivery: 'Online (SCORM 2004)', desc: 'Annual evacuation procedures, assembly points and guest-assist protocols for resort properties.', slides: ['Know your nearest exits and assembly point.', 'Assist guests with mobility needs first; never use lifts.', 'Report all drills and false alarms in the Service Desk.'] },
-        { id: 'KZ-GR-101', title: 'Guest Recovery & Service Excellence', type: 'COURSE', rev: '2.4', due: d(4), required: true, status: 'In progress', icon: '☆', hrs: 2, delivery: 'Online (SCORM 1.2)', desc: 'Turn a service failure into a loyalty moment using the Listen, Own, Fix, Follow-up approach.', slides: ['Listen: let the guest finish before responding.', 'Own it: apologise once, sincerely, without excuses.', 'Fix and follow up: agree a remedy and check back within 24h.'] },
+        { id: 'KZ-LD-100', title: 'Manager Onboarding: Leading at Kerzner', type: 'COURSE', rev: '2.1', due: d(9), required: true, status: 'Not started', icon: '\u2605', hrs: 1.5, delivery: 'Online', desc: 'Everything a new people leader needs in the first 90 days: leading the team, people processes, safety and compliance.', slides: ['Plan your first 30, 60 and 90 days.', 'Hold regular one-to-ones and pre-shift briefings.', 'Know where leave, rosters, recruitment and performance live.'] },
+        { id: 'KZ-FS-210', title: 'Fire Safety & Evacuation Refresher', type: 'COURSE', rev: '3.1', due: d(-3), required: true, status: 'Not started', icon: '☢', hrs: 1.5, delivery: 'Online', desc: 'Annual evacuation procedures, assembly points and guest-assist protocols for resort properties.', slides: ['Know your nearest exits and assembly point.', 'Assist guests with mobility needs first; never use lifts.', 'Report all drills and false alarms in the Service Desk.'] },
+        { id: 'KZ-GR-101', title: 'Guest Recovery & Service Excellence', type: 'COURSE', rev: '2.4', due: d(4), required: true, status: 'In progress', icon: '☆', hrs: 2, delivery: 'Online', desc: 'Turn a service failure into a loyalty moment using the Listen, Own, Fix, Follow-up approach.', slides: ['Listen: let the guest finish before responding.', 'Own it: apologise once, sincerely, without excuses.', 'Fix and follow up: agree a remedy and check back within 24h.'] },
         { id: 'KZ-HS-045', title: 'Food Allergen Awareness', type: 'EXAM', rev: '1.2', due: d(18), required: true, status: 'Not started', icon: '✎', hrs: 1, delivery: 'Online assessment', desc: 'Identify the 14 major allergens and handle allergen requests across all outlets.', slides: ['The 14 major allergens must be declared on every menu.', 'Always confirm with the chef before answering a guest.', 'Cross-contact: separate utensils, boards and fryers.'] },
         { id: 'KZ-LD-300', title: 'Leading with Inclusion', type: 'COURSE', rev: '1.0', due: d(52), required: true, status: 'Not started', icon: '☺', hrs: 3, delivery: 'Instructor-led with online content', desc: 'Practical habits for leading diverse, multilingual hospitality teams.', slides: ['Name and pronounce colleagues’ names correctly.', 'Rotate who speaks first in huddles.', 'Create a feedback loop that works across languages.'] },
-        { id: 'KZ-AQ-020', title: 'Aquaventure Lifeguard Awareness', type: 'COURSE', rev: '2.0', due: null, required: false, status: 'Not started', icon: '⚓', hrs: 1, delivery: 'Online (SCORM 2004)', desc: 'Optional awareness module for colleagues working near water attractions.', slides: ['Recognise the signs of a struggling swimmer.', 'Raise the alarm and clear the area.', 'Know where first-aid equipment is located.'] }
+        { id: 'KZ-AQ-020', title: 'Aquaventure Lifeguard Awareness', type: 'COURSE', rev: '2.0', due: null, required: false, status: 'Not started', icon: '⚓', hrs: 1, delivery: 'Online', desc: 'Optional awareness module for colleagues working near water attractions.', slides: ['Recognise the signs of a struggling swimmer.', 'Raise the alarm and clear the area.', 'Know where first-aid equipment is located.'] }
     ];
 
     var state = { sort: 'date', kw: '', type: '', collapsed: {} };
@@ -207,14 +199,13 @@
     function openPlayer(it) {
         cur = it; idx = it.status === 'In progress' ? 1 : 0;
         document.getElementById('pTitle').textContent = it.title;
-        document.getElementById('pUrl').textContent = 'https://kerzner.plateau.com/learning/user/deeplink_redirect.jsp?linkId=EMBEDDED_PLAYER&componentID=' + it.id + '&componentTypeID=COURSE';
         overlay.classList.add('show'); drawSlide();
     }
     function drawSlide() {
         var total = cur.slides.length + 1;
         var s = document.getElementById('slide');
         if (idx < cur.slides.length) s.innerHTML = '<h3>' + cur.title + '</h3><p>Section ' + (idx + 1) + ' of ' + cur.slides.length + '</p><ul><li>' + cur.slides[idx] + '</li></ul>';
-        else s.innerHTML = '<h3>&#10003; Course complete</h3><p>Your completion will be recorded in SuccessFactors Learning (recordLearningEvents) and appear in Learning History.</p>';
+        else s.innerHTML = '<h3>&#10003; Course complete</h3><p>Your completion has been recorded and will appear in your Learning History.</p>';
         document.getElementById('pFill').style.width = Math.round(idx / (total - 1) * 100) + '%';
         document.getElementById('pNext').textContent = idx >= cur.slides.length ? 'Close' : 'Next';
         document.getElementById('pPrev').style.visibility = idx === 0 ? 'hidden' : 'visible';

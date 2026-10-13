@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="widget-name" content="SuccessFactors Embedded Content Player">
+<meta name="widget-description" content="Course player for Kerzner Academy: manager onboarding course with outline, progress, knowledge check and completion.">
+<meta name="widget-tags" content="Learning, SuccessFactors, Kerzner">
+<title>Embedded Content Player</title>
+<style>
+    :root { --blue:#0070F2; --blue-dark:#0057D2; --blue-bg:#EAF3FF; --ink:#1D2D3E; --ink-light:#5B738B; --line:#E5E5E5; --bg:#F5F6F7; --ok:#107E3E; --bad:#D20A0A; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:"72","72full",Arial,Helvetica,sans-serif; font-size:14px; color:var(--ink); background:transparent; }
+    .host { border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#fff; }
+    .player-bar { display:flex; align-items:center; gap:12px; padding:10px 14px; background:#354A5F; color:#fff; }
+    .player-bar h1 { font-size:14px; font-weight:600; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .menu-btn, .exit-btn { background:none; border:1px solid rgba(255,255,255,.4); color:#fff; border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; font-family:inherit; }
+    .menu-btn:hover, .exit-btn:hover { background:rgba(255,255,255,.12); }
+    .progress { height:4px; background:#D5DADD; } .progress i { display:block; height:100%; width:0; background:var(--blue); transition:width .25s; }
+    .body { display:flex; min-height:300px; position:relative; }
+    .outline { width:0; overflow:hidden; border-right:0 solid var(--line); background:var(--bg); transition:width .2s; flex-shrink:0; }
+    .outline.open { width:190px; border-right-width:1px; }
+    .outline ul { list-style:none; padding:10px 0; width:190px; }
+    .outline li { padding:9px 14px; font-size:12px; color:var(--ink-light); cursor:pointer; display:flex; gap:8px; }
+    .outline li.cur { color:var(--blue); font-weight:700; background:#fff; }
+    .outline li.done::before { content:"\2713"; color:var(--ok); } .outline li:not(.done)::before { content:"\25CB"; color:#9AA9B8; }
+    .content { flex:1; padding:24px 26px; min-width:0; }
+    .content .kicker { font-size:11px; letter-spacing:.5px; text-transform:uppercase; color:var(--ink-light); margin-bottom:8px; }
+    .content h2 { font-size:20px; margin-bottom:12px; }
+    .content p { line-height:1.6; color:var(--ink-light); margin-bottom:10px; }
+    .content ul.pts { margin:0 0 0 18px; color:var(--ink-light); line-height:1.8; }
+    .callout { margin-top:14px; padding:12px 14px; border-left:4px solid var(--blue); background:var(--blue-bg); font-size:13px; color:var(--ink); border-radius:0 6px 6px 0; }
+    .opt { display:flex; gap:10px; align-items:center; padding:10px 12px; border:1px solid var(--line); border-radius:8px; margin:8px 0; cursor:pointer; font-size:13px; }
+    .opt:hover { border-color:var(--blue); } .opt.sel { border-color:var(--blue); background:var(--blue-bg); }
+    .opt.right { border-color:var(--ok); background:#EEF8F1; } .opt.wrong { border-color:var(--bad); background:#FDF0F0; }
+    .feedback { font-size:12.5px; margin-top:6px; min-height:18px; } .feedback.ok { color:var(--ok); } .feedback.bad { color:var(--bad); }
+    .done-badge { display:inline-flex; align-items:center; justify-content:center; width:54px; height:54px; border-radius:50%; background:#EEF8F1; color:var(--ok); font-size:28px; margin-bottom:12px; }
+    .foot { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; border-top:1px solid var(--line); background:#fff; }
+    .foot .pg { font-size:12px; color:var(--ink-light); }
+    .btn { background:var(--blue); color:#fff; border:0; border-radius:6px; padding:8px 18px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; }
+    .btn:hover { background:var(--blue-dark); } .btn.ghost { background:#fff; color:var(--blue); border:1px solid var(--blue); } .btn[disabled] { opacity:.4; cursor:default; }
+    .launcher { display:none; padding:34px 20px; text-align:center; }
+    .launcher .play { width:64px; height:64px; border-radius:50%; background:var(--blue); color:#fff; font-size:26px; border:0; cursor:pointer; margin-bottom:12px; }
+    .launcher h2 { font-size:17px; margin-bottom:4px; } .launcher p { color:var(--ink-light); font-size:12.5px; }
+</style>
+</head>
+<body>
+<div class="host" id="host">
+    <div class="launcher" id="launcher">
+        <button class="play" id="playBtn" aria-label="Launch course">&#9654;</button>
+        <h2>Manager Onboarding: Leading at Kerzner</h2>
+        <p>Online course &middot; about 15 minutes &middot; opens right here</p>
+    </div>
+    <div id="playerWrap">
+        <div class="player-bar">
+            <h1>Manager Onboarding: Leading at Kerzner</h1>
+            <button class="menu-btn" id="menuBtn">&#9776; Outline</button>
+            <button class="exit-btn" id="exitBtn">Exit</button>
+        </div>
+        <div class="progress"><i id="bar"></i></div>
+        <div class="body">
+            <nav class="outline" id="outline"><ul id="outlineList"></ul></nav>
+            <div class="content" id="content"></div>
+        </div>
+        <div class="foot">
+            <button class="btn ghost" id="prev">Back</button>
+            <span class="pg" id="pg"></span>
+            <button class="btn" id="next">Next</button>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    var pages = [
+        { t:'Welcome to leadership', k:'Page 1', html:'<p>Congratulations on stepping into a people-leader role. This course covers what you need in your first weeks: how we lead, how we support colleagues, and where to find help.</p><ul class="pts"><li>Your role and what good looks like</li><li>Your first 30, 60 and 90 days</li><li>The people processes you will use every week</li></ul><div class="callout">Colleagues take their cue from you. How you show up shapes how guests are looked after.</div>' },
+        { t:'Your first 30, 60 and 90 days', k:'Page 2', html:'<p>A clear plan helps you settle in and helps your team know what to expect.</p><ul class="pts"><li><b>First 30 days:</b> meet every team member one-to-one, shadow each shift pattern, learn the property and your outlet standards</li><li><b>By 60 days:</b> agree team goals with your manager, review rosters and handovers, start regular coaching conversations</li><li><b>By 90 days:</b> own your team’s performance rhythm, complete your leadership pathway modules</li></ul>' },
+        { t:'Leading your team day to day', k:'Page 3', html:'<p>Great managers are consistent and visible. Build a simple routine your team can rely on.</p><ul class="pts"><li>Hold a short pre-shift briefing and share what matters today</li><li>Have a regular one-to-one with every direct report</li><li>Recognise good work quickly and specifically</li><li>Give feedback early, privately and with a clear next step</li></ul><div class="callout">Listen first, then decide. A two-minute conversation now avoids a bigger issue later.</div>' },
+        { t:'People processes you will use', k:'Page 4', html:'<p>You will approve and manage several processes through the intranet. Know where each one lives.</p><ul class="pts"><li><b>Leave:</b> review and approve requests, and plan cover before approving</li><li><b>Rosters and shift swaps:</b> keep rosters fair, published on time and compliant with working-hours rules</li><li><b>Recruitment:</b> raise vacancies and take part in interviews with People &amp; Culture</li><li><b>Performance and development:</b> set objectives, hold reviews and agree learning plans</li></ul>' },
+        { t:'Safety, security and compliance', k:'Page 5', html:'<p>Every manager is responsible for the safety of their team and guests.</p><ul class="pts"><li>Make sure your team completes mandatory training before the due date</li><li>Report incidents and near-misses the same shift</li><li>Know your department’s emergency and evacuation procedures</li><li>Follow the current security advisories shared in your property channel</li></ul>' },
+        { t:'Knowledge check', k:'Page 6', quiz:true },
+        { t:'Course complete', k:'Page 7', done:true }
+    ];
+    var q = { text:'A new team member seems quiet and unsure in their second week. What is the best first step?', opts:['Wait and see whether things improve on their own','Ask a colleague to keep an eye on them and report back','Arrange a one-to-one to listen, check how they are settling in and agree clear next steps','Mention it at the next team briefing so everyone is aware'], ans:2 };
+    var i = 0, passed = false, picked = null, visited = {}, started = false;
+    var $ = function (id) { return document.getElementById(id); };
+
+    function outline() {
+        $('outlineList').innerHTML = pages.map(function (p, n) { return '<li data-n="' + n + '" class="' + (n === i ? 'cur ' : '') + (visited[n] && n !== i ? 'done' : '') + '">' + p.t + '</li>'; }).join('');
+    }
+    function draw() {
+        var p = pages[i]; visited[i] = true;
+        var h = '<div class="kicker">' + p.k + ' of ' + pages.length + '</div><h2>' + p.t + '</h2>';
+        if (p.quiz) {
+            h += '<p>' + q.text + '</p>' + q.opts.map(function (o, n) {
+                var c = picked === n ? (passed ? 'opt right' : (picked !== null && n !== q.ans ? 'opt wrong' : 'opt sel')) : 'opt';
+                return '<div class="' + c + '" data-o="' + n + '"><span>' + String.fromCharCode(65 + n) + '.</span>' + o + '</div>';
+            }).join('') + '<div class="feedback ' + (picked === null ? '' : (passed ? 'ok' : 'bad')) + '">' + (picked === null ? '' : (passed ? 'Correct. Listening first builds trust and helps you agree the right support.' : 'Not quite. Try again.')) + '</div>';
+        } else if (p.done) {
+            h = '<div class="done-badge">&#10003;</div><h2>Course complete</h2><p>Welcome to the leadership team. Your completion has been recorded against your learning plan. You can close this window and carry on.</p><div class="callout">Completion is written back to the learning system, so it appears in your Learning History straight away.</div>';
+            $('bar').style.width = '100%';
+        } else h += p.html;
+        $('content').innerHTML = h;
+        if (!p.done) { $('bar').style.width = Math.round(i / (pages.length - 1) * 100) + '%'; }
+        $('pg').textContent = 'Page ' + (i + 1) + ' of ' + pages.length;
+        $('prev').style.visibility = i === 0 ? 'hidden' : 'visible';
+        $('next').textContent = p.done ? 'Close' : (i === pages.length - 2 ? 'Finish' : 'Next');
+        $('next').disabled = !!(p.quiz && !passed);
+        outline();
+    }
+    function show(playing) { $('playerWrap').style.display = playing ? '' : 'none'; $('launcher').style.display = playing ? 'none' : 'block'; }
+    function reset() { i = 0; passed = false; picked = null; visited = {}; $('bar').style.width = '0'; }
+
+    $('next').onclick = function () { if (pages[i].done) { reset(); show(false); return; } i++; draw(); };
+    $('prev').onclick = function () { if (i > 0) { i--; draw(); } };
+    $('menuBtn').onclick = function () { $('outline').classList.toggle('open'); };
+    $('exitBtn').onclick = function () { show(false); };
+    $('playBtn').onclick = function () { show(true); started = true; draw(); };
+    $('outlineList').onclick = function (e) { var n = e.target.getAttribute('data-n'); if (n === null) return; n = +n; if (n <= i || visited[n] || (n === 6 && !passed)) { if (n === 6 && !passed) return; i = n; draw(); } };
+    $('content').onclick = function (e) { var o = e.target.closest('[data-o]'); if (!o || passed) return; picked = +o.getAttribute('data-o'); passed = picked === q.ans; draw(); };
+
+    draw();
+})();
+</script>
+</body>
+</html>
