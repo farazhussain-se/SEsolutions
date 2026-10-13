@@ -52,12 +52,12 @@
 <div class="host" id="host">
     <div class="launcher" id="launcher">
         <button class="play" id="playBtn" aria-label="Launch course">&#9654;</button>
-        <h2>Fire Safety &amp; Evacuation Refresher</h2>
-        <p>Online course &middot; about 10 minutes &middot; opens right here, no separate login</p>
+        <h2>Manager Onboarding: Leading at Kerzner</h2>
+        <p>Online course &middot; about 15 minutes &middot; opens right here, no separate login</p>
     </div>
     <div id="playerWrap">
         <div class="player-bar">
-            <h1>Fire Safety &amp; Evacuation Refresher</h1>
+            <h1>Manager Onboarding: Leading at Kerzner</h1>
             <button class="menu-btn" id="menuBtn">&#9776; Outline</button>
             <button class="exit-btn" id="exitBtn">Exit</button>
         </div>
@@ -77,20 +77,22 @@
         <span class="chip">Format <b>SCORM 2004</b></span>
         <span class="chip">Tracking <b id="track">not started</b></span>
     </div>
-    <div class="tech"><b>&lt;iframe</b> src=<span class="dim">"https://kerzner.plateau.com/learning/user/deeplink_redirect.jsp?linkId=EMBEDDED_PLAYER&amp;componentID=KZ-FS-210"</span>
+    <div class="tech"><b>&lt;iframe</b> src=<span class="dim">"https://kerzner.plateau.com/learning/user/deeplink_redirect.jsp?linkId=EMBEDDED_PLAYER&amp;componentID=KZ-LD-100"</span>
         width=<span class="dim">"100%"</span> height=<span class="dim">"800"</span> sandbox=<span class="dim">"allow-scripts allow-same-origin allow-forms allow-popups"</span> allowfullscreen<b>&gt;&lt;/iframe&gt;</b>
 <span class="dim">// deep link returned by the Learning Plan API &middot; host domain trusted via frame-ancestors</span></div>
 </div>
 <script>
 (function () {
     var pages = [
-        { t:'Why this matters', k:'Page 1', html:'<p>Every colleague is a fire marshal for their own area. In an emergency, the first two minutes decide how smoothly a property is evacuated.</p><ul class="pts"><li>Know the nearest two exits from your work area</li><li>Know your assembly point</li><li>Know who your floor warden is</li></ul>' },
-        { t:'When the alarm sounds', k:'Page 2', html:'<p>Stay calm, stop what you are doing, and move guests and colleagues towards the nearest safe exit.</p><ul class="pts"><li>Never use lifts</li><li>Assist guests who need help first</li><li>Close doors behind you; do not lock them</li><li>Do not return for belongings</li></ul><div class="callout">Guests take their cue from you. A calm voice and clear directions matter more than speed.</div>' },
-        { t:'Assembly and roll call', k:'Page 3', html:'<p>At the assembly point, report to your floor warden. Wardens take a roll call of colleagues and report any missing person to the incident lead.</p><ul class="pts"><li>Stay at your assembly point until released</li><li>Report anyone you believe is still inside</li><li>Do not re-enter until the all-clear is given</li></ul>' },
-        { t:'Knowledge check', k:'Page 4', quiz:true },
-        { t:'Course complete', k:'Page 5', done:true }
+        { t:'Welcome to leadership', k:'Page 1', html:'<p>Congratulations on stepping into a people-leader role. This course covers what you need in your first weeks: how we lead, how we support colleagues, and where to find help.</p><ul class="pts"><li>Your role and what good looks like</li><li>Your first 30, 60 and 90 days</li><li>The people processes you will use every week</li></ul><div class="callout">Colleagues take their cue from you. How you show up shapes how guests are looked after.</div>' },
+        { t:'Your first 30, 60 and 90 days', k:'Page 2', html:'<p>A clear plan helps you settle in and helps your team know what to expect.</p><ul class="pts"><li><b>First 30 days:</b> meet every team member one-to-one, shadow each shift pattern, learn the property and your outlet standards</li><li><b>By 60 days:</b> agree team goals with your manager, review rosters and handovers, start regular coaching conversations</li><li><b>By 90 days:</b> own your team’s performance rhythm, complete your leadership pathway modules</li></ul>' },
+        { t:'Leading your team day to day', k:'Page 3', html:'<p>Great managers are consistent and visible. Build a simple routine your team can rely on.</p><ul class="pts"><li>Hold a short pre-shift briefing and share what matters today</li><li>Have a regular one-to-one with every direct report</li><li>Recognise good work quickly and specifically</li><li>Give feedback early, privately and with a clear next step</li></ul><div class="callout">Listen first, then decide. A two-minute conversation now avoids a bigger issue later.</div>' },
+        { t:'People processes you will use', k:'Page 4', html:'<p>You will approve and manage several processes through the intranet. Know where each one lives.</p><ul class="pts"><li><b>Leave:</b> review and approve requests, and plan cover before approving</li><li><b>Rosters and shift swaps:</b> keep rosters fair, published on time and compliant with working-hours rules</li><li><b>Recruitment:</b> raise vacancies and take part in interviews with People &amp; Culture</li><li><b>Performance and development:</b> set objectives, hold reviews and agree learning plans</li></ul>' },
+        { t:'Safety, security and compliance', k:'Page 5', html:'<p>Every manager is responsible for the safety of their team and guests.</p><ul class="pts"><li>Make sure your team completes mandatory training before the due date</li><li>Report incidents and near-misses the same shift</li><li>Know your department’s emergency and evacuation procedures</li><li>Follow the current security advisories shared in your property channel</li></ul>' },
+        { t:'Knowledge check', k:'Page 6', quiz:true },
+        { t:'Course complete', k:'Page 7', done:true }
     ];
-    var q = { text:'You hear the alarm while a guest in a wheelchair is next to you. What do you do first?', opts:['Take the lift quickly so you can both get out faster','Stay with the guest, alert the nearest warden and assist them to a safe exit','Leave immediately and tell reception afterwards','Wait where you are until the alarm stops'], ans:1 };
+    var q = { text:'A new team member seems quiet and unsure in their second week. What is the best first step?', opts:['Wait and see whether things improve on their own','Ask a colleague to keep an eye on them and report back','Arrange a one-to-one to listen, check how they are settling in and agree clear next steps','Mention it at the next team briefing so everyone is aware'], ans:2 };
     var i = 0, passed = false, picked = null, visited = {}, started = false;
     var $ = function (id) { return document.getElementById(id); };
 
@@ -104,9 +106,9 @@
             h += '<p>' + q.text + '</p>' + q.opts.map(function (o, n) {
                 var c = picked === n ? (passed ? 'opt right' : (picked !== null && n !== q.ans ? 'opt wrong' : 'opt sel')) : 'opt';
                 return '<div class="' + c + '" data-o="' + n + '"><span>' + String.fromCharCode(65 + n) + '.</span>' + o + '</div>';
-            }).join('') + '<div class="feedback ' + (picked === null ? '' : (passed ? 'ok' : 'bad')) + '">' + (picked === null ? '' : (passed ? 'Correct. Safety of others comes first, with support from your warden.' : 'Not quite. Try again.')) + '</div>';
+            }).join('') + '<div class="feedback ' + (picked === null ? '' : (passed ? 'ok' : 'bad')) + '">' + (picked === null ? '' : (passed ? 'Correct. Listening first builds trust and helps you agree the right support.' : 'Not quite. Try again.')) + '</div>';
         } else if (p.done) {
-            h = '<div class="done-badge">&#10003;</div><h2>Course complete</h2><p>Your completion has been recorded against your learning plan. You can close this window and carry on.</p><div class="callout">Completion is written back to the learning system, so it appears in your Learning History straight away.</div>';
+            h = '<div class="done-badge">&#10003;</div><h2>Course complete</h2><p>Welcome to the leadership team. Your completion has been recorded against your learning plan. You can close this window and carry on.</p><div class="callout">Completion is written back to the learning system, so it appears in your Learning History straight away.</div>';
             $('track').textContent = 'completed'; $('bar').style.width = '100%';
         } else h += p.html;
         $('content').innerHTML = h;
@@ -125,7 +127,7 @@
     $('menuBtn').onclick = function () { $('outline').classList.toggle('open'); };
     $('exitBtn').onclick = function () { show(false); };
     $('playBtn').onclick = function () { show(true); started = true; draw(); };
-    $('outlineList').onclick = function (e) { var n = e.target.getAttribute('data-n'); if (n === null) return; n = +n; if (n <= i || visited[n] || (n === 4 && !passed)) { if (n === 4 && !passed) return; i = n; draw(); } };
+    $('outlineList').onclick = function (e) { var n = e.target.getAttribute('data-n'); if (n === null) return; n = +n; if (n <= i || visited[n] || (n === 6 && !passed)) { if (n === 6 && !passed) return; i = n; draw(); } };
     $('content').onclick = function (e) { var o = e.target.closest('[data-o]'); if (!o || passed) return; picked = +o.getAttribute('data-o'); passed = picked === q.ans; draw(); };
 
     draw();
