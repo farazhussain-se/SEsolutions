@@ -3,81 +3,256 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="widget-name" content="SuccessFactors Learning (Kerzner Academy)">
-<meta name="widget-description" content="Placeholder SAP SuccessFactors LMS widget for Kerzner Academy / Atlantis Learning pages &mdash; course progress, assigned learning, and certifications.">
+<meta name="widget-name" content="SuccessFactors Learning (Headless API Widget)">
+<meta name="widget-description" content="Simulates the headless SAP SuccessFactors Learning pattern: a native-looking 'My Learning Assignments' list rendered from the Learning Plan OData API (UserTodoLearningItems), with Launch handing off to an embedded content player.">
 <meta name="widget-tags" content="Learning, SuccessFactors, Kerzner">
-<title>SuccessFactors Learning</title>
+<title>My Learning Assignments</title>
 <style>
     :root {
-        --sf-blue: #0a6ed1; --sf-blue-dark: #0854a0; --sf-blue-bg: #eaf3fc;
-        --kerzner: #81191F;
-        --ink: #2a2423; --ink-light: #7a716e; --bg-gray: #f7f5f3; --border: #e9e3e0;
-        --success: #2f7a4f; --success-bg: #ecf6ef;
+        --blue: #0070F2; --blue-dark: #0057D2; --blue-bg: #EAF3FF;
+        --ink: #1D2D3E; --ink-light: #5B738B; --line: #E5E5E5; --bg: #F5F6F7;
+        --required: #D20A0A; --ok: #107E3E; --warn: #E9730C;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: transparent; padding: 20px; display: flex; justify-content: center; }
-    .card { background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 4px 20px rgba(42,36,35,0.10); max-width: 460px; width: 100%; overflow: hidden; }
-    .ribbon { background: var(--kerzner); color: #fff; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 6px 24px; }
-    .header { background: linear-gradient(135deg, var(--sf-blue) 0%, var(--sf-blue-dark) 100%); color: #fff; padding: 18px 24px; display: flex; align-items: center; gap: 12px; }
-    .sf-mark { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
-    .header h2 { font-size: 17px; font-weight: 600; margin: 0 0 2px; }
-    .header p { font-size: 11.5px; margin: 0; opacity: 0.9; }
-    .progress-summary { display: flex; gap: 10px; padding: 16px 24px 4px; }
-    .ptile { flex: 1; background: var(--bg-gray); border-radius: 8px; padding: 10px; text-align: center; }
-    .ptile .num { font-size: 19px; font-weight: 700; color: var(--sf-blue); }
-    .ptile .label { font-size: 10.5px; color: var(--ink-light); margin-top: 2px; }
-    .section-title { font-size: 11.5px; font-weight: 700; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.5px; padding: 16px 24px 6px; }
-    .course { padding: 10px 24px; display: flex; flex-direction: column; gap: 6px; }
-    .course-top { display: flex; justify-content: space-between; align-items: baseline; }
-    .course-top h4 { font-size: 13px; color: var(--ink); margin: 0; }
-    .course-pct { font-size: 11.5px; font-weight: 700; color: var(--sf-blue); }
-    .bar-track { height: 6px; border-radius: 4px; background: var(--bg-gray); overflow: hidden; }
-    .bar-fill { height: 100%; background: var(--sf-blue); border-radius: 4px; }
-    .cert-row { display: flex; align-items: center; gap: 12px; padding: 10px 24px; }
-    .cert-icon { width: 30px; height: 30px; border-radius: 50%; background: var(--success-bg); color: var(--success); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
-    .cert-text h4 { margin: 0 0 2px; font-size: 12.5px; color: var(--ink); }
-    .cert-text p { margin: 0; font-size: 10.5px; color: var(--ink-light); }
-    .footer { background: var(--bg-gray); padding: 12px 24px 16px; font-size: 10.5px; color: var(--ink-light); border-top: 1px solid var(--border); text-align: center; margin-top: 6px; }
+    body { font-family: "72", "72full", Arial, Helvetica, sans-serif; font-size: 14px; color: var(--ink); background: transparent; }
+    .tile { background: #fff; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+    .tile-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+    .tile-head h1 { font-size: 16px; font-weight: 700; }
+    .tile-head .sub { font-size: 11px; color: var(--ink-light); margin-top: 2px; }
+    .ctrls { font-size: 12px; color: var(--ink-light); display: flex; gap: 12px; align-items: center; }
+    .ctrls a { color: var(--blue); cursor: pointer; text-decoration: none; }
+    .ctrls a.on { font-weight: 700; color: var(--ink); }
+    .filterbar { display: none; padding: 10px 16px; background: var(--bg); border-bottom: 1px solid var(--line); gap: 8px; }
+    .filterbar.show { display: flex; }
+    .filterbar input, .filterbar select { flex: 1; padding: 7px 9px; border: 1px solid #BCC3CA; border-radius: 6px; font-size: 12px; font-family: inherit; }
+    .group-h { display: flex; align-items: center; gap: 6px; padding: 9px 16px; background: var(--bg); font-size: 11px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; cursor: pointer; border-bottom: 1px solid var(--line); user-select: none; }
+    .group-h .chev { transition: transform .15s; display: inline-block; }
+    .group.collapsed .chev { transform: rotate(-90deg); }
+    .group.collapsed .row { display: none; }
+    .group-h .count { margin-left: auto; font-weight: 400; color: var(--ink-light); }
+    .row { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+    .thumb { width: 48px; height: 48px; border-radius: 6px; background: #E8ECEF; color: #8396A8; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    .meta { flex: 1; min-width: 0; }
+    .tagline { font-size: 11px; letter-spacing: .3px; }
+    .tagline .req { color: var(--required); font-weight: 600; }
+    .tagline .opt { color: var(--ink-light); }
+    .tagline .overdue { color: var(--required); font-weight: 700; }
+    .title { display: block; margin: 2px 0; color: var(--blue); font-size: 15px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .title:hover { text-decoration: underline; }
+    .code { font-size: 11px; color: var(--ink-light); }
+    .act { position: relative; flex-shrink: 0; text-align: right; }
+    .btn { border: 1px solid var(--blue); color: var(--blue); background: #fff; font-size: 11px; font-weight: 700; letter-spacing: .3px; padding: 7px 12px; border-radius: 6px 0 0 6px; cursor: pointer; text-transform: uppercase; font-family: inherit; }
+    .btn:hover { background: var(--blue-bg); }
+    .btn.off { color: #8396A8; border-color: #BCC3CA; cursor: default; background: #fff; }
+    .caret { border: 1px solid var(--blue); border-left: 0; background: #fff; color: var(--blue); padding: 7px 8px; border-radius: 0 6px 6px 0; font-size: 10px; cursor: pointer; }
+    .menu { display: none; position: absolute; right: 0; top: 34px; background: #fff; border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,.14); z-index: 5; min-width: 140px; text-align: left; }
+    .menu.show { display: block; }
+    .menu div { padding: 9px 12px; font-size: 12px; cursor: pointer; }
+    .menu div:hover { background: var(--bg); }
+    .note { font-size: 10.5px; color: var(--warn); margin-top: 4px; }
+    .history { padding: 12px 16px; }
+    .history h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--ink-light); margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .history h2 a { color: var(--blue); text-transform: none; letter-spacing: 0; font-weight: 400; }
+    .hrow { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+    .hrow .st { font-weight: 700; }
+    .st.ok { color: var(--ok); } .st.fail { color: var(--required); }
+    .apibar { background: #0B1D2E; color: #9FD0FF; font-family: ui-monospace, Menlo, monospace; font-size: 10.5px; padding: 7px 16px; display: flex; justify-content: space-between; gap: 10px; }
+    .apibar b { color: #fff; font-weight: 600; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(13,20,30,.55); z-index: 20; padding: 12px; }
+    .overlay.show { display: flex; }
+    .player { margin: auto; width: 100%; max-width: 560px; background: #fff; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; max-height: 100%; }
+    .player-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #354A5F; color: #fff; font-size: 13px; }
+    .player-bar button { background: none; border: 0; color: #fff; font-size: 18px; cursor: pointer; }
+    .player-url { font-family: ui-monospace, Menlo, monospace; font-size: 10px; padding: 6px 14px; background: var(--bg); color: var(--ink-light); border-bottom: 1px solid var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .slide { padding: 28px 24px; min-height: 230px; }
+    .slide h3 { font-size: 18px; margin-bottom: 10px; }
+    .slide p { line-height: 1.55; color: var(--ink-light); margin-bottom: 10px; }
+    .slide ul { margin: 0 0 0 18px; color: var(--ink-light); line-height: 1.7; }
+    .player-foot { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--line); }
+    .pbar { flex: 1; height: 6px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+    .pbar i { display: block; height: 100%; width: 0; background: var(--blue); transition: width .25s; }
+    .pbtn { background: var(--blue); color: #fff; border: 0; border-radius: 6px; padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .pbtn.ghost { background: #fff; color: var(--blue); border: 1px solid var(--blue); }
+    .detail { display: none; padding: 16px; }
+    .detail.show { display: block; }
+    .detail .back { color: var(--blue); font-size: 12px; cursor: pointer; margin-bottom: 10px; display: inline-block; }
+    .detail h2 { font-size: 18px; margin-bottom: 6px; }
+    .detail p { color: var(--ink-light); line-height: 1.55; margin-bottom: 12px; }
+    .hours { display: flex; gap: 22px; margin: 6px 0 14px; }
+    .hours div { font-size: 26px; color: var(--ink); } .hours small { display: block; font-size: 10px; color: var(--ink-light); letter-spacing: .4px; }
+    .kv { font-size: 12px; color: var(--ink-light); line-height: 1.9; }
+    .kv b { display: inline-block; width: 110px; color: var(--ink); font-weight: 600; }
+    #list.hide { display: none; }
 </style>
 </head>
 <body>
-<div class="card">
-    <div class="ribbon">kerzner academy</div>
-    <div class="header">
-        <div class="sf-mark">SF</div>
+<div class="tile" id="tile">
+    <div class="tile-head">
         <div>
-            <h2>SuccessFactors Learning</h2>
-            <p>Amara Okafor &middot; Atlantis Dubai</p>
+            <h1>My Learning Assignments</h1>
+            <div class="sub" id="sub">Amara &middot; Atlantis Dubai</div>
+        </div>
+        <div class="ctrls">
+            <span>Sort by</span><a id="sortDate" class="on">Date</a><span>|</span><a id="sortPri">Priority</a>
+            <a id="filterBtn">&#9660; Filter</a>
         </div>
     </div>
-    <div class="progress-summary">
-        <div class="ptile"><div class="num">3</div><div class="label">In progress</div></div>
-        <div class="ptile"><div class="num">11</div><div class="label">Completed</div></div>
-        <div class="ptile"><div class="num">2</div><div class="label">Due this month</div></div>
+    <div class="filterbar" id="filterbar">
+        <input id="kw" type="text" placeholder="Course name or ID">
+        <select id="typeSel"><option value="">All assignment types</option><option>Required</option><option>Optional</option></select>
     </div>
-    <div class="section-title">Assigned Learning</div>
-    <div class="course">
-        <div class="course-top"><h4>Guest Recovery &amp; Service Excellence</h4><span class="course-pct">80%</span></div>
-        <div class="bar-track"><div class="bar-fill" style="width:80%"></div></div>
+
+    <div id="list"></div>
+
+    <div class="detail" id="detail"></div>
+
+    <div class="history" id="historyBox">
+        <h2>Learning History <a>View All</a></h2>
+        <div class="hrow"><span>Service Foundations</span><span class="st ok">&#10003; Completed</span></div>
+        <div class="hrow"><span>Food Safety Level 2</span><span class="st ok">&#10003; Completed</span></div>
+        <div class="hrow"><span>Responsible Alcohol Service</span><span class="st fail">&#10005; Expired</span></div>
     </div>
-    <div class="course">
-        <div class="course-top"><h4>Fire Safety &amp; Evacuation Refresher</h4><span class="course-pct">45%</span></div>
-        <div class="bar-track"><div class="bar-fill" style="width:45%"></div></div>
+
+    <div class="apibar">
+        <span><b>GET</b> /learning/odatav4/learningPlan/v1/UserTodoLearningItems?$filter=criteria/includeDeeplink eq true</span>
+        <span id="apiState">200 OK</span>
     </div>
-    <div class="course">
-        <div class="course-top"><h4>Leading with Inclusion</h4><span class="course-pct">10%</span></div>
-        <div class="bar-track"><div class="bar-fill" style="width:10%"></div></div>
-    </div>
-    <div class="section-title">Certifications</div>
-    <div class="cert-row">
-        <div class="cert-icon">&#10003;</div>
-        <div class="cert-text"><h4>Food Safety Level 2</h4><p>Issued Mar 2026 &middot; Valid until Mar 2028</p></div>
-    </div>
-    <div class="cert-row">
-        <div class="cert-icon">&#10003;</div>
-        <div class="cert-text"><h4>Kerzner Academy &mdash; Service Foundations</h4><p>Issued Jan 2026</p></div>
-    </div>
-    <div class="footer">SAP SuccessFactors Learning &middot; synced nightly with Kerzner Academy</div>
 </div>
+
+<div class="overlay" id="overlay">
+    <div class="player">
+        <div class="player-bar"><span id="pTitle">Course</span><button id="pClose" aria-label="Close">&times;</button></div>
+        <div class="player-url" id="pUrl"></div>
+        <div class="slide" id="slide"></div>
+        <div class="player-foot">
+            <button class="pbtn ghost" id="pPrev">Back</button>
+            <div class="pbar"><i id="pFill"></i></div>
+            <button class="pbtn" id="pNext">Next</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var day = 86400000, now = Date.now();
+    function d(n) { return new Date(now + n * day); }
+    function fmt(dt) { return dt.getDate().toString().padStart(2, '0') + '/' + (dt.getMonth() + 1).toString().padStart(2, '0') + '/' + dt.getFullYear(); }
+
+    // Simulated response of UserTodoLearningItems (anchored to today's date)
+    var items = [
+        { id: 'KZ-FS-210', title: 'Fire Safety & Evacuation Refresher', type: 'COURSE', rev: '3.1', due: d(-3), required: true, status: 'Not started', icon: '☢', hrs: 1.5, delivery: 'Online (SCORM 2004)', desc: 'Annual evacuation procedures, assembly points and guest-assist protocols for resort properties.', slides: ['Know your nearest exits and assembly point.', 'Assist guests with mobility needs first; never use lifts.', 'Report all drills and false alarms in the Service Desk.'] },
+        { id: 'KZ-GR-101', title: 'Guest Recovery & Service Excellence', type: 'COURSE', rev: '2.4', due: d(4), required: true, status: 'In progress', icon: '☆', hrs: 2, delivery: 'Online (SCORM 1.2)', desc: 'Turn a service failure into a loyalty moment using the Listen, Own, Fix, Follow-up approach.', slides: ['Listen: let the guest finish before responding.', 'Own it: apologise once, sincerely, without excuses.', 'Fix and follow up: agree a remedy and check back within 24h.'] },
+        { id: 'KZ-HS-045', title: 'Food Allergen Awareness', type: 'EXAM', rev: '1.2', due: d(18), required: true, status: 'Not started', icon: '✎', hrs: 1, delivery: 'Online assessment', desc: 'Identify the 14 major allergens and handle allergen requests across all outlets.', slides: ['The 14 major allergens must be declared on every menu.', 'Always confirm with the chef before answering a guest.', 'Cross-contact: separate utensils, boards and fryers.'] },
+        { id: 'KZ-LD-300', title: 'Leading with Inclusion', type: 'COURSE', rev: '1.0', due: d(52), required: true, status: 'Not started', icon: '☺', hrs: 3, delivery: 'Instructor-led with online content', desc: 'Practical habits for leading diverse, multilingual hospitality teams.', slides: ['Name and pronounce colleagues’ names correctly.', 'Rotate who speaks first in huddles.', 'Create a feedback loop that works across languages.'] },
+        { id: 'KZ-AQ-020', title: 'Aquaventure Lifeguard Awareness', type: 'COURSE', rev: '2.0', due: null, required: false, status: 'Not started', icon: '⚓', hrs: 1, delivery: 'Online (SCORM 2004)', desc: 'Optional awareness module for colleagues working near water attractions.', slides: ['Recognise the signs of a struggling swimmer.', 'Raise the alarm and clear the area.', 'Know where first-aid equipment is located.'] }
+    ];
+
+    var state = { sort: 'date', kw: '', type: '', collapsed: {} };
+    var list = document.getElementById('list'), detail = document.getElementById('detail');
+
+    function groupOf(it) {
+        if (!it.due) return 'Due Anytime';
+        var diff = (it.due - now) / day;
+        if (diff < 0) return 'Overdue';
+        if (diff <= 7) return 'Due Within a Week';
+        if (diff <= 30) return 'Due Within a Month';
+        return 'Due Later';
+    }
+    var order = ['Overdue', 'Due Within a Week', 'Due Within a Month', 'Due Later', 'Due Anytime'];
+
+    function actionLabel(it) { return it.status === 'In progress' ? 'Continue Course' : 'Start Course'; }
+
+    function render() {
+        var rows = items.filter(function (it) {
+            var k = state.kw.toLowerCase();
+            var okK = !k || it.title.toLowerCase().indexOf(k) > -1 || it.id.toLowerCase().indexOf(k) > -1;
+            var okT = !state.type || (state.type === 'Required') === it.required;
+            return okK && okT;
+        });
+        if (state.sort === 'priority') rows.sort(function (a, b) { return (b.required - a.required) || ((a.due || 9e15) - (b.due || 9e15)); });
+        var html = '';
+        order.forEach(function (g) {
+            var gi = rows.filter(function (it) { return groupOf(it) === g; });
+            if (!gi.length) return;
+            html += '<div class="group' + (state.collapsed[g] ? ' collapsed' : '') + '"><div class="group-h" data-g="' + g + '"><span class="chev">&#9660;</span>' + g + '<span class="count">' + gi.length + '</span></div>';
+            gi.forEach(function (it) {
+                var over = g === 'Overdue';
+                html += '<div class="row"><div class="thumb">' + it.icon + '</div><div class="meta">' +
+                    '<div class="tagline">' + (it.due ? '<span class="' + (over ? 'overdue' : 'req') + '">' + fmt(it.due) + '</span> | ' : '') + (it.required ? '<span class="req">REQUIRED</span>' : '<span class="opt">OPTIONAL</span>') + '</div>' +
+                    '<a class="title" data-id="' + it.id + '">' + it.title + '</a>' +
+                    '<div class="code">' + it.type + ' ' + it.id + ' rev.' + it.rev + '</div></div>' +
+                    '<div class="act"><button class="btn" data-launch="' + it.id + '">' + actionLabel(it) + '</button><button class="caret" data-menu="' + it.id + '">&#9660;</button>' +
+                    '<div class="menu" id="m-' + it.id + '"><div data-act="schedule" data-id="' + it.id + '">Request Schedule</div><div data-act="recommend" data-id="' + it.id + '">Recommend</div></div></div></div>';
+            });
+            html += '</div>';
+        });
+        list.innerHTML = html || '<div style="padding:24px;text-align:center;color:#5B738B">No assignments match your filter.</div>';
+    }
+
+    function find(id) { return items.filter(function (i) { return i.id === id; })[0]; }
+
+    function showDetail(it) {
+        list.classList.add('hide'); document.getElementById('historyBox').style.display = 'none';
+        detail.innerHTML = '<a class="back" id="back">&larr; Back</a><h2>' + it.title + '</h2><div class="code">' + it.type + ' ' + it.id + ' rev.' + it.rev + '</div>' +
+            '<p style="margin-top:10px">' + it.desc + '</p>' +
+            '<div class="hours"><div>' + it.hrs.toFixed(1) + '<small>CREDIT HOURS</small></div><div>' + it.hrs.toFixed(1) + '<small>CONTACT HOURS</small></div></div>' +
+            '<div class="kv"><div><b>Delivery method</b>' + it.delivery + '</div><div><b>Status</b>' + it.status + '</div><div><b>Source</b>Kerzner Academy</div></div>' +
+            '<div style="margin-top:14px"><button class="pbtn" data-launch="' + it.id + '">' + actionLabel(it) + '</button></div>';
+        detail.classList.add('show');
+    }
+    function hideDetail() { detail.classList.remove('show'); list.classList.remove('hide'); document.getElementById('historyBox').style.display = ''; }
+
+    // Embedded content player (simulated deep link)
+    var cur = null, idx = 0, overlay = document.getElementById('overlay');
+    function openPlayer(it) {
+        cur = it; idx = it.status === 'In progress' ? 1 : 0;
+        document.getElementById('pTitle').textContent = it.title;
+        document.getElementById('pUrl').textContent = 'https://kerzner.plateau.com/learning/user/deeplink_redirect.jsp?linkId=EMBEDDED_PLAYER&componentID=' + it.id + '&componentTypeID=COURSE';
+        overlay.classList.add('show'); drawSlide();
+    }
+    function drawSlide() {
+        var total = cur.slides.length + 1;
+        var s = document.getElementById('slide');
+        if (idx < cur.slides.length) s.innerHTML = '<h3>' + cur.title + '</h3><p>Section ' + (idx + 1) + ' of ' + cur.slides.length + '</p><ul><li>' + cur.slides[idx] + '</li></ul>';
+        else s.innerHTML = '<h3>&#10003; Course complete</h3><p>Your completion will be recorded in SuccessFactors Learning (recordLearningEvents) and appear in Learning History.</p>';
+        document.getElementById('pFill').style.width = Math.round(idx / (total - 1) * 100) + '%';
+        document.getElementById('pNext').textContent = idx >= cur.slides.length ? 'Close' : 'Next';
+        document.getElementById('pPrev').style.visibility = idx === 0 ? 'hidden' : 'visible';
+    }
+    function closePlayer(done) {
+        overlay.classList.remove('show');
+        if (done && cur) {
+            items = items.filter(function (i) { return i.id !== cur.id; });
+            var h = document.querySelector('.history h2');
+            var row = document.createElement('div'); row.className = 'hrow';
+            row.innerHTML = '<span>' + cur.title + '</span><span class="st ok">&#10003; Completed</span>';
+            h.insertAdjacentElement('afterend', row);
+            hideDetail(); render();
+        }
+        cur = null;
+    }
+    document.getElementById('pNext').onclick = function () { if (idx >= cur.slides.length) closePlayer(true); else { idx++; drawSlide(); } };
+    document.getElementById('pPrev').onclick = function () { if (idx > 0) { idx--; drawSlide(); } };
+    document.getElementById('pClose').onclick = function () { closePlayer(false); };
+
+    document.addEventListener('click', function (e) {
+        var t = e.target;
+        var gh = t.closest('.group-h'); if (gh) { var g = gh.getAttribute('data-g'); state.collapsed[g] = !state.collapsed[g]; render(); return; }
+        if (t.dataset.launch) { openPlayer(find(t.dataset.launch)); return; }
+        if (t.dataset.menu) { var m = document.getElementById('m-' + t.dataset.menu); var was = m.classList.contains('show'); document.querySelectorAll('.menu').forEach(function (x) { x.classList.remove('show'); }); if (!was) m.classList.add('show'); return; }
+        if (t.dataset.act) { alert(t.dataset.act === 'schedule' ? 'Schedule request sent to the course owner.' : 'Recommendation sent to a colleague.'); document.querySelectorAll('.menu').forEach(function (x) { x.classList.remove('show'); }); return; }
+        if (t.classList.contains('title')) { showDetail(find(t.dataset.id)); return; }
+        if (t.id === 'back') { hideDetail(); return; }
+        document.querySelectorAll('.menu').forEach(function (x) { x.classList.remove('show'); });
+    });
+    document.getElementById('sortDate').onclick = function () { state.sort = 'date'; this.classList.add('on'); document.getElementById('sortPri').classList.remove('on'); render(); };
+    document.getElementById('sortPri').onclick = function () { state.sort = 'priority'; this.classList.add('on'); document.getElementById('sortDate').classList.remove('on'); render(); };
+    document.getElementById('filterBtn').onclick = function () { document.getElementById('filterbar').classList.toggle('show'); };
+    document.getElementById('kw').oninput = function () { state.kw = this.value; render(); };
+    document.getElementById('typeSel').onchange = function () { state.type = this.value; render(); };
+
+    render();
+})();
+</script>
 </body>
 </html>
