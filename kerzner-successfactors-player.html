@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="widget-name" content="SuccessFactors Embedded Content Player">
-<meta name="widget-description" content="Simulates the SAP SuccessFactors Learning embedded content player running inside an intranet page: a course plays in a frame with no surrounding LMS chrome, using a deep link and the host portal's SSO session.">
+<meta name="widget-description" content="Course player for Kerzner Academy: manager onboarding course with outline, progress, knowledge check and completion.">
 <meta name="widget-tags" content="Learning, SuccessFactors, Kerzner">
 <title>Embedded Content Player</title>
 <style>
@@ -42,10 +42,6 @@
     .launcher { display:none; padding:34px 20px; text-align:center; }
     .launcher .play { width:64px; height:64px; border-radius:50%; background:var(--blue); color:#fff; font-size:26px; border:0; cursor:pointer; margin-bottom:12px; }
     .launcher h2 { font-size:17px; margin-bottom:4px; } .launcher p { color:var(--ink-light); font-size:12.5px; }
-    .tech { background:#0B1D2E; color:#9FD0FF; font-family:ui-monospace,Menlo,monospace; font-size:10.5px; line-height:1.65; padding:10px 14px; overflow-x:auto; white-space:pre; }
-    .tech b { color:#fff; font-weight:600; } .tech .dim { color:#6F8CA8; }
-    .status { display:flex; flex-wrap:wrap; gap:8px; padding:10px 14px; background:var(--bg); border-top:1px solid var(--line); font-size:11px; }
-    .chip { padding:3px 9px; border-radius:20px; background:#fff; border:1px solid var(--line); color:var(--ink-light); } .chip b { color:var(--ink); } .chip.ok b { color:var(--ok); }
 </style>
 </head>
 <body>
@@ -53,7 +49,7 @@
     <div class="launcher" id="launcher">
         <button class="play" id="playBtn" aria-label="Launch course">&#9654;</button>
         <h2>Manager Onboarding: Leading at Kerzner</h2>
-        <p>Online course &middot; about 15 minutes &middot; opens right here, no separate login</p>
+        <p>Online course &middot; about 15 minutes &middot; opens right here</p>
     </div>
     <div id="playerWrap">
         <div class="player-bar">
@@ -72,14 +68,6 @@
             <button class="btn" id="next">Next</button>
         </div>
     </div>
-    <div class="status">
-        <span class="chip ok">SSO session <b>active</b></span>
-        <span class="chip">Format <b>SCORM 2004</b></span>
-        <span class="chip">Tracking <b id="track">not started</b></span>
-    </div>
-    <div class="tech"><b>&lt;iframe</b> src=<span class="dim">"https://kerzner.plateau.com/learning/user/deeplink_redirect.jsp?linkId=EMBEDDED_PLAYER&amp;componentID=KZ-LD-100"</span>
-        width=<span class="dim">"100%"</span> height=<span class="dim">"800"</span> sandbox=<span class="dim">"allow-scripts allow-same-origin allow-forms allow-popups"</span> allowfullscreen<b>&gt;&lt;/iframe&gt;</b>
-<span class="dim">// deep link returned by the Learning Plan API &middot; host domain trusted via frame-ancestors</span></div>
 </div>
 <script>
 (function () {
@@ -109,10 +97,10 @@
             }).join('') + '<div class="feedback ' + (picked === null ? '' : (passed ? 'ok' : 'bad')) + '">' + (picked === null ? '' : (passed ? 'Correct. Listening first builds trust and helps you agree the right support.' : 'Not quite. Try again.')) + '</div>';
         } else if (p.done) {
             h = '<div class="done-badge">&#10003;</div><h2>Course complete</h2><p>Welcome to the leadership team. Your completion has been recorded against your learning plan. You can close this window and carry on.</p><div class="callout">Completion is written back to the learning system, so it appears in your Learning History straight away.</div>';
-            $('track').textContent = 'completed'; $('bar').style.width = '100%';
+            $('bar').style.width = '100%';
         } else h += p.html;
         $('content').innerHTML = h;
-        if (!p.done) { $('track').textContent = 'in progress'; $('bar').style.width = Math.round(i / (pages.length - 1) * 100) + '%'; }
+        if (!p.done) { $('bar').style.width = Math.round(i / (pages.length - 1) * 100) + '%'; }
         $('pg').textContent = 'Page ' + (i + 1) + ' of ' + pages.length;
         $('prev').style.visibility = i === 0 ? 'hidden' : 'visible';
         $('next').textContent = p.done ? 'Close' : (i === pages.length - 2 ? 'Finish' : 'Next');
@@ -120,7 +108,7 @@
         outline();
     }
     function show(playing) { $('playerWrap').style.display = playing ? '' : 'none'; $('launcher').style.display = playing ? 'none' : 'block'; }
-    function reset() { i = 0; passed = false; picked = null; visited = {}; $('track').textContent = 'not started'; $('bar').style.width = '0'; }
+    function reset() { i = 0; passed = false; picked = null; visited = {}; $('bar').style.width = '0'; }
 
     $('next').onclick = function () { if (pages[i].done) { reset(); show(false); return; } i++; draw(); };
     $('prev').onclick = function () { if (i > 0) { i--; draw(); } };
