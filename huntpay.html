@@ -323,9 +323,10 @@
 
       <!-- Month Tabs -->
       <div class="month-tabs">
-        <button class="month-tab active" onclick="switchMonth(this)">August 2026</button>
-        <button class="month-tab" onclick="switchMonth(this)">July 2026</button>
-        <button class="month-tab" onclick="switchMonth(this)">June 2026</button>
+        <button class="month-tab active" onclick="switchMonth(this,'oct')">October 2026</button>
+        <button class="month-tab" onclick="switchMonth(this,'sep')">September 2026</button>
+        <button class="month-tab" onclick="switchMonth(this,'aug')">August 2026</button>
+        <button class="month-tab" onclick="switchMonth(this,'jul')">July 2026</button>
       </div>
       <div class="scrollbar-mock"></div>
 
@@ -333,23 +334,105 @@
       <div class="summary-card">
         <div class="net-pay-section">
           <div class="net-pay-label">Net Pay</div>
-          <div class="net-pay-value">8,303.20</div>
+          <div class="net-pay-value">$8,303.20</div>
         </div>
         <div class="gross-deductions-row">
           <div class="gross-cell">
             <div class="cell-label">Gross Pay</div>
-            <div class="cell-value">12,451.26</div>
+            <div class="cell-value">$12,451.26</div>
           </div>
           <div class="deductions-cell">
             <div class="cell-label">Deductions</div>
-            <div class="cell-value">4,148.06</div>
+            <div class="cell-value">$4,148.06</div>
           </div>
         </div>
       </div>
 
       <!-- Payslips List -->
       <div class="payslips-title">Payslips</div>
-      <div class="payslips-list">
+      <div class="payslips-list" data-month="oct">
+        <div class="payslip-row" onclick="openPayslip('payslips/payslip-2026-10-31.pdf')">
+          <div class="payslip-left">
+            <div class="file-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <span class="payslip-date">10/31/2026</span>
+          </div>
+          <div class="payslip-right">
+            <span class="payslip-amount">$4,151.60</span>
+            <div class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="payslip-row" onclick="openPayslip('payslips/payslip-2026-10-15.pdf')">
+          <div class="payslip-left">
+            <div class="file-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <span class="payslip-date">10/15/2026</span>
+          </div>
+          <div class="payslip-right">
+            <span class="payslip-amount">$4,151.60</span>
+            <div class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="payslips-list" data-month="sep" style="display:none">
+        <div class="payslip-row" onclick="openPayslip('payslips/payslip-2026-09-30.pdf')">
+          <div class="payslip-left">
+            <div class="file-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <span class="payslip-date">09/30/2026</span>
+          </div>
+          <div class="payslip-right">
+            <span class="payslip-amount">$4,151.60</span>
+            <div class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="payslip-row" onclick="openPayslip('payslips/payslip-2026-09-15.pdf')">
+          <div class="payslip-left">
+            <div class="file-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <span class="payslip-date">09/15/2026</span>
+          </div>
+          <div class="payslip-right">
+            <span class="payslip-amount">$4,151.60</span>
+            <div class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="payslips-list" data-month="aug" style="display:none">
         <div class="payslip-row" onclick="openPayslip('payslips/payslip-2026-08-31.pdf')">
           <div class="payslip-left">
             <div class="file-icon">
@@ -361,7 +444,7 @@
             <span class="payslip-date">08/31/2026</span>
           </div>
           <div class="payslip-right">
-            <span class="payslip-amount">4,151.60</span>
+            <span class="payslip-amount">$4,151.60</span>
             <div class="chevron">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="9 18 15 12 9 6"/>
@@ -381,7 +464,7 @@
             <span class="payslip-date">08/15/2026</span>
           </div>
           <div class="payslip-right">
-            <span class="payslip-amount">4,151.60</span>
+            <span class="payslip-amount">$4,151.60</span>
             <div class="chevron">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="9 18 15 12 9 6"/>
@@ -391,6 +474,47 @@
         </div>
       </div>
 
+      <div class="payslips-list" data-month="jul" style="display:none">
+        <div class="payslip-row" onclick="openPayslip('payslips/payslip-2026-07-31.pdf')">
+          <div class="payslip-left">
+            <div class="file-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <span class="payslip-date">07/31/2026</span>
+          </div>
+          <div class="payslip-right">
+            <span class="payslip-amount">$4,151.60</span>
+            <div class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="payslip-row" onclick="openPayslip('payslips/payslip-2026-07-15.pdf')">
+          <div class="payslip-left">
+            <div class="file-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <span class="payslip-date">07/15/2026</span>
+          </div>
+          <div class="payslip-right">
+            <span class="payslip-amount">$4,151.60</span>
+            <div class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -408,9 +532,12 @@
     document.getElementById('hide-btn').style.display = 'none';
   }
 
-  function switchMonth(el) {
+  function switchMonth(el, month) {
     document.querySelectorAll('.month-tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
+    document.querySelectorAll('.payslips-list').forEach(l => {
+      l.style.display = l.dataset.month === month ? '' : 'none';
+    });
   }
 
   function openPayslip(url) {
