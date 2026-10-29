@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Staffbase brand color via ?brand= URL param (sb-brand-url-param) -->
+<script>(function(){try{var b=new URLSearchParams(location.search).get('brand');if(b&&/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(b)){document.documentElement.style.setProperty('--sb-brand',b);}}catch(e){}})();</script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="widget-name" content="Life Time Communities Hub">
+<meta name="widget-description" content="Club team communities for Life Time team members: browse and join groups, then dive into a feed with posts, events, members and files.">
+<meta name="widget-tags" content="Communications">
+<title>Life Time Communities Hub</title>
+
+<style>
+    @font-face { font-family: "LT Sans"; src: url("https://www.lifetime.life/etc/designs/ltnext/lt-kumiko-components/assets/fonts/LTSans-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+    @font-face { font-family: "LT Sans"; src: url("https://www.lifetime.life/etc/designs/ltnext/lt-kumiko-components/assets/fonts/LTSans-Medium.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+    @font-face { font-family: "LT Sans"; src: url("https://www.lifetime.life/etc/designs/ltnext/lt-kumiko-components/assets/fonts/LTSans-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+    @font-face { font-family: "LT Serif"; src: url("https://www.lifetime.life/etc/designs/ltnext/lt-kumiko-components/assets/fonts/LTSerif-Medium.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+    @font-face { font-family: "LT Serif"; src: url("https://www.lifetime.life/etc/designs/ltnext/lt-kumiko-components/assets/fonts/LTSerif-Semibold.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+    :root {
+        --primary: var(--sb-brand, #5277AB);
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --text: #313131;
+        --text-light: #6b7280;
+        --bg: #ffffff;
+        --bg-gray: #FBF7F2;
+        --border: #e5e7eb;
+    }
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --primary: var(--sb-brand, #7FA0D1);
+            --success: #34d399;
+            --warning: #fbbf24;
+            --danger: #f87171;
+            --text: #f3f4f6;
+            --text-light: #9ca3af;
+            --bg: #1f2937;
+            --bg-gray: #111827;
+            --border: #374151;
+        }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: "LT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .widget { width: 100%; max-width: 960px; margin: 0 auto; padding: 16px; }
+    button { font-family: inherit; }
+
+    /* ---------- shared components ---------- */
+    .cw-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        padding: 8px 14px; font-size: 14px; font-weight: 600; border-radius: 8px;
+        background: var(--primary); color: #fff; border: 1px solid var(--primary);
+        cursor: pointer; white-space: nowrap;
+    }
+    .cw-btn:hover { filter: brightness(0.93); }
+    .cw-btn.cw-outline { background: transparent; color: var(--primary); }
+    .cw-btn.cw-outline:hover { background: var(--bg-gray); filter: none; }
+    .cw-btn.cw-ghost { background: transparent; color: var(--text-light); border-color: var(--border); }
+    .cw-btn.cw-ghost:hover { background: var(--bg-gray); filter: none; }
+    .cw-btn.cw-ghost.cw-on { color: var(--primary); border-color: var(--primary); }
+    .cw-btn.cw-sm { padding: 5px 10px; font-size: 13px; }
+    .cw-btn:disabled { opacity: .5; cursor: default; }
+
+    .cw-card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; }
+    .cw-chip {
+        padding: 6px 12px; font-size: 13px; border-radius: 999px; cursor: pointer;
+        border: 1px solid var(--border); background: var(--bg); color: var(--text-light); font-weight: 500;
+    }
+    .cw-chip:hover { background: var(--bg-gray); }
+    .cw-chip.cw-active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .cw-input {
+        width: 100%; padding: 10px 12px; font-size: 14px; border-radius: 8px; font-family: inherit;
+        border: 1px solid var(--border); background: var(--bg); color: var(--text);
+    }
+    .cw-input:focus { outline: 2px solid var(--primary); outline-offset: -1px; }
+    .cw-badge {
+        display: inline-block; padding: 2px 8px; font-size: 11px; font-weight: 600; border-radius: 999px;
+        background: var(--bg-gray); color: var(--text-light); border: 1px solid var(--border);
+    }
+    .cw-badge.cw-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .cw-avatar {
+        width: 40px; height: 40px; border-radius: 50%; flex: none; color: #fff; font-weight: 700;
+        font-size: 14px; display: flex; align-items: center; justify-content: center;
+    }
+    .cw-avatar.cw-sm { width: 30px; height: 30px; font-size: 11px; }
+    .cw-muted { color: var(--text-light); font-size: 13px; }
+
+    /* ---------- list view ---------- */
+    .hub-hero {
+        position: relative; overflow: hidden; border-radius: 16px; padding: 32px 32px 34px; margin-bottom: 16px;
+        border: 1px solid var(--border);
+        background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 7%, var(--bg)), color-mix(in srgb, var(--primary) 14%, var(--bg)));
+    }
+    .hub-hero::before, .hub-hero::after { content: ""; position: absolute; pointer-events: none; }
+    .hub-hero::before { width: 260px; height: 260px; right: -20px; top: -50px; border-radius: 60px; transform: rotate(25deg); background: color-mix(in srgb, var(--primary) 18%, transparent); }
+    .hub-hero::after { width: 300px; height: 300px; right: -90px; bottom: -150px; border-radius: 50%; background: color-mix(in srgb, var(--primary) 32%, transparent); }
+    .hub-hero > * { position: relative; z-index: 1; }
+    .hub-eyebrow { margin: 0 0 6px; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--primary); }
+    .hub-hero h2 { margin: 0 0 10px; font-size: 34px; line-height: 1.1; letter-spacing: -0.02em; }
+    .hub-hero p.hub-sub { margin: 0 0 22px; max-width: 520px; font-size: 16px; line-height: 1.5; color: var(--text); }
+    .hub-searchrow { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .hub-search { position: relative; flex: 1 1 260px; max-width: 420px; }
+    .hub-search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-light); pointer-events: none; }
+    .hub-search input {
+        width: 100%; padding: 13px 16px 13px 42px; font-size: 15px; font-family: inherit; border-radius: 12px;
+        border: 1px solid var(--border); background: var(--bg); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .hub-search input:focus { outline: 2px solid var(--primary); outline-offset: -1px; }
+    .hub-create { padding: 12px 18px; font-size: 15px; border-radius: 10px; }
+    .hub-createform { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; max-width: 520px; }
+    .hub-createform .cw-input { flex: 1 1 200px; }
+    .hub-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+    .hub-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .hub-section { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-light); font-weight: 700; }
+    .hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; margin-bottom: 26px; }
+    .comm-card { overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: box-shadow .15s, transform .15s; }
+    .comm-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.12); transform: translateY(-2px); }
+    .comm-cover { height: 78px; display: flex; align-items: flex-end; padding: 0 14px; position: relative; }
+    .comm-icon {
+        width: 52px; height: 52px; border-radius: 12px; background: var(--bg); border: 3px solid var(--bg);
+        display: flex; align-items: center; justify-content: center; font-size: 26px; transform: translateY(24px);
+    }
+    .comm-body { padding: 30px 14px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .comm-body h3 { margin: 0; font-size: 16px; }
+    .comm-body p { margin: 0; font-size: 13px; color: var(--text-light); flex: 1; line-height: 1.45; }
+    .comm-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; gap: 8px; }
+    .hub-empty { text-align: center; color: var(--text-light); padding: 40px 0; }
+
+    /* ---------- detail view ---------- */
+    .back-link { background: none; border: none; color: var(--primary); font-weight: 600; font-size: 14px; cursor: pointer; padding: 4px 0; margin-bottom: 10px; }
+    .back-link:hover { text-decoration: underline; }
+    .det-hero { overflow: hidden; margin-bottom: 14px; }
+    .det-cover { height: 120px; }
+    .det-bar { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; padding: 0 18px 16px; }
+    .det-icon {
+        width: 84px; height: 84px; border-radius: 18px; background: var(--bg); border: 4px solid var(--bg);
+        display: flex; align-items: center; justify-content: center; font-size: 42px; margin-top: -42px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    }
+    .det-title { flex: 1 1 220px; min-width: 0; }
+    .det-title h2 { margin: 0; font-size: 22px; }
+    .det-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .det-tabs { display: flex; gap: 4px; border-top: 1px solid var(--border); padding: 0 12px; overflow-x: auto; }
+    .cw-tab { padding: 12px 14px; background: none; border: none; border-bottom: 3px solid transparent; color: var(--text-light); font-weight: 600; font-size: 14px; cursor: pointer; white-space: nowrap; }
+    .cw-tab:hover { color: var(--text); }
+    .cw-tab.cw-active { color: var(--primary); border-bottom-color: var(--primary); }
+    .det-layout { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 14px; align-items: start; }
+    @media (max-width: 760px) { .det-layout { grid-template-columns: 1fr; } }
+    .side-card { padding: 14px; margin-bottom: 14px; }
+    .side-card h4 { margin: 0 0 8px; font-size: 14px; }
+    .side-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; }
+
+    .composer { padding: 14px; margin-bottom: 12px; }
+    .composer textarea { resize: vertical; min-height: 64px; }
+    .composer-foot { display: flex; justify-content: flex-end; margin-top: 8px; }
+    .join-banner { padding: 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; background: var(--bg-gray); }
+    .feed-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+
+    .post { padding: 14px 16px; margin-bottom: 12px; }
+    .post-head { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .post-head .who { flex: 1; min-width: 0; }
+    .post-head .who b { display: block; font-size: 14px; }
+    .post-text { font-size: 14.5px; line-height: 1.55; margin: 0 0 10px; white-space: pre-wrap; word-break: break-word; }
+    .post-actions { display: flex; gap: 4px; border-top: 1px solid var(--border); padding-top: 8px; flex-wrap: wrap; }
+    .act-btn { background: none; border: none; color: var(--text-light); font-size: 13px; font-weight: 600; padding: 6px 10px; border-radius: 6px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+    .act-btn:hover { background: var(--bg-gray); color: var(--text); }
+    .act-btn.cw-on { color: var(--primary); }
+    .comments { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
+    .comment { display: flex; gap: 8px; margin-bottom: 10px; }
+    .comment-bubble { background: var(--bg-gray); border-radius: 12px; padding: 8px 12px; font-size: 13.5px; }
+    .comment-bubble b { display: block; font-size: 12.5px; }
+    .comment-form { display: flex; gap: 8px; }
+    .poll-opt { position: relative; display: block; width: 100%; text-align: left; margin-bottom: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; cursor: pointer; overflow: hidden; }
+    .poll-opt:hover { border-color: var(--primary); }
+    .poll-fill { position: absolute; inset: 0 auto 0 0; background: var(--primary); opacity: .15; }
+    .poll-opt.cw-mine { border-color: var(--primary); font-weight: 600; }
+    .poll-row { position: relative; display: flex; justify-content: space-between; gap: 8px; }
+    .more-wrap { text-align: center; margin: 4px 0 18px; }
+
+    .week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 14px; }
+    .day-btn { padding: 8px 2px; text-align: center; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; }
+    .day-btn:hover { background: var(--bg-gray); }
+    .day-btn.cw-active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .day-btn small { display: block; font-size: 11px; opacity: .8; text-transform: uppercase; }
+    .day-btn b { display: block; font-size: 17px; }
+    .day-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); margin: 3px auto 0; }
+    .day-btn.cw-active .day-dot { background: #fff; }
+    .event { display: flex; gap: 14px; padding: 14px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+    .event-date { width: 56px; text-align: center; flex: none; }
+    .event-date small { display: block; font-size: 11px; text-transform: uppercase; color: var(--ev, var(--primary)); font-weight: 700; }
+    .event { border-left: 4px solid var(--ev, var(--border)); }
+    .event-date b { font-size: 24px; line-height: 1.1; }
+    .event-info { flex: 1 1 200px; min-width: 0; }
+    .event-info h4 { margin: 0 0 2px; font-size: 15px; }
+
+    .file { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 8px; }
+    .file-ico { width: 38px; height: 38px; border-radius: 8px; background: var(--bg-gray); display: flex; align-items: center; justify-content: center; font-size: 18px; flex: none; }
+    .file-info { flex: 1; min-width: 0; }
+    .file-info b { display: block; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .member { display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin-bottom: 8px; }
+    .member-info { flex: 1; min-width: 0; }
+    .member-info b { font-size: 14px; }
+    .member-btns { display: flex; gap: 6px; }
+
+    .about-card { padding: 18px; margin-bottom: 14px; }
+    .about-card h3 { margin: 0 0 8px; font-size: 16px; }
+    .about-card p, .about-card li { font-size: 14px; line-height: 1.55; color: var(--text); }
+    .about-card ul { margin: 0; padding-left: 20px; }
+
+    .set-form { display: grid; gap: 10px; margin-top: 12px; }
+    .set-form label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--text-light); }
+    .set-form textarea { resize: vertical; min-height: 70px; }
+    .set-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .set-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .set-item span:first-child { flex: 1; min-width: 0; }
+    .cw-btn.cw-danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+    .cw-btn.cw-danger:hover { background: var(--bg-gray); filter: none; }
+    .cal-card { padding: 0 0 12px; margin-bottom: 14px; overflow: hidden; }
+    .cal-card > :not(.cal-head) { margin-left: 14px; margin-right: 14px; }
+    .cal-head {
+        display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; margin-bottom: 8px; color: #fff;
+        background: linear-gradient(120deg, #343434, #5277AB);
+    }
+    .cal-head h4 { margin: 0; font-size: 15px; text-transform: capitalize; color: #fff; }
+    .cal-nav { background: rgba(255,255,255,.22); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 17px; line-height: 1; }
+    .cal-nav:hover { background: rgba(255,255,255,.38); }
+    .cal-grid { padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+    .cal-wd { font-size: 11px; color: var(--primary); padding: 4px 0; font-weight: 700; }
+    .cal-day { position: relative; aspect-ratio: 1; border: 1px solid transparent; background: none; color: var(--text); border-radius: 8px; font-size: 12.5px; cursor: pointer; padding: 0; }
+    .cal-day:hover { background: var(--bg-gray); }
+    .cal-day.cw-wknd { color: var(--danger); }
+    .cal-day.cw-ev { font-weight: 700; color: var(--text); }
+    .cal-day.cw-today { border: 2px solid var(--primary); font-weight: 800; }
+    .cal-day.cw-active { background: var(--primary) !important; color: #fff; }
+    .cal-dots { position: absolute; left: 0; right: 0; bottom: 3px; display: flex; justify-content: center; gap: 2px; }
+    .cal-dot { width: 5px; height: 5px; border-radius: 50%; box-shadow: 0 0 0 1px var(--bg); }
+    .cal-day.cw-active .cal-dot { box-shadow: 0 0 0 1px #fff; }
+    .cal-list-h { margin-top: 12px; margin-bottom: 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--primary); font-weight: 700; }
+    .cal-ev { display: flex; gap: 10px; align-items: center; width: calc(100% - 28px); text-align: left; border: none; border-left: 4px solid var(--ev); border-radius: 8px; margin-bottom: 6px; padding: 7px 8px; cursor: pointer; color: var(--text); background: color-mix(in srgb, var(--ev) 12%, var(--bg)); }
+    .cal-ev:hover { background: color-mix(in srgb, var(--ev) 22%, var(--bg)); }
+    .cal-ev-date { width: 36px; text-align: center; flex: none; line-height: 1.1; border-radius: 8px; padding: 3px 0; background: var(--ev); color: #fff; }
+    .cal-ev-date small { display: block; font-size: 10px; text-transform: uppercase; font-weight: 700; opacity: .9; }
+    .cal-ev-date b { font-size: 16px; }
+    .cal-ev-info { min-width: 0; font-size: 13px; }
+    .cal-ev-info b { display: block; font-weight: 600; }
+    .cal-link { background: none; border: none; color: var(--primary); font-weight: 600; font-size: 13px; cursor: pointer; padding: 4px 0 0; text-align: left; }
+    .cal-link:hover { text-decoration: underline; }
+    #toast {
+        position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 20px); opacity: 0;
+        background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px;
+        pointer-events: none; transition: opacity .2s, transform .2s; max-width: 90vw; z-index: 50;
+    }
+    #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    h1, h2, h3, .hub-hero h2, .cw-serif { font-family: "LT Serif", Georgia, "Times New Roman", serif; font-weight: 500; }
+    .cw-btn { background: #343434; border-color: #343434; }
+    .cw-btn.cw-outline { background: transparent; color: var(--text); border-color: #343434; }
+    .cw-btn.cw-ghost.cw-on { color: var(--primary); }
+    .cw-chip.cw-active { background: #343434; border-color: #343434; }
+    @media (prefers-color-scheme: dark) {
+        .cw-btn { background: #FBF7F2; border-color: #FBF7F2; color: #313131; }
+        .cw-btn.cw-outline { background: transparent; color: var(--text); border-color: var(--text-light); }
+        .cw-chip.cw-active { background: #FBF7F2; border-color: #FBF7F2; color: #313131; }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="widget" id="app"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+    // --- Language detection (per widgets/MULTILANGUAGE.md) ---
+    const LANG = (() => {
+        const l = navigator.language || '';
+        if (l.startsWith('de')) return 'de';
+        if (l.startsWith('fr')) return 'fr';
+        if (l.startsWith('es')) return 'es';
+        if (l.startsWith('ja')) return 'ja';
+        if (l === 'en-GB')      return 'en-GB';
+        return 'en-US';
+    })();
+    document.documentElement.lang = LANG;
+
+    const LOCALE = {
+        'de': 'de-DE', 'fr': 'fr-FR', 'es': 'es-ES',
+        'ja': 'ja-JP', 'en-GB': 'en-GB', 'en-US': 'en-US'
+    }[LANG];
+    const HOUR12 = LANG === 'en-GB' || LANG === 'en-US';
+
+    // --- Translations ---
+    const T = {
+        de: {
+            title: "Communities",
+            description: "Tritt Communities bei, folge Gesprächen und vernetze dich mit Kolleginnen und Kollegen.",
+            search: "Communities nach Namen suchen …",
+            heroTitle: "Communities entdecken", heroDesc: "Finde Gruppen, die zu deinen Interessen passen, vernetze dich mit Kolleginnen und Kollegen und bleib auf dem Laufenden.", create: "Community erstellen", createName: "Name der Community", createConfirm: "Erstellen", cancel: "Abbrechen", createdToast: "${c} wurde erstellt", newDesc: "Eine neue Community – sag Hallo und lege los.",
+            tabSettings: "Einstellungen", settingsTitle: "Community-Einstellungen", managerTitle: "Community-Manager", managerHint: "Wechsle in die Manager-Ansicht, um Seiten, Events, Mitglieder und Beiträge zu verwalten.", managerEnter: "Als Community-Manager agieren", managerExit: "Manager-Ansicht verlassen", managerBadge: "Manager-Ansicht", managerToastOn: "Du agierst jetzt als Community-Manager", managerToastOff: "Manager-Ansicht deaktiviert", detailsTitle: "Community-Details", nameLbl: "Name", descLbl: "Beschreibung", saveChanges: "Änderungen speichern", savedChanges: "Änderungen gespeichert", pagesTitle: "Seiten", addPage: "Seite hinzufügen", pageTitle: "Seitentitel", pageBody: "Seiteninhalt", pageAdded: "Seite hinzugefügt", pageDeleted: "Seite gelöscht", noPagesYet: "Noch keine eigenen Seiten", eventsTitle: "Events", addEvent: "Event hinzufügen", eventTitleLbl: "Eventtitel", eventDayLbl: "Tag", eventTimeLbl: "Startzeit", eventLocLbl: "Ort", eventAdded: "Event hinzugefügt", eventDeleted: "Event gelöscht", deleteBtn: "Löschen", pinPost: "Anpinnen", unpinPost: "Lösen", postDeleted: "Beitrag gelöscht", removeBtn: "Entfernen", memberRemoved: "${n} wurde entfernt", fillRequired: "Bitte fülle die Pflichtfelder aus",
+            upcoming: "Kommende Events", viewAll: "Alle Events anzeigen", prevMonth: "Vorheriger Monat", nextMonth: "Nächster Monat",
+            myCommunities: "Deine Communities", discover: "Communities entdecken",
+            members: "${n} Mitglieder", join: "Beitreten", joined: "Beigetreten", leave: "Verlassen",
+            joinedToast: "Du bist ${c} beigetreten", leftToast: "Du hast ${c} verlassen",
+            back: "Alle Communities",
+            tabFeed: "Feed", tabAbout: "Info", tabMembers: "Mitglieder", tabEvents: "Events", tabFiles: "Dateien",
+            fAll: "Alle", fAnnouncements: "Ankündigungen", fDiscussions: "Diskussionen", fPolls: "Umfragen",
+            composerPlaceholder: "Teile etwas mit der Community …", post: "Veröffentlichen", postedToast: "Dein Beitrag ist live",
+            like: "Gefällt mir", comment: "Kommentieren", comments: "${n} Kommentare", share: "Teilen",
+            shareToast: "Link in die Zwischenablage kopiert", save: "Merken", saved: "Gemerkt", savedToast: "Beitrag gemerkt", pinned: "Angepinnt",
+            writeComment: "Kommentar schreiben …", send: "Senden",
+            joinToPost: "Tritt der Community bei, um zu posten und zu kommentieren.",
+            notifOn: "Benachrichtigungen an", notifOff: "Benachrichtigungen aus",
+            notifOnToast: "Benachrichtigungen aktiviert", notifOffToast: "Benachrichtigungen stummgeschaltet",
+            invite: "Kolleg:innen einladen", inviteToast: "Einladungslink kopiert",
+            follow: "Folgen", following: "Folge ich", message: "Nachricht", messageToast: "Chat mit ${n} wird geöffnet",
+            roleAdmin: "Admin", roleMod: "Moderation", roleMember: "Mitglied", you: "Du",
+            searchMembers: "Mitglieder suchen …",
+            rsvp: "Zusagen", going: "Zugesagt", goingToast: "Du hast für das Event zugesagt", ungoingToast: "Zusage zurückgezogen",
+            attendees: "${n} Zusagen", download: "Herunterladen", downloadToast: "${f} wird heruntergeladen …",
+            aboutTitle: "Über diese Community", rules: "Community-Richtlinien",
+            rule1: "Geht respektvoll miteinander um.", rule2: "Bleibt konstruktiv und beim Thema.", rule3: "Teilt keine vertraulichen oder personenbezogenen Daten.",
+            created: "Erstellt im ${d}", admins: "Admins", visibility: "Offene Community · Jeder kann beitreten",
+            noResults: "Keine passenden Communities gefunden", noPosts: "Noch keine Beiträge", noEvents: "Keine Events geplant",
+            showMore: "Mehr anzeigen", allDays: "Alle Tage", votes: "${n} Stimmen",
+            catAll: "Alle", catWork: "Meine Rolle", catWellbeing: "Gesunde Lebensweise", catCulture: "Kultur",
+            genWelcome: "Willkommen bei ${c}! Sag Hallo und erzähl uns, was dich hierher führt.",
+            genQ: "Was möchtest du in diesem Quartal aus ${c} mitnehmen?",
+            genTip: "Tipp: Aktiviere die Benachrichtigungen, damit du keine Neuigkeiten aus ${c} verpasst.",
+            evKick: "${c}: Kick-off-Call", evCoffee: "Virtueller Kaffeeklatsch", locOnline: "Online", locHub: "Teamraum im Club",
+            cm1: "Guter Punkt, danke fürs Teilen!", cm2: "Ich bin dabei!", cm3: "Tolle Idee.", cm4: "Danke für das Update.", cm5: "Sehe ich genauso, das beschäftigt mich auch.",
+        },
+        fr: {
+            title: "Communautés",
+            description: "Rejoignez des communautés, suivez les conversations et échangez avec vos collègues.",
+            search: "Rechercher une communauté par nom…",
+            heroTitle: "Découvrir des communautés", heroDesc: "Trouvez des groupes qui correspondent à vos centres d'intérêt, échangez avec vos collègues et restez informé.", create: "Créer une communauté", createName: "Nom de la communauté", createConfirm: "Créer", cancel: "Annuler", createdToast: "${c} a été créée", newDesc: "Une nouvelle communauté : dites bonjour et lancez-vous.",
+            tabSettings: "Paramètres", settingsTitle: "Paramètres de la communauté", managerTitle: "Gestionnaire de la communauté", managerHint: "Passez en vue gestionnaire pour gérer les pages, événements, membres et publications.", managerEnter: "Agir en tant que gestionnaire", managerExit: "Quitter la vue gestionnaire", managerBadge: "Vue gestionnaire", managerToastOn: "Vous agissez maintenant en tant que gestionnaire", managerToastOff: "Vue gestionnaire désactivée", detailsTitle: "Détails de la communauté", nameLbl: "Nom", descLbl: "Description", saveChanges: "Enregistrer les modifications", savedChanges: "Modifications enregistrées", pagesTitle: "Pages", addPage: "Ajouter une page", pageTitle: "Titre de la page", pageBody: "Contenu de la page", pageAdded: "Page ajoutée", pageDeleted: "Page supprimée", noPagesYet: "Aucune page personnalisée", eventsTitle: "Événements", addEvent: "Ajouter un événement", eventTitleLbl: "Titre de l'événement", eventDayLbl: "Jour", eventTimeLbl: "Heure de début", eventLocLbl: "Lieu", eventAdded: "Événement ajouté", eventDeleted: "Événement supprimé", deleteBtn: "Supprimer", pinPost: "Épingler", unpinPost: "Désépingler", postDeleted: "Publication supprimée", removeBtn: "Retirer", memberRemoved: "${n} a été retiré", fillRequired: "Veuillez remplir les champs obligatoires",
+            upcoming: "Événements à venir", viewAll: "Voir tous les événements", prevMonth: "Mois précédent", nextMonth: "Mois suivant",
+            myCommunities: "Vos communautés", discover: "Découvrir des communautés",
+            members: "${n} membres", join: "Rejoindre", joined: "Membre", leave: "Quitter",
+            joinedToast: "Vous avez rejoint ${c}", leftToast: "Vous avez quitté ${c}",
+            back: "Toutes les communautés",
+            tabFeed: "Fil", tabAbout: "À propos", tabMembers: "Membres", tabEvents: "Événements", tabFiles: "Fichiers",
+            fAll: "Tout", fAnnouncements: "Annonces", fDiscussions: "Discussions", fPolls: "Sondages",
+            composerPlaceholder: "Partagez quelque chose avec la communauté…", post: "Publier", postedToast: "Votre publication est en ligne",
+            like: "J'aime", comment: "Commenter", comments: "${n} commentaires", share: "Partager",
+            shareToast: "Lien copié dans le presse-papiers", save: "Enregistrer", saved: "Enregistré", savedToast: "Publication enregistrée", pinned: "Épinglé",
+            writeComment: "Écrire un commentaire…", send: "Envoyer",
+            joinToPost: "Rejoignez la communauté pour publier et commenter.",
+            notifOn: "Notifications activées", notifOff: "Notifications désactivées",
+            notifOnToast: "Notifications activées", notifOffToast: "Notifications mises en sourdine",
+            invite: "Inviter des collègues", inviteToast: "Lien d'invitation copié",
+            follow: "Suivre", following: "Suivi", message: "Message", messageToast: "Ouverture du chat avec ${n}",
+            roleAdmin: "Admin", roleMod: "Modérateur", roleMember: "Membre", you: "Vous",
+            searchMembers: "Rechercher un membre…",
+            rsvp: "Je participe", going: "Inscrit", goingToast: "Vous êtes inscrit à l'événement", ungoingToast: "Inscription annulée",
+            attendees: "${n} participants", download: "Télécharger", downloadToast: "Téléchargement de ${f}…",
+            aboutTitle: "À propos de cette communauté", rules: "Règles de la communauté",
+            rule1: "Soyez respectueux les uns envers les autres.", rule2: "Restez constructif et dans le sujet.", rule3: "Ne partagez pas d'informations confidentielles ou personnelles.",
+            created: "Créée en ${d}", admins: "Admins", visibility: "Communauté ouverte · Tout le monde peut la rejoindre",
+            noResults: "Aucune communauté trouvée", noPosts: "Aucune publication pour le moment", noEvents: "Aucun événement prévu",
+            showMore: "Afficher plus", allDays: "Tous les jours", votes: "${n} votes",
+            catAll: "Toutes", catWork: "Mon rôle", catWellbeing: "Mode de vie sain", catCulture: "Culture",
+            genWelcome: "Bienvenue dans ${c} ! Dites bonjour et racontez-nous ce qui vous amène.",
+            genQ: "Qu'espérez-vous retirer de ${c} ce trimestre ?",
+            genTip: "Astuce : activez les notifications pour ne rien manquer de ${c}.",
+            evKick: "${c} : appel de lancement", evCoffee: "Pause café virtuelle", locOnline: "En ligne", locHub: "Salle d'équipe du club",
+            cm1: "Bon point, merci du partage !", cm2: "Je suis partant !", cm3: "Super idée.", cm4: "Merci pour la mise à jour.", cm5: "Tout à fait d'accord, j'y pensais aussi.",
+        },
+        es: {
+            title: "Comunidades",
+            description: "Únete a comunidades, sigue las conversaciones y conecta con tus compañeros.",
+            search: "Buscar comunidades por nombre…",
+            heroTitle: "Descubrir comunidades", heroDesc: "Encuentra grupos que encajen con tus intereses, conecta con tus compañeros y mantente al día.", create: "Crear comunidad", createName: "Nombre de la comunidad", createConfirm: "Crear", cancel: "Cancelar", createdToast: "Se ha creado ${c}", newDesc: "Una comunidad nueva: saluda y empieza.",
+            tabSettings: "Ajustes", settingsTitle: "Ajustes de la comunidad", managerTitle: "Gestor de la comunidad", managerHint: "Cambia a la vista de gestor para administrar páginas, eventos, miembros y publicaciones.", managerEnter: "Actuar como gestor de la comunidad", managerExit: "Salir de la vista de gestor", managerBadge: "Vista de gestor", managerToastOn: "Ahora actúas como gestor de la comunidad", managerToastOff: "Vista de gestor desactivada", detailsTitle: "Detalles de la comunidad", nameLbl: "Nombre", descLbl: "Descripción", saveChanges: "Guardar cambios", savedChanges: "Cambios guardados", pagesTitle: "Páginas", addPage: "Añadir página", pageTitle: "Título de la página", pageBody: "Contenido de la página", pageAdded: "Página añadida", pageDeleted: "Página eliminada", noPagesYet: "Aún no hay páginas personalizadas", eventsTitle: "Eventos", addEvent: "Añadir evento", eventTitleLbl: "Título del evento", eventDayLbl: "Día", eventTimeLbl: "Hora de inicio", eventLocLbl: "Lugar", eventAdded: "Evento añadido", eventDeleted: "Evento eliminado", deleteBtn: "Eliminar", pinPost: "Fijar", unpinPost: "Desfijar", postDeleted: "Publicación eliminada", removeBtn: "Quitar", memberRemoved: "Se ha quitado a ${n}", fillRequired: "Rellena los campos obligatorios",
+            upcoming: "Próximos eventos", viewAll: "Ver todos los eventos", prevMonth: "Mes anterior", nextMonth: "Mes siguiente",
+            myCommunities: "Tus comunidades", discover: "Descubrir comunidades",
+            members: "${n} miembros", join: "Unirse", joined: "Unido", leave: "Salir",
+            joinedToast: "Te has unido a ${c}", leftToast: "Has salido de ${c}",
+            back: "Todas las comunidades",
+            tabFeed: "Feed", tabAbout: "Acerca de", tabMembers: "Miembros", tabEvents: "Eventos", tabFiles: "Archivos",
+            fAll: "Todo", fAnnouncements: "Anuncios", fDiscussions: "Debates", fPolls: "Encuestas",
+            composerPlaceholder: "Comparte algo con la comunidad…", post: "Publicar", postedToast: "Tu publicación ya está en línea",
+            like: "Me gusta", comment: "Comentar", comments: "${n} comentarios", share: "Compartir",
+            shareToast: "Enlace copiado al portapapeles", save: "Guardar", saved: "Guardado", savedToast: "Publicación guardada", pinned: "Fijado",
+            writeComment: "Escribe un comentario…", send: "Enviar",
+            joinToPost: "Únete a la comunidad para publicar y comentar.",
+            notifOn: "Notificaciones activadas", notifOff: "Notificaciones desactivadas",
+            notifOnToast: "Notificaciones activadas", notifOffToast: "Notificaciones silenciadas",
+            invite: "Invitar a compañeros", inviteToast: "Enlace de invitación copiado",
+            follow: "Seguir", following: "Siguiendo", message: "Mensaje", messageToast: "Abriendo chat con ${n}",
+            roleAdmin: "Admin", roleMod: "Moderador", roleMember: "Miembro", you: "Tú",
+            searchMembers: "Buscar miembros…",
+            rsvp: "Asistiré", going: "Asistirás", goingToast: "Te has apuntado al evento", ungoingToast: "Inscripción cancelada",
+            attendees: "${n} asistentes", download: "Descargar", downloadToast: "Descargando ${f}…",
+            aboutTitle: "Acerca de esta comunidad", rules: "Normas de la comunidad",
+            rule1: "Trátense con respeto.", rule2: "Mantén un tono constructivo y ceñido al tema.", rule3: "No compartas información confidencial ni personal.",
+            created: "Creada en ${d}", admins: "Administradores", visibility: "Comunidad abierta · Cualquiera puede unirse",
+            noResults: "No se encontraron comunidades", noPosts: "Aún no hay publicaciones", noEvents: "No hay eventos programados",
+            showMore: "Mostrar más", allDays: "Todos los días", votes: "${n} votos",
+            catAll: "Todas", catWork: "Mi función", catWellbeing: "Estilo de vida saludable", catCulture: "Cultura",
+            genWelcome: "¡Te damos la bienvenida a ${c}! Saluda y cuéntanos qué te trae por aquí.",
+            genQ: "¿Qué esperas obtener de ${c} este trimestre?",
+            genTip: "Consejo: activa las notificaciones para no perderte nada de ${c}.",
+            evKick: "${c}: llamada de lanzamiento", evCoffee: "Café virtual", locOnline: "En línea", locHub: "Sala del equipo del club",
+            cm1: "Buen punto, ¡gracias por compartirlo!", cm2: "¡Me apunto!", cm3: "Me encanta la idea.", cm4: "Gracias por la actualización.", cm5: "Totalmente de acuerdo, yo también lo pensaba.",
+        },
+        ja: {
+            title: "コミュニティ",
+            description: "コミュニティに参加して、会話をフォローし、同僚とつながりましょう。",
+            search: "名前でコミュニティを検索…",
+            heroTitle: "コミュニティを探す", heroDesc: "興味に合ったグループを見つけて、同僚とつながり、最新情報を逃さないようにしましょう。", create: "コミュニティを作成", createName: "コミュニティ名", createConfirm: "作成", cancel: "キャンセル", createdToast: "${c}を作成しました", newDesc: "新しいコミュニティです。ぜひ挨拶から始めましょう。",
+            tabSettings: "設定", settingsTitle: "コミュニティ設定", managerTitle: "コミュニティマネージャー", managerHint: "マネージャー表示に切り替えると、ページ、イベント、メンバー、投稿を管理できます。", managerEnter: "コミュニティマネージャーとして操作", managerExit: "マネージャー表示を終了", managerBadge: "マネージャー表示", managerToastOn: "コミュニティマネージャーとして操作しています", managerToastOff: "マネージャー表示をオフにしました", detailsTitle: "コミュニティの詳細", nameLbl: "名前", descLbl: "説明", saveChanges: "変更を保存", savedChanges: "変更を保存しました", pagesTitle: "ページ", addPage: "ページを追加", pageTitle: "ページタイトル", pageBody: "ページの内容", pageAdded: "ページを追加しました", pageDeleted: "ページを削除しました", noPagesYet: "カスタムページはまだありません", eventsTitle: "イベント", addEvent: "イベントを追加", eventTitleLbl: "イベント名", eventDayLbl: "日付", eventTimeLbl: "開始時刻", eventLocLbl: "場所", eventAdded: "イベントを追加しました", eventDeleted: "イベントを削除しました", deleteBtn: "削除", pinPost: "固定", unpinPost: "固定解除", postDeleted: "投稿を削除しました", removeBtn: "削除", memberRemoved: "${n}さんを削除しました", fillRequired: "必須項目を入力してください",
+            upcoming: "今後のイベント", viewAll: "すべてのイベントを表示", prevMonth: "前の月", nextMonth: "次の月",
+            myCommunities: "参加中のコミュニティ", discover: "コミュニティを探す",
+            members: "${n}人のメンバー", join: "参加する", joined: "参加中", leave: "退会する",
+            joinedToast: "${c}に参加しました", leftToast: "${c}を退会しました",
+            back: "すべてのコミュニティ",
+            tabFeed: "フィード", tabAbout: "概要", tabMembers: "メンバー", tabEvents: "イベント", tabFiles: "ファイル",
+            fAll: "すべて", fAnnouncements: "お知らせ", fDiscussions: "ディスカッション", fPolls: "アンケート",
+            composerPlaceholder: "コミュニティに共有しましょう…", post: "投稿する", postedToast: "投稿が公開されました",
+            like: "いいね", comment: "コメント", comments: "${n}件のコメント", share: "共有",
+            shareToast: "リンクをコピーしました", save: "保存", saved: "保存済み", savedToast: "投稿を保存しました", pinned: "固定",
+            writeComment: "コメントを書く…", send: "送信",
+            joinToPost: "投稿やコメントをするには、コミュニティに参加してください。",
+            notifOn: "通知オン", notifOff: "通知オフ",
+            notifOnToast: "通知をオンにしました", notifOffToast: "通知をオフにしました",
+            invite: "同僚を招待", inviteToast: "招待リンクをコピーしました",
+            follow: "フォロー", following: "フォロー中", message: "メッセージ", messageToast: "${n}さんとのチャットを開いています",
+            roleAdmin: "管理者", roleMod: "モデレーター", roleMember: "メンバー", you: "自分",
+            searchMembers: "メンバーを検索…",
+            rsvp: "参加登録", going: "参加予定", goingToast: "イベントに参加登録しました", ungoingToast: "参加登録を取り消しました",
+            attendees: "${n}人が参加予定", download: "ダウンロード", downloadToast: "${f}をダウンロード中…",
+            aboutTitle: "このコミュニティについて", rules: "コミュニティガイドライン",
+            rule1: "互いに敬意を持って接しましょう。", rule2: "建設的で、話題に沿った投稿を心がけましょう。", rule3: "機密情報や個人情報は共有しないでください。",
+            created: "${d}に作成", admins: "管理者", visibility: "オープンコミュニティ・誰でも参加できます",
+            noResults: "該当するコミュニティはありません", noPosts: "まだ投稿はありません", noEvents: "予定されているイベントはありません",
+            showMore: "さらに表示", allDays: "すべての日", votes: "${n}票",
+            catAll: "すべて", catWork: "担当業務", catWellbeing: "ヘルシー・ウェイ・オブ・ライフ", catCulture: "カルチャー",
+            genWelcome: "${c}へようこそ！ ぜひ自己紹介と参加のきっかけを教えてください。",
+            genQ: "今四半期、${c}で得たいことは何ですか？",
+            genTip: "ヒント：通知をオンにすると、${c}の最新情報を見逃しません。",
+            evKick: "${c}：キックオフ通話", evCoffee: "オンライン・コーヒーチャット", locOnline: "オンライン", locHub: "クラブのチームルーム",
+            cm1: "いい視点ですね、共有ありがとう！", cm2: "参加します！", cm3: "素敵なアイデアです。", cm4: "更新ありがとうございます。", cm5: "同感です、私も気になっていました。",
+        },
+        'en-GB': {
+            title: "Communities",
+            description: "Join communities, follow conversations and connect with colleagues.",
+            search: "Search communities by name…",
+            heroTitle: "Discover communities", heroDesc: "Find groups that match your interests, connect with colleagues, and stay in the loop.", create: "Create community", createName: "Community name", createConfirm: "Create", cancel: "Cancel", createdToast: "${c} was created", newDesc: "A brand new community. Say hello and get started.",
+            tabSettings: "Settings", settingsTitle: "Community settings", managerTitle: "Community manager", managerHint: "Switch to manager view to manage pages, events, members and posts.", managerEnter: "Act as community manager", managerExit: "Exit manager view", managerBadge: "Manager view", managerToastOn: "You are now acting as community manager", managerToastOff: "Manager view turned off", detailsTitle: "Community details", nameLbl: "Name", descLbl: "Description", saveChanges: "Save changes", savedChanges: "Changes saved", pagesTitle: "Pages", addPage: "Add page", pageTitle: "Page title", pageBody: "Page content", pageAdded: "Page added", pageDeleted: "Page deleted", noPagesYet: "No custom pages yet", eventsTitle: "Events", addEvent: "Add event", eventTitleLbl: "Event title", eventDayLbl: "Day", eventTimeLbl: "Start time", eventLocLbl: "Location", eventAdded: "Event added", eventDeleted: "Event deleted", deleteBtn: "Delete", pinPost: "Pin", unpinPost: "Unpin", postDeleted: "Post deleted", removeBtn: "Remove", memberRemoved: "${n} was removed", fillRequired: "Please fill in the required fields",
+            upcoming: "Upcoming events", viewAll: "View all events", prevMonth: "Previous month", nextMonth: "Next month",
+            myCommunities: "Your communities", discover: "Discover communities",
+            members: "${n} members", join: "Join", joined: "Joined", leave: "Leave",
+            joinedToast: "You joined ${c}", leftToast: "You left ${c}",
+            back: "All communities",
+            tabFeed: "Feed", tabAbout: "About", tabMembers: "Members", tabEvents: "Events", tabFiles: "Files",
+            fAll: "All", fAnnouncements: "Announcements", fDiscussions: "Discussions", fPolls: "Polls",
+            composerPlaceholder: "Share something with the community…", post: "Post", postedToast: "Your post is live",
+            like: "Like", comment: "Comment", comments: "${n} comments", share: "Share",
+            shareToast: "Link copied to clipboard", save: "Save", saved: "Saved", savedToast: "Post saved", pinned: "Pinned",
+            writeComment: "Write a comment…", send: "Send",
+            joinToPost: "Join this community to post and comment.",
+            notifOn: "Notifications on", notifOff: "Notifications off",
+            notifOnToast: "Notifications turned on", notifOffToast: "Notifications muted",
+            invite: "Invite colleagues", inviteToast: "Invitation link copied",
+            follow: "Follow", following: "Following", message: "Message", messageToast: "Opening chat with ${n}",
+            roleAdmin: "Admin", roleMod: "Moderator", roleMember: "Member", you: "You",
+            searchMembers: "Search members…",
+            rsvp: "RSVP", going: "Going", goingToast: "You're going to the event", ungoingToast: "RSVP cancelled",
+            attendees: "${n} going", download: "Download", downloadToast: "Downloading ${f}…",
+            aboutTitle: "About this community", rules: "Community guidelines",
+            rule1: "Treat each other with respect.", rule2: "Stay constructive and on topic.", rule3: "Don't share confidential or personal data.",
+            created: "Created ${d}", admins: "Admins", visibility: "Open community · Anyone can join",
+            noResults: "No communities found", noPosts: "No posts yet", noEvents: "No events scheduled",
+            showMore: "Show more", allDays: "All days", votes: "${n} votes",
+            catAll: "All", catWork: "My Role", catWellbeing: "Healthy Way of Life", catCulture: "Culture",
+            genWelcome: "Welcome to ${c}! Say hello and tell us what brings you here.",
+            genQ: "What is one thing you hope to get out of ${c} this quarter?",
+            genTip: "Tip: turn on notifications so you never miss an update from ${c}.",
+            evKick: "${c} kick-off call", evCoffee: "Virtual coffee chat", locOnline: "Online", locHub: "Club team room",
+            cm1: "Great point, thanks for sharing!", cm2: "Count me in!", cm3: "Love this idea.", cm4: "Thanks for the update.", cm5: "Totally agree, this has been on my mind too.",
+        },
+        'en-US': {
+            title: "Communities",
+            description: "Join communities, follow conversations and connect with colleagues.",
+            search: "Search communities by name…",
+            heroTitle: "Discover communities", heroDesc: "Find groups that match your interests, connect with colleagues, and stay in the loop.", create: "Create community", createName: "Community name", createConfirm: "Create", cancel: "Cancel", createdToast: "${c} was created", newDesc: "A brand new community. Say hello and get started.",
+            tabSettings: "Settings", settingsTitle: "Community settings", managerTitle: "Community manager", managerHint: "Switch to manager view to manage pages, events, members and posts.", managerEnter: "Act as community manager", managerExit: "Exit manager view", managerBadge: "Manager view", managerToastOn: "You are now acting as community manager", managerToastOff: "Manager view turned off", detailsTitle: "Community details", nameLbl: "Name", descLbl: "Description", saveChanges: "Save changes", savedChanges: "Changes saved", pagesTitle: "Pages", addPage: "Add page", pageTitle: "Page title", pageBody: "Page content", pageAdded: "Page added", pageDeleted: "Page deleted", noPagesYet: "No custom pages yet", eventsTitle: "Events", addEvent: "Add event", eventTitleLbl: "Event title", eventDayLbl: "Day", eventTimeLbl: "Start time", eventLocLbl: "Location", eventAdded: "Event added", eventDeleted: "Event deleted", deleteBtn: "Delete", pinPost: "Pin", unpinPost: "Unpin", postDeleted: "Post deleted", removeBtn: "Remove", memberRemoved: "${n} was removed", fillRequired: "Please fill in the required fields",
+            upcoming: "Upcoming events", viewAll: "View all events", prevMonth: "Previous month", nextMonth: "Next month",
+            myCommunities: "Your communities", discover: "Discover communities",
+            members: "${n} members", join: "Join", joined: "Joined", leave: "Leave",
+            joinedToast: "You joined ${c}", leftToast: "You left ${c}",
+            back: "All communities",
+            tabFeed: "Feed", tabAbout: "About", tabMembers: "Members", tabEvents: "Events", tabFiles: "Files",
+            fAll: "All", fAnnouncements: "Announcements", fDiscussions: "Discussions", fPolls: "Polls",
+            composerPlaceholder: "Share something with the community…", post: "Post", postedToast: "Your post is live",
+            like: "Like", comment: "Comment", comments: "${n} comments", share: "Share",
+            shareToast: "Link copied to clipboard", save: "Save", saved: "Saved", savedToast: "Post saved", pinned: "Pinned",
+            writeComment: "Write a comment…", send: "Send",
+            joinToPost: "Join this community to post and comment.",
+            notifOn: "Notifications on", notifOff: "Notifications off",
+            notifOnToast: "Notifications turned on", notifOffToast: "Notifications muted",
+            invite: "Invite colleagues", inviteToast: "Invitation link copied",
+            follow: "Follow", following: "Following", message: "Message", messageToast: "Opening chat with ${n}",
+            roleAdmin: "Admin", roleMod: "Moderator", roleMember: "Member", you: "You",
+            searchMembers: "Search members…",
+            rsvp: "RSVP", going: "Going", goingToast: "You're going to the event", ungoingToast: "RSVP canceled",
+            attendees: "${n} going", download: "Download", downloadToast: "Downloading ${f}…",
+            aboutTitle: "About this community", rules: "Community guidelines",
+            rule1: "Treat each other with respect.", rule2: "Stay constructive and on topic.", rule3: "Don't share confidential or personal data.",
+            created: "Created ${d}", admins: "Admins", visibility: "Open community · Anyone can join",
+            noResults: "No communities found", noPosts: "No posts yet", noEvents: "No events scheduled",
+            showMore: "Show more", allDays: "All days", votes: "${n} votes",
+            catAll: "All", catWork: "My Role", catWellbeing: "Healthy Way of Life", catCulture: "Culture",
+            genWelcome: "Welcome to ${c}! Say hello and tell us what brings you here.",
+            genQ: "What is one thing you hope to get out of ${c} this quarter?",
+            genTip: "Tip: turn on notifications so you never miss an update from ${c}.",
+            evKick: "${c} kick-off call", evCoffee: "Virtual coffee chat", locOnline: "Online", locHub: "Club team room",
+            cm1: "Great point, thanks for sharing!", cm2: "Count me in!", cm3: "Love this idea.", cm4: "Thanks for the update.", cm5: "Totally agree, this has been on my mind too.",
+        },
+    };
+    const t = T[LANG] ?? T['en-US'];
+
+    function tr(key, vars = {}) {
+        let s = t[key] || key;
+        for (const [k, v] of Object.entries(vars)) s = s.split('${' + k + '}').join(v);
+        return s;
+    }
+
+    // --- Data-array helper (per MULTILANGUAGE.md §4b) ---
+    const LANG_SUFFIX = { 'de': 'De', 'fr': 'Fr', 'es': 'Es', 'ja': 'Ja', 'en-GB': '', 'en-US': '' };
+    function loc(obj, key) {
+        const suffix = LANG_SUFFIX[LANG] || '';
+        return (suffix ? obj[key + suffix] : undefined) || obj[key];
+    }
+    // Builds { key, keyDe, keyFr, keyEs, keyJa } from five strings.
+    const m = (k, en, de, fr, es, ja) => ({ [k]: en, [k + 'De']: de, [k + 'Fr']: fr, [k + 'Es']: es, [k + 'Ja']: ja });
+
+    // --- Staffbase brand color passthrough ---
+    function applySBBrand() {
+        var sb = getComputedStyle(document.documentElement).getPropertyValue('--sb-brand').trim();
+        if (sb) {
+            document.documentElement.style.setProperty('--primary', sb);
+            return;
+        }
+        try {
+            sb = window.parent.getComputedStyle(window.parent.document.documentElement)
+                    .getPropertyValue('--sb-brand').trim();
+            if (sb) document.documentElement.style.setProperty('--primary', sb);
+        } catch (e) { /* cross-origin, ignore */ }
+    }
+
+    // --- Date helpers (mock data is always anchored to "now") ---
+    const now = new Date();
+    const hoursAgo = n => new Date(now.getTime() - n * 3600000);
+    const daysAgo = n => { const d = new Date(now); d.setDate(d.getDate() - n); return d; };
+    const daysFromNow = (n, h = 0, min = 0) => { const d = new Date(now); d.setDate(d.getDate() + n); d.setHours(h, min, 0, 0); return d; };
+
+    const timeFmt = new Intl.DateTimeFormat(LOCALE, { hour: 'numeric', minute: '2-digit', hour12: HOUR12 });
+    const monthShortFmt = new Intl.DateTimeFormat(LOCALE, { month: 'short' });
+    const weekdayShortFmt = new Intl.DateTimeFormat(LOCALE, { weekday: 'short' });
+    const monthYearFmt = new Intl.DateTimeFormat(LOCALE, { month: 'long', year: 'numeric' });
+    const numFmt = new Intl.NumberFormat(LOCALE);
+    const rtf = new Intl.RelativeTimeFormat(LOCALE, { numeric: 'auto' });
+    function rel(d) {
+        const s = (d - new Date()) / 1000;
+        const mi = Math.round(s / 60), h = Math.round(s / 3600), dd = Math.round(s / 86400);
+        if (Math.abs(mi) < 60) return rtf.format(mi, 'minute');
+        if (Math.abs(h) < 24) return rtf.format(h, 'hour');
+        return rtf.format(dd, 'day');
+    }
+
+    // --- Demo data ---
+    const ME = 'Maya';
+    const PEOPLE = ['Jordan', 'Priya', 'Marcus', 'Elena', 'Devon', 'Tasha', 'Luis', 'Hannah',
+        'Omar', 'Keisha', 'Brian', 'Mei', 'Carlos', 'Sofia'];
+
+    // Life Time palette: charcoal, slate blue, cream, with a few supporting tones.
+    const GRADS = {
+        g1: 'linear-gradient(135deg, #343434, #5277AB)',
+        g2: 'linear-gradient(135deg, #2F5F8F, #3AA6EF)',
+        g3: 'linear-gradient(135deg, #477F33, #8BB174)',
+        g4: 'linear-gradient(135deg, #5277AB, #9DB4D6)',
+        g5: 'linear-gradient(135deg, #313131, #707070)',
+        g6: 'linear-gradient(135deg, #8A6D4B, #CDB89A)',
+        g7: 'linear-gradient(135deg, #9B2C2C, #D9534F)',
+        g8: 'linear-gradient(135deg, #3E7C73, #8CC4B8)',
+    };
+
+    const COMMUNITIES = [
+        { id: 'c1', icon: '🏡', grad: 'g1', cat: 'work', baseMembers: 4820, joined: true, createdDaysAgo: 540,
+          ...m('name', 'Club Team Lounge', 'Club-Team-Lounge', "Salon de l'équipe du club", 'Sala del equipo del club', 'クラブチーム・ラウンジ'),
+          ...m('desc', 'The home for every club team member: shout-outs, shift tips, perks and everyday club life.',
+              'Das Zuhause für alle Club-Teammitglieder: Lob, Schicht-Tipps, Vorteile und der Club-Alltag.',
+              "Le lieu de rendez-vous de toute l'équipe du club : bravos, astuces de quart, avantages et vie quotidienne du club.",
+              'El hogar de todo el equipo del club: reconocimientos, consejos de turno, beneficios y el día a día del club.',
+              'クラブのチームメンバー全員のための場所。称賛、シフトのヒント、特典、クラブの日常をシェアしましょう。') },
+        { id: 'c2', icon: '🏊', grad: 'g2', cat: 'work', baseMembers: 1310, joined: true, createdDaysAgo: 420,
+          ...m('name', 'Aquatics & Lifeguards', 'Aquatics & Rettungsschwimmer', 'Aquatique et sauveteurs', 'Acuáticos y salvavidas', 'アクアティクスとライフガード'),
+          ...m('desc', 'Rotation reminders, safety drills and pool-deck tips from lifeguards and swim coaches.',
+              'Rotationserinnerungen, Sicherheitsübungen und Tipps vom Beckenrand von Rettungsschwimmern und Schwimmtrainern.',
+              'Rappels de rotation, exercices de sécurité et conseils du bord du bassin par les sauveteurs et les entraîneurs de natation.',
+              'Recordatorios de rotación, simulacros de seguridad y consejos junto a la piscina de salvavidas y entrenadores de natación.',
+              'ローテーションのリマインド、安全訓練、プールサイドのヒントをライフガードとスイムコーチが共有します。') },
+        { id: 'c3', icon: '🧒', grad: 'g3', cat: 'work', baseMembers: 960, joined: false, createdDaysAgo: 380,
+          ...m('name', 'Kids Academy Crew', 'Kids-Academy-Team', 'Équipe Kids Academy', 'Equipo Kids Academy', 'キッズアカデミー・クルー'),
+          ...m('desc', 'Activity ideas, opening checks and great moments from our Kids Academy teams.',
+              'Aktivitätsideen, Öffnungschecks und schöne Momente aus unseren Kids-Academy-Teams.',
+              "Idées d'activités, vérifications d'ouverture et beaux moments de nos équipes Kids Academy.",
+              'Ideas de actividades, revisiones de apertura y grandes momentos de nuestros equipos de Kids Academy.',
+              'アクティビティのアイデア、開店前チェック、キッズアカデミーチームの素敵な瞬間を共有します。') },
+        { id: 'c4', icon: '💪', grad: 'g5', cat: 'work', baseMembers: 1875, joined: false, createdDaysAgo: 300,
+          ...m('name', 'Personal Training & Coaching', 'Personal Training & Coaching', 'Entraînement personnel et coaching', 'Entrenamiento personal y coaching', 'パーソナルトレーニング＆コーチング'),
+          ...m('desc', 'Programming ideas, client wins and continuing education for trainers and coaches.',
+              'Trainingsideen, Erfolge mit Kundinnen und Kunden und Weiterbildung für Trainer und Coaches.',
+              'Idées de programmation, réussites de clients et formation continue pour entraîneurs et coachs.',
+              'Ideas de programación, logros de clientes y formación continua para entrenadores y coaches.',
+              'プログラミングのアイデア、クライアントの成果、トレーナーとコーチ向けの継続教育。') },
+        { id: 'c5', icon: '🎶', grad: 'g7', cat: 'work', baseMembers: 1420, joined: false, createdDaysAgo: 260,
+          ...m('name', 'Group Fitness Studio', 'Group-Fitness-Studio', 'Studio de cours collectifs', 'Estudio de clases grupales', 'グループフィットネス・スタジオ'),
+          ...m('desc', 'Playlists, class formats and cueing tips from instructors across every club.',
+              'Playlists, Kursformate und Cueing-Tipps von Instruktorinnen und Instruktoren aus allen Clubs.',
+              'Playlists, formats de cours et conseils de guidage par les instructeurs de tous les clubs.',
+              'Listas de reproducción, formatos de clase y consejos de indicaciones de instructores de todos los clubes.',
+              'プレイリスト、クラス構成、キューイングのコツを、全クラブのインストラクターが共有します。') },
+        { id: 'c6', icon: '🛎️', grad: 'g4', cat: 'work', baseMembers: 2240, joined: false, createdDaysAgo: 330,
+          ...m('name', 'Member Experience', 'Mitgliedererlebnis', 'Expérience membre', 'Experiencia del socio', 'メンバーエクスペリエンス'),
+          ...m('desc', 'Front desk, concierge and membership teams swapping ways to make every visit feel great.',
+              'Empfang, Concierge und Mitgliederteams tauschen Ideen aus, damit jeder Besuch ein gutes Gefühl hinterlässt.',
+              "Accueil, conciergerie et équipes d'adhésion partagent leurs idées pour que chaque visite soit réussie.",
+              'Recepción, conserjería y equipos de membresía comparten ideas para que cada visita sea excelente.',
+              'フロント、コンシェルジュ、メンバーシップチームが、毎回の来館を素晴らしい体験にする工夫を共有します。') },
+        { id: 'c7', icon: '🏃', grad: 'g6', cat: 'wellbeing', baseMembers: 780, joined: false, createdDaysAgo: 200,
+          ...m('name', 'Run Club', 'Lauftreff', 'Club de course', 'Club de running', 'ランクラブ'),
+          ...m('desc', 'Weekly team-member runs, race-day meetups and training plans for every pace.',
+              'Wöchentliche Läufe für Teammitglieder, Treffen am Wettkampftag und Trainingspläne für jedes Tempo.',
+              'Sorties hebdomadaires entre collègues, rendez-vous les jours de course et plans pour tous les rythmes.',
+              'Salidas semanales del equipo, encuentros en días de carrera y planes de entrenamiento para cualquier ritmo.',
+              'チームメンバーの週次ランニング、レース当日の集まり、どのペースにも合うトレーニングプラン。') },
+        { id: 'c8', icon: '🥗', grad: 'g8', cat: 'wellbeing', baseMembers: 1530, joined: false, createdDaysAgo: 450,
+          ...m('name', 'Healthy Way of Life', 'Gesunde Lebensweise', 'Mode de vie sain', 'Estilo de vida saludable', 'ヘルシー・ウェイ・オブ・ライフ'),
+          ...m('desc', 'Practice what we preach: recovery, nutrition and habits for the team behind the clubs.',
+              'Wir leben, was wir vermitteln: Erholung, Ernährung und Gewohnheiten für das Team hinter den Clubs.',
+              "Joindre le geste à la parole : récupération, nutrition et habitudes pour l'équipe derrière les clubs.",
+              'Practicar lo que predicamos: recuperación, nutrición y hábitos para el equipo detrás de los clubes.',
+              '私たちが伝えることを実践：クラブを支えるチームのためのリカバリー、栄養、習慣づくり。') },
+        { id: 'c9', icon: '🤝', grad: 'g3', cat: 'culture', baseMembers: 640, joined: false, createdDaysAgo: 150,
+          ...m('name', 'Giving & Community', 'Engagement & Gemeinschaft', 'Entraide et communauté', 'Solidaridad y comunidad', '社会貢献とコミュニティ'),
+          ...m('desc', 'Find volunteer days, charity events and local causes near your club.',
+              'Finde Freiwilligentage, Wohltätigkeitsevents und lokale Anliegen in der Nähe deines Clubs.',
+              'Trouvez des journées de bénévolat, des événements caritatifs et des causes locales près de votre club.',
+              'Encuentra jornadas de voluntariado, eventos benéficos y causas locales cerca de tu club.',
+              'ボランティアデー、チャリティイベント、お近くのクラブ周辺の活動を見つけましょう。') },
+        { id: 'c10', icon: '🌟', grad: 'g1', cat: 'culture', baseMembers: 3150, joined: false, createdDaysAgo: 500,
+          ...m('name', 'Shout-Outs & Wins', 'Lob & Erfolge', 'Bravos et réussites', 'Reconocimientos y logros', '称賛と成果'),
+          ...m('desc', 'Celebrate teammates who went above and beyond for members.',
+              'Feiere Kolleginnen und Kollegen, die für Mitglieder über sich hinausgewachsen sind.',
+              'Célébrez les collègues qui se sont surpassés pour les membres.',
+              'Celebra a los compañeros que fueron más allá por los socios.',
+              'メンバーのために期待以上の対応をした仲間を称えましょう。') },
+    ];
+
+    // Hand-written feed for the featured community; the rest use generic templated posts.
+    const HERO_POSTS = [
+        { id: 'h1', type: 'announcement', pinned: true, author: 'Jordan', ts: hoursAgo(70), likes: 142, comments: [{ a: 'Marcus', k: 'cm3' }, { a: 'Elena', k: 'cm2' }],
+          ...m('text', 'Welcome to the Club Team Lounge! From the front desk to the pool deck, this is where we share wins, swap tips and keep up with club life. Introduce yourself below and tell us which club you call home.',
+              'Willkommen in der Club-Team-Lounge! Vom Empfang bis zum Beckenrand teilen wir hier Erfolge, tauschen Tipps aus und bleiben beim Club-Alltag auf dem Laufenden. Stell dich unten vor und sag uns, welcher Club dein Zuhause ist.',
+              "Bienvenue dans le Salon de l'équipe du club ! De l'accueil au bord du bassin, c'est ici que nous partageons nos réussites, échangeons des astuces et suivons la vie du club. Présentez-vous ci-dessous et dites-nous quel club est le vôtre.",
+              '¡Bienvenidos a la Sala del equipo del club! Desde la recepción hasta la piscina, aquí compartimos logros, intercambiamos consejos y seguimos la vida del club. Preséntate abajo y cuéntanos en qué club trabajas.',
+              'クラブチーム・ラウンジへようこそ！ フロントからプールサイドまで、ここで成果を共有し、ヒントを交換し、クラブの今を知ることができます。下のコメントで自己紹介と所属クラブを教えてください。') },
+        { id: 'h2', type: 'poll', author: 'Priya', ts: hoursAgo(5), likes: 38, comments: [{ a: 'Devon', k: 'cm2' }],
+          ...m('text', 'Which team-member event should we host next?',
+              'Welches Event für Teammitglieder sollen wir als Nächstes veranstalten?',
+              'Quel événement pour les membres de l’équipe devons-nous organiser ensuite ?',
+              '¿Qué evento para el equipo deberíamos organizar a continuación?',
+              '次に開催するチームメンバー向けイベントはどれがいいですか？'),
+          poll: [
+              { votes: 112, ...m('label', 'Group workout + smoothie social', 'Gruppentraining + Smoothie-Treff', 'Entraînement collectif + smoothies', 'Entrenamiento grupal + reunión con batidos', 'グループワークアウト＋スムージー交流会') },
+              { votes: 87, ...m('label', 'Family fun day at the club', 'Familientag im Club', 'Journée famille au club', 'Día familiar en el club', 'クラブでのファミリーデー') },
+              { votes: 64, ...m('label', 'Community volunteer day', 'Freiwilligentag für die Gemeinschaft', 'Journée de bénévolat communautaire', 'Jornada de voluntariado comunitario', 'コミュニティ・ボランティアデー') },
+          ] },
+        { id: 'h3', type: 'discussion', author: 'Marcus', ts: hoursAgo(26), likes: 64, comments: [{ a: 'Tasha', k: 'cm5' }, { a: 'Luis', k: 'cm1' }, { a: 'Hannah', k: 'cm3' }],
+          ...m('text', 'What is the one thing you do at the start of a shift that makes the biggest difference for members? Share it below.',
+              'Was ist das Eine, das du zu Schichtbeginn tust und das für Mitglieder den größten Unterschied macht? Teile es unten.',
+              'Quelle est la chose que vous faites en début de quart qui fait le plus de différence pour les membres ? Partagez-la ci-dessous.',
+              '¿Qué es lo que haces al inicio del turno que más marca la diferencia para los socios? Compártelo abajo.',
+              'シフトの始めにあなたが必ず行っている、メンバーにとって一番違いが出ることは何ですか？ 下で教えてください。') },
+        { id: 'h4', type: 'announcement', author: 'Jordan', ts: hoursAgo(50), likes: 96, comments: [{ a: 'Mei', k: 'cm4' }],
+          ...m('text', 'Recap: thank you to every club that hosted this weekend’s open house. The tour script and photos are in the Files tab.',
+              'Rückblick: Danke an jeden Club, der am Wochenende einen Tag der offenen Tür veranstaltet hat. Das Tour-Skript und Fotos findest du im Tab „Dateien“.',
+              "Retour : merci à tous les clubs qui ont organisé une journée portes ouvertes ce week-end. Le script de visite et les photos sont dans l'onglet Fichiers.",
+              'Resumen: gracias a cada club que organizó una jornada de puertas abiertas este fin de semana. El guion de recorrido y las fotos están en la pestaña Archivos.',
+              '振り返り：今週末にオープンハウスを開催してくださったすべてのクラブに感謝します。ツアーの台本と写真は「ファイル」タブにあります。') },
+        { id: 'h5', type: 'discussion', author: 'Elena', ts: hoursAgo(98), likes: 29, comments: [],
+          ...m('text', 'Reminder: shift-swap requests for next week close Thursday at noon. Reply here if you need cover.',
+              'Erinnerung: Schichttausch-Anfragen für nächste Woche enden am Donnerstag um 12 Uhr. Antworte hier, wenn du eine Vertretung brauchst.',
+              'Rappel : les demandes d’échange de quart pour la semaine prochaine se terminent jeudi à midi. Répondez ici si vous avez besoin d’un remplaçant.',
+              'Recordatorio: las solicitudes de cambio de turno para la próxima semana cierran el jueves al mediodía. Responde aquí si necesitas cobertura.',
+              '来週のシフト交代の申請は木曜日の正午までです。代わりが必要な場合はここに返信してください。') },
+        { id: 'h6', type: 'discussion', author: 'Devon', ts: hoursAgo(140), likes: 73, comments: [{ a: 'Omar', k: 'cm5' }],
+          ...m('text', 'Tip of the week: greet every member by name in the first ten seconds. It sets the tone for the whole visit.',
+              'Tipp der Woche: Begrüße jedes Mitglied in den ersten zehn Sekunden mit Namen. Das prägt den ganzen Besuch.',
+              'Astuce de la semaine : accueillez chaque membre par son prénom dans les dix premières secondes. Cela donne le ton de toute la visite.',
+              'Consejo de la semana: saluda a cada socio por su nombre en los primeros diez segundos. Marca el tono de toda la visita.',
+              '今週のヒント：最初の10秒以内に、メンバーの名前を呼んで挨拶しましょう。来館全体の雰囲気が決まります。') },
+        { id: 'h7', type: 'announcement', author: 'Jordan', ts: hoursAgo(190), likes: 51, comments: [],
+          ...m('text', 'New this month: refreshed team-member perks, including guest passes and discounts at Life Café. Find the one-pager in the Files tab.',
+              'Neu in diesem Monat: aktualisierte Vorteile für Teammitglieder, darunter Gästepässe und Rabatte im Life Café. Das Infoblatt findest du im Tab „Dateien“.',
+              'Nouveau ce mois-ci : avantages renouvelés pour les membres de l’équipe, dont des laissez-passer invités et des rabais au Life Café. La fiche est dans l’onglet Fichiers.',
+              'Novedad de este mes: beneficios renovados para el equipo, incluidos pases de invitado y descuentos en Life Café. Encuentra el resumen en la pestaña Archivos.',
+              '今月の新情報：ゲストパスやLife Caféでの割引など、チームメンバー特典が新しくなりました。概要は「ファイル」タブにあります。') },
+    ];
+
+    const HERO_EVENTS = [
+        { id: 'e1', day: 0, h: 15, min: 0, dur: 30, loc: 'locOnline', going: 212, ...m('title', 'Team Huddle: Weekend Prep', 'Team-Huddle: Wochenend-Vorbereitung', 'Point d’équipe : préparation du week-end', 'Reunión de equipo: preparación del fin de semana', 'チームハドル：週末の準備') },
+        { id: 'e2', day: 2, h: 10, min: 30, dur: 45, loc: 'locHub', going: 36, ...m('title', 'Tour Practice: Show Off the Club', 'Tour-Übung: Den Club präsentieren', 'Pratique de visite : mettre le club en valeur', 'Práctica de recorrido: presenta el club', 'ツアー練習：クラブの魅力を伝える') },
+        { id: 'e3', day: 4, h: 13, min: 0, dur: 60, loc: 'locOnline', going: 178, ...m('title', 'Ask the GM: Open Q&A', 'Fragen an die Clubleitung: offene Runde', 'Questions au directeur du club : séance ouverte', 'Pregunta al gerente: sesión abierta', 'クラブ責任者に質問：オープンQ&A') },
+        { id: 'e4', day: 6, h: 9, min: 0, dur: 30, loc: 'locOnline', going: 94, ...m('title', 'Weekly Club Team Check-in', 'Wöchentlicher Club-Team-Check-in', 'Point hebdomadaire de l’équipe du club', 'Reunión semanal del equipo del club', '週次クラブチーム・チェックイン') },
+    ];
+    const HERO_FILES = [
+        { n: 'Opening_Checklist.pdf', s: '640 KB', by: 'Jordan', d: 3, ico: '📕' },
+        { n: 'Shift_Swap_Guide.pdf', s: '310 KB', by: 'Elena', d: 5, ico: '📕' },
+        { n: 'Team_Member_Perks.pdf', s: '1.2 MB', by: 'Jordan', d: 1, ico: '📕' },
+        { n: 'Tour_Script.docx', s: '180 KB', by: 'Priya', d: 4, ico: '📘' },
+        { n: 'Open_House_Photos.zip', s: '48 MB', by: 'Mei', d: 2, ico: '🗂️' },
+    ];
+    const GENERIC_FILES = [
+        { n: 'Welcome_Guide.pdf', s: '860 KB', by: 'Jordan', d: 6, ico: '📕' },
+        { n: 'Community_Guidelines.pdf', s: '210 KB', by: 'Priya', d: 6, ico: '📕' },
+    ];
+
+    function genPosts(i) {
+        const a = PEOPLE;
+        return [
+            { id: 'g1', type: 'announcement', pinned: true, key: 'genWelcome', author: a[i % a.length], ts: hoursAgo(80 + i), likes: 20 + i * 3, comments: [{ a: a[(i + 2) % a.length], k: 'cm3' }, { a: a[(i + 4) % a.length], k: 'cm2' }] },
+            { id: 'g2', type: 'discussion', key: 'genQ', author: a[(i + 1) % a.length], ts: hoursAgo(20 + i * 2), likes: 11 + i, comments: [{ a: a[(i + 3) % a.length], k: 'cm5' }] },
+            { id: 'g3', type: 'discussion', key: 'genTip', author: a[(i + 5) % a.length], ts: hoursAgo(44 + i), likes: 8 + i, comments: [] },
+        ];
+    }
+
+    COMMUNITIES.forEach((c, i) => {
+        c.notif = true;
+        c.visible = 4;
+        c.tab = 'feed';
+        c.posts = c.id === 'c1' ? HERO_POSTS.map(p => ({ ...p })) : genPosts(i);
+        c.events = c.id === 'c1' ? HERO_EVENTS : [
+            { id: 'ge1', day: 1 + (i % 3), h: 11, min: 0, dur: 45, loc: 'locOnline', going: 14 + i, key: 'evKick' },
+            { id: 'ge2', day: 3 + (i % 3), h: 14, min: 30, dur: 30, loc: 'locOnline', going: 9 + i, key: 'evCoffee' },
+        ];
+        c.files = c.id === 'c1' ? HERO_FILES : GENERIC_FILES;
+        c.pages = c.id === 'c1' ? [{ id: 'pg1',
+            ...m('title', 'Getting started', 'Erste Schritte', 'Premiers pas', 'Primeros pasos', 'はじめに'),
+            ...m('body', '1. Introduce yourself in the feed.\n2. Check the Events tab for the next team huddle.\n3. Grab the Opening Checklist from Files.',
+                '1. Stell dich im Feed vor.\n2. Im Tab „Events“ findest du das nächste Team-Huddle.\n3. Die Öffnungs-Checkliste gibt es unter „Dateien“.',
+                "1. Présentez-vous dans le fil.\n2. Consultez l'onglet Événements pour le prochain point d'équipe.\n3. Récupérez la liste de vérification d'ouverture dans Fichiers.",
+                '1. Preséntate en el feed.\n2. Consulta la pestaña Eventos para ver la próxima reunión de equipo.\n3. Descarga la lista de apertura en Archivos.',
+                '1. フィードで自己紹介しましょう。\n2. 「イベント」タブで次のチームハドルを確認しましょう。\n3. 「ファイル」から開店チェックリストを入手しましょう。') }] : [];
+        c.removed = new Set();
+        c.manager = false;
+    });
+
+    // --- State ---
+    const state = { calMonth: 0, calDay: null, creating: false, view: 'list', cat: 'all', q: '', cid: null, feedFilter: 'all', day: null, mq: '' };
+    const liked = new Set(), saved = new Set(), followed = new Set(), rsvps = new Set(), voted = {}, openComments = new Set();
+    const seed = { n: 1 };
+
+    // --- Helpers ---
+    const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    const cById = id => COMMUNITIES.find(c => c.id === id);
+    const memberCount = c => c.baseMembers + (c.joined ? 1 : 0) - c.removed.size;
+    const initials = n => n.split(' ').map(p => p[0]).slice(0, 2).join('');
+    const hueOf = n => { let h = 0; for (const ch of n) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; };
+    const AV = ['#343434', '#5277AB', '#477F33', '#8A6D4B', '#707070', '#2F5F8F'];
+    const avatar = (n, sm) => `<div class="cw-avatar${sm ? ' cw-sm' : ''}" style="background:${AV[hueOf(n) % AV.length]}" aria-hidden="true">${esc(initials(n))}</div>`;
+    const coverBg = c => GRADS[c.grad] || GRADS.g1;
+    const roleOf = (idx) => idx === 0 ? 'roleAdmin' : idx === 1 ? 'roleMod' : 'roleMember';
+    const postText = p => p.key ? tr(p.key, { c: loc(cById(state.cid), 'name') }) : loc(p, 'text');
+    const eventTitle = (e, c) => e.key ? tr(e.key, { c: loc(c, 'name') }) : loc(e, 'title');
+    const eventDate = e => daysFromNow(e.day, e.h, e.min);
+
+    let toastTimer;
+    function toast(msg) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+    }
+    function copyText(s) {
+        try { navigator.clipboard && navigator.clipboard.writeText(s).catch(() => {}); } catch (e) { /* ignore */ }
+    }
+
+    // --- List view ---
+    function listResults() {
+        const q = state.q.trim().toLowerCase();
+        const match = c => (state.cat === 'all' || c.cat === state.cat) &&
+            (!q || (loc(c, 'name') + ' ' + loc(c, 'desc')).toLowerCase().includes(q));
+        const mine = COMMUNITIES.filter(c => c.joined && match(c));
+        const other = COMMUNITIES.filter(c => !c.joined && match(c));
+        if (!mine.length && !other.length) return `<div class="hub-empty">${t.noResults}</div>`;
+        const card = c => `
+            <div class="cw-card comm-card" data-act="open" data-id="${c.id}" tabindex="0" role="button" aria-label="${esc(loc(c, 'name'))}">
+                <div class="comm-cover" style="background:${coverBg(c)}"><div class="comm-icon">${c.icon}</div></div>
+                <div class="comm-body">
+                    <h3>${esc(loc(c, 'name'))}</h3>
+                    <p>${esc(loc(c, 'desc'))}</p>
+                    <div class="comm-foot">
+                        <span class="cw-muted">${tr('members', { n: numFmt.format(memberCount(c)) })}</span>
+                        <button class="cw-btn cw-sm ${c.joined ? 'cw-outline' : ''}" data-act="toggleJoin" data-id="${c.id}">${c.joined ? '✓ ' + t.joined : t.join}</button>
+                    </div>
+                </div>
+            </div>`;
+        return (mine.length ? `<h3 class="hub-section">${t.myCommunities}</h3><div class="hub-grid">${mine.map(card).join('')}</div>` : '') +
+               (other.length ? `<h3 class="hub-section">${t.discover}</h3><div class="hub-grid">${other.map(card).join('')}</div>` : '');
+    }
+
+    function renderList() {
+        const cats = [['all', 'catAll'], ['work', 'catWork'], ['wellbeing', 'catWellbeing'], ['culture', 'catCulture']];
+        return `
+            <section class="hub-hero">
+                <p class="hub-eyebrow">${t.title}</p>
+                <h2>${t.heroTitle}</h2>
+                <p class="hub-sub">${t.heroDesc}</p>
+                <div class="hub-searchrow">
+                    <div class="hub-search">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                        <input id="q" type="search" value="${esc(state.q)}" placeholder="${esc(t.search)}" aria-label="${esc(t.search)}">
+                    </div>
+                    <button class="cw-btn hub-create" data-act="showCreate">＋ ${t.create}</button>
+                </div>
+                ${state.creating ? `<div class="hub-createform">
+                    <input class="cw-input" id="newName" maxlength="40" placeholder="${esc(t.createName)}" aria-label="${esc(t.createName)}">
+                    <button class="cw-btn" data-act="createCommunity">${t.createConfirm}</button>
+                    <button class="cw-btn cw-ghost" data-act="showCreate">${t.cancel}</button></div>` : ''}
+            </section>
+            <div class="hub-tools">
+                <div class="hub-chips">${cats.map(([k, lbl]) => `<button class="cw-chip ${state.cat === k ? 'cw-active' : ''}" data-act="cat" data-v="${k}">${t[lbl]}</button>`).join('')}</div>
+            </div>
+            <div id="results">${listResults()}</div>`;
+    }
+
+    // --- Detail view ---
+    function renderPost(p, c) {
+        const isLiked = liked.has(p.id), isSaved = saved.has(p.id), isOpen = openComments.has(p.id);
+        const likeCount = p.likes + (isLiked ? 1 : 0);
+        let poll = '';
+        if (p.poll) {
+            const total = p.poll.reduce((s, o) => s + o.votes, 0) + (voted[p.id] !== undefined ? 1 : 0);
+            poll = p.poll.map((o, i) => {
+                const v = o.votes + (voted[p.id] === i ? 1 : 0);
+                const pct = Math.round(v / total * 100);
+                return `<button class="poll-opt ${voted[p.id] === i ? 'cw-mine' : ''}" data-act="vote" data-id="${p.id}" data-i="${i}" ${voted[p.id] !== undefined ? 'disabled' : ''}>
+                    <span class="poll-fill" style="width:${voted[p.id] !== undefined ? pct : 0}%"></span>
+                    <span class="poll-row"><span>${esc(loc(o, 'label'))}</span><span>${voted[p.id] !== undefined ? pct + '%' : ''}</span></span></button>`;
+            }).join('') + `<div class="cw-muted" style="margin-bottom:10px">${tr('votes', { n: numFmt.format(total) })}</div>`;
+        }
+        const comments = isOpen ? `
+            <div class="comments">
+                ${p.comments.map(cm => `<div class="comment">${avatar(cm.a, true)}<div class="comment-bubble"><b>${esc(cm.a)}</b>${esc(cm.text ?? t[cm.k])}</div></div>`).join('')}
+                ${c.joined ? `<div class="comment-form"><input class="cw-input" id="ci-${p.id}" data-id="${p.id}" placeholder="${esc(t.writeComment)}"><button class="cw-btn" data-act="sendComment" data-id="${p.id}">${t.send}</button></div>`
+                           : `<div class="cw-muted">${t.joinToPost}</div>`}
+            </div>` : '';
+        return `
+            <article class="cw-card post">
+                <div class="post-head">${avatar(p.author)}
+                    <div class="who"><b>${esc(p.author)}</b><span class="cw-muted">${rel(p.ts)}</span></div>
+                    ${p.pinned ? `<span class="cw-badge cw-primary">📌 ${t.pinned}</span>` : ''}
+                    ${p.type === 'announcement' && !p.pinned ? `<span class="cw-badge">📣 ${t.fAnnouncements}</span>` : ''}
+                </div>
+                <p class="post-text">${esc(postText(p))}</p>
+                ${poll}
+                <div class="post-actions">
+                    <button class="act-btn ${isLiked ? 'cw-on' : ''}" data-act="like" data-id="${p.id}">${isLiked ? '👍' : '👍🏻'} ${t.like} · ${likeCount}</button>
+                    <button class="act-btn ${isOpen ? 'cw-on' : ''}" data-act="toggleComments" data-id="${p.id}">💬 ${tr('comments', { n: p.comments.length })}</button>
+                    <button class="act-btn" data-act="share" data-id="${p.id}">↗ ${t.share}</button>
+                    <button class="act-btn ${isSaved ? 'cw-on' : ''}" data-act="save" data-id="${p.id}">${isSaved ? '🔖 ' + t.saved : '🔖 ' + t.save}</button>
+                    ${c.manager ? `<button class="act-btn" data-act="pin" data-id="${p.id}">📌 ${p.pinned ? t.unpinPost : t.pinPost}</button><button class="act-btn" data-act="delPost" data-id="${p.id}" style="color:var(--danger)">🗑 ${t.deleteBtn}</button>` : ''}
+                </div>
+                ${comments}
+            </article>`;
+    }
+
+    function feedHtml(c) {
+        const filters = [['all', 'fAll'], ['announcement', 'fAnnouncements'], ['discussion', 'fDiscussions'], ['poll', 'fPolls']];
+        let posts = c.posts.filter(p => state.feedFilter === 'all' || p.type === state.feedFilter);
+        posts = posts.slice().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.ts - a.ts);
+        const shown = posts.slice(0, c.visible);
+        const composer = c.joined ? `
+            <div class="cw-card composer">
+                <div style="display:flex;gap:10px">${avatar(ME)}<textarea class="cw-input" id="composer" placeholder="${esc(t.composerPlaceholder)}"></textarea></div>
+                <div class="composer-foot"><button class="cw-btn" data-act="publish">${t.post}</button></div>
+            </div>` : `
+            <div class="cw-card join-banner"><span>${t.joinToPost}</span><button class="cw-btn" data-act="toggleJoin" data-id="${c.id}">${t.join}</button></div>`;
+        return `
+            ${composer}
+            <div class="feed-filters">${filters.map(([k, lbl]) => `<button class="cw-chip ${state.feedFilter === k ? 'cw-active' : ''}" data-act="feedFilter" data-v="${k}">${t[lbl]}</button>`).join('')}</div>
+            ${shown.length ? shown.map(p => renderPost(p, c)).join('') : `<div class="hub-empty">${t.noPosts}</div>`}
+            ${posts.length > shown.length ? `<div class="more-wrap"><button class="cw-btn cw-outline" data-act="showMore">${t.showMore}</button></div>` : ''}`;
+    }
+
+    const EV_COLORS = ['#5277AB', '#477F33', '#343434', '#8A6D4B', '#3AA6EF', '#9B2C2C'];
+    const evColor = (c, e) => EV_COLORS[Math.max(0, c.events.indexOf(e)) % EV_COLORS.length];
+    const calKey = d => d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+    function calendarHtml(c) {
+        const base = new Date(now.getFullYear(), now.getMonth() + state.calMonth, 1);
+        const firstDow = (LANG === 'en-US' || LANG === 'ja') ? 0 : 1;
+        const lead = (base.getDay() - firstDow + 7) % 7;
+        const dim = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+        const byDay = {};
+        c.events.forEach(e => { const k = calKey(eventDate(e)); (byDay[k] = byDay[k] || []).push(e); });
+        const wdFmt = new Intl.DateTimeFormat(LOCALE, { weekday: 'narrow' });
+        const heads = Array.from({ length: 7 }, (_, i) => `<div class="cal-wd">${wdFmt.format(new Date(2024, 0, 7 + firstDow + i))}</div>`).join('');
+        let cells = '<span></span>'.repeat(lead);
+        for (let d = 1; d <= dim; d++) {
+            const k = calKey(new Date(base.getFullYear(), base.getMonth(), d));
+            const evs = byDay[k] || [], dow = new Date(base.getFullYear(), base.getMonth(), d).getDay();
+            const tint = evs.length ? ` style="background:color-mix(in srgb, ${evColor(c, evs[0])} 18%, var(--bg))"` : '';
+            cells += `<button class="cal-day ${evs.length ? 'cw-ev' : ''} ${dow === 0 || dow === 6 ? 'cw-wknd' : ''} ${k === calKey(now) ? 'cw-today' : ''} ${state.calDay === k ? 'cw-active' : ''}" data-act="calDay" data-k="${k}"${tint}>${d}${evs.length ? `<span class="cal-dots">${evs.map(e => `<i class="cal-dot" style="background:${evColor(c, e)}"></i>`).join('')}</span>` : ''}</button>`;
+        }
+        let list, heading;
+        if (state.calDay) {
+            const [y, mo, d] = state.calDay.split('-').map(Number);
+            heading = new Intl.DateTimeFormat(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(y, mo, d));
+            list = byDay[state.calDay] || [];
+        } else {
+            heading = t.upcoming;
+            list = c.events.slice().sort((a, b) => eventDate(a) - eventDate(b)).slice(0, 3);
+        }
+        const rows = list.length ? list.map(e => {
+            const dt = eventDate(e);
+            return `<button class="cal-ev" data-act="calEvent" data-id="${e.id}" style="--ev:${evColor(c, e)}">
+                <div class="cal-ev-date"><small>${monthShortFmt.format(dt)}</small><b>${dt.getDate()}</b></div>
+                <div class="cal-ev-info"><b>${esc(eventTitle(e, c))}</b><span class="cw-muted">${timeFmt.format(dt)} · ${e.locText ? esc(e.locText) : t[e.loc]}</span></div></button>`;
+        }).join('') : `<div class="cw-muted" style="padding:6px 0">${t.noEvents}</div>`;
+        return `
+            <div class="cw-card cal-card">
+                <div class="cal-head">
+                    <button class="cal-nav" data-act="calNav" data-v="-1" aria-label="${esc(t.prevMonth)}">‹</button>
+                    <h4>${monthYearFmt.format(base)}</h4>
+                    <button class="cal-nav" data-act="calNav" data-v="1" aria-label="${esc(t.nextMonth)}">›</button>
+                </div>
+                <div class="cal-grid">${heads}${cells}</div>
+                <div class="cal-list-h">${esc(heading)}</div>
+                ${rows}
+                <button class="cal-link" data-act="goEvents">${t.viewAll} →</button>
+            </div>`;
+    }
+
+    function sideHtml(c) {
+        const people = PEOPLE.slice(0, 3);
+        return `
+            <div class="cw-card side-card">
+                <h4>${t.aboutTitle}</h4>
+                <p class="cw-muted" style="margin:0 0 8px">${esc(loc(c, 'desc'))}</p>
+                <div class="cw-muted">${t.visibility}</div>
+            </div>
+            ${calendarHtml(c)}
+            <div class="cw-card side-card">
+                <h4>${t.admins}</h4>
+                ${people.slice(0, 2).map(n => `<div class="side-row">${avatar(n, true)}<span>${esc(n)}</span></div>`).join('')}
+            </div>`;
+    }
+
+    function aboutHtml(c) {
+        return `
+            <div class="cw-card about-card">
+                <h3>${t.aboutTitle}</h3>
+                <p>${esc(loc(c, 'desc'))}</p>
+                <p class="cw-muted">${tr('created', { d: monthYearFmt.format(daysAgo(c.createdDaysAgo)) })} · ${t.visibility}</p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="cw-btn cw-outline" data-act="invite">${t.invite}</button>
+                    ${c.joined ? `<button class="cw-btn cw-ghost" data-act="toggleJoin" data-id="${c.id}">${t.leave}</button>` : `<button class="cw-btn" data-act="toggleJoin" data-id="${c.id}">${t.join}</button>`}
+                </div>
+            </div>
+            <div class="cw-card about-card"><h3>${t.rules}</h3><ul><li>${t.rule1}</li><li>${t.rule2}</li><li>${t.rule3}</li></ul></div>
+            <div class="cw-card about-card"><h3>${t.admins}</h3>
+                ${PEOPLE.slice(0, 2).map(n => `<div class="side-row">${avatar(n, true)}<span>${esc(n)}</span><span class="cw-badge">${t.roleAdmin}</span></div>`).join('')}
+            </div>`;
+    }
+
+    function membersListHtml(c) {
+        const q = state.mq.trim().toLowerCase();
+        const list = [];
+        if (c.joined) list.push({ n: ME, role: 'roleMember', me: true });
+        PEOPLE.forEach((n, i) => { if (!c.removed.has(n)) list.push({ n, role: roleOf(i) }); });
+        const rows = list.filter(x => !q || x.n.toLowerCase().includes(q));
+        if (!rows.length) return `<div class="hub-empty">${t.noResults}</div>`;
+        return rows.map(x => `
+            <div class="cw-card member">${avatar(x.n)}
+                <div class="member-info"><b>${esc(x.n)}</b> <span class="cw-badge">${x.me ? t.you : t[x.role]}</span></div>
+                ${x.me ? '' : `<div class="member-btns">
+                    <button class="cw-btn cw-sm ${followed.has(x.n) ? 'cw-ghost cw-on' : 'cw-outline'}" data-act="follow" data-n="${esc(x.n)}">${followed.has(x.n) ? '✓ ' + t.following : t.follow}</button>
+                    <button class="cw-btn cw-sm cw-ghost" data-act="msg" data-n="${esc(x.n)}">${t.message}</button>
+                    ${c.manager ? `<button class="cw-btn cw-sm cw-danger" data-act="removeMember" data-n="${esc(x.n)}">${t.removeBtn}</button>` : ''}</div>`}
+            </div>`).join('');
+    }
+    function membersHtml(c) {
+        return `<input class="cw-input" id="mq" type="search" style="margin-bottom:12px" value="${esc(state.mq)}" placeholder="${esc(t.searchMembers)}">
+                <div id="mlist">${membersListHtml(c)}</div>`;
+    }
+
+    function eventsHtml(c) {
+        const days = Array.from({ length: 7 }, (_, i) => i);
+        const evs = c.events.slice().sort((a, b) => eventDate(a) - eventDate(b));
+        const shown = evs.filter(e => state.day === null || e.day === state.day);
+        const strip = days.map(d => {
+            const dt = daysFromNow(d);
+            return `<button class="day-btn ${state.day === d ? 'cw-active' : ''}" data-act="day" data-v="${d}" aria-pressed="${state.day === d}">
+                <small>${weekdayShortFmt.format(dt)}</small><b>${dt.getDate()}</b>${evs.some(e => e.day === d) ? '<div class="day-dot"></div>' : '<div style="height:9px"></div>'}</button>`;
+        }).join('');
+        return `
+            <div class="week-strip">${strip}</div>
+            ${state.day !== null ? `<div style="margin-bottom:10px"><button class="cw-chip" data-act="day" data-v="all">✕ ${t.allDays}</button></div>` : ''}
+            ${shown.length ? shown.map(e => {
+                const dt = eventDate(e), end = new Date(dt.getTime() + e.dur * 60000), on = rsvps.has(e.id);
+                return `<div class="cw-card event" style="--ev:${evColor(c, e)}">
+                    <div class="event-date"><small>${monthShortFmt.format(dt)}</small><b>${dt.getDate()}</b></div>
+                    <div class="event-info"><h4>${esc(eventTitle(e, c))}</h4>
+                        <div class="cw-muted">${timeFmt.format(dt)} – ${timeFmt.format(end)} · ${e.locText ? esc(e.locText) : t[e.loc]}</div>
+                        <div class="cw-muted">${tr('attendees', { n: numFmt.format(e.going + (on ? 1 : 0)) })}</div></div>
+                    <button class="cw-btn ${on ? 'cw-outline' : ''}" data-act="rsvp" data-id="${e.id}">${on ? '✓ ' + t.going : t.rsvp}</button>
+                </div>`;
+            }).join('') : `<div class="hub-empty">${t.noEvents}</div>`}`;
+    }
+
+    function filesHtml(c) {
+        return c.files.map(f => `
+            <div class="cw-card file"><div class="file-ico">${f.ico}</div>
+                <div class="file-info"><b>${esc(f.n)}</b><span class="cw-muted">${f.s} · ${esc(f.by)} · ${rel(daysAgo(f.d))}</span></div>
+                <button class="cw-btn cw-sm cw-outline" data-act="download" data-f="${esc(f.n)}">⬇ ${t.download}</button>
+            </div>`).join('');
+    }
+
+    function pageHtml(c) {
+        const pg = c.pages.find(x => 'page:' + x.id === c.tab);
+        return `<div class="cw-card about-card"><h3>${esc(loc(pg, 'title'))}</h3><p style="white-space:pre-wrap">${esc(loc(pg, 'body'))}</p>
+            ${c.manager ? `<button class="cw-btn cw-danger cw-sm" data-act="delPage" data-id="${pg.id}">🗑 ${t.deleteBtn}</button>` : ''}</div>`;
+    }
+
+    function settingsHtml(c) {
+        if (!c.manager) return `
+            <div class="cw-card about-card"><h3>⚙ ${t.managerTitle}</h3><p>${t.managerHint}</p>
+                <button class="cw-btn" data-act="toggleManager">${t.managerEnter}</button></div>`;
+        const dayFmt = new Intl.DateTimeFormat(LOCALE, { weekday: 'short', day: 'numeric', month: 'short' });
+        const dayOpts = Array.from({ length: 7 }, (_, d) => `<option value="${d}">${dayFmt.format(daysFromNow(d))}</option>`).join('');
+        const evs = c.events.slice().sort((a, b) => eventDate(a) - eventDate(b));
+        return `
+            <div class="cw-card about-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+                <h3 style="margin:0">⚙ ${t.managerTitle} <span class="cw-badge cw-primary">${t.managerBadge}</span></h3>
+                <button class="cw-btn cw-ghost cw-sm" data-act="toggleManager">${t.managerExit}</button></div></div>
+
+            <div class="cw-card about-card"><h3>${t.detailsTitle}</h3>
+                <div class="set-form">
+                    <label>${t.nameLbl}<input class="cw-input" id="sName" maxlength="40" value="${esc(loc(c, 'name'))}"></label>
+                    <label>${t.descLbl}<textarea class="cw-input" id="sDesc">${esc(loc(c, 'desc'))}</textarea></label>
+                    <div><button class="cw-btn" data-act="saveDetails">${t.saveChanges}</button></div>
+                </div></div>
+
+            <div class="cw-card about-card"><h3>${t.pagesTitle}</h3>
+                ${c.pages.length ? c.pages.map(pg => `<div class="set-item"><span>📄 ${esc(loc(pg, 'title'))}</span><button class="cw-btn cw-danger cw-sm" data-act="delPage" data-id="${pg.id}">${t.deleteBtn}</button></div>`).join('') : `<div class="cw-muted">${t.noPagesYet}</div>`}
+                <div class="set-form">
+                    <label>${t.pageTitle}<input class="cw-input" id="pgTitle" maxlength="40"></label>
+                    <label>${t.pageBody}<textarea class="cw-input" id="pgBody"></textarea></label>
+                    <div><button class="cw-btn" data-act="addPage">＋ ${t.addPage}</button></div>
+                </div></div>
+
+            <div class="cw-card about-card"><h3>${t.eventsTitle}</h3>
+                ${evs.map(e => `<div class="set-item"><span>📅 ${esc(eventTitle(e, c))}</span><span class="cw-muted">${timeFmt.format(eventDate(e))}</span><button class="cw-btn cw-danger cw-sm" data-act="delEvent" data-id="${e.id}">${t.deleteBtn}</button></div>`).join('')}
+                <div class="set-form">
+                    <label>${t.eventTitleLbl}<input class="cw-input" id="evTitle" maxlength="60"></label>
+                    <div class="set-row">
+                        <label>${t.eventDayLbl}<select class="cw-input" id="evDay">${dayOpts}</select></label>
+                        <label>${t.eventTimeLbl}<input class="cw-input" id="evTime" type="time" value="10:00"></label>
+                    </div>
+                    <label>${t.eventLocLbl}<input class="cw-input" id="evLoc" maxlength="60" placeholder="${esc(t.locOnline)}"></label>
+                    <div><button class="cw-btn" data-act="addEvent">＋ ${t.addEvent}</button></div>
+                </div></div>`;
+    }
+
+    function renderDetail() {
+        const c = cById(state.cid);
+        const tabs = [['feed', t.tabFeed], ['about', t.tabAbout], ['members', t.tabMembers], ['events', t.tabEvents], ['files', t.tabFiles],
+            ...c.pages.map(pg => ['page:' + pg.id, loc(pg, 'title')]), ['settings', '⚙ ' + t.tabSettings]];
+        let body;
+        if (c.tab === 'feed') body = `<div class="det-layout"><div>${feedHtml(c)}</div><aside>${sideHtml(c)}</aside></div>`;
+        else if (c.tab === 'about') body = aboutHtml(c);
+        else if (c.tab === 'members') body = membersHtml(c);
+        else if (c.tab === 'events') body = eventsHtml(c);
+        else if (c.tab === 'files') body = filesHtml(c);
+        else if (c.tab === 'settings') body = settingsHtml(c);
+        else body = pageHtml(c);
+        return `
+            <button class="back-link" data-act="back">← ${t.back}</button>
+            <div class="cw-card det-hero">
+                <div class="det-cover" style="background:${coverBg(c)}"></div>
+                <div class="det-bar">
+                    <div class="det-icon">${c.icon}</div>
+                    <div class="det-title"><h2>${esc(loc(c, 'name'))}</h2>${c.manager ? `<span class="cw-badge cw-primary">⚙ ${t.managerBadge}</span> ` : ''}<span class="cw-muted">${tr('members', { n: numFmt.format(memberCount(c)) })}</span></div>
+                    <div class="det-actions">
+                        ${c.joined ? `<button class="cw-btn cw-ghost cw-sm" data-act="notif" data-id="${c.id}">${c.notif ? '🔔 ' + t.notifOn : '🔕 ' + t.notifOff}</button>` : ''}
+                        <button class="cw-btn cw-outline cw-sm" data-act="invite">＋ ${t.invite}</button>
+                        <button class="cw-btn ${c.joined ? 'cw-outline' : ''}" data-act="toggleJoin" data-id="${c.id}">${c.joined ? '✓ ' + t.joined : t.join}</button>
+                    </div>
+                </div>
+                <div class="det-tabs" role="tablist">${tabs.map(([k, lbl]) => `<button class="cw-tab ${c.tab === k ? 'cw-active' : ''}" role="tab" aria-selected="${c.tab === k}" data-act="tab" data-v="${k}">${esc(lbl)}</button>`).join('')}</div>
+            </div>
+            ${body}`;
+    }
+
+    function render() {
+        document.getElementById('app').innerHTML = state.view === 'list' ? renderList() : renderDetail();
+    }
+
+    // --- Actions ---
+    function findPost(id) {
+        for (const c of COMMUNITIES) { const p = c.posts.find(x => x.id === id); if (p) return p; }
+    }
+    function requireJoin(c) {
+        if (c.joined) return true;
+        toast(t.joinToPost);
+        return false;
+    }
+
+    const actions = {
+        open(el) { state.calMonth = 0; state.calDay = null; state.view = 'detail'; state.cid = el.dataset.id; state.feedFilter = 'all'; state.day = null; state.mq = ''; render(); window.scrollTo(0, 0); },
+        back() { state.view = 'list'; render(); },
+        showCreate() {
+            state.creating = !state.creating; render();
+            const n = document.getElementById('newName'); if (n) n.focus();
+        },
+        createCommunity() {
+            const input = document.getElementById('newName'), name = input.value.trim();
+            if (!name) { input.focus(); return; }
+            const c = { id: 'n' + (seed.n++), icon: '✨', grad: 'g' + (1 + Math.floor(Math.random() * 8)), cat: 'work', baseMembers: 0, joined: true, createdDaysAgo: 0,
+                name, desc: t.newDesc, notif: true, visible: 4, tab: 'feed', posts: [], events: [], files: [], pages: [], removed: new Set(), manager: true };
+            COMMUNITIES.unshift(c);
+            state.creating = false; state.q = ''; state.cat = 'all';
+            toast(tr('createdToast', { c: name }));
+            actions.open({ dataset: { id: c.id } });
+        },
+        toggleManager() {
+            const c = cById(state.cid); c.manager = !c.manager;
+            toast(c.manager ? t.managerToastOn : t.managerToastOff); render();
+        },
+        saveDetails() {
+            const c = cById(state.cid), n = document.getElementById('sName').value.trim(), d = document.getElementById('sDesc').value.trim();
+            if (!n) { toast(t.fillRequired); return; }
+            for (const sfx of ['', 'De', 'Fr', 'Es', 'Ja']) { c['name' + sfx] = n; c['desc' + sfx] = d; }
+            toast(t.savedChanges); render();
+        },
+        addPage() {
+            const c = cById(state.cid), ti = document.getElementById('pgTitle').value.trim(), b = document.getElementById('pgBody').value.trim();
+            if (!ti || !b) { toast(t.fillRequired); return; }
+            c.pages.push({ id: 'up' + (seed.n++), title: ti, body: b });
+            toast(t.pageAdded); render();
+        },
+        delPage(el) {
+            const c = cById(state.cid);
+            c.pages = c.pages.filter(x => x.id !== el.dataset.id);
+            if (c.tab === 'page:' + el.dataset.id) c.tab = 'settings';
+            toast(t.pageDeleted); render();
+        },
+        addEvent() {
+            const c = cById(state.cid), ti = document.getElementById('evTitle').value.trim();
+            const [h, mi] = (document.getElementById('evTime').value || '10:00').split(':').map(Number);
+            if (!ti) { toast(t.fillRequired); return; }
+            const where = document.getElementById('evLoc').value.trim();
+            c.events.push({ id: 'ue' + (seed.n++), day: Number(document.getElementById('evDay').value), h, min: mi, dur: 60, loc: 'locOnline', locText: where || undefined, going: 0, title: ti });
+            toast(t.eventAdded); render();
+        },
+        delEvent(el) { const c = cById(state.cid); c.events = c.events.filter(x => x.id !== el.dataset.id); toast(t.eventDeleted); render(); },
+        pin(el) { const p = findPost(el.dataset.id); p.pinned = !p.pinned; render(); },
+        delPost(el) { const c = cById(state.cid); c.posts = c.posts.filter(x => x.id !== el.dataset.id); toast(t.postDeleted); render(); },
+        removeMember(el) { cById(state.cid).removed.add(el.dataset.n); toast(tr('memberRemoved', { n: el.dataset.n })); render(); },
+        calNav(el) { state.calMonth += Number(el.dataset.v); render(); },
+        calDay(el) { state.calDay = state.calDay === el.dataset.k ? null : el.dataset.k; render(); },
+        calEvent(el) {
+            const c = cById(state.cid), e = c.events.find(x => x.id === el.dataset.id);
+            c.tab = 'events'; state.day = e ? e.day : null; render(); window.scrollTo(0, 0);
+        },
+        goEvents() { cById(state.cid).tab = 'events'; state.day = null; render(); window.scrollTo(0, 0); },
+        cat(el) { state.cat = el.dataset.v; render(); },
+        toggleJoin(el) {
+            const c = cById(el.dataset.id);
+            c.joined = !c.joined;
+            toast(tr(c.joined ? 'joinedToast' : 'leftToast', { c: loc(c, 'name') }));
+            render();
+        },
+        tab(el) { cById(state.cid).tab = el.dataset.v; state.day = null; render(); },
+        feedFilter(el) { state.feedFilter = el.dataset.v; cById(state.cid).visible = 4; render(); },
+        showMore() { cById(state.cid).visible += 4; render(); },
+        notif(el) { const c = cById(el.dataset.id); c.notif = !c.notif; toast(c.notif ? t.notifOnToast : t.notifOffToast); render(); },
+        invite() { copyText(location.href); toast(t.inviteToast); },
+        publish() {
+            const c = cById(state.cid), ta = document.getElementById('composer');
+            const txt = ta.value.trim();
+            if (!txt) { ta.focus(); return; }
+            c.posts.unshift({ id: 'u' + (seed.n++), type: 'discussion', author: ME, ts: new Date(), likes: 0, comments: [], text: txt });
+            state.feedFilter = 'all';
+            toast(t.postedToast);
+            render();
+        },
+        like(el) { const id = el.dataset.id; liked.has(id) ? liked.delete(id) : liked.add(id); render(); },
+        save(el) { const id = el.dataset.id; if (saved.has(id)) saved.delete(id); else { saved.add(id); toast(t.savedToast); } render(); },
+        share(el) { copyText(location.href + '#post-' + el.dataset.id); toast(t.shareToast); },
+        toggleComments(el) { const id = el.dataset.id; openComments.has(id) ? openComments.delete(id) : openComments.add(id); render(); },
+        sendComment(el) {
+            const c = cById(state.cid);
+            if (!requireJoin(c)) return;
+            const input = document.getElementById('ci-' + el.dataset.id);
+            const txt = input.value.trim();
+            if (!txt) { input.focus(); return; }
+            findPost(el.dataset.id).comments.push({ a: ME, text: txt });
+            render();
+            const again = document.getElementById('ci-' + el.dataset.id);
+            if (again) again.focus();
+        },
+        vote(el) {
+            if (!requireJoin(cById(state.cid))) return;
+            voted[el.dataset.id] = Number(el.dataset.i);
+            render();
+        },
+        follow(el) { const n = el.dataset.n; followed.has(n) ? followed.delete(n) : followed.add(n); document.getElementById('mlist').innerHTML = membersListHtml(cById(state.cid)); },
+        msg(el) { toast(tr('messageToast', { n: el.dataset.n })); },
+        day(el) { const v = el.dataset.v; state.day = v === 'all' || state.day === Number(v) ? null : Number(v); render(); },
+        rsvp(el) {
+            const c = cById(state.cid);
+            if (!requireJoin(c)) return;
+            const id = el.dataset.id;
+            if (rsvps.has(id)) { rsvps.delete(id); toast(t.ungoingToast); } else { rsvps.add(id); toast(t.goingToast); }
+            render();
+        },
+        download(el) { toast(tr('downloadToast', { f: el.dataset.f })); },
+    };
+
+    document.addEventListener('click', e => {
+        const el = e.target.closest('[data-act]');
+        if (!el || !actions[el.dataset.act]) return;
+        actions[el.dataset.act](el);
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && e.target.id === 'newName') { actions.createCommunity(); return; }
+        if (e.key === 'Enter' && e.target.matches('.comment-form input')) {
+            actions.sendComment({ dataset: { id: e.target.dataset.id } });
+        } else if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.comm-card')) {
+            e.preventDefault();
+            actions.open(e.target);
+        }
+    });
+    document.addEventListener('input', e => {
+        if (e.target.id === 'q') { state.q = e.target.value; document.getElementById('results').innerHTML = listResults(); }
+        else if (e.target.id === 'mq') { state.mq = e.target.value; document.getElementById('mlist').innerHTML = membersListHtml(cById(state.cid)); }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        applySBBrand();
+        render();
+    });
+</script>
+
+<!-- Widget usage counter — see CLAUDE.md -->
+<script>(function(){try{if(location.search.indexOf('preview=1')!==-1)return;var n=location.pathname.split('/').pop();if(!n||n==='index.html')return;var url='https://widget-counter.klauejohann.workers.dev/bump/'+encodeURIComponent(n);if(navigator.sendBeacon)navigator.sendBeacon(url);else fetch(url,{method:'POST',keepalive:true}).catch(function(){});var k='widgetCounts',c=JSON.parse(localStorage.getItem(k)||'{}');c[n]=(c[n]||0)+1;localStorage.setItem(k,JSON.stringify(c));}catch(e){}})();</script>
+
+</body>
+</html>
