@@ -1268,19 +1268,19 @@
 
   .status-link:hover { color: var(--primary); }
 
-  /* ============ TASK GROUP PROGRESS ============
-     One row per Tasks task-list (what the Tasks app calls a group), showing
-     completion across the whole list rather than per assignee. The colour dot
+  /* ============ CHECKLIST PROGRESS ============
+     One row per Tasks task-list — a checklist — showing completion across the
+     whole list rather than per assignee. The colour dot
      mirrors the list's own colour from GET /tasks/{inst}/lists. */
-  .tg-row {
+  .cl-row {
     display: flex;
     align-items: flex-start;
     gap: 11px;
     padding: 12px 0;
     border-bottom: 1px solid var(--border);
   }
-  .tg-row:last-child { border-bottom: none; }
-  .tg-dot {
+  .cl-row:last-child { border-bottom: none; }
+  .cl-dot {
     width: 10px;
     height: 10px;
     border-radius: 50%;
@@ -1288,39 +1288,39 @@
     margin-top: 5px;
     background: var(--primary);
   }
-  .tg-body { flex: 1; min-width: 0; }
-  .tg-head {
+  .cl-body { flex: 1; min-width: 0; }
+  .cl-head {
     display: flex;
     align-items: baseline;
     gap: 8px;
     flex-wrap: wrap;
   }
-  .tg-name {
+  .cl-name {
     font-weight: 700;
     font-size: 14px;
     color: var(--text);
     overflow-wrap: anywhere;
   }
-  .tg-count {
+  .cl-count {
     font-size: 12.5px;
     color: var(--text-light);
     font-variant-numeric: tabular-nums;
   }
-  .tg-bar {
+  .cl-bar {
     height: 6px;
     border-radius: 999px;
     background: var(--bg-gray);
     margin-top: 8px;
     overflow: hidden;
   }
-  .tg-fill {
+  .cl-fill {
     height: 100%;
     border-radius: 999px;
     background: var(--success);
     transition: width .35s ease;
   }
-  .tg-fill.none { background: var(--border); }
-  .tg-meta {
+  .cl-fill.none { background: var(--border); }
+  .cl-meta {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1329,8 +1329,8 @@
     font-size: 12px;
     color: var(--text-light);
   }
-  .tg-actions { flex: 0 0 auto; }
-  .tg-remind {
+  .cl-actions { flex: 0 0 auto; }
+  .cl-remind {
     background: transparent;
     border: 1.5px solid var(--border);
     color: var(--text-light);
@@ -1343,8 +1343,57 @@
     white-space: nowrap;
     min-height: 32px;
   }
-  .tg-remind:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
-  .tg-remind:disabled { opacity: .55; cursor: default; }
+  .cl-remind:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+  .cl-remind:disabled { opacity: .55; cursor: default; }
+  .cl-remind.sm { font-size: 11.5px; padding: 4px 9px; min-height: 28px; }
+
+  /* The assignee summary doubles as the disclosure for per-person actions. */
+  .cl-who {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-size: 12px;
+    color: var(--text-light);
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+  }
+  .cl-who:hover { color: var(--primary); }
+  .cl-who::after { content: " \25BE"; }
+  .cl-who.open::after { content: " \25B4"; }
+
+  .cl-people {
+    margin-top: 9px;
+    border-top: 1px dashed var(--border);
+    padding-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .cl-person {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .cl-person-name { font-size: 12.5px; font-weight: 700; color: var(--text); flex: 0 0 auto; }
+  .cl-person-stat { font-size: 12px; color: var(--text-light); flex: 1 1 auto; min-width: 0; }
+  .cl-chat {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-light);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 11.5px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    min-height: 28px;
+  }
+  .cl-chat:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+  .cl-chat:disabled { opacity: .55; cursor: default; }
 
   /* ============ RESPONSIVE ============ */
   @media (max-width: 900px) {
@@ -1440,10 +1489,14 @@
 
     /* The Remind button drops under the group rather than squeezing the name
        into a two-character column. */
-    .tg-row { flex-wrap: wrap; }
-    .tg-actions { flex: 1 1 100%; padding-left: 21px; }
-    .tg-remind { width: 100%; min-height: 38px; }
-    .tg-head { gap: 2px 8px; }
+    .cl-row { flex-wrap: wrap; }
+    .cl-actions { flex: 1 1 100%; padding-left: 21px; }
+    /* Scoped to the whole-checklist button: the per-person .cl-remind.sm sits
+       inline beside Chat and must stay content-width. */
+    .cl-actions .cl-remind { width: 100%; min-height: 38px; }
+    /* Person rows go two-line on a phone: name, then stat + both actions. */
+    .cl-person-name { flex: 1 1 100%; }
+    .cl-head { gap: 2px 8px; }
 
     body { padding: 12px; }
     .hub { padding: 10px; }

@@ -32,6 +32,10 @@ export const configurationSchema: JSONSchema7 = {
       title: "Demo mode",
       default: true,
     },
+    chaturl: {
+      type: "string",
+      title: "Chat link pattern (optional)",
+    },
   },
 };
 
@@ -39,6 +43,10 @@ export const uiSchema: UiSchema = {
   apitoken: {
     "ui:widget": "password",
     "ui:help": "One-time setup — paste the Branch API token here when installing this widget. The branch URL itself is detected automatically via the widget SDK.",
+  },
+  chaturl: {
+    "ui:help":
+      "Where the Chat button on a checklist sends you, with {userId} as the placeholder — e.g. /chat/{userId}. Leave blank to use that default. Set it only if this branch serves chat from a different path; a full https:// URL also works.",
   },
   demomode: {
     "ui:help":

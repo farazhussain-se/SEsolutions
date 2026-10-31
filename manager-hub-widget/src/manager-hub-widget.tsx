@@ -24,6 +24,8 @@ export interface ManagerHubWidgetProps {
   /** Studio boolean config. Custom-element attributes arrive as strings, so
    * this can be a real boolean (dev harness) or "true"/"false" (production). */
   demomode?: boolean | string;
+  /** Studio override for the chat deep link; {userId} is substituted. */
+  chaturl?: string;
   contentLanguage?: string;
 }
 
@@ -34,7 +36,7 @@ function resolveDemoMode(demomode?: boolean | string): boolean {
   return String(demomode) !== "false";
 }
 
-export const ManagerHubWidget = ({ widgetApi, apitoken, demomode }: ManagerHubWidgetProps): ReactElement => {
+export const ManagerHubWidget = ({ widgetApi, apitoken, demomode, chaturl }: ManagerHubWidgetProps): ReactElement => {
   const containerRef = useRef<HTMLDivElement>(null);
   const demoMode = resolveDemoMode(demomode);
 
@@ -50,18 +52,19 @@ export const ManagerHubWidget = ({ widgetApi, apitoken, demomode }: ManagerHubWi
       branchBase,
       apiToken: (apitoken || "").trim(),
       demoMode,
+      chatUrlPattern: (chaturl || "").trim(),
     });
     // Re-runs if apitoken or demoMode changes (e.g. Studio config updated) —
     // the `key` below forces a fresh DOM tree each time so initDashboard never
     // wires duplicate event listeners onto stale markup.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apitoken, demoMode]);
+  }, [apitoken, demoMode, chaturl]);
 
   return (
     <div>
       <style>{dashboardCss}</style>
       <div
-        key={`${apitoken || "no-token"}:${demoMode ? "demo" : "live"}`}
+        key={`${apitoken || "no-token"}:${demoMode ? "demo" : "live"}:${chaturl || ""}`}
         ref={containerRef}
         dangerouslySetInnerHTML={{ __html: dashboardHtml }}
       />

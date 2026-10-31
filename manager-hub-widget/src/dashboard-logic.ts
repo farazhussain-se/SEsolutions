@@ -18,6 +18,8 @@ export interface DashboardOptions {
   branchBase: string;
   /** The one-time-setup Staffbase Branch API token (Basic-auth key:secret, base64). */
   apiToken: string;
+  /** Optional Studio override for the 1:1 chat deep link, with {userId}. */
+  chatUrlPattern?: string;
   /** Studio "Demo mode" toggle. When true (default), built-in sample data is
    * blended in alongside whatever the API returns so every panel is populated
    * and every workflow is demoable; when false, only real API data shows. */
@@ -122,7 +124,7 @@ export function initDashboard(opts: DashboardOptions): void {
   initPromotionLauncher(container, branchBase, apiToken, getUserId);
   initRequisitions(container, demoMode, branchBase, apiToken, widgetApi);
   initMyTasks(container, branchBase, apiToken, tasksInstallationId, widgetApi, demoMode);
-  initTaskGroups(container, branchBase, apiToken, tasksInstallationId, demoMode);
+  initChecklists(container, branchBase, apiToken, tasksInstallationId, demoMode, opts.chatUrlPattern || "");
   initShiftRoster(container, branchBase, apiToken, getUserId, demoMode);
   applyViewerIdentity(container, widgetApi);
 }
@@ -797,7 +799,7 @@ function sendNotification(branchBase: string, apiToken: string, userId: string, 
 // Resolves a real task list to create tasks in. There's no list-index
 // endpoint used here, but every existing task carries its taskListId, so
 // we borrow the list of an existing open task (cached after first lookup).
-// (GET /tasks/{inst}/lists does enumerate lists — see fetchTaskGroupProgress.)
+// (GET /tasks/{inst}/lists does enumerate lists — see fetchChecklistProgress.)
 // Verified live (2026-08-23): POST /tasks/{inst}/task with a valid
 // taskListId returns 201, dueDate round-trips, and DELETE removes it.
 let cachedTaskListId: string | null = null;
@@ -2590,11 +2592,10 @@ function baselineShiftRequests(): ShiftChangeRequest[] {
   ];
 }
 
-/* ============ TASK GROUP PROGRESS ============
-   Completion per Tasks task-list ("group" in the Tasks app) rather than per
-   assignee, plus a reminder that goes to everyone holding an open task in
+/* ============ CHECKLIST PROGRESS ============
+   Completion per Tasks task-list — a checklist — rather than per assignee, plus a reminder that goes to everyone holding an open task in
    that group. */
-interface TaskGroupAssignee {
+interface ChecklistAssignee {
   userId: string;
   name: string;
   open: number;
@@ -2613,7 +2614,7 @@ interface RawOpenTask {
   dueDate?: string;
   assigneeIds?: string[];
 }
-interface TaskGroupProgress {
+interface ChecklistProgress {
   id: string;
   name: string;
   color: string;
@@ -2622,7 +2623,7 @@ interface TaskGroupProgress {
   total: number;
   pct: number;
   overdue: number;
-  assignees: TaskGroupAssignee[];
+  assignees: ChecklistAssignee[];
 }
 
 /** How many past-due tasks in one group before it reads as critical rather
@@ -2635,7 +2636,7 @@ function firstNameOf(full: string): string {
   return (full || "").trim().split(/\s+/)[0] || full;
 }
 
-const BASELINE_TASK_GROUPS: TaskGroupProgress[] = [
+const BASELINE_CHECKLISTS: ChecklistProgress[] = [
   { id: "b1", name: "Daily Pool Deck Opening", color: "#1565C0", open: 3, closed: 3, total: 6, pct: 50, overdue: 1,
     assignees: [{ userId: "", name: "Jordan", open: 3, overdue: 1 }] },
   { id: "b2", name: "Kids Academy — Daily Opening", color: "#E8821E", open: 3, closed: 4, total: 7, pct: 57, overdue: 0,
@@ -2646,7 +2647,7 @@ const BASELINE_TASK_GROUPS: TaskGroupProgress[] = [
 
 /** Reads the real task lists, then overlays open-task data so each group can
  * show how much is past due and who to chase. */
-async function fetchTaskGroupProgress(branchBase: string, apiToken: string, tasksInstallationId: string): Promise<TaskGroupProgress[]> {
+async function fetchChecklistProgress(branchBase: string, apiToken: string, tasksInstallationId: string): Promise<ChecklistProgress[]> {
   const listsRes = await staffbaseFetch(branchBase, apiToken, `/tasks/${tasksInstallationId}/lists`);
   if (!listsRes.ok) throw new Error("HTTP " + listsRes.status);
   const lists: RawTaskList[] = (await listsRes.json()) || [];
@@ -2667,7 +2668,7 @@ async function fetchTaskGroupProgress(branchBase: string, apiToken: string, task
 
   return lists.map((l) => {
     const mine = openEntries.filter((t) => t.taskListId === l.id);
-    const byUser = new Map<string, TaskGroupAssignee>();
+    const byUser = new Map<string, ChecklistAssignee>();
     let overdue = 0;
     mine.forEach((t) => {
       const isLate = !!t.dueDate && new Date(t.dueDate) < now;
@@ -2699,28 +2700,34 @@ async function fetchTaskGroupProgress(branchBase: string, apiToken: string, task
   });
 }
 
-function initTaskGroups(
+/** Staffbase chat route for a 1:1 conversation. Overridable in Studio because
+ * the route is not part of any documented API — if a branch serves chat from a
+ * different path, that is a config change rather than a rebuild. */
+const DEFAULT_CHAT_URL_PATTERN = "/chat/{userId}";
+
+function initChecklists(
   container: HTMLElement,
   branchBase: string,
   apiToken: string,
   tasksInstallationId: string,
-  demoMode: boolean
+  demoMode: boolean,
+  chatUrlPattern: string
 ): void {
-  const listEl = container.querySelector<HTMLElement>("#taskGroupsList");
-  const metaEl = container.querySelector<HTMLElement>("#taskGroupsMeta");
-  const badgeEl = container.querySelector<HTMLElement>("#taskGroupsBadge");
-  const sortEl = container.querySelector<HTMLSelectElement>("#taskGroupSortSelect");
-  const overdueToggleEl = container.querySelector<HTMLElement>("#taskGroupOverdueToggle");
-  const clearBtnEl = container.querySelector<HTMLElement>("#taskGroupFilterClearBtn");
-  const sendAllBtn = container.querySelector<HTMLButtonElement>("#sendGroupRemindersBtn");
-  container.querySelector<HTMLElement>("#taskGroupsOpenLink")?.addEventListener("click", openManagerTasksApp);
+  const listEl = container.querySelector<HTMLElement>("#checklistList");
+  const metaEl = container.querySelector<HTMLElement>("#checklistMeta");
+  const badgeEl = container.querySelector<HTMLElement>("#checklistBadge");
+  const sortEl = container.querySelector<HTMLSelectElement>("#checklistSortSelect");
+  const overdueToggleEl = container.querySelector<HTMLElement>("#checklistOverdueToggle");
+  const clearBtnEl = container.querySelector<HTMLElement>("#checklistFilterClearBtn");
+  const sendAllBtn = container.querySelector<HTMLButtonElement>("#sendChecklistRemindersBtn");
+  container.querySelector<HTMLElement>("#checklistOpenLink")?.addEventListener("click", openManagerTasksApp);
   if (!listEl) return;
 
-  let all: TaskGroupProgress[] = [];
+  let all: ChecklistProgress[] = [];
   let sortMode: "progress" | "overdue" | "name" = "progress";
   let overdueOnly = false;
 
-  function remindOne(g: TaskGroupProgress): Promise<boolean> {
+  function remindOne(g: ChecklistProgress): Promise<boolean> {
     const targets = g.assignees.filter((a) => a.userId);
     if (!apiToken || !targets.length) return Promise.resolve(false);
     return Promise.all(
@@ -2730,7 +2737,7 @@ function initTaskGroups(
           apiToken,
           a.userId,
           "Task reminder",
-          `You have ${a.open} open task${a.open === 1 ? "" : "s"} in "${g.name}"` +
+          `You have ${a.open} open task${a.open === 1 ? "" : "s"} on the "${g.name}" checklist` +
             (a.overdue ? `, ${a.overdue} of them past due` : "") +
             ". Please update them in Tasks."
         )
@@ -2738,7 +2745,29 @@ function initTaskGroups(
     ).then((rs) => rs.some(Boolean));
   }
 
-  function visible(): TaskGroupProgress[] {
+  /** Reminds one person about their own open items on this checklist. */
+  function remindPerson(g: ChecklistProgress, a: ChecklistAssignee): Promise<boolean> {
+    if (!apiToken || !a.userId) return Promise.resolve(false);
+    return sendNotification(
+      branchBase,
+      apiToken,
+      a.userId,
+      "Checklist reminder",
+      `You have ${a.open} open task${a.open === 1 ? "" : "s"} on the "${g.name}" checklist` +
+        (a.overdue ? `, ${a.overdue} of them past due` : "") +
+        ". Please update them in Tasks."
+    );
+  }
+
+  /** Resolves the 1:1 chat deep link for a user, or "" when none is set. */
+  function chatUrlFor(userId: string): string {
+    if (!userId) return "";
+    const pattern = chatUrlPattern || DEFAULT_CHAT_URL_PATTERN;
+    const path = pattern.replace("{userId}", encodeURIComponent(userId));
+    return /^https?:\/\//.test(path) ? path : branchBase.replace(/\/api$/, "") + path;
+  }
+
+  function visible(): ChecklistProgress[] {
     const rows = overdueOnly ? all.filter((g) => g.overdue > 0) : all.slice();
     rows.sort((a, b) =>
       sortMode === "name" ? a.name.localeCompare(b.name)
@@ -2754,69 +2783,139 @@ function initTaskGroups(
     if (!rows.length) {
       const empty = document.createElement("div");
       empty.className = "ooo-meta";
-      empty.textContent = overdueOnly ? "No task group has anything past due." : "No task groups found.";
+      empty.textContent = overdueOnly ? "No checklist has anything past due." : "No checklists found.";
       listEl!.appendChild(empty);
       return;
     }
     rows.forEach((g) => {
       const row = document.createElement("div");
-      row.className = "tg-row";
+      row.className = "cl-row";
 
       const dot = document.createElement("span");
-      dot.className = "tg-dot";
+      dot.className = "cl-dot";
       if (g.color) dot.style.background = g.color;
       row.appendChild(dot);
 
       const body = document.createElement("div");
-      body.className = "tg-body";
+      body.className = "cl-body";
 
       const head = document.createElement("div");
-      head.className = "tg-head";
+      head.className = "cl-head";
       const name = document.createElement("span");
-      name.className = "tg-name";
+      name.className = "cl-name";
       name.textContent = g.name;
       const count = document.createElement("span");
-      count.className = "tg-count";
+      count.className = "cl-count";
       count.textContent = `${g.closed} of ${g.total} complete · ${g.pct}%`;
       head.appendChild(name);
       head.appendChild(count);
       body.appendChild(head);
 
       const bar = document.createElement("div");
-      bar.className = "tg-bar";
+      bar.className = "cl-bar";
       const fill = document.createElement("div");
-      fill.className = "tg-fill" + (g.pct === 0 ? " none" : "");
+      fill.className = "cl-fill" + (g.pct === 0 ? " none" : "");
       fill.style.width = Math.max(g.pct, 2) + "%";
       bar.appendChild(fill);
       body.appendChild(bar);
 
       const meta = document.createElement("div");
-      meta.className = "tg-meta";
+      meta.className = "cl-meta";
       if (g.overdue) {
         const pill = document.createElement("span");
         pill.className = "cw-pill " + (g.overdue >= CRITICAL_OVERDUE_COUNT ? "required" : "warn");
         pill.textContent = `${g.overdue} past due`;
         meta.appendChild(pill);
       }
-      const who = document.createElement("span");
       const names = g.assignees.map((a) => a.name).filter(Boolean);
-      who.textContent = names.length
-        ? (names.length > 3 ? `${names.slice(0, 3).join(", ")} +${names.length - 3}` : names.join(", "))
+      const summary = names.length
+        ? names.length > 3
+          ? `${names.slice(0, 3).join(", ")} +${names.length - 3}`
+          : names.join(", ")
         : "Unassigned";
-      meta.appendChild(who);
+
+      // The names double as the disclosure for the per-person actions, so a
+      // manager can chase one person on a checklist rather than everyone.
+      const people = document.createElement("div");
+      people.className = "cl-people";
+      people.hidden = true;
+
+      if (g.assignees.length) {
+        const who = document.createElement("button");
+        who.type = "button";
+        who.className = "cl-who";
+        who.setAttribute("aria-expanded", "false");
+        who.textContent = summary;
+        who.addEventListener("click", () => {
+          // `hidden` is typed boolean | "until-found", so coerce before use.
+          const open = !!people.hidden;
+          people.hidden = !open;
+          who.setAttribute("aria-expanded", String(open));
+          who.classList.toggle("open", open);
+        });
+        meta.appendChild(who);
+      } else {
+        const who = document.createElement("span");
+        who.textContent = summary;
+        meta.appendChild(who);
+      }
       body.appendChild(meta);
+
+      g.assignees.forEach((a) => {
+        const personRow = document.createElement("div");
+        personRow.className = "cl-person";
+
+        const label = document.createElement("span");
+        label.className = "cl-person-name";
+        label.textContent = a.name || "Unassigned";
+        const stat = document.createElement("span");
+        stat.className = "cl-person-stat";
+        stat.textContent = `${a.open} open${a.overdue ? ` · ${a.overdue} past due` : ""}`;
+        personRow.appendChild(label);
+        personRow.appendChild(stat);
+
+        const remind = document.createElement("button");
+        remind.type = "button";
+        remind.className = "cl-remind sm";
+        remind.textContent = "Remind";
+        if (!apiToken || !a.userId) {
+          remind.disabled = true;
+          remind.title = apiToken ? "No linked account for this person" : "Add an API token in Setup to send reminders";
+        } else {
+          remind.addEventListener("click", () => {
+            const done = flashButton(remind, "Sent ✓");
+            remindPerson(g, a).then(done);
+          });
+        }
+        personRow.appendChild(remind);
+
+        const chat = document.createElement("button");
+        chat.type = "button";
+        chat.className = "cl-chat";
+        chat.textContent = "Chat";
+        if (!a.userId || !chatUrlFor(a.userId)) {
+          chat.disabled = true;
+          chat.title = a.userId ? "No chat URL configured for this branch" : "No linked account for this person";
+        } else {
+          chat.addEventListener("click", () => window.open(chatUrlFor(a.userId), "_blank", "noopener"));
+        }
+        personRow.appendChild(chat);
+
+        people.appendChild(personRow);
+      });
+      body.appendChild(people);
       row.appendChild(body);
 
       const actions = document.createElement("div");
-      actions.className = "tg-actions";
+      actions.className = "cl-actions";
       const btn = document.createElement("button");
-      btn.className = "tg-remind";
+      btn.className = "cl-remind";
       btn.type = "button";
       btn.textContent = "Remind";
       const targets = g.assignees.filter((a) => a.userId).length;
       if (!apiToken || !targets) {
         btn.disabled = true;
-        btn.title = !apiToken ? "Add an API token in Setup to send reminders" : "Nobody is assigned in this group";
+        btn.title = !apiToken ? "Add an API token in Setup to send reminders" : "Nobody is assigned on this checklist";
       } else {
         btn.addEventListener("click", () => {
           const done = flashButton(btn, "Sent ✓");
@@ -2830,14 +2929,14 @@ function initTaskGroups(
     });
   }
 
-  function setGroups(rows: TaskGroupProgress[], live: boolean): void {
+  function setGroups(rows: ChecklistProgress[], live: boolean): void {
     all = rows;
     const totalOpen = rows.reduce((n, g) => n + g.open, 0);
     const totalOverdue = rows.reduce((n, g) => n + g.overdue, 0);
     if (metaEl) {
       metaEl.textContent = rows.length
-        ? `${rows.length} group${rows.length === 1 ? "" : "s"} · ${totalOpen} open · ${totalOverdue} past due`
-        : "No task groups found.";
+        ? `${rows.length} checklist${rows.length === 1 ? "" : "s"} · ${totalOpen} open · ${totalOverdue} past due`
+        : "No checklists found.";
     }
     if (badgeEl) badgeEl.style.display = live ? "" : "none";
     render();
@@ -2872,12 +2971,12 @@ function initTaskGroups(
   }
 
   if (!apiToken) {
-    setGroups(demoMode ? BASELINE_TASK_GROUPS : [], false);
+    setGroups(demoMode ? BASELINE_CHECKLISTS : [], false);
     return;
   }
-  fetchTaskGroupProgress(branchBase, apiToken, tasksInstallationId)
-    .then((rows) => setGroups(rows.length ? rows : demoMode ? BASELINE_TASK_GROUPS : [], rows.length > 0))
-    .catch(() => setGroups(demoMode ? BASELINE_TASK_GROUPS : [], false));
+  fetchChecklistProgress(branchBase, apiToken, tasksInstallationId)
+    .then((rows) => setGroups(rows.length ? rows : demoMode ? BASELINE_CHECKLISTS : [], rows.length > 0))
+    .catch(() => setGroups(demoMode ? BASELINE_CHECKLISTS : [], false));
 }
 
 function initShiftRoster(
