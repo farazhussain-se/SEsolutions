@@ -239,14 +239,21 @@ describe("ManagerHubWidget", () => {
       expect(person.querySelector(".cl-chat")).toBeTruthy();
     });
 
-    it("keeps per-person actions inert when there is no linked account", async () => {
+    it("keeps Remind inert without a linked account, but still offers Chat", async () => {
       const { container } = render(<ManagerHubWidget widgetApi={apiMock} contentLanguage="en_US" />);
       await waitFor(() => expect(container.querySelector(".cl-who")).toBeTruthy());
       (container.querySelector(".cl-who") as HTMLButtonElement).click();
       const person = container.querySelector(".cl-person") as HTMLElement;
-      // baseline rows carry no real user id, so neither action can do anything
+
+      // A notification needs a real recipient id, so Remind cannot fire.
       expect((person.querySelector(".cl-remind") as HTMLButtonElement).disabled).toBe(true);
-      expect((person.querySelector(".cl-chat") as HTMLButtonElement).disabled).toBe(true);
+
+      // Chat only needs the branch's chat app, which is not per-user: Staffbase
+      // has no deep link to one conversation, so this opens chat and names the
+      // person in the tooltip rather than pretending to open their thread.
+      const chat = person.querySelector(".cl-chat") as HTMLButtonElement;
+      expect(chat.disabled).toBe(false);
+      expect(chat.title).toMatch(/Open chat to message/i);
     });
   });
 });

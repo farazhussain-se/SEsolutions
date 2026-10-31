@@ -2700,10 +2700,14 @@ async function fetchChecklistProgress(branchBase: string, apiToken: string, task
   });
 }
 
-/** Staffbase chat route for a 1:1 conversation. Overridable in Studio because
- * the route is not part of any documented API — if a branch serves chat from a
- * different path, that is a config change rather than a rebuild. */
-const DEFAULT_CHAT_URL_PATTERN = "/chat/{userId}";
+/** Verified on this branch 2026-11-01 by driving the real app: chat is a
+ * content plugin at /content/chat/{installationId}. `/chat` is NOT a route —
+ * it silently redirects to the home page — and **opening a conversation does
+ * not change the URL**, so there is no deep link to a 1:1. The button can
+ * therefore only open Life Chat with the person named in its tooltip; a
+ * {userId} placeholder is still substituted if a branch ever gains such a
+ * route, and the whole value is overridable in Studio. */
+const DEFAULT_CHAT_URL_PATTERN = "/content/chat/6a5684a6b05fc81e73bf4c20";
 
 function initChecklists(
   container: HTMLElement,
@@ -2759,10 +2763,11 @@ function initChecklists(
     );
   }
 
-  /** Resolves the 1:1 chat deep link for a user, or "" when none is set. */
+  /** Resolves the chat URL, substituting {userId} when the pattern uses it.
+   * Returns "" only when no pattern is configured at all. */
   function chatUrlFor(userId: string): string {
-    if (!userId) return "";
     const pattern = chatUrlPattern || DEFAULT_CHAT_URL_PATTERN;
+    if (!pattern) return "";
     const path = pattern.replace("{userId}", encodeURIComponent(userId));
     return /^https?:\/\//.test(path) ? path : branchBase.replace(/\/api$/, "") + path;
   }
@@ -2893,11 +2898,15 @@ function initChecklists(
         chat.type = "button";
         chat.className = "cl-chat";
         chat.textContent = "Chat";
-        if (!a.userId || !chatUrlFor(a.userId)) {
+        const chatHref = chatUrlFor(a.userId);
+        if (!chatHref) {
           chat.disabled = true;
-          chat.title = a.userId ? "No chat URL configured for this branch" : "No linked account for this person";
+          chat.title = "No chat URL configured for this branch";
         } else {
-          chat.addEventListener("click", () => window.open(chatUrlFor(a.userId), "_blank", "noopener"));
+          // Honest label: Staffbase chat cannot be deep-linked to one
+          // conversation, so this opens the chat app, not a thread.
+          chat.title = `Open chat to message ${a.name || "this person"}`;
+          chat.addEventListener("click", () => window.open(chatHref, "_blank", "noopener"));
         }
         personRow.appendChild(chat);
 

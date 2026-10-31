@@ -46,7 +46,7 @@ export const uiSchema: UiSchema = {
   },
   chaturl: {
     "ui:help":
-      "Where the Chat button on a checklist sends you, with {userId} as the placeholder — e.g. /chat/{userId}. Leave blank to use that default. Set it only if this branch serves chat from a different path; a full https:// URL also works.",
+      "Where the Chat button on a checklist sends you. Defaults to this branch's Life Chat app. Staffbase has no deep link to a single conversation — opening one does not change the URL — so this opens chat rather than a specific thread. A {userId} placeholder is substituted if you supply one; a full https:// URL also works.",
   },
   demomode: {
     "ui:help":
