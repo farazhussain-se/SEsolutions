@@ -125,7 +125,7 @@
     .hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; margin-bottom: 26px; }
     .comm-card { overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: box-shadow .15s, transform .15s; }
     .comm-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.12); transform: translateY(-2px); }
-    .comm-cover { height: 78px; display: flex; align-items: flex-end; padding: 0 14px; position: relative; }
+    .comm-cover { height: 118px; display: flex; align-items: flex-end; padding: 0 14px; position: relative; }
     .comm-icon {
         width: 52px; height: 52px; border-radius: 12px; background: var(--bg); border: 3px solid var(--bg);
         display: flex; align-items: center; justify-content: center; font-size: 26px; transform: translateY(24px);
@@ -140,7 +140,7 @@
     .back-link { background: none; border: none; color: var(--primary); font-weight: 600; font-size: 14px; cursor: pointer; padding: 4px 0; margin-bottom: 10px; }
     .back-link:hover { text-decoration: underline; }
     .det-hero { overflow: hidden; margin-bottom: 14px; }
-    .det-cover { height: 120px; }
+    .det-cover { height: 190px; }
     .det-bar { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; padding: 0 18px 16px; }
     .det-icon {
         width: 84px; height: 84px; border-radius: 18px; background: var(--bg); border: 4px solid var(--bg);
@@ -278,6 +278,7 @@
 <body>
 
 <div class="widget" id="app"></div>
+<p class="cw-muted" style="text-align:center;font-size:11px;margin:0 0 16px">Photos: Wikimedia Commons contributors · <a href="https://farazhussain-se.github.io/SEsolutions/assets/communities/CREDITS.md" target="_blank" rel="noopener" style="color:inherit">credits &amp; licences</a></p>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -811,7 +812,14 @@
     const hueOf = n => { let h = 0; for (const ch of n) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; };
     const AV = ['#343434', '#5277AB', '#477F33', '#8A6D4B', '#707070', '#2F5F8F'];
     const avatar = (n, sm) => `<div class="cw-avatar${sm ? ' cw-sm' : ''}" style="background:${AV[hueOf(n) % AV.length]}" aria-hidden="true">${esc(initials(n))}</div>`;
-    const coverBg = c => GRADS[c.grad] || GRADS.g1;
+    // Cover photos (Wikimedia Commons, credits in assets/communities/CREDITS.md). Absolute URL: the widget is embedded cross-origin.
+    const IMG_BASE = 'https://farazhussain-se.github.io/SEsolutions/assets/communities/';
+    const coverBg = c => {
+        const g = GRADS[c.grad] || GRADS.g1;
+        return /^c\d+$/.test(c.id)
+            ? `linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.30)), url('${IMG_BASE}${c.id}.jpg') center/cover no-repeat, ${g}`
+            : g;
+    };
     const roleOf = (idx) => idx === 0 ? 'roleAdmin' : idx === 1 ? 'roleMod' : 'roleMember';
     const postText = p => p.key ? tr(p.key, { c: loc(cById(state.cid), 'name') }) : loc(p, 'text');
     const eventTitle = (e, c) => e.key ? tr(e.key, { c: loc(c, 'name') }) : loc(e, 'title');
