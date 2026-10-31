@@ -152,6 +152,14 @@ function applySBBrand(): void {
   }
 }
 
+/** Horizontal distance (px) a touch must travel to count as a view swipe. */
+const SWIPE_MIN_DISTANCE = 60;
+/** How much more horizontal than vertical a swipe must be, so that scrolling
+ * the page never flips the view by accident. */
+const SWIPE_AXIS_RATIO = 1.6;
+/** Beyond this a drag reads as a considered gesture, not a flick. */
+const SWIPE_MAX_DURATION_MS = 700;
+
 function wireTabs(container: HTMLElement): void {
   // Only the top-level header tabs carry a data-tab. Other `.cw-tab`-styled
   // buttons (e.g. the Requisitions Open/Completed toggle) reuse the class for
@@ -159,17 +167,94 @@ function wireTabs(container: HTMLElement): void {
   // a nonexistent `view-undefined` and blanks the whole dashboard.
   const tabs = Array.from(container.querySelectorAll<HTMLElement>(".cw-tab[data-tab]"));
   const views = Array.from(container.querySelectorAll<HTMLElement>(".view"));
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const target = tab.dataset.tab;
-      tabs.forEach((each) => each.classList.remove("active"));
-      tab.classList.add("active");
-      views.forEach((v) => {
-        v.classList.remove("active");
-        if (v.id === "view-" + target) v.classList.add("active");
-      });
+
+  /** Single activation path for taps and swipes. `from` is the side the new
+   * view slides in from; omitted for a tap, which keeps the plain fade. */
+  function activate(tab: HTMLElement, from?: "left" | "right"): void {
+    const target = tab.dataset.tab;
+    tabs.forEach((each) => each.classList.remove("active"));
+    tab.classList.add("active");
+    views.forEach((v) => {
+      v.classList.remove("active", "from-left", "from-right");
+      if (v.id === "view-" + target) {
+        if (from) v.classList.add("from-" + from);
+        v.classList.add("active");
+      }
     });
-  });
+    centreTabInStrip(tab);
+  }
+
+  /** On a phone the tab strip scrolls horizontally, so a tab reached by
+   * swiping would otherwise stay off-screen. Scrolls the strip only — never
+   * scrollIntoView, which would also move the host Staffbase page. */
+  function centreTabInStrip(tab: HTMLElement): void {
+    const strip = tab.parentElement;
+    if (!strip || strip.scrollWidth <= strip.clientWidth) return;
+    const left = tab.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2;
+    const max = strip.scrollWidth - strip.clientWidth;
+    const x = Math.max(0, Math.min(left, max));
+    if (typeof strip.scrollTo === "function") strip.scrollTo({ left: x, behavior: "smooth" });
+    else strip.scrollLeft = x;
+  }
+
+  tabs.forEach((tab) => tab.addEventListener("click", () => activate(tab)));
+  wireViewSwipe(container, tabs, activate);
+}
+
+/** Lets a horizontal swipe across the content area move to the next/previous
+ * top-level view, so the tabs behave like a carousel on touch. Listeners are
+ * passive: this never blocks native scrolling, it only reads the gesture
+ * after the fact. */
+function wireViewSwipe(
+  container: HTMLElement,
+  tabs: HTMLElement[],
+  activate: (tab: HTMLElement, from?: "left" | "right") => void
+): void {
+  const content = container.querySelector<HTMLElement>(".cw-content");
+  if (!content || typeof window === "undefined" || !("ontouchstart" in window)) return;
+
+  let startX = 0;
+  let startY = 0;
+  let startedAt = 0;
+  let tracking = false;
+
+  content.addEventListener(
+    "touchstart",
+    (e: TouchEvent) => {
+      tracking = false;
+      if (e.touches.length !== 1) return;
+      // A swipe that begins on something which scrolls or drags on its own
+      // belongs to that control, not to the carousel.
+      const el = e.target as HTMLElement | null;
+      if (el?.closest?.(".cw-subtabs, select, input, textarea, [data-no-swipe]")) return;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startedAt = Date.now();
+      tracking = true;
+    },
+    { passive: true }
+  );
+
+  content.addEventListener(
+    "touchend",
+    (e: TouchEvent) => {
+      if (!tracking) return;
+      tracking = false;
+      const touch = e.changedTouches[0];
+      if (!touch) return;
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+      if (Date.now() - startedAt > SWIPE_MAX_DURATION_MS) return;
+      if (Math.abs(dx) < SWIPE_MIN_DISTANCE) return;
+      if (Math.abs(dx) < Math.abs(dy) * SWIPE_AXIS_RATIO) return;
+      const current = tabs.findIndex((t) => t.classList.contains("active"));
+      if (current < 0) return;
+      const next = current + (dx < 0 ? 1 : -1);
+      if (next < 0 || next >= tabs.length) return; // no wrap-around at the ends
+      activate(tabs[next], dx < 0 ? "right" : "left");
+    },
+    { passive: true }
+  );
 }
 
 /** Generic sub-tab wiring: any `.cw-subtabs[data-subtabs=GROUP]` bar toggles

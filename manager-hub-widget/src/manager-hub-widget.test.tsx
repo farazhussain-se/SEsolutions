@@ -86,4 +86,71 @@ describe("ManagerHubWidget", () => {
     // and the per-person view yields
     expect(container.querySelector('[data-subview="tasks"]')!.classList.contains("active")).toBe(false);
   });
+
+  describe("mobile carousel", () => {
+    // jsdom reports no touch support, so the swipe wiring would bail out.
+    // Declaring the property is what the feature check actually looks for.
+    beforeEach(() => {
+      (window as unknown as Record<string, unknown>).ontouchstart = null;
+    });
+    afterEach(() => {
+      delete (window as unknown as Record<string, unknown>).ontouchstart;
+    });
+
+    const swipe = (el: Element, dx: number, dy = 0) => {
+      const start = new Event("touchstart", { bubbles: true });
+      Object.defineProperty(start, "touches", { value: [{ clientX: 200, clientY: 300 }] });
+      Object.defineProperty(start, "target", { value: el });
+      el.dispatchEvent(start);
+      const end = new Event("touchend", { bubbles: true });
+      Object.defineProperty(end, "changedTouches", { value: [{ clientX: 200 + dx, clientY: 300 + dy }] });
+      el.dispatchEvent(end);
+    };
+
+    const activeView = (c: HTMLElement) => c.querySelector(".view.active")?.id;
+
+    it("swiping left and right moves through the top-level views", async () => {
+      const { container } = render(<ManagerHubWidget widgetApi={apiMock} contentLanguage="en_US" />);
+      const content = container.querySelector(".cw-content") as HTMLElement;
+      expect(activeView(container)).toBe("view-action");
+
+      swipe(content, -120);
+      expect(activeView(container)).toBe("view-mytasks");
+      expect(container.querySelector("#view-mytasks")!.classList.contains("from-right")).toBe(true);
+      expect(container.querySelector('.cw-tab[data-tab="mytasks"]')!.classList.contains("active")).toBe(true);
+
+      swipe(content, -120);
+      expect(activeView(container)).toBe("view-progress");
+
+      swipe(content, 120);
+      expect(activeView(container)).toBe("view-mytasks");
+      expect(container.querySelector("#view-mytasks")!.classList.contains("from-left")).toBe(true);
+    });
+
+    it("ignores gestures that are vertical, too short, or past the ends", async () => {
+      const { container } = render(<ManagerHubWidget widgetApi={apiMock} contentLanguage="en_US" />);
+      const content = container.querySelector(".cw-content") as HTMLElement;
+
+      swipe(content, -30);            // too short
+      expect(activeView(container)).toBe("view-action");
+      swipe(content, -120, 400);      // mostly vertical: a page scroll
+      expect(activeView(container)).toBe("view-action");
+      swipe(content, 150);            // already at the first view, no wrap
+      expect(activeView(container)).toBe("view-action");
+    });
+
+    it("does not hijack a swipe that starts on the sub-tab strip", async () => {
+      const { container } = render(<ManagerHubWidget widgetApi={apiMock} contentLanguage="en_US" />);
+      const content = container.querySelector(".cw-content") as HTMLElement;
+      const subtabs = container.querySelector(".cw-subtabs") as HTMLElement;
+      const start = new Event("touchstart", { bubbles: true });
+      Object.defineProperty(start, "touches", { value: [{ clientX: 200, clientY: 300 }] });
+      Object.defineProperty(start, "target", { value: subtabs });
+      content.dispatchEvent(start);
+      const end = new Event("touchend", { bubbles: true });
+      Object.defineProperty(end, "changedTouches", { value: [{ clientX: 60, clientY: 300 }] });
+      content.dispatchEvent(end);
+      expect(activeView(container)).toBe("view-action");
+    });
+  });
 });

@@ -317,6 +317,24 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  /* Swiping between top-level views slides in from the direction of travel,
+     so the tabs read as a carousel rather than a set of independent pages.
+     More specific than the .view fadeIn above, so it wins when present. */
+  @keyframes slideFromRight {
+    from { opacity: 0; transform: translateX(26px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideFromLeft {
+    from { opacity: 0; transform: translateX(-26px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .view.active.from-right { animation: slideFromRight 0.26s ease; }
+  .view.active.from-left  { animation: slideFromLeft  0.26s ease; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .view, .view.active.from-right, .view.active.from-left { animation: none; }
+  }
+
   .layout {
     display: grid;
     grid-template-columns: 1.55fr 1fr;
@@ -1371,6 +1389,33 @@
   }
 
   @media (max-width: 640px) {
+    /* Six tabs wrapped to three rows ate ~110px of vertical space. On a phone
+       they become one swipeable strip instead, bled to the card edges so the
+       cut-off tab signals there is more to scroll to. */
+    /* The header is a wrapping flex row, so the strip's max-content width
+       (734px) propagated all the way up and re-inflated .hub to 758px — the
+       same min-content trap as before. A single-column grid track of
+       minmax(0, 1fr) is what actually lets the strip be narrower than its
+       contents so overflow-x can scroll instead of expand. */
+    .cw-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 10px;
+    }
+    .cw-tabs {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      min-width: 0;
+      gap: 18px;
+      margin: 0 -16px;
+      padding: 0 16px;
+    }
+    .cw-tabs::-webkit-scrollbar { display: none; }
+    .cw-tab { flex: 0 0 auto; scroll-snap-align: center; }
+
     /* The Remind button drops under the group rather than squeezing the name
        into a two-character column. */
     .tg-row { flex-wrap: wrap; }
