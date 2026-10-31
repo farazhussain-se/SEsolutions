@@ -1363,6 +1363,38 @@
   .cl-who::after { content: " \25BE"; }
   .cl-who.open::after { content: " \25B4"; }
 
+  /* The past-due pill doubles as a trigger for the same disclosure. */
+  button.cl-pill { cursor: pointer; font: inherit; font-size: 11px; }
+
+  .cl-people-head {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-top: 2px;
+  }
+  .cl-people-head + .cl-late { margin-top: -2px; }
+  .cl-late {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .cl-late-title {
+    font-size: 12.5px;
+    color: var(--text);
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .cl-late-by {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--danger);
+    white-space: nowrap;
+  }
+
   .cl-people {
     margin-top: 9px;
     border-top: 1px dashed var(--border);

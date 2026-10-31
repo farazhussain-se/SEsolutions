@@ -255,5 +255,26 @@ describe("ManagerHubWidget", () => {
       expect(chat.disabled).toBe(false);
       expect(chat.title).toMatch(/Open chat to message/i);
     });
+
+    it("names which items are past due, not just how many", async () => {
+      const { container } = render(<ManagerHubWidget widgetApi={apiMock} contentLanguage="en_US" />);
+      await waitFor(() => expect(container.querySelector(".cl-row")).toBeTruthy());
+
+      // find a checklist that actually has something late
+      const row = [...container.querySelectorAll(".cl-row")].find((r) => r.querySelector(".cl-pill")) as HTMLElement;
+      expect(row).toBeTruthy();
+
+      const people = row.querySelector(".cl-people") as HTMLElement;
+      expect(people.hidden).toBe(true);
+
+      // the past-due pill opens the same disclosure as the names
+      (row.querySelector(".cl-pill") as HTMLButtonElement).click();
+      expect(people.hidden).toBe(false);
+
+      const late = people.querySelector(".cl-late") as HTMLElement;
+      expect(late.querySelector(".cl-late-title")!.textContent!.length).toBeGreaterThan(3);
+      expect(late.querySelector(".cl-late-by")!.textContent).toMatch(/\d+d late/);
+      expect(people.textContent).toMatch(/Past due/);
+    });
   });
 });

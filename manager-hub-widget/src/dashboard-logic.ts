@@ -2610,9 +2610,16 @@ interface RawTaskList {
   numberOfClosedTasks?: number;
 }
 interface RawOpenTask {
+  title?: string;
   taskListId?: string;
   dueDate?: string;
   assigneeIds?: string[];
+}
+interface ChecklistOverdueTask {
+  title: string;
+  /** Who it is on, already shortened to a first name. */
+  name: string;
+  daysOverdue: number;
 }
 interface ChecklistProgress {
   id: string;
@@ -2624,6 +2631,8 @@ interface ChecklistProgress {
   pct: number;
   overdue: number;
   assignees: ChecklistAssignee[];
+  /** The actual past-due items, so the view can say which ones. */
+  overdueTasks: ChecklistOverdueTask[];
 }
 
 /** How many past-due tasks in one group before it reads as critical rather
@@ -2638,11 +2647,13 @@ function firstNameOf(full: string): string {
 
 const BASELINE_CHECKLISTS: ChecklistProgress[] = [
   { id: "b1", name: "Daily Pool Deck Opening", color: "#1565C0", open: 3, closed: 3, total: 6, pct: 50, overdue: 1,
-    assignees: [{ userId: "", name: "Jordan", open: 3, overdue: 1 }] },
+    assignees: [{ userId: "", name: "Jordan", open: 3, overdue: 1 }],
+    overdueTasks: [{ title: "Opening checklist sign-off", name: "Jordan", daysOverdue: 1 }] },
   { id: "b2", name: "Kids Academy — Daily Opening", color: "#E8821E", open: 3, closed: 4, total: 7, pct: 57, overdue: 0,
-    assignees: [{ userId: "", name: "Jordan", open: 3, overdue: 0 }] },
-  { id: "b3", name: "Team Assignments", color: "#8A6D45", open: 11, closed: 4, total: 15, pct: 27, overdue: 3,
-    assignees: [{ userId: "", name: "Zack", open: 4, overdue: 1 }, { userId: "", name: "Carina", open: 4, overdue: 1 }, { userId: "", name: "Julie", open: 3, overdue: 1 }] },
+    assignees: [{ userId: "", name: "Jordan", open: 3, overdue: 0 }], overdueTasks: [] },
+  { id: "b3", name: "Weekly Pool Safety & Compliance", color: "#0E7490", open: 5, closed: 3, total: 8, pct: 38, overdue: 1,
+    assignees: [{ userId: "", name: "Enrique", open: 2, overdue: 1 }, { userId: "", name: "Joel", open: 1, overdue: 0 }, { userId: "", name: "Maya", open: 1, overdue: 0 }],
+    overdueTasks: [{ title: "Run weekly in-service training with the guard team", name: "Enrique", daysOverdue: 2 }] },
 ];
 
 /** Reads the real task lists, then overlays open-task data so each group can
@@ -2669,10 +2680,19 @@ async function fetchChecklistProgress(branchBase: string, apiToken: string, task
   return lists.map((l) => {
     const mine = openEntries.filter((t) => t.taskListId === l.id);
     const byUser = new Map<string, ChecklistAssignee>();
+    const overdueTasks: ChecklistOverdueTask[] = [];
     let overdue = 0;
     mine.forEach((t) => {
       const isLate = !!t.dueDate && new Date(t.dueDate) < now;
-      if (isLate) overdue++;
+      if (isLate) {
+        overdue++;
+        const owner = (t.assigneeIds || [])[0];
+        overdueTasks.push({
+          title: t.title || "Untitled task",
+          name: owner ? firstNameOf(nameOf(users[owner])) : "",
+          daysOverdue: Math.max(1, Math.floor((now.getTime() - new Date(t.dueDate as string).getTime()) / 86400000)),
+        });
+      }
       (t.assigneeIds || []).forEach((uid: string) => {
         let a = byUser.get(uid);
         if (!a) {
@@ -2696,6 +2716,7 @@ async function fetchChecklistProgress(branchBase: string, apiToken: string, task
       pct: total ? Math.round((closed / total) * 100) : 0,
       overdue,
       assignees: Array.from(byUser.values()).sort((a, b) => b.overdue - a.overdue || b.open - a.open),
+      overdueTasks: overdueTasks.sort((a, b) => b.daysOverdue - a.daysOverdue),
     };
   });
 }
@@ -2826,10 +2847,13 @@ function initChecklists(
 
       const meta = document.createElement("div");
       meta.className = "cl-meta";
+      let pill: HTMLElement | null = null;
       if (g.overdue) {
-        const pill = document.createElement("span");
-        pill.className = "cw-pill " + (g.overdue >= CRITICAL_OVERDUE_COUNT ? "required" : "warn");
+        pill = document.createElement("button");
+        (pill as HTMLButtonElement).type = "button";
+        pill.className = "cw-pill cl-pill " + (g.overdue >= CRITICAL_OVERDUE_COUNT ? "required" : "warn");
         pill.textContent = `${g.overdue} past due`;
+        pill.title = "Show which items are past due";
         meta.appendChild(pill);
       }
       const names = g.assignees.map((a) => a.name).filter(Boolean);
@@ -2851,13 +2875,15 @@ function initChecklists(
         who.className = "cl-who";
         who.setAttribute("aria-expanded", "false");
         who.textContent = summary;
-        who.addEventListener("click", () => {
+        const toggle = () => {
           // `hidden` is typed boolean | "until-found", so coerce before use.
           const open = !!people.hidden;
           people.hidden = !open;
           who.setAttribute("aria-expanded", String(open));
           who.classList.toggle("open", open);
-        });
+        };
+        who.addEventListener("click", toggle);
+        pill?.addEventListener("click", toggle);
         meta.appendChild(who);
       } else {
         const who = document.createElement("span");
@@ -2865,6 +2891,34 @@ function initChecklists(
         meta.appendChild(who);
       }
       body.appendChild(meta);
+
+      // Which ones are late, by name — a count alone does not tell a manager
+      // what to chase.
+      if (g.overdueTasks.length) {
+        const head = document.createElement("div");
+        head.className = "cl-people-head";
+        head.textContent = "Past due";
+        people.appendChild(head);
+        g.overdueTasks.forEach((t) => {
+          const item = document.createElement("div");
+          item.className = "cl-late";
+          const title = document.createElement("span");
+          title.className = "cl-late-title";
+          title.textContent = t.title;
+          const by = document.createElement("span");
+          by.className = "cl-late-by";
+          // An overdue item with no owner is itself worth surfacing, so say so
+          // rather than rendering a bare "3d late".
+          by.textContent = `${t.name || "Unassigned"} · ${t.daysOverdue}d late`;
+          item.appendChild(title);
+          item.appendChild(by);
+          people.appendChild(item);
+        });
+        const head2 = document.createElement("div");
+        head2.className = "cl-people-head";
+        head2.textContent = "Who to chase";
+        people.appendChild(head2);
+      }
 
       g.assignees.forEach((a) => {
         const personRow = document.createElement("div");
