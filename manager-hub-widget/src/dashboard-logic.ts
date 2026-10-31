@@ -159,6 +159,9 @@ const SWIPE_MIN_DISTANCE = 60;
 const SWIPE_AXIS_RATIO = 1.6;
 /** Beyond this a drag reads as a considered gesture, not a flick. */
 const SWIPE_MAX_DURATION_MS = 700;
+/** Travel (px) before a drag commits to an axis. Below this nothing is
+ * prevented, so a vertical scroll is never stolen from the page. */
+const SWIPE_AXIS_LOCK = 10;
 
 function wireTabs(container: HTMLElement): void {
   // Only the top-level header tabs carry a data-tab. Other `.cw-tab`-styled
@@ -201,10 +204,14 @@ function wireTabs(container: HTMLElement): void {
   wireViewSwipe(container, tabs, activate);
 }
 
-/** Lets a horizontal swipe across the content area move to the next/previous
- * top-level view, so the tabs behave like a carousel on touch. Listeners are
- * passive: this never blocks native scrolling, it only reads the gesture
- * after the fact. */
+/** Lets a horizontal drag across the content area carry the current view with
+ * the finger and hand over to the next/previous one on release, so the tabs
+ * behave like a real carousel rather than a delayed tab switch.
+ *
+ * touchmove is deliberately NOT passive: once the gesture is locked to the
+ * horizontal axis this calls preventDefault so the page cannot scroll
+ * sideways underneath the drag. Until that lock happens nothing is
+ * prevented, so vertical scrolling is never interfered with. */
 function wireViewSwipe(
   container: HTMLElement,
   tabs: HTMLElement[],
@@ -217,45 +224,99 @@ function wireViewSwipe(
   let startY = 0;
   let startedAt = 0;
   let tracking = false;
+  let axis: "" | "x" | "y" = "";
+  let dragged: HTMLElement | null = null;
+
+  /** Index of the tab a drag in this direction would land on, or -1. */
+  function neighbour(dx: number): number {
+    const current = tabs.findIndex((t) => t.classList.contains("active"));
+    if (current < 0) return -1;
+    const next = current + (dx < 0 ? 1 : -1);
+    return next >= 0 && next < tabs.length ? next : -1;
+  }
+
+  /** Rubber-banding: at the first/last view the content still moves, but
+   * grudgingly, so the gesture is acknowledged without implying a view that
+   * is not there. */
+  function offsetFor(dx: number): number {
+    return neighbour(dx) < 0 ? dx / 3.5 : dx;
+  }
+
+  function release(): void {
+    if (dragged) {
+      dragged.classList.remove("dragging");
+      dragged.style.transform = "";
+    }
+    dragged = null;
+    tracking = false;
+    axis = "";
+  }
 
   content.addEventListener(
     "touchstart",
     (e: TouchEvent) => {
-      tracking = false;
+      release();
       if (e.touches.length !== 1) return;
-      // A swipe that begins on something which scrolls or drags on its own
+      // A drag that begins on something which scrolls or drags on its own
       // belongs to that control, not to the carousel.
       const el = e.target as HTMLElement | null;
       if (el?.closest?.(".cw-subtabs, select, input, textarea, [data-no-swipe]")) return;
+      const view = container.querySelector<HTMLElement>(".view.active");
+      if (!view) return;
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       startedAt = Date.now();
+      dragged = view;
       tracking = true;
     },
     { passive: true }
   );
 
   content.addEventListener(
+    "touchmove",
+    (e: TouchEvent) => {
+      if (!tracking || !dragged || e.touches.length !== 1) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (!axis) {
+        // Wait for enough travel to tell a sideways drag from a page scroll.
+        if (Math.abs(dx) < SWIPE_AXIS_LOCK && Math.abs(dy) < SWIPE_AXIS_LOCK) return;
+        axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+        if (axis === "y") {
+          release(); // vertical: hand the gesture back to the page
+          return;
+        }
+        dragged.classList.add("dragging");
+      }
+      e.preventDefault();
+      dragged.style.transform = "translateX(" + offsetFor(dx) + "px)";
+    },
+    { passive: false }
+  );
+
+  content.addEventListener(
     "touchend",
     (e: TouchEvent) => {
-      if (!tracking) return;
-      tracking = false;
+      if (!tracking || !dragged) return release();
       const touch = e.changedTouches[0];
-      if (!touch) return;
-      const dx = touch.clientX - startX;
-      const dy = touch.clientY - startY;
-      if (Date.now() - startedAt > SWIPE_MAX_DURATION_MS) return;
+      const wasHorizontal = axis === "x";
+      const dx = touch ? touch.clientX - startX : 0;
+      const dy = touch ? touch.clientY - startY : 0;
+      const quick = Date.now() - startedAt <= SWIPE_MAX_DURATION_MS;
+      release(); // always snap back first; activate() replays the slide-in
+      if (!touch || !wasHorizontal || !quick) return;
       if (Math.abs(dx) < SWIPE_MIN_DISTANCE) return;
       if (Math.abs(dx) < Math.abs(dy) * SWIPE_AXIS_RATIO) return;
-      const current = tabs.findIndex((t) => t.classList.contains("active"));
-      if (current < 0) return;
-      const next = current + (dx < 0 ? 1 : -1);
-      if (next < 0 || next >= tabs.length) return; // no wrap-around at the ends
+      const next = neighbour(dx);
+      if (next < 0) return; // no wrap-around at the ends
       activate(tabs[next], dx < 0 ? "right" : "left");
     },
     { passive: true }
   );
+
+  content.addEventListener("touchcancel", release, { passive: true });
 }
+
 
 /** Generic sub-tab wiring: any `.cw-subtabs[data-subtabs=GROUP]` bar toggles
  * the `.subview[data-subgroup=GROUP][data-subview=NAME]` panels that share
@@ -343,24 +404,35 @@ function wireSetupLink(container: HTMLElement): void {
 }
 
 /** Real logged-in manager's identity via the widget SDK — no manual login. */
+/** Fills the header identity from the signed-in user, or hides it. There is
+ * no fallback persona: showing an invented name and job title next to real
+ * team data reads as a real colleague, so when the SDK gives us nobody the
+ * block stays hidden instead. */
 function applyViewerIdentity(container: HTMLElement, widgetApi: WidgetApi): void {
+  const block = container.querySelector<HTMLElement>("#headerUser");
   widgetApi
     .getUserInformation()
     .then((user) => {
-      const name = `${user.firstName} ${user.lastName}`.trim();
+      const name = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+      if (!name) {
+        if (block) block.hidden = true;
+        return;
+      }
       const initials = initialsOf(name);
       const roleLine = [user.position, user.location].filter(Boolean).join(" · ");
 
       setText(container, ".header-user-name", name);
       setText(container, ".header-user-avatar", initials);
-      setText(container, ".header-user-role", roleLine || "—");
+      setText(container, ".header-user-role", roleLine);
+      if (block) block.hidden = false;
 
       setText(container, "#setupViewerName", name);
       setText(container, "#setupViewerAvatar", initials);
       setText(container, "#setupViewerMeta", [user.department, user.location].filter(Boolean).join(" · ") || "—");
     })
     .catch(() => {
-      // leave the placeholder markup in place — only happens outside a real widget host
+      // Outside a real widget host there is no signed-in user to show.
+      if (block) block.hidden = true;
     });
 }
 
@@ -1597,9 +1669,9 @@ type ReqStatus =
 type ChainStage = "Requisition" | "PO Issued" | "Received" | "Invoiced";
 
 interface Worktags {
-  costCenter: string; // e.g. "CC-4102 · Winter Park – Facilities"
+  costCenter: string; // e.g. "CC-4102 · Plano – Facilities"
   spendCategory: string; // e.g. "SC-REPAIRS-BLDG · Repairs & Maintenance – Building"
-  location: string; // e.g. "Life Time Winter Park"
+  location: string; // e.g. "Life Time Plano"
 }
 
 interface RequisitionLine {
@@ -1643,11 +1715,11 @@ const FACOPS_GROUP_TITLE = "Club Facility Specialists & Engineers";
 
 // Option lists for the create form — Worktag values keep Workday vocabulary.
 const REQ_COST_CENTERS = [
-  "CC-4102 · Winter Park – Facilities",
-  "CC-4101 · Winter Park – Housekeeping",
-  "CC-4108 · Winter Park – Aquatics",
-  "CC-4110 · Winter Park – Fitness Floor",
-  "CC-4120 · Winter Park – LifeCafe",
+  "CC-4102 · Plano – Facilities",
+  "CC-4101 · Plano – Housekeeping",
+  "CC-4108 · Plano – Aquatics",
+  "CC-4110 · Plano – Fitness Floor",
+  "CC-4120 · Plano – LifeCafe",
 ];
 const REQ_SPEND_CATEGORIES = [
   "SC-REPAIRS-BLDG · Repairs & Maintenance – Building",
@@ -1657,7 +1729,7 @@ const REQ_SPEND_CATEGORIES = [
   "SC-SUPPLIES-JAN · Janitorial & Cleaning Supplies",
   "SC-SUPPLIES-OFFICE · Office & Admin Supplies",
 ];
-const REQ_LOCATIONS = ["Life Time Winter Park", "Life Time Centennial", "Life Time Chanhassen Flagship"];
+const REQ_LOCATIONS = ["Life Time Plano", "Life Time Las Colinas", "Life Time Centennial", "Life Time Chanhassen Flagship"];
 
 // localStorage: requisitions the manager creates in-widget persist across
 // reloads (no live Workday backend), same pattern as role changes.
@@ -1737,14 +1809,14 @@ const BASELINE_REQUISITIONS: Requisition[] = [
   {
     requisitionNumber: "REQ-WD-2026-1044",
     requisitionDate: "2026-08-22",
-    requester: "Elena Perry",
+    requester: "Club Operations",
     company: "Life Time, Inc.",
     requisitionType: "Non-Catalog",
     supplier: "Cintas Fire Protection",
     worktags: {
-      costCenter: "CC-4102 · Winter Park – Facilities",
+      costCenter: "CC-4102 · Plano – Facilities",
       spendCategory: "SC-INSPECTIONS · Safety & Compliance Inspections",
-      location: "Life Time Winter Park",
+      location: "Life Time Plano",
     },
     status: "Draft",
     currency: "USD",
@@ -1757,14 +1829,14 @@ const BASELINE_REQUISITIONS: Requisition[] = [
   {
     requisitionNumber: "REQ-WD-2026-1042",
     requisitionDate: "2026-08-18",
-    requester: "Elena Perry",
+    requester: "Club Operations",
     company: "Life Time, Inc.",
     requisitionType: "Non-Catalog",
     supplier: "Grainger Industrial Supply",
     worktags: {
-      costCenter: "CC-4102 · Winter Park – Facilities",
+      costCenter: "CC-4102 · Plano – Facilities",
       spendCategory: "SC-REPAIRS-BLDG · Repairs & Maintenance – Building",
-      location: "Life Time Winter Park",
+      location: "Life Time Plano",
     },
     status: "In Progress",
     currency: "USD",
@@ -1783,9 +1855,9 @@ const BASELINE_REQUISITIONS: Requisition[] = [
     requisitionType: "Catalog",
     supplier: "Lincoln Aquatics",
     worktags: {
-      costCenter: "CC-4108 · Winter Park – Aquatics",
+      costCenter: "CC-4108 · Plano – Aquatics",
       spendCategory: "SC-POOL-CHEM · Pool Chemicals & Supplies",
-      location: "Life Time Winter Park",
+      location: "Life Time Plano",
     },
     status: "Successfully Completed",
     currency: "USD",
@@ -1800,14 +1872,14 @@ const BASELINE_REQUISITIONS: Requisition[] = [
   {
     requisitionNumber: "REQ-WD-2026-1035",
     requisitionDate: "2026-08-04",
-    requester: "Elena Perry",
+    requester: "Club Operations",
     company: "Life Time, Inc.",
     requisitionType: "Catalog",
     supplier: "Grainger Industrial Supply",
     worktags: {
-      costCenter: "CC-4101 · Winter Park – Housekeeping",
+      costCenter: "CC-4101 · Plano – Housekeeping",
       spendCategory: "SC-SUPPLIES-JAN · Janitorial & Cleaning Supplies",
-      location: "Life Time Winter Park",
+      location: "Life Time Plano",
     },
     status: "Closed",
     currency: "USD",
@@ -1827,9 +1899,9 @@ const BASELINE_REQUISITIONS: Requisition[] = [
     requisitionType: "Non-Catalog",
     supplier: "FastSigns",
     worktags: {
-      costCenter: "CC-4102 · Winter Park – Facilities",
+      costCenter: "CC-4102 · Plano – Facilities",
       spendCategory: "SC-REPAIRS-BLDG · Repairs & Maintenance – Building",
-      location: "Life Time Winter Park",
+      location: "Life Time Plano",
     },
     status: "Sent Back",
     currency: "USD",
@@ -2144,8 +2216,10 @@ function initReqCreateForm(container: HTMLElement, h: ReqCreateHandlers): void {
   fill(scSel, REQ_SPEND_CATEGORIES);
   fill(locSel, REQ_LOCATIONS);
 
-  // Requester defaults to the signed-in manager.
-  let requesterName = "Elena Perry";
+  // Requester is the signed-in manager. No invented fallback: if the SDK
+  // gives us nobody, the field stays blank rather than naming someone who
+  // does not exist.
+  let requesterName = "—";
   h.widgetApi
     .getUserInformation()
     .then((u) => {

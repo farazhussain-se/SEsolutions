@@ -97,11 +97,23 @@ describe("ManagerHubWidget", () => {
       delete (window as unknown as Record<string, unknown>).ontouchstart;
     });
 
-    const swipe = (el: Element, dx: number, dy = 0) => {
+    /** A real drag: down, at least one move (which is what locks the axis and
+     * starts carrying the view), then up. */
+    const swipe = (el: Element, dx: number, dy = 0, opts: { target?: Element } = {}) => {
+      const target = opts.target ?? el;
       const start = new Event("touchstart", { bubbles: true });
       Object.defineProperty(start, "touches", { value: [{ clientX: 200, clientY: 300 }] });
-      Object.defineProperty(start, "target", { value: el });
+      Object.defineProperty(start, "target", { value: target });
       el.dispatchEvent(start);
+
+      // two moves: the first locks the axis, the second carries it the rest
+      [0.5, 1].forEach((f) => {
+        const move = new Event("touchmove", { bubbles: true, cancelable: true });
+        Object.defineProperty(move, "touches", { value: [{ clientX: 200 + dx * f, clientY: 300 + dy * f }] });
+        Object.defineProperty(move, "target", { value: target });
+        el.dispatchEvent(move);
+      });
+
       const end = new Event("touchend", { bubbles: true });
       Object.defineProperty(end, "changedTouches", { value: [{ clientX: 200 + dx, clientY: 300 + dy }] });
       el.dispatchEvent(end);
@@ -137,20 +149,48 @@ describe("ManagerHubWidget", () => {
       expect(activeView(container)).toBe("view-action");
       swipe(content, 150);            // already at the first view, no wrap
       expect(activeView(container)).toBe("view-action");
+
+      // a press with no travel at all is a tap, not a drag
+      const down = new Event("touchstart", { bubbles: true });
+      Object.defineProperty(down, "touches", { value: [{ clientX: 200, clientY: 300 }] });
+      Object.defineProperty(down, "target", { value: content });
+      content.dispatchEvent(down);
+      const up = new Event("touchend", { bubbles: true });
+      Object.defineProperty(up, "changedTouches", { value: [{ clientX: 200, clientY: 300 }] });
+      content.dispatchEvent(up);
+      expect(activeView(container)).toBe("view-action");
     });
 
     it("does not hijack a swipe that starts on the sub-tab strip", async () => {
       const { container } = render(<ManagerHubWidget widgetApi={apiMock} contentLanguage="en_US" />);
       const content = container.querySelector(".cw-content") as HTMLElement;
       const subtabs = container.querySelector(".cw-subtabs") as HTMLElement;
-      const start = new Event("touchstart", { bubbles: true });
-      Object.defineProperty(start, "touches", { value: [{ clientX: 200, clientY: 300 }] });
-      Object.defineProperty(start, "target", { value: subtabs });
-      content.dispatchEvent(start);
-      const end = new Event("touchend", { bubbles: true });
-      Object.defineProperty(end, "changedTouches", { value: [{ clientX: 60, clientY: 300 }] });
-      content.dispatchEvent(end);
+      swipe(content, -140, 0, { target: subtabs });
       expect(activeView(container)).toBe("view-action");
+    });
+  });
+
+  describe("header identity", () => {
+    it("shows the signed-in user's own profile, not a stand-in", async () => {
+      const { container } = render(<ManagerHubWidget widgetApi={apiMock} contentLanguage="en_US" />);
+      await waitFor(() => {
+        expect((container.querySelector("#headerUser") as HTMLElement).hidden).toBe(false);
+      });
+      expect(container.querySelector("#headerUserName")!.textContent).toMatch(/Lucy Liu/);
+    });
+
+    it("hides the identity block when there is no signed-in user", async () => {
+      const noUser = {
+        ...apiMock,
+        getUserInformation: () => Promise.reject(new Error("no host")),
+      } as unknown as typeof apiMock;
+      const { container } = render(<ManagerHubWidget widgetApi={noUser} contentLanguage="en_US" />);
+      await waitFor(() => {
+        expect((container.querySelector("#headerUser") as HTMLElement).hidden).toBe(true);
+      });
+      // and nothing invented is sitting in the markup waiting to be shown
+      expect(container.querySelector("#headerUserName")!.textContent).toBe("");
+      expect(container.querySelector("#headerUserRole")!.textContent).toBe("");
     });
   });
 });

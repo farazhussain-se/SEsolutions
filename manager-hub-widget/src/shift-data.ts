@@ -52,13 +52,13 @@ const ROSTER_KEY = "lifetime-shift-roster:roster";
 const REQUESTS_KEY = "lifetime-shift-roster:requests";
 
 const COST_CENTERS_BY_LOCATION: Record<ShiftLocation, string> = {
-  "Front Desk": "CC-4100 · Winter Park – Member Services",
-  "Pool Deck": "CC-4108 · Winter Park – Aquatics",
-  "Group Fitness": "CC-4110 · Winter Park – Fitness Floor",
-  "Fitness Floor": "CC-4110 · Winter Park – Fitness Floor",
-  LifeCafe: "CC-4120 · Winter Park – LifeCafe",
-  Housekeeping: "CC-4101 · Winter Park – Housekeeping",
-  "Personal Training": "CC-4112 · Winter Park – Personal Training",
+  "Front Desk": "CC-4100 · Plano – Member Services",
+  "Pool Deck": "CC-4108 · Plano – Aquatics",
+  "Group Fitness": "CC-4110 · Plano – Fitness Floor",
+  "Fitness Floor": "CC-4110 · Plano – Fitness Floor",
+  LifeCafe: "CC-4120 · Plano – LifeCafe",
+  Housekeeping: "CC-4101 · Plano – Housekeeping",
+  "Personal Training": "CC-4112 · Plano – Personal Training",
 };
 
 // Identical seed roster to shift-roster-widget, so the coverage matrix here
@@ -135,7 +135,7 @@ function buildBaselineRoster(): Shift[] {
 }
 
 // `allowSeed` mirrors this widget's demoMode toggle: when off, an empty
-// roster stays empty instead of blending in the sample Winter Park roster
+// roster stays empty instead of blending in the sample Plano roster
 // (same "no sample data when demo mode is off" rule as requisitions/journeys).
 export function loadRoster(allowSeed = true): Shift[] {
   try {

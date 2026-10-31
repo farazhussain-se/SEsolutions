@@ -12,7 +12,7 @@
       </div>
       <div>
         <div class="header-title">MANAGER HUB</div>
-        <div class="header-subtitle">Club Operations · Life Time Winter Park</div>
+        <div class="header-subtitle">Club Operations · Life Time Plano</div>
       </div>
     </div>
     <div class="cw-tabs">
@@ -23,11 +23,14 @@
       <button class="cw-tab" data-tab="talent">Talent Mobility</button>
       <button class="cw-tab" data-tab="requisitions">Requisitions</button>
     </div>
-    <div class="header-user">
-      <div class="header-user-avatar" id="headerUserAvatar">EP</div>
+    <!-- Hidden until the widget SDK returns a real signed-in user; there is
+         deliberately no placeholder person here, so nothing invented can ever
+         render as though it were somebody's profile. -->
+    <div class="header-user" id="headerUser" hidden>
+      <div class="header-user-avatar" id="headerUserAvatar"></div>
       <div>
-        <div class="header-user-name" id="headerUserName">Elena Perry</div>
-        <div class="header-user-role" id="headerUserRole">General Manager · Winter Park</div>
+        <div class="header-user-name" id="headerUserName"></div>
+        <div class="header-user-role" id="headerUserRole"></div>
       </div>
     </div>
   </div>
