@@ -80,6 +80,10 @@
   .hub {
     width: 100%;
     max-width: 1160px;
+    /* Flex item of the centring body rule above: without min-width:0 it cannot
+       shrink below its min-content width, and because body centres it the
+       overflow hangs off the LEFT edge where nothing can scroll to it. */
+    min-width: 0;
     background: var(--hub-bg);
     border-radius: 20px;
     border: 1px solid var(--border);
@@ -181,7 +185,9 @@
   .cw-tabs {
     display: flex;
     align-items: center;
-    gap: 22px;
+    flex-wrap: wrap;
+    min-width: 0;
+    gap: 8px 22px;
     position: relative;
     z-index: 1;
   }
@@ -782,6 +788,18 @@
     flex-wrap: wrap;
     margin-bottom: 10px;
   }
+  .policy-input {
+    /* A bare <select> takes its auto width from its longest <option> — the
+       spend-category list is 393px — and the wrapper then sizes to the select,
+       so max-width:100% has nothing to resolve against. An explicit width is
+       what actually caps it. Flex contexts (.filter-bar, .journey-connect-form)
+       set a flex-basis, which wins over this. */
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    text-overflow: ellipsis;
+  }
   .filter-bar select.policy-input {
     flex: 1 1 140px;
     min-width: 120px;
@@ -893,6 +911,8 @@
     padding: 9px 12px;
     cursor: pointer;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     transition: all 0.15s ease;
   }
   .cw-subtab:hover { color: var(--text); }
@@ -1001,7 +1021,7 @@
   .req-line {
     position: absolute;
     top: 7px;
-    left: 50%;
+    right: 50%;
     width: 100%;
     height: 2px;
     background: var(--border);
@@ -1217,13 +1237,147 @@
 
   .status-link:hover { color: var(--primary); }
 
+  /* ============ TASK GROUP PROGRESS ============
+     One row per Tasks task-list (what the Tasks app calls a group), showing
+     completion across the whole list rather than per assignee. The colour dot
+     mirrors the list's own colour from GET /tasks/{inst}/lists. */
+  .tg-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tg-row:last-child { border-bottom: none; }
+  .tg-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex: 0 0 10px;
+    margin-top: 5px;
+    background: var(--primary);
+  }
+  .tg-body { flex: 1; min-width: 0; }
+  .tg-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tg-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+  .tg-count {
+    font-size: 12.5px;
+    color: var(--text-light);
+    font-variant-numeric: tabular-nums;
+  }
+  .tg-bar {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--bg-gray);
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .tg-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--success);
+    transition: width .35s ease;
+  }
+  .tg-fill.none { background: var(--border); }
+  .tg-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 7px;
+    font-size: 12px;
+    color: var(--text-light);
+  }
+  .tg-actions { flex: 0 0 auto; }
+  .tg-remind {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-light);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    min-height: 32px;
+  }
+  .tg-remind:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+  .tg-remind:disabled { opacity: .55; cursor: default; }
+
   /* ============ RESPONSIVE ============ */
   @media (max-width: 900px) {
     .metrics { grid-template-columns: repeat(2, 1fr); }
     .layout  { grid-template-columns: 1fr; }
   }
 
+  @media (max-width: 600px) {
+    /* Two inline flex-basis values (120px + 130px) left the description input
+       19px wide. Stacking is the only thing that frees it, and the inline
+       styles need !important to be beaten. */
+    .req-field-row { flex-direction: column; align-items: stretch; }
+    .req-field-row > * { flex: 1 1 auto !important; width: 100%; }
+    .req-meta-grid { grid-template-columns: 1fr; }
+    .journey-tracker-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
+
+  @media (max-width: 600px) {
+    /* Four sub-tabs in 375px truncate to "Status Ch". Scrolling the strip
+       keeps every label readable, which beats an ellipsis on a nav control. */
+    .cw-subtabs {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .cw-subtabs::-webkit-scrollbar { display: none; }
+    .cw-subtab { flex: 0 0 auto; min-width: 0; }
+  }
+
+  @media (max-width: 480px) {
+    /* .metrics.compact carries an inline 2-column template in the markup. */
+    .metrics, .metrics.compact { grid-template-columns: 1fr !important; }
+    .filter-bar select.policy-input { flex: 1 1 100%; min-width: 0; }
+  }
+
+  /* Touch devices: the dashboard is dense with 16–34px controls. Floor the
+     interactive ones at 44px rather than resizing them everywhere, so the
+     desktop layout is unchanged. */
+  @media (pointer: coarse) {
+    .hub button,
+    .hub select,
+    .hub .task-item.clickable,
+    .hub .training-link,
+    .hub .status-link {
+      min-height: 44px;
+    }
+    .hub button, .hub .training-link, .hub .status-link {
+      display: inline-flex;
+      align-items: center;
+    }
+    .hub .task-item.clickable { display: flex; align-items: center; }
+    .hub .checklist-check { width: 24px; height: 24px; }
+    .hub .req-facops-toggle input { width: 22px; height: 22px; }
+    .hub .gear-btn { width: 44px; height: 44px; }
+  }
+
   @media (max-width: 640px) {
+    /* The Remind button drops under the group rather than squeezing the name
+       into a two-character column. */
+    .tg-row { flex-wrap: wrap; }
+    .tg-actions { flex: 1 1 100%; padding-left: 21px; }
+    .tg-remind { width: 100%; min-height: 38px; }
+    .tg-head { gap: 2px 8px; }
+
     body { padding: 12px; }
     .hub { padding: 10px; }
     .cw-header { padding: 16px; }

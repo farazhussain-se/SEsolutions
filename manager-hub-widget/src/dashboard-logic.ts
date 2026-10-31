@@ -122,6 +122,7 @@ export function initDashboard(opts: DashboardOptions): void {
   initPromotionLauncher(container, branchBase, apiToken, getUserId);
   initRequisitions(container, demoMode, branchBase, apiToken, widgetApi);
   initMyTasks(container, branchBase, apiToken, tasksInstallationId, widgetApi, demoMode);
+  initTaskGroups(container, branchBase, apiToken, tasksInstallationId, demoMode);
   initShiftRoster(container, branchBase, apiToken, getUserId, demoMode);
   applyViewerIdentity(container, widgetApi);
 }
@@ -637,8 +638,9 @@ function sendNotification(branchBase: string, apiToken: string, userId: string, 
 }
 
 // Resolves a real task list to create tasks in. There's no list-index
-// endpoint on this API, but every existing task carries its taskListId, so
+// endpoint used here, but every existing task carries its taskListId, so
 // we borrow the list of an existing open task (cached after first lookup).
+// (GET /tasks/{inst}/lists does enumerate lists — see fetchTaskGroupProgress.)
 // Verified live (2026-08-23): POST /tasks/{inst}/task with a valid
 // taskListId returns 201, dueDate round-trips, and DELETE removes it.
 let cachedTaskListId: string | null = null;
@@ -2427,6 +2429,296 @@ function baselineShiftRequests(): ShiftChangeRequest[] {
       submittedAt: new Date().toISOString(),
     },
   ];
+}
+
+/* ============ TASK GROUP PROGRESS ============
+   Completion per Tasks task-list ("group" in the Tasks app) rather than per
+   assignee, plus a reminder that goes to everyone holding an open task in
+   that group. */
+interface TaskGroupAssignee {
+  userId: string;
+  name: string;
+  open: number;
+  overdue: number;
+}
+/** Only the fields this view reads off the Tasks API. */
+interface RawTaskList {
+  id: string;
+  name?: string;
+  color?: string;
+  numberOfOpenTasks?: number;
+  numberOfClosedTasks?: number;
+}
+interface RawOpenTask {
+  taskListId?: string;
+  dueDate?: string;
+  assigneeIds?: string[];
+}
+interface TaskGroupProgress {
+  id: string;
+  name: string;
+  color: string;
+  open: number;
+  closed: number;
+  total: number;
+  pct: number;
+  overdue: number;
+  assignees: TaskGroupAssignee[];
+}
+
+/** How many past-due tasks in one group before it reads as critical rather
+ * than merely late. Deliberately NOT CRITICAL_THRESHOLD_DAYS — that one is a
+ * count of days on a single task, this is a count of tasks in a group. */
+const CRITICAL_OVERDUE_COUNT = 3;
+
+/** First name only — demo personas are shown without surnames. */
+function firstNameOf(full: string): string {
+  return (full || "").trim().split(/\s+/)[0] || full;
+}
+
+const BASELINE_TASK_GROUPS: TaskGroupProgress[] = [
+  { id: "b1", name: "Daily Pool Deck Opening", color: "#1565C0", open: 3, closed: 3, total: 6, pct: 50, overdue: 1,
+    assignees: [{ userId: "", name: "Jordan", open: 3, overdue: 1 }] },
+  { id: "b2", name: "Kids Academy — Daily Opening", color: "#E8821E", open: 3, closed: 4, total: 7, pct: 57, overdue: 0,
+    assignees: [{ userId: "", name: "Jordan", open: 3, overdue: 0 }] },
+  { id: "b3", name: "Team Assignments", color: "#8A6D45", open: 11, closed: 4, total: 15, pct: 27, overdue: 3,
+    assignees: [{ userId: "", name: "Zack", open: 4, overdue: 1 }, { userId: "", name: "Carina", open: 4, overdue: 1 }, { userId: "", name: "Julie", open: 3, overdue: 1 }] },
+];
+
+/** Reads the real task lists, then overlays open-task data so each group can
+ * show how much is past due and who to chase. */
+async function fetchTaskGroupProgress(branchBase: string, apiToken: string, tasksInstallationId: string): Promise<TaskGroupProgress[]> {
+  const listsRes = await staffbaseFetch(branchBase, apiToken, `/tasks/${tasksInstallationId}/lists`);
+  if (!listsRes.ok) throw new Error("HTTP " + listsRes.status);
+  const lists: RawTaskList[] = (await listsRes.json()) || [];
+
+  // NOTE: the search endpoint requires a date window, and filtering on
+  // startDate silently drops every task that has none (most of them) — so
+  // this windows on updateDate, which every task carries.
+  const openRes = await staffbaseFetch(
+    branchBase,
+    apiToken,
+    `/tasks/${tasksInstallationId}/task/search?status=OPEN&limit=200&updateDateFrom=2020-01-01T00:00:00.000Z&updateDateTo=2100-01-01T00:00:00.000Z`
+  );
+  const openEntries: RawOpenTask[] = openRes.ok ? ((await openRes.json()).entries || []) : [];
+
+  const ids = Array.from(new Set(openEntries.flatMap((t) => t.assigneeIds || [])));
+  const users = ids.length ? await resolveUsers(branchBase, apiToken, ids) : {};
+  const now = new Date();
+
+  return lists.map((l) => {
+    const mine = openEntries.filter((t) => t.taskListId === l.id);
+    const byUser = new Map<string, TaskGroupAssignee>();
+    let overdue = 0;
+    mine.forEach((t) => {
+      const isLate = !!t.dueDate && new Date(t.dueDate) < now;
+      if (isLate) overdue++;
+      (t.assigneeIds || []).forEach((uid: string) => {
+        let a = byUser.get(uid);
+        if (!a) {
+          a = { userId: uid, name: firstNameOf(nameOf(users[uid])), open: 0, overdue: 0 };
+          byUser.set(uid, a);
+        }
+        a.open++;
+        if (isLate) a.overdue++;
+      });
+    });
+    const open = typeof l.numberOfOpenTasks === "number" ? l.numberOfOpenTasks : mine.length;
+    const closed = typeof l.numberOfClosedTasks === "number" ? l.numberOfClosedTasks : 0;
+    const total = open + closed;
+    return {
+      id: l.id,
+      name: l.name || "Untitled list",
+      color: l.color && /^#/.test(l.color) ? l.color : "",
+      open,
+      closed,
+      total,
+      pct: total ? Math.round((closed / total) * 100) : 0,
+      overdue,
+      assignees: Array.from(byUser.values()).sort((a, b) => b.overdue - a.overdue || b.open - a.open),
+    };
+  });
+}
+
+function initTaskGroups(
+  container: HTMLElement,
+  branchBase: string,
+  apiToken: string,
+  tasksInstallationId: string,
+  demoMode: boolean
+): void {
+  const listEl = container.querySelector<HTMLElement>("#taskGroupsList");
+  const metaEl = container.querySelector<HTMLElement>("#taskGroupsMeta");
+  const badgeEl = container.querySelector<HTMLElement>("#taskGroupsBadge");
+  const sortEl = container.querySelector<HTMLSelectElement>("#taskGroupSortSelect");
+  const overdueToggleEl = container.querySelector<HTMLElement>("#taskGroupOverdueToggle");
+  const clearBtnEl = container.querySelector<HTMLElement>("#taskGroupFilterClearBtn");
+  const sendAllBtn = container.querySelector<HTMLButtonElement>("#sendGroupRemindersBtn");
+  container.querySelector<HTMLElement>("#taskGroupsOpenLink")?.addEventListener("click", openManagerTasksApp);
+  if (!listEl) return;
+
+  let all: TaskGroupProgress[] = [];
+  let sortMode: "progress" | "overdue" | "name" = "progress";
+  let overdueOnly = false;
+
+  function remindOne(g: TaskGroupProgress): Promise<boolean> {
+    const targets = g.assignees.filter((a) => a.userId);
+    if (!apiToken || !targets.length) return Promise.resolve(false);
+    return Promise.all(
+      targets.map((a) =>
+        sendNotification(
+          branchBase,
+          apiToken,
+          a.userId,
+          "Task reminder",
+          `You have ${a.open} open task${a.open === 1 ? "" : "s"} in "${g.name}"` +
+            (a.overdue ? `, ${a.overdue} of them past due` : "") +
+            ". Please update them in Tasks."
+        )
+      )
+    ).then((rs) => rs.some(Boolean));
+  }
+
+  function visible(): TaskGroupProgress[] {
+    const rows = overdueOnly ? all.filter((g) => g.overdue > 0) : all.slice();
+    rows.sort((a, b) =>
+      sortMode === "name" ? a.name.localeCompare(b.name)
+        : sortMode === "overdue" ? b.overdue - a.overdue || a.pct - b.pct
+        : a.pct - b.pct || b.overdue - a.overdue
+    );
+    return rows;
+  }
+
+  function render(): void {
+    const rows = visible();
+    listEl!.innerHTML = "";
+    if (!rows.length) {
+      const empty = document.createElement("div");
+      empty.className = "ooo-meta";
+      empty.textContent = overdueOnly ? "No task group has anything past due." : "No task groups found.";
+      listEl!.appendChild(empty);
+      return;
+    }
+    rows.forEach((g) => {
+      const row = document.createElement("div");
+      row.className = "tg-row";
+
+      const dot = document.createElement("span");
+      dot.className = "tg-dot";
+      if (g.color) dot.style.background = g.color;
+      row.appendChild(dot);
+
+      const body = document.createElement("div");
+      body.className = "tg-body";
+
+      const head = document.createElement("div");
+      head.className = "tg-head";
+      const name = document.createElement("span");
+      name.className = "tg-name";
+      name.textContent = g.name;
+      const count = document.createElement("span");
+      count.className = "tg-count";
+      count.textContent = `${g.closed} of ${g.total} complete · ${g.pct}%`;
+      head.appendChild(name);
+      head.appendChild(count);
+      body.appendChild(head);
+
+      const bar = document.createElement("div");
+      bar.className = "tg-bar";
+      const fill = document.createElement("div");
+      fill.className = "tg-fill" + (g.pct === 0 ? " none" : "");
+      fill.style.width = Math.max(g.pct, 2) + "%";
+      bar.appendChild(fill);
+      body.appendChild(bar);
+
+      const meta = document.createElement("div");
+      meta.className = "tg-meta";
+      if (g.overdue) {
+        const pill = document.createElement("span");
+        pill.className = "cw-pill " + (g.overdue >= CRITICAL_OVERDUE_COUNT ? "required" : "warn");
+        pill.textContent = `${g.overdue} past due`;
+        meta.appendChild(pill);
+      }
+      const who = document.createElement("span");
+      const names = g.assignees.map((a) => a.name).filter(Boolean);
+      who.textContent = names.length
+        ? (names.length > 3 ? `${names.slice(0, 3).join(", ")} +${names.length - 3}` : names.join(", "))
+        : "Unassigned";
+      meta.appendChild(who);
+      body.appendChild(meta);
+      row.appendChild(body);
+
+      const actions = document.createElement("div");
+      actions.className = "tg-actions";
+      const btn = document.createElement("button");
+      btn.className = "tg-remind";
+      btn.type = "button";
+      btn.textContent = "Remind";
+      const targets = g.assignees.filter((a) => a.userId).length;
+      if (!apiToken || !targets) {
+        btn.disabled = true;
+        btn.title = !apiToken ? "Add an API token in Setup to send reminders" : "Nobody is assigned in this group";
+      } else {
+        btn.addEventListener("click", () => {
+          const done = flashButton(btn, "Sent ✓");
+          remindOne(g).then(done);
+        });
+      }
+      actions.appendChild(btn);
+      row.appendChild(actions);
+
+      listEl!.appendChild(row);
+    });
+  }
+
+  function setGroups(rows: TaskGroupProgress[], live: boolean): void {
+    all = rows;
+    const totalOpen = rows.reduce((n, g) => n + g.open, 0);
+    const totalOverdue = rows.reduce((n, g) => n + g.overdue, 0);
+    if (metaEl) {
+      metaEl.textContent = rows.length
+        ? `${rows.length} group${rows.length === 1 ? "" : "s"} · ${totalOpen} open · ${totalOverdue} past due`
+        : "No task groups found.";
+    }
+    if (badgeEl) badgeEl.style.display = live ? "" : "none";
+    render();
+  }
+
+  sortEl?.addEventListener("change", () => {
+    sortMode = (sortEl.value as typeof sortMode) || "progress";
+    render();
+  });
+  overdueToggleEl?.addEventListener("click", () => {
+    overdueOnly = !overdueOnly;
+    overdueToggleEl.classList.toggle("active", overdueOnly);
+    render();
+  });
+  clearBtnEl?.addEventListener("click", () => {
+    overdueOnly = false;
+    sortMode = "progress";
+    if (sortEl) sortEl.value = "progress";
+    overdueToggleEl?.classList.remove("active");
+    render();
+  });
+
+  sendAllBtn?.addEventListener("click", () => {
+    const rows = visible().filter((g) => g.assignees.some((a) => a.userId));
+    if (!rows.length || !apiToken) return;
+    const done = flashButton(sendAllBtn, "Sent ✓");
+    Promise.all(rows.map(remindOne)).then((rs) => done(rs.some(Boolean)));
+  });
+  if (sendAllBtn && !apiToken) {
+    sendAllBtn.disabled = true;
+    sendAllBtn.title = "Add an API token in Setup to send reminders";
+  }
+
+  if (!apiToken) {
+    setGroups(demoMode ? BASELINE_TASK_GROUPS : [], false);
+    return;
+  }
+  fetchTaskGroupProgress(branchBase, apiToken, tasksInstallationId)
+    .then((rows) => setGroups(rows.length ? rows : demoMode ? BASELINE_TASK_GROUPS : [], rows.length > 0))
+    .catch(() => setGroups(demoMode ? BASELINE_TASK_GROUPS : [], false));
 }
 
 function initShiftRoster(

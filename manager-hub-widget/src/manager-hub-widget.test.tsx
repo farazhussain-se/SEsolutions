@@ -43,4 +43,47 @@ describe("ManagerHubWidget", () => {
     });
     expect(screen.queryByText(/Jamie Cole/)).not.toBeInTheDocument();
   });
+
+  it("shows per-task-group completion in the Task Groups sub-tab", async () => {
+    const { container } = render(<ManagerHubWidget widgetApi={apiMock} contentLanguage="en_US" />);
+
+    // With no token the baseline groups render, so the manager still sees the
+    // shape of the view rather than an empty panel.
+    await waitFor(() => {
+      expect(container.querySelector("#taskGroupsList")!.textContent).toContain("Daily Pool Deck Opening");
+    });
+    const groups = container.querySelector("#taskGroupsList") as HTMLElement;
+    expect(groups.querySelectorAll(".tg-row").length).toBeGreaterThan(1);
+    // Completion is stated per group, not per person.
+    expect(groups.textContent).toMatch(/\d+ of \d+ complete/);
+    expect(container.querySelector("#taskGroupsMeta")!.textContent).toMatch(/group.*open.*past due/);
+  });
+
+  it("disables both reminder actions when no API token is configured", async () => {
+    const { container } = render(<ManagerHubWidget widgetApi={apiMock} contentLanguage="en_US" />);
+
+    await waitFor(() => {
+      expect(container.querySelectorAll(".tg-remind").length).toBeGreaterThan(0);
+    });
+    // Reminders go out over the branch API, so without a token every entry
+    // point must be inert rather than silently failing on click.
+    container.querySelectorAll<HTMLButtonElement>(".tg-remind").forEach((b) => {
+      expect(b.disabled).toBe(true);
+    });
+    expect(container.querySelector<HTMLButtonElement>("#sendGroupRemindersBtn")!.disabled).toBe(true);
+  });
+
+  it("reaches the Task Groups view through the Team Readiness sub-tabs", async () => {
+    const { container } = render(<ManagerHubWidget widgetApi={apiMock} contentLanguage="en_US" />);
+    await waitFor(() => {
+      expect(container.querySelector('[data-subtab="groups"]')).toBeInTheDocument();
+    });
+    const btn = container.querySelector<HTMLButtonElement>('[data-subtab="groups"]')!;
+    btn.click();
+    expect(btn.classList.contains("active")).toBe(true);
+    const view = container.querySelector('[data-subview="groups"]') as HTMLElement;
+    expect(view.classList.contains("active")).toBe(true);
+    // and the per-person view yields
+    expect(container.querySelector('[data-subview="tasks"]')!.classList.contains("active")).toBe(false);
+  });
 });

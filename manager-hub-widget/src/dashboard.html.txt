@@ -216,6 +216,7 @@
       <div class="cw-subtabs" data-subtabs="progress">
         <button class="cw-subtab active" data-subtab="journeys">Journeys</button>
         <button class="cw-subtab" data-subtab="tasks">Team Tasks</button>
+        <button class="cw-subtab" data-subtab="groups">Task Groups</button>
       </div>
 
       <!-- Journeys sub-tab -->
@@ -325,6 +326,41 @@
           </div>
           <div class="scroll-list sm" id="overdueTasksList"></div>
           <button class="ghost-btn" id="sendTaskRemindersBtn" style="margin-top:10px;">Remind All — Notification</button>
+        </div>
+      </div>
+
+      <!-- Task Groups sub-tab: completion per task list, not per person -->
+      <div class="subview" data-subgroup="progress" data-subview="groups">
+        <div class="side-card">
+          <h3>
+            <span class="accent-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </span>
+            <span>Progress by Task Group</span>
+          </h3>
+          <div class="journey-tracker-header" style="margin-bottom:10px;">
+            <div>
+              <div class="journey-meta" id="taskGroupsMeta">Loading…</div>
+            </div>
+            <div class="journey-header-actions">
+              <span class="live-badge live" id="taskGroupsBadge" style="display:none;">Live</span>
+              <span class="training-link" id="taskGroupsOpenLink">
+                <span>Open in Tasks</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </span>
+            </div>
+          </div>
+          <div class="filter-bar">
+            <select class="policy-input" id="taskGroupSortSelect">
+              <option value="progress">Sort: Least complete</option>
+              <option value="overdue">Sort: Most overdue</option>
+              <option value="name">Sort: Name</option>
+            </select>
+            <button class="filter-toggle-btn" id="taskGroupOverdueToggle" type="button">With overdue only</button>
+            <button class="filter-clear-btn" id="taskGroupFilterClearBtn" type="button">Clear all</button>
+          </div>
+          <div class="scroll-list" id="taskGroupsList"></div>
+          <button class="ghost-btn" id="sendGroupRemindersBtn" style="margin-top:10px;">Remind Every Group — Notification</button>
         </div>
       </div>
     </div>
